@@ -28,20 +28,29 @@ class Action:
         self.allow_multiple: bool = allow_multiple
         self.exclusive: bool = exclusive
 
+        self.state = False
+
     def __eq__(self, other: Union[Key, 'Action']) -> bool:
         return other in self.inputs if isinstance(other, Key) else (self.name, self.inputs) == (other.name, other.inputs)
 
     def __str__(self) -> str:
-        return f"{self.name}{'*' if self.exclusive else ''}: {[get_arcade_key_name(i) for i in self.inputs]}{'*' if self.allow_multiple else ''}"
+        return f"{self.name}{'*' if self.exclusive else ''}: {[get_arcade_key_name(i) for i in self.inputs]}{'*' if self.allow_multiple else ''} [{'X' if self.state else '_'}]"
 
 class ActionSet:
     def __init__(self, d: dict[str, Action]):
-        self._dict = d
+        self._dict: dict[str, Action] = d
+
+    @property
+    def state(self) -> tuple[bool]:
+        return tuple([a.state for a in self._dict.values()])
 
     def __getattr__(self, name: str) -> Action:
         if name not in self._dict:
             raise ActionNotInSetError(name)
         return self._dict[name]
+
+    def __iter__(self):
+        return (getattr(self, name) for name in self._dict.keys())
 
 
 class KeyMap:
@@ -68,7 +77,7 @@ class KeyMap:
             Action('hero_4', [KEY_4], False, False, False),
             Action('hero_5', [KEY_5], False, False, False),
             Action('hero_strum_up', [UP], False, False, False),
-            Action('hero_strum_Down', [DOWN], False, False, False),
+            Action('hero_strum_down', [DOWN], False, False, False),
             Action('hero_power', [RSHIFT], False, False, False)
         ]
 

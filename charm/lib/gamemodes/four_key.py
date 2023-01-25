@@ -343,8 +343,10 @@ class FourKeyEngine(Engine):
         self.active_sustains: list[FourKeyNote] = []
         self.last_sustain_tick = 0
 
-    def process_keystate(self, key_states: KeyStates):
+    def process_keystate(self):
         last_state = self.key_state
+        key_states = KeyMap().get_set("fourkey").state
+        print(key_states)
         if self.last_p1_note in (0, 1, 2, 3) and key_states[self.last_p1_note] is False:
             self.last_p1_note = None
         # ignore spam during front/back porch
@@ -358,7 +360,7 @@ class FourKeyEngine(Engine):
             elif key_states[n] is False and last_state[n] is True:
                 e = DigitalKeyEvent(self.chart_time, n, "up")
                 self.current_events.append(e)
-        self.key_state = key_states.copy()
+        self.key_state = key_states
 
     @property
     def average_acc(self) -> float:

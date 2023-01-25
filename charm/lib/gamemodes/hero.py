@@ -18,6 +18,7 @@ from charm.lib.errors import ChartParseError, ChartPostReadParseError, NoChartsE
 from charm.lib.generic.engine import Engine, Judgement
 from charm.lib.generic.highway import Highway
 from charm.lib.generic.song import Chart, Event, Metadata, Note, Seconds, Song
+from charm.lib.keymap import KeyMap
 from charm.lib.settings import Settings
 from charm.lib.spritebucket import SpriteBucketCollection
 from charm.lib.utils import img_from_resource
@@ -711,8 +712,8 @@ class HeroHighway(Highway):
 
 class HeroEngine(Engine):
     def __init__(self, chart: Chart, offset: Seconds = 0):
-        mapping = [arcade.key.KEY_1, arcade.key.KEY_2, arcade.key.KEY_3, arcade.key.KEY_4, arcade.key.KEY_5,
-            arcade.key.RIGHT, arcade.key.LEFT]
+        hero_keys = KeyMap().get_set("hero")
+        self.mapping = [hero_keys.green, hero_keys.red, hero_keys.yellow, hero_keys.blue, hero_keys.orange, hero_keys.strum_up, hero_keys.strum_down]
         hit_window = 0.050  # 50ms +/-
         judgements = [Judgement("pass", 50, 100, 1, 1), Judgement("miss", math.inf, 0, -1, -1)]
         super().__init__(chart, mapping, hit_window, judgements, offset)
