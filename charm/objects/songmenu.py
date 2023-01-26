@@ -1,7 +1,6 @@
 import io
 import logging
 import requests
-import os.path
 
 import arcade
 from arcade import Sprite
@@ -30,19 +29,26 @@ class SongMenuItem(Sprite):
         # Make a real hash, probably on Song.
         self.key = song.hash
 
-        try:
-            album_art_img = PIL.Image.open(f"./albums/album_{self.key}.png")
-        except FileNotFoundError:
-            art_path = Path(songspath / "fnf" / song.key / "art.jpg") # TODO: check for png as well
-            if (not art_path.is_file()):
+        art_path = None
+        art_paths = [Path(songspath / "fnf" / song.key / "album.jpg"),
+                     Path(songspath / "fnf" / song.key / "album.png")]
+        for p in art_paths:
+            if p.is_file():
+                art_path = p
+                break
+        if art_path is None:
+            try:
+                album_art_img = PIL.Image.open(f"./albums/album_{self.key}.png")
+            except FileNotFoundError:
                 album_art = io.BytesIO(requests.get("https://picsum.photos/200.jpg").content)
                 album_art_img = PIL.Image.open(album_art)
-            else:
-                album_art_img = PIL.Image.open(art_path)
-            album_art_img = album_art_img.convert("RGBA")
-            if (album_art_img.width != 200 or album_art_img.height != 200):
-                album_art_img = album_art_img.resize((200, 200))
-            album_art_img.save(f"./albums/album_{self.key}.png")
+                album_art_img.save(f"./albums/album_{self.key}.png")
+        else:
+            album_art_img = PIL.Image.open(art_path)
+        album_art_img = album_art_img.convert("RGBA")
+        if (album_art_img.width != 200 or album_art_img.height != 200):
+            album_art_img = album_art_img.resize((200, 200))
+
         self.album_art = arcade.Texture(f"{self.key}-albumart", album_art_img, hit_box_algorithm=None)
 
         self._w = w if w else Settings.width // 2
