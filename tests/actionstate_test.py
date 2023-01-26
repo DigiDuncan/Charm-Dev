@@ -1,11 +1,29 @@
 from typing import Optional, Union
 import arcade.key
 from arcade.key import D, F, J, K
-from charm.lib.utils import findone
-from charm.lib.errors import ActionNameConflictError, SetNotFoundError, KeyUnrecognizedError, ActionNotInSetError
+
+class ActionNameConflictError(Exception):
+    pass
+
+class SetNotFoundError(Exception):
+    pass
+
+class KeyUnrecognizedError(Exception):
+    pass
+
+class ActionNotInSetError(Exception):
+    pass
+
 
 Key = int
 Keys = list[int]
+
+def findone(iterator):
+    try:
+        val = next(iterator)
+    except StopIteration:
+        val = None
+    return val
 
 
 def get_arcade_key_name(i: Key) -> str:
