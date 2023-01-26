@@ -25,7 +25,7 @@ class Metadata:
     preview_end: Seconds = None
     mod: str = None
     hash: str = None
-    key: str = None  # TODO: Deprecate?
+    path: Path = None
 
     def get(self, key, default = None):
         """Basically a duplicate of dict.get()"""

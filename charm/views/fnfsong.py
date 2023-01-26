@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 import arcade
 
@@ -9,7 +10,6 @@ from charm.lib.gamemodes.fnf import CameraFocusEvent, FNFEngine, FNFHighway, FNF
 from charm.lib.keymap import KeyMap
 from charm.lib.logsection import LogSection
 from charm.lib.oggsound import OGGSound
-from charm.lib.paths import songspath
 from charm.lib.settings import Settings
 from charm.lib.trackcollection import TrackCollection
 from charm.lib.utils import map_range
@@ -18,9 +18,9 @@ logger = logging.getLogger("charm")
 
 
 class FNFSongView(DigiView):
-    def __init__(self, name: str, *args, **kwargs):
+    def __init__(self, path: Path, *args, **kwargs):
         super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, *args, **kwargs)
-        self.name: str = name
+        self.path = path
         self.engine: FNFEngine = None
         self.highway_1: FNFHighway = None
         self.highway_2: FNFHighway = None
@@ -57,7 +57,7 @@ class FNFSongView(DigiView):
         super().setup()
 
         with LogSection(logger, "loading song data"):
-            path = songspath / "fnf" / self.name
+            path = self.path
             self.songdata = FNFSong.parse(path)
             if not self.songdata:
                 raise ValueError("No valid chart found!")

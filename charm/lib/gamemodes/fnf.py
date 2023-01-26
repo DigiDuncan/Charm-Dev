@@ -151,9 +151,9 @@ class FNFSong(Song):
         title = song["song"].replace("-", " ").title()
         artist = ""
         album = ""
-        key = k
+        path = songspath / "fnf" / k
 
-        return Metadata(title, artist, album, hash = hash, key = key)
+        return Metadata(title, artist, album, hash = hash, path = path)
 
     @classmethod
     def parse(cls, folder: str, mod: FNFMod = None) -> FNFSong:

@@ -11,7 +11,6 @@ from charm.lib.charm import CharmColors
 from charm.lib.generic.song import Metadata
 from charm.lib.settings import Settings
 from charm.lib.utils import clamp
-from charm.lib.paths import songspath
 
 from pathlib import Path
 
@@ -30,8 +29,9 @@ class SongMenuItem(Sprite):
         self.key = song.hash
 
         art_path = None
-        art_paths = [Path(songspath / "fnf" / song.key / "album.jpg"),
-                     Path(songspath / "fnf" / song.key / "album.png")]
+        art_paths = [Path(song.path / "album.jpg"),
+                     Path(song.path / "album.png"),
+                     Path(song.path / "album.gif")]
         for p in art_paths:
             if p.is_file():
                 art_path = p

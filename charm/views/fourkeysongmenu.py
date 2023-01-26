@@ -87,7 +87,7 @@ class FNFSongMenuView(DigiView):
                 arcade.play_sound(self.window.sounds["select"])
             case keymap.start:
                 arcade.play_sound(self.window.sounds["valid"])
-                songview = FourKeySongView(self.menu.selected.song.key, back=self)
+                songview = FourKeySongView(self.menu.selected.song.path, back=self)
                 songview.setup()
                 self.window.show_view(songview)
             case keymap.back:
@@ -107,7 +107,7 @@ class FNFSongMenuView(DigiView):
     @shows_errors
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int):
         arcade.play_sound(self.window.sounds["valid"])
-        songview = FourKeySongView(self.menu.selected.song.key, back=self)
+        songview = FourKeySongView(self.menu.selected.song.path, back=self)
         songview.setup()
         self.window.show_view(songview)
 
