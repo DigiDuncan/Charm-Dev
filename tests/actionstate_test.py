@@ -70,10 +70,13 @@ class ActionSet:
 
 class KeyMap:
     # Singleton BS
+    __instance = None
+
     def __new__(cls):
-        if not hasattr(cls, '_instance'):
-            cls._instance = super(KeyMap, cls).__new__(cls)
-        return cls._instance
+        if cls.__instance is None:
+            print("creating...")
+            cls.__instance = object.__new__(cls)
+        return cls.__instance
 
     def __init__(self):
         """Access and set mappings for inputs to actions. Key binding."""
@@ -93,10 +96,10 @@ class KeyMap:
         # Create action sets (hardcoded, frozen.)
         self.sets: dict[str, ActionSet] = {
             "fourkey": ActionSet({
-                "key1": self.fourkey_1,
-                "key2": self.fourkey_2,
-                "key3": self.fourkey_3,
-                "key4": self.fourkey_4
+                "key1": self.actions[0],
+                "key2": self.actions[1],
+                "key3": self.actions[2],
+                "key4": self.actions[3]
             })
         }
 
@@ -111,11 +114,14 @@ class KeyMap:
             raise SetNotFoundError(name)
         return s
 
-    def __str__(self) -> str:
-        return f"{[str(i) for i in self.actions]}"
+    # def __str__(self) -> str:
+    #     return f"{[str(i) for i in self.actions]}"
 
 
 def test():
+    print(KeyMap())
+    print(KeyMap())
+
     four_key0 = KeyMap().get_set("fourkey")
     print(four_key0.state)
 
