@@ -4,7 +4,7 @@ from charm.lib.anim import ease_quartout
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView, shows_errors
 from charm.lib.errors import TestError
-from charm.lib.keymap import KeyMap
+from charm.lib.keymap import get_keymap
 from charm.lib.paths import songspath
 from charm.objects.menu import MainMenu, MainMenuItem
 from charm.views.fnfsongmenu import FNFSongMenuView
@@ -52,7 +52,7 @@ class MainMenuView(DigiView):
 
     @shows_errors
     def on_key_press(self, symbol: int, modifiers: int):
-        keymap = KeyMap()
+        keymap = get_keymap()
         match symbol:
             case arcade.key.RIGHT:
                 self.menu.selected_id += 1

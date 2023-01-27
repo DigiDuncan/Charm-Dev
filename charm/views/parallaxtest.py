@@ -1,5 +1,5 @@
 import arcade
-from charm.lib.keymap import KeyMap
+from charm.lib.keymap import get_keymap
 from pyglet.math import Vec2
 
 from charm.lib.digiview import DigiView
@@ -126,7 +126,7 @@ class ParallaxView(DigiView):
         return super().on_update(delta_time)
 
     def on_key_press(self, symbol: int, modifiers: int):
-        keymap = KeyMap()
+        keymap = get_keymap()
         match symbol:
             case keymap.back:
                 self.back.setup()

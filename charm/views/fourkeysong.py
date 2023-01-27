@@ -8,7 +8,7 @@ from charm.lib.anim import ease_circout
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView, shows_errors
 from charm.lib.gamemodes.four_key import FourKeySong, FourKeyHighway, FourKeyEngine
-from charm.lib.keymap import KeyMap
+from charm.lib.keymap import get_keymap
 from charm.lib.logsection import LogSection
 from charm.lib.oggsound import OGGSound
 from charm.lib.trackcollection import TrackCollection
@@ -44,7 +44,6 @@ class FourKeySongView(DigiView):
 
         with LogSection(logger, "loading engine"):
             self.engine = FourKeyEngine(self.chart)
-            self.key_state = [False] * 4
 
         with LogSection(logger, "loading highway"):
             self.highway = FourKeyHighway(self.chart, (0, 0))
@@ -82,12 +81,14 @@ class FourKeySongView(DigiView):
 
     @shows_errors
     def on_key_something(self, symbol: int, modifiers: int, press: bool):
+        for key in get_keymap().get_set("fourkey"):
+            if symbol == key:
+                key.state = press
         if symbol in self.engine.mapping:
             i = self.engine.mapping.index(symbol)
             self.highway.strikeline[i].alpha = 255 if press else 64
             if self.tracks.playing:
-                self.key_state[i] = press
-                self.engine.process_keystate(self.key_state)
+                self.engine.process_keystate()
 
     def generate_data_string(self):
         return (f"Time: {int(self.tracks.time // 60)}:{int(self.tracks.time % 60):02}\n"
@@ -99,7 +100,7 @@ class FourKeySongView(DigiView):
 
     @shows_errors
     def on_key_press(self, symbol: int, modifiers: int):
-        keymap = KeyMap()
+        keymap = get_keymap()
         match symbol:
             case keymap.back:
                 self.tracks.close()

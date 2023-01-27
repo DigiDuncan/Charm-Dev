@@ -23,11 +23,11 @@ from simfile.timing.engine import TimingEngine
 import charm.data.images.skins.fnf as fnfskin
 import charm.data.images.skins.base as baseskin
 from charm.lib.charm import load_missing_texture
-from charm.lib.generic.engine import DigitalKeyEvent, Engine, Judgement, KeyStates
+from charm.lib.generic.engine import DigitalKeyEvent, Engine, Judgement
 from charm.lib.generic.highway import Highway
 from charm.lib.generic.results import Results
 from charm.lib.generic.song import Metadata, Note, Chart, Seconds, Song, BPMChangeEvent
-from charm.lib.keymap import KeyMap
+from charm.lib.keymap import get_keymap
 from charm.lib.settings import Settings
 from charm.lib.spritebucket import SpriteBucketCollection
 from charm.lib.utils import img_from_resource, clamp
@@ -307,7 +307,7 @@ class FourKeyJudgement(Judgement):
 class FourKeyEngine(Engine):
     def __init__(self, chart: FourKeyChart, offset: Seconds = -0.025):  # TODO: Set this dynamically
         hit_window: Seconds = 0.075
-        fk = KeyMap().get_set("fourkey")
+        fk = get_keymap().get_set("fourkey")
         mapping = [fk.key1, fk.key2, fk.key3, fk.key4]
         judgements = [
             #               ("name",           "key"             ms, score,  acc, hp=0)
@@ -343,8 +343,10 @@ class FourKeyEngine(Engine):
         self.active_sustains: list[FourKeyNote] = []
         self.last_sustain_tick = 0
 
-    def process_keystate(self, key_states: KeyStates):
+    def process_keystate(self):
         last_state = self.key_state
+        key_states = get_keymap().get_set("fourkey").state
+        print(key_states)
         if self.last_p1_note in (0, 1, 2, 3) and key_states[self.last_p1_note] is False:
             self.last_p1_note = None
         # ignore spam during front/back porch
@@ -358,7 +360,7 @@ class FourKeyEngine(Engine):
             elif key_states[n] is False and last_state[n] is True:
                 e = DigitalKeyEvent(self.chart_time, n, "up")
                 self.current_events.append(e)
-        self.key_state = key_states.copy()
+        self.key_state = key_states
 
     @property
     def average_acc(self) -> float:

@@ -4,7 +4,7 @@ from charm.lib.adobexml import sprite_from_adobe
 
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView
-from charm.lib.keymap import KeyMap
+from charm.lib.keymap import get_keymap
 from charm.lib.settings import Settings
 
 
@@ -34,7 +34,7 @@ class SpriteTestView(DigiView):
         self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
 
     def on_key_press(self, symbol: int, modifiers: int):
-        keymap = KeyMap()
+        keymap = get_keymap()
         match symbol:
             case keymap.back:
                 self.back.setup()
