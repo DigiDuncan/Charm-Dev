@@ -59,6 +59,8 @@ class IndexDict(TypedDict):
     time_sig: Index
     section: Index
     beat: Index
+    note: Index
+    chord: Index
 
 @dataclass
 class TickEvent(Event):
@@ -191,6 +193,18 @@ class HeroChord:
         return self.tick + self.tick_length
 
     @property
+    def time(self) -> Seconds:
+        return self.notes[0].time
+
+    @property
+    def length(self) -> Seconds:
+        return max([n.length for n in self.notes])
+
+    @property
+    def end(self) -> Seconds:
+        return self.time + self.length
+
+    @property
     def type(self) -> str:
         return self.notes[0].type
 
@@ -205,12 +219,16 @@ class HeroChart(Chart):
         self.song: HeroSong = self.song
         self.chords: list[HeroChord] = None
 
+        self.indexes_by_tick: IndexDict = {}
+        self.indexes_by_time: IndexDict = {}
+
     def finalize(self):
         """Do some last-pass parsing steps."""
         self.create_chords()
         self.calculate_note_flags()
         self.calculate_hopos()
         self.parse_text_events()
+        self.index()
 
     def create_chords(self):
         """Turn lists of notes (in `self.notes`) into `HeroChord`s (in `self.chords`)
@@ -298,6 +316,12 @@ class HeroChart(Chart):
             self.events.append(e)
         self.events.sort()
 
+    def index(self):
+        self.indexes_by_tick["note"] = Index(self.notes, "tick")
+        self.indexes_by_tick["chord"] = Index(self.chords, "tick")
+
+        self.indexes_by_time["note"] = Index(self.notes, "time")
+        self.indexes_by_time["chord"] = Index(self.chords, "time")
 
 class HeroSong(Song):
     def __init__(self, path: Path):
@@ -611,8 +635,6 @@ class HeroHighway(Highway):
         self.last_update_time = 0
         self._pixel_offset = 0
 
-        self.note_index = 0
-
     def update(self, song_time: float):
         super().update(song_time)
         self.sprite_buckets.update_animation(song_time)
@@ -622,10 +644,10 @@ class HeroHighway(Highway):
         self.last_update_time = self.song_time
 
         if self.auto:
-            while self.note_sprites[self.note_index].note.time < self.song_time - 0.050:
-                self.note_index += 1
+            # while self.note_sprites[self.note_index].note.time < self.song_time - 0.050:
+            #     self.note_index += 1
             # Fancy strikeline
-            i = self.note_index
+            i = self.chart.indexes_by_time["note"].lteq_index(self.song_time - 0.050) or 0
             while True:
                 note_sprite = self.note_sprites[i]
                 if note_sprite.note.time > self.song_time + 0.050:
@@ -685,7 +707,7 @@ class HeroHighway(Highway):
         b = self.sprite_buckets.calc_bucket(self.song_time)
         for bucket in self.sprite_buckets.buckets[b:b+2] + [self.sprite_buckets.overbucket]:
             for note in bucket.sprite_list:
-                if isinstance(note, HeroLongNoteSprite) and note.note.time < self.song_time + self.viewport:
+                if isinstance(note, HeroLongNoteSprite) and note.note.time < self.song_time + self.viewport and note.note.end > self.song_time:
                     note.draw_trail()
         self.sprite_buckets.draw(self.song_time)
         _cam.use()
