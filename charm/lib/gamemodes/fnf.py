@@ -156,14 +156,10 @@ class FNFSong(Song):
         return Metadata(title, artist, album, hash = hash, path = path)
 
     @classmethod
-    def parse(cls, folder: str, mod: FNFMod = None) -> FNFSong:
-        folder_path = Path(folder)
+    def parse(cls, path: Path, mod: FNFMod = None) -> FNFSong:
+        folder_path = Path(path)
         stem = folder_path.stem
-        song = FNFSong(stem)
-        song.path = songspath / "fnf" / stem
-        if mod:
-            song.mod = mod
-            song.path = mod.path / stem
+        song = FNFSong(path)
 
         charts = song.path.glob(f"./{stem}*.json")
         parsed_charts = [cls.parse_chart(chart, song) for chart in charts]
@@ -172,7 +168,7 @@ class FNFSong(Song):
                 song.charts.append(chart)
 
         if not song.charts:
-            raise NoChartsError(folder)
+            raise NoChartsError(path)
 
         # Global attributes that are stored per-chart, for some reason.
         chart: FNFChart = song.charts[0]
