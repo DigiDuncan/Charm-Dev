@@ -197,3 +197,19 @@ class KeyMap:
 
     def __str__(self) -> str:
         return f"{[str(i) for i in self.actions]}"
+
+
+keymap = None
+
+
+def get_keymap() -> KeyMap:
+    global keymap
+    if keymap is not None:
+        return keymap
+    keymap = KeyMap()
+    return keymap
+
+
+def set_keymap(new_keymap: KeyMap):
+    global keymap
+    keymap = new_keymap

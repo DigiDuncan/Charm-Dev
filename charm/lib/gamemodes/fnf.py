@@ -19,7 +19,7 @@ from charm.lib.errors import AssetNotFoundError, NoChartsError, UnknownLanesErro
 from charm.lib.generic.engine import DigitalKeyEvent, Engine, Judgement, KeyStates
 from charm.lib.generic.highway import Highway
 from charm.lib.generic.song import BPMChangeEvent, Chart, Event, Metadata, Milliseconds, Note, Seconds, Song
-from charm.lib.keymap import KeyMap
+from charm.lib.keymap import get_keymap
 from charm.lib.logsection import LogSection
 from charm.lib.paths import modsfolder, songspath
 from charm.lib.settings import Settings
@@ -327,7 +327,7 @@ class FNFSong(Song):
 class FNFEngine(Engine):
     def __init__(self, chart: FNFChart, offset: Seconds = -0.075):  # FNF defaults to a 75ms input offset.
         hit_window = 0.166
-        fk = KeyMap().get_set("fourkey")
+        fk = get_keymap().get_set("fourkey")
         mapping = [fk.key1, fk.key2, fk.key3, fk.key4]
         judgements = [
             #           ("name",  "key"    ms,       score, acc,   hp=0)

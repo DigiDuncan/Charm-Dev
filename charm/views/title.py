@@ -9,7 +9,7 @@ import charm.data.images
 from charm.lib.anim import bounce, ease_linear, ease_quadinout
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView
-from charm.lib.keymap import KeyMap
+from charm.lib.keymap import get_keymap
 from charm.lib.utils import img_from_resource
 from charm.views.mainmenu import MainMenuView
 
@@ -102,7 +102,7 @@ class TitleView(DigiView):
                             color=CharmColors.PURPLE + (0xFF,))
 
     def on_key_press(self, symbol: int, modifiers: int):
-        keymap = KeyMap()
+        keymap = get_keymap()
         match symbol:
             case keymap.start:
                 self.hit_start = self.local_time

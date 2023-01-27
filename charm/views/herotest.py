@@ -5,7 +5,7 @@ import arcade
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView
 from charm.lib.gamemodes.hero import HeroHighway, HeroSong, SectionEvent
-from charm.lib.keymap import KeyMap
+from charm.lib.keymap import get_keymap
 from charm.lib.oggsound import OGGSound
 from charm.lib.paths import songspath
 
@@ -41,7 +41,7 @@ class HeroTestView(DigiView):
         self.song = arcade.play_sound(self._song, self.volume, looping=False)
 
     def on_key_press(self, symbol: int, modifiers: int):
-        keymap = KeyMap()
+        keymap = get_keymap()
         match symbol:
             case keymap.back:
                 self.song.delete()

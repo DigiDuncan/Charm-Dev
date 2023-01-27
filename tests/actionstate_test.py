@@ -69,15 +69,6 @@ class ActionSet:
 
 
 class KeyMap:
-    # Singleton BS
-    __instance = None
-
-    def __new__(cls):
-        if cls.__instance is None:
-            print("creating...")
-            cls.__instance = object.__new__(cls)
-        return cls.__instance
-
     def __init__(self):
         """Access and set mappings for inputs to actions. Key binding."""
         self.actions: list[Action] = [
@@ -103,6 +94,8 @@ class KeyMap:
             })
         }
 
+        set_keymap(self)
+
     def __getattr__(self, item: str) -> Optional[Action]:
         """Get an action by name."""
         return findone((a for a in self.actions if a.name == item))
@@ -114,26 +107,39 @@ class KeyMap:
             raise SetNotFoundError(name)
         return s
 
-    # def __str__(self) -> str:
-    #     return f"{[str(i) for i in self.actions]}"
+    def __str__(self) -> str:
+        return f"{[str(i) for i in self.actions]}"
+
+
+keymap = None
+
+
+def get_keymap() -> KeyMap:
+    global keymap
+    if keymap is not None:
+        return keymap
+    keymap = KeyMap()
+    return keymap
+
+
+def set_keymap(new_keymap: KeyMap):
+    global keymap
+    keymap = new_keymap
 
 
 def test():
-    print(KeyMap())
-    print(KeyMap())
-
-    four_key0 = KeyMap().get_set("fourkey")
+    four_key0 = get_keymap().get_set("fourkey")
     print(four_key0.state)
 
     # The D key has been hit...
-    four_key1 = KeyMap().get_set("fourkey")
+    four_key1 = get_keymap().get_set("fourkey")
     for key in four_key1:
         if key == D:
             key.state = True
             print(f"Set {key} state to True")
 
     # Let's see what the state is now
-    four_key2 = KeyMap().get_set("fourkey")
+    four_key2 = get_keymap().get_set("fourkey")
     print(four_key2.state)
 
 
