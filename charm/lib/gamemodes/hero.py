@@ -714,7 +714,7 @@ class HeroHighway(Highway):
 class HeroEngine(Engine):
     def __init__(self, chart: Chart, offset: Seconds = 0):
         hero_keys = get_keymap().get_set("hero")
-        self.mapping = [hero_keys.green, hero_keys.red, hero_keys.yellow, hero_keys.blue, hero_keys.orange, hero_keys.strum_up, hero_keys.strum_down]
+        mapping = [hero_keys.green, hero_keys.red, hero_keys.yellow, hero_keys.blue, hero_keys.orange, hero_keys.strum_up, hero_keys.strum_down]
         hit_window = 0.050  # 50ms +/-
         judgements = [Judgement("pass", 50, 100, 1, 1), Judgement("miss", math.inf, 0, -1, -1)]
 
