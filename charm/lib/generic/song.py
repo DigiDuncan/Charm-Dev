@@ -131,10 +131,9 @@ class Chart:
 
 class Song:
     """A list of charts and global events, with some helpful metadata."""
-    def __init__(self, name: str):
-        self.name = name
-        self.path: Path = None
-        self.metadata = Metadata(name, "Unknown Artist", "Unknown Album")
+    def __init__(self, path: Path):
+        self.path: Path = path
+        self.metadata = Metadata(path.stem, "Unknown Artist", "Unknown Album")
         self.charts: list[Chart] = []
         self.events: list[Event] = []
 

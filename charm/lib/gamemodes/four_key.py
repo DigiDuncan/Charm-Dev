@@ -108,8 +108,8 @@ class FourKeyChart(Chart):
         self.song: FourKeySong = song
 
 class FourKeySong(Song):
-    def __init__(self, name: str):
-        super().__init__(name)
+    def __init__(self, path: Path):
+        super().__init__(path)
 
         self.timing_engine: TimingEngine = None
 
@@ -121,7 +121,7 @@ class FourKeySong(Song):
         with open(sm_file, "r") as f:
             sm = simfile.load(f)
 
-        song = FourKeySong(folder.stem)
+        song = FourKeySong(folder)
 
         charts: dict[str, FourKeyChart] = {}
 

@@ -299,23 +299,23 @@ class HeroChart(Chart):
 
 
 class HeroSong(Song):
-    def __init__(self, name: str):
-        super().__init__(name)
+    def __init__(self, path: Path):
+        super().__init__(path)
         self.indexes_by_tick: IndexDict = {}
         self.indexes_by_time: IndexDict = {}
         self.resolution: int = 192
         self.metadata = Metadata("Unknown Title")
 
     @classmethod
-    def parse(cls, folder: Path) -> "HeroSong":
-        if not (folder / "notes.chart").exists():
-            raise NoChartsError(folder.stem)
-        with open(folder / "notes.chart", encoding = "utf-8") as f:
+    def parse(cls, path: Path) -> "HeroSong":
+        if not (path / "notes.chart").exists():
+            raise NoChartsError(path.stem)
+        with open(path / "notes.chart", encoding = "utf-8") as f:
             chartfile = f.readlines()
 
         resolution: Ticks = 192
         offset: Seconds = 0
-        metadata = Metadata("Unknown Title")
+        metadata = Metadata("Unknown Title", path = path)
         charts: dict[str, HeroChart] = {}
         events: list[Event] = []
 
@@ -456,7 +456,7 @@ class HeroSong(Song):
                     raise ChartParseError(line_num, f"Non-chart event in {last_header}: {line!r}")
 
         # Finalize
-        song = HeroSong(metadata.key)
+        song = HeroSong(metadata.path)
         for event in events:
             song.events.append(event)
         song.events.sort()
@@ -739,3 +739,8 @@ class HeroEngine(Engine):
                 e = DigitalKeyEvent(self.chart_time, self.mapping[n], "up")
                 self.current_events.append(e)
         self.key_state = key_states.copy()
+
+    def calculate_score(self):
+        # Get all non-scored notes within the current window
+        for note in [n for n in self.current_notes if n.time <= self.chart_time + self.hit_window]:
+            pass
