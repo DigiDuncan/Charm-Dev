@@ -743,6 +743,8 @@ class HeroEngine(Engine):
         self.current_notes: list[HeroNote] = self.chart.notes.copy()
         self.current_events: list[DigitalKeyEvent] = []
 
+        self.combo = 0
+
         super().__init__(chart, mapping, hit_window, judgements, offset)
 
         # TODO: this is a stop-gap until I remove mapping entirely.
@@ -765,5 +767,8 @@ class HeroEngine(Engine):
 
     def calculate_score(self):
         # Get all non-scored notes within the current window
+
+        buttons = get_keymap().get_set("hero")
+
         for note in [n for n in self.current_notes if n.time <= self.chart_time + self.hit_window]:
             pass
