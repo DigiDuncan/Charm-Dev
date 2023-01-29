@@ -15,9 +15,8 @@ import arcade
 from charm.lib.anim import ease_linear
 from charm.lib.charm import load_missing_texture
 from charm.lib.errors import ChartParseError, ChartPostReadParseError, NoChartsError
-from charm.lib.generic.engine import DigitalKeyEvent, Engine, Judgement, KeyStates
+from charm.lib.generic.engine import DigitalKeyEvent, Engine, Judgement
 from charm.lib.generic.highway import Highway
-from charm.lib.keymap import KeyMap
 from charm.lib.generic.song import Chart, Event, Metadata, Note, Seconds, Song
 from charm.lib.keymap import get_keymap
 from charm.lib.settings import Settings
@@ -784,6 +783,8 @@ class HeroEngine(Engine):
         self.current_chords: list[HeroChord] = self.chart.notes.copy()
         self.current_events: list[DigitalKeyEvent] = []
 
+        self.key_state = (False, False, False, False, False)
+
         self.combo = 0
         self.strum_events: list[StrumEvent] = []
 
@@ -794,8 +795,9 @@ class HeroEngine(Engine):
 
         self.current_holds = [False, False, False, False, False]
 
-    def process_keystate(self, key_states: KeyStates):
+    def process_keystate(self):
         last_state = self.key_state
+        key_states = get_keymap().get_set("hero").state
         # ignore spam during front/back porch
         if (self.chart_time < self.chart.notes[0].time - self.hit_window
            or self.chart_time > self.chart.notes[-1].time + self.hit_window):
@@ -813,7 +815,7 @@ class HeroEngine(Engine):
                 self.current_events.append(e)
                 if n < 5:  # fret button
                     self.current_holds[n] = False
-        self.key_state = key_states.copy()
+        self.key_state = key_states
 
     def calculate_score(self):
         # Get all non-scored notes within the current window
