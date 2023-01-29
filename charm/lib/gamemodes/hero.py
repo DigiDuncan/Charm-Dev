@@ -776,22 +776,22 @@ class StrumEvent(Event):
 class HeroEngine(Engine):
     def __init__(self, chart: Chart, offset: Seconds = 0):
         hero_keys = get_keymap().get_set("hero")
-        mapping = [hero_keys.green, hero_keys.red, hero_keys.yellow, hero_keys.blue, hero_keys.orange, hero_keys.strum_up, hero_keys.strum_down]
+        mapping = [hero_keys.green, hero_keys.red, hero_keys.yellow, hero_keys.blue, hero_keys.orange, hero_keys.strumup, hero_keys.strumdown]
         hit_window = 0.050  # 50ms +/-
         judgements = [Judgement("pass", 50, 100, 1, 1), Judgement("miss", math.inf, 0, -1, -1)]
+
+        super().__init__(chart, mapping, hit_window, judgements, offset)
 
         self.current_chords: list[HeroChord] = self.chart.notes.copy()
         self.current_events: list[DigitalKeyEvent] = []
 
-        self.key_state = (False, False, False, False, False)
+        self.key_state = (False, False, False, False, False, False, False, False)
 
         self.combo = 0
         self.strum_events: list[StrumEvent] = []
 
-        super().__init__(chart, mapping, hit_window, judgements, offset)
-
         # TODO: this is a stop-gap until I remove mapping entirely.
-        self.mapping = [hero_keys.green, hero_keys.red, hero_keys.yellow, hero_keys.blue, hero_keys.orange, hero_keys.strum_up, hero_keys.strum_down, hero_keys.power]
+        self.mapping = [hero_keys.green, hero_keys.red, hero_keys.yellow, hero_keys.blue, hero_keys.orange, hero_keys.strumup, hero_keys.strumdown, hero_keys.power]
 
         self.current_holds = [False, False, False, False, False]
 

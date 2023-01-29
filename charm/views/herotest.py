@@ -4,7 +4,7 @@ import arcade
 
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView
-from charm.lib.gamemodes.hero import HeroHighway, HeroSong, SectionEvent
+from charm.lib.gamemodes.hero import HeroEngine, HeroHighway, HeroSong, SectionEvent
 from charm.lib.keymap import get_keymap
 from charm.lib.oggsound import OGGSound
 from charm.lib.paths import songspath
@@ -25,6 +25,7 @@ class HeroTestView(DigiView):
         self._song = OGGSound(songspath / "ch" / "soulless5" / "song.ogg")
         self.hero_song = HeroSong.parse(songspath / "ch" / "soulless5")
         self.chart = self.hero_song.get_chart("Expert", "Single")
+        self.engine = HeroEngine(self.chart)
         self.highway = HeroHighway(self.chart, (0, 0), auto = True)
         self.highway.x += self.window.width // 2 - self.highway.w // 2
 
@@ -32,6 +33,7 @@ class HeroTestView(DigiView):
         self.metadata_text = arcade.Text(metadata_string, 5, 5, arcade.color.BLACK, 16, align = "left", anchor_x = "left", anchor_y = "bottom", multiline = True, font_name = "bananaslip plus plus", width=self.window.width)
         self.section_text = arcade.Text("", self.window.width - 5, 5, arcade.color.BLACK, 16, align = "right", anchor_x = "right", font_name = "bananaslip plus plus", width=self.window.width)
         self.time_text = arcade.Text("0:00", self.window.width - 5, 35, arcade.color.BLACK, 16, align = "right", anchor_x = "right", font_name = "bananaslip plus plus", width=self.window.width)
+        self.score_text = arcade.Text("0", self.window.width - 5, 65, arcade.color.BLACK, font_size=24, anchor_x="right", font_name="bananaslip plus plus")
 
         # Generate "gum wrapper" background
         self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
@@ -42,6 +44,7 @@ class HeroTestView(DigiView):
 
     def on_key_press(self, symbol: int, modifiers: int):
         keymap = get_keymap()
+        self.engine.process_keystate()
         match symbol:
             case keymap.back:
                 self.song.delete()
@@ -63,10 +66,16 @@ class HeroTestView(DigiView):
 
         return super().on_key_press(symbol, modifiers)
 
+    def on_key_release(self, symbol: int, modifiers: int):
+        self.engine.process_keystate()
+
     def on_update(self, delta_time):
         super().on_update(delta_time)
 
         self.highway.update(self.song.time)
+
+        self.engine.update(self.song.time)
+        self.engine.calculate_score()
 
         # Section name
         # This should in theory be kinda fast because it's using Indexes?
@@ -78,6 +87,9 @@ class HeroTestView(DigiView):
         time_string = f"{self.song.time // 60:.0f}:{int(self.song.time % 60):02}"
         if self.time_text.text != time_string:
             self.time_text.text = time_string
+
+        if self.score_text._label.text != str(self.engine.score):
+            self.score_text._label.text = str(self.engine.score)
 
         move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
 
@@ -93,5 +105,6 @@ class HeroTestView(DigiView):
         self.metadata_text.draw()
         self.section_text.draw()
         self.time_text.draw()
+        self.score_text.draw()
 
         super().on_draw()
