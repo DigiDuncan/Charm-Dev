@@ -26,7 +26,7 @@ class HeroTestView(DigiView):
         self.hero_song = HeroSong.parse(songspath / "ch" / "soulless5")
         self.chart = self.hero_song.get_chart("Expert", "Single")
         self.engine = HeroEngine(self.chart)
-        self.highway = HeroHighway(self.chart, (0, 0), auto = True)
+        self.highway = HeroHighway(self.chart, (0, 0), auto = False)
         self.highway.x += self.window.width // 2 - self.highway.w // 2
 
         metadata_string = f"{self.hero_song.metadata.title}\n{self.hero_song.metadata.artist}\n{self.hero_song.metadata.album}"
@@ -44,6 +44,7 @@ class HeroTestView(DigiView):
 
     def on_key_press(self, symbol: int, modifiers: int):
         keymap = get_keymap()
+        keymap.set_state(symbol, True)
         self.engine.process_keystate()
         match symbol:
             case keymap.back:
@@ -67,6 +68,8 @@ class HeroTestView(DigiView):
         return super().on_key_press(symbol, modifiers)
 
     def on_key_release(self, symbol: int, modifiers: int):
+        keymap = get_keymap()
+        keymap.set_state(symbol, False)
         self.engine.process_keystate()
 
     def on_update(self, delta_time):

@@ -54,12 +54,6 @@ class ActionSet:
 
 
 class KeyMap:
-    # Singleton BS
-    def __new__(cls):
-        if not hasattr(cls, '_instance'):
-            cls._instance = super(KeyMap, cls).__new__(cls)
-        return cls._instance
-
     def __init__(self):
         """Access and set mappings for inputs to actions. Key binding."""
         self.actions: list[Action] = [
@@ -194,6 +188,10 @@ class KeyMap:
         for action in self.actions:
             self.validate(action.name)
         return True
+
+    def set_state(self, key: Key, state: bool):
+        for action in [a for a in self.actions if a == key]:
+            action.state = state
 
     def __str__(self) -> str:
         return f"{[str(i) for i in self.actions]}"

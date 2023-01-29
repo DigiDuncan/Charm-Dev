@@ -246,7 +246,7 @@ class HeroChord:
         else:
             b = [False, True]
             max_fret = max(self.frets) + 1
-            [list(i) + ([] * (5 - max_fret)) for i in itertools.product(b, repeat = max_fret)]
+            return [list(i) + ([] * (5 - max_fret)) for i in itertools.product(b, repeat = max_fret)]
 
 class HeroChart(Chart):
     def __init__(self, song: 'Song', difficulty: str, instrument: str, lanes: int, hash: str) -> None:
@@ -773,6 +773,9 @@ class StrumEvent(Event):
     direction: str
     shape: list[bool]
 
+    def __str__(self) -> str:
+        return f"<StrumEvent {self.direction} @ {round(self.time, 5)}: {[n for n, v in enumerate(self.shape) if v is True]}>"
+
 class HeroEngine(Engine):
     def __init__(self, chart: Chart, offset: Seconds = 0):
         hero_keys = get_keymap().get_set("hero")
@@ -782,7 +785,7 @@ class HeroEngine(Engine):
 
         super().__init__(chart, mapping, hit_window, judgements, offset)
 
-        self.current_chords: list[HeroChord] = self.chart.notes.copy()
+        self.current_chords: list[HeroChord] = self.chart.chords.copy()
         self.current_events: list[DigitalKeyEvent] = []
 
         self.key_state = (False, False, False, False, False, False, False, False)
@@ -809,7 +812,9 @@ class HeroEngine(Engine):
                 if n < 5:  # fret button
                     self.current_holds[n] = True
                 elif n in [5, 6]:  # strum
-                    self.strum_events.append(StrumEvent(self.chart_time, "up" if n == 5 else "down", self.current_holds))
+                    strum_event = StrumEvent(self.chart_time, "up" if n == 5 else "down", self.current_holds)
+                    self.strum_events.append(strum_event)
+                    print(strum_event)
             elif key_states[n] is False and last_state[n] is True:
                 e = DigitalKeyEvent(self.chart_time, self.mapping[n], "up")
                 self.current_events.append(e)
@@ -826,6 +831,7 @@ class HeroEngine(Engine):
             # Process strums
             for event in [e for e in self.strum_events if self.chart_time - self.hit_window <= e.time <= self.chart_time + self.hit_window]:
                 if event.shape in chord.valid_shapes:
+                    chord.hit = True
                     chord.hit_time = event.time
                     self.score_chord(chord)
                     self.current_chords.remove(chord)
@@ -840,3 +846,6 @@ class HeroEngine(Engine):
     def score_chord(self, chord: HeroChord):
         if chord.hit:
             self.score += 50 * ((self.combo % 10) + 1)
+            self.combo += 1
+        elif chord.missed:
+            self.combo = 0
