@@ -213,6 +213,42 @@ class HeroChord:
         for n in self.notes:
             n.type = v
 
+    @property
+    def hit(self) -> bool:
+        return self.notes[0].hit
+
+    @hit.setter
+    def hit(self, v):
+        for n in self.notes:
+            n.hit = v
+
+    @property
+    def hit_time(self) -> Seconds:
+        return self.notes[0].hit_time
+
+    @hit_time.setter
+    def hit_time(self, v):
+        for n in self.notes:
+            n.hit_time = v
+
+    @property
+    def missed(self) -> bool:
+        return self.notes[0].missed
+
+    @missed.setter
+    def missed(self, v):
+        for n in self.notes:
+            n.missed = v
+
+    @property
+    def valid_shapes(self) -> list[list[bool]]:
+        if len(self.frets) > 1:
+            return [[n in self.frets for n in range(5)]]
+        else:
+            b = [False, True]
+            max_fret = max(self.frets) + 1
+            [list(i) + ([] * (5 - max_fret)) for i in itertools.product(b, repeat = max_fret)]
+
 class HeroChart(Chart):
     def __init__(self, song: 'Song', difficulty: str, instrument: str, lanes: int, hash: str) -> None:
         super().__init__(song, "hero", difficulty, instrument, lanes, hash)
@@ -733,6 +769,11 @@ class HeroHighway(Highway):
                 if sprite.note.lane in [5, 6]:
                     sprite.alpha = 0
 
+@dataclass
+class StrumEvent(Event):
+    direction: str
+    shape: list[bool]
+
 class HeroEngine(Engine):
     def __init__(self, chart: Chart, offset: Seconds = 0):
         hero_keys = get_keymap().get_set("hero")
@@ -740,15 +781,18 @@ class HeroEngine(Engine):
         hit_window = 0.050  # 50ms +/-
         judgements = [Judgement("pass", 50, 100, 1, 1), Judgement("miss", math.inf, 0, -1, -1)]
 
-        self.current_notes: list[HeroNote] = self.chart.notes.copy()
+        self.current_chords: list[HeroChord] = self.chart.notes.copy()
         self.current_events: list[DigitalKeyEvent] = []
 
         self.combo = 0
+        self.strum_events: list[StrumEvent] = []
 
         super().__init__(chart, mapping, hit_window, judgements, offset)
 
         # TODO: this is a stop-gap until I remove mapping entirely.
         self.mapping = [hero_keys.green, hero_keys.red, hero_keys.yellow, hero_keys.blue, hero_keys.orange, hero_keys.strum_up, hero_keys.strum_down, hero_keys.power]
+
+        self.current_holds = [False, False, False, False, False]
 
     def process_keystate(self, key_states: KeyStates):
         last_state = self.key_state
@@ -760,15 +804,37 @@ class HeroEngine(Engine):
             if key_states[n] is True and last_state[n] is False:
                 e = DigitalKeyEvent(self.chart_time, self.mapping[n], "down")
                 self.current_events.append(e)
+                if n < 5:  # fret button
+                    self.current_holds[n] = True
+                elif n in [5, 6]:  # strum
+                    self.strum_events.append(StrumEvent(self.chart_time, "up" if n == 5 else "down", self.current_holds))
             elif key_states[n] is False and last_state[n] is True:
                 e = DigitalKeyEvent(self.chart_time, self.mapping[n], "up")
                 self.current_events.append(e)
+                if n < 5:  # fret button
+                    self.current_holds[n] = False
         self.key_state = key_states.copy()
 
     def calculate_score(self):
         # Get all non-scored notes within the current window
 
-        buttons = get_keymap().get_set("hero")
+        buttons = get_keymap().get_set("hero")  # noqa: F841
 
-        for note in [n for n in self.current_notes if n.time <= self.chart_time + self.hit_window]:
-            pass
+        for chord in [c for c in self.current_chords if c.time <= self.chart_time + self.hit_window]:
+            # Process strums
+            for event in [e for e in self.strum_events if self.chart_time - self.hit_window <= e.time <= self.chart_time + self.hit_window]:
+                if event.shape in chord.valid_shapes:
+                    chord.hit_time = event.time
+                    self.score_chord(chord)
+                    self.current_chords.remove(chord)
+                    self.strum_events.remove(event)
+        # Missed chords
+        for chord in [c for c in self.current_chords if self.chart_time > c.time + self.hit_window]:
+            chord.missed = True
+            chord.hit_time = math.inf
+            self.score_chord(chord)
+            self.current_chords.remove(chord)
+
+    def score_chord(self, chord: HeroChord):
+        if chord.hit:
+            self.score += 50 * ((self.combo % 10) + 1)
