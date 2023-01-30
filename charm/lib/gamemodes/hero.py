@@ -827,9 +827,12 @@ class HeroEngine(Engine):
 
         buttons = get_keymap().get_set("hero")  # noqa: F841
 
-        for chord in [c for c in self.current_chords if c.time <= self.chart_time + self.hit_window]:
+        look_at_chords = [c for c in self.current_chords if c.time <= self.chart_time + self.hit_window]
+        look_at_strums = [e for e in self.strum_events if self.chart_time - self.hit_window <= e.time <= self.chart_time + self.hit_window]
+
+        for chord in look_at_chords:
             # Process strums
-            for event in [e for e in self.strum_events if self.chart_time - self.hit_window <= e.time <= self.chart_time + self.hit_window]:
+            for event in look_at_strums:
                 if event.shape in chord.valid_shapes:
                     chord.hit = True
                     chord.hit_time = event.time
@@ -837,7 +840,9 @@ class HeroEngine(Engine):
                     self.current_chords.remove(chord)
                     self.strum_events.remove(event)
         # Missed chords
-        for chord in [c for c in self.current_chords if self.chart_time > c.time + self.hit_window]:
+        missed_chords = [c for c in self.current_chords if self.chart_time > c.time + self.hit_window]
+
+        for chord in missed_chords:
             chord.missed = True
             chord.hit_time = math.inf
             self.score_chord(chord)

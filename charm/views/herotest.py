@@ -22,8 +22,8 @@ class HeroTestView(DigiView):
     def setup(self):
         super().setup()
 
-        self._song = OGGSound(songspath / "ch" / "soulless5" / "song.ogg")
-        self.hero_song = HeroSong.parse(songspath / "ch" / "soulless5")
+        self._song = OGGSound(songspath / "ch" / "flagpole" / "song.ogg")
+        self.hero_song = HeroSong.parse(songspath / "ch" / "flagpole")
         self.chart = self.hero_song.get_chart("Expert", "Single")
         self.engine = HeroEngine(self.chart)
         self.highway = HeroHighway(self.chart, (0, 0), auto = False)
