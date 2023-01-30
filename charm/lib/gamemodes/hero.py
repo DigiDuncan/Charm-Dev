@@ -811,7 +811,11 @@ class HeroEngine(Engine):
                 self.current_events.append(e)
                 if n < 5:  # fret button
                     self.current_holds[n] = True
-                elif n in [5, 6]:  # strum
+                elif n in [5, 6]:  # strum buttons
+                    # Create strum events tagged with the current held keystate
+                    # FIXME: It's likely this becomes a problem in the future!
+                    # Technically, I think strums should be processed indepenently from frets all together?
+                    # :OmegaAAA:
                     strum_event = StrumEvent(self.chart_time, "up" if n == 5 else "down", self.current_holds)
                     self.strum_events.append(strum_event)
                     print(strum_event)
@@ -823,10 +827,9 @@ class HeroEngine(Engine):
         self.key_state = key_states
 
     def calculate_score(self):
-        # Get all non-scored notes within the current window
-
         buttons = get_keymap().get_set("hero")  # noqa: F841
 
+        # Get all non-scored notes within the current window
         look_at_chords = [c for c in self.current_chords if c.time <= self.chart_time + self.hit_window]
         look_at_strums = [e for e in self.strum_events if self.chart_time - self.hit_window <= e.time <= self.chart_time + self.hit_window]
 
@@ -839,6 +842,7 @@ class HeroEngine(Engine):
                     self.score_chord(chord)
                     self.current_chords.remove(chord)
                     self.strum_events.remove(event)
+
         # Missed chords
         missed_chords = [c for c in self.current_chords if self.chart_time > c.time + self.hit_window]
 
