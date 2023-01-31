@@ -310,7 +310,7 @@ class HeroChart(Chart):
             ticks_per_quarternote = self.song.resolution
             ticks_per_wholenote = ticks_per_quarternote * 4
             # Why can the time signature be X/0? What? What is that supposed to parse as? :amtired:
-            beats_per_wholenote = timesig.denominator if timesig.denominator != 0 else 1
+            beats_per_wholenote = timesig.denominator if timesig.denominator != 0 else 0.5
             ticks_per_beat = ticks_per_wholenote / beats_per_wholenote
 
             chord_distance = current_chord.tick - last_chord.tick
