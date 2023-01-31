@@ -92,11 +92,11 @@ class HeroTestView(DigiView):
         if self.time_text.text != time_string:
             self.time_text.text = time_string
 
-        if self.score_text._label.text != str(self.engine.score):
-            self.score_text._label.text = str(self.engine.score)
+        if self.score_text._label.text != f"{self.engine.score}":
+            self.score_text._label.text = f"{self.engine.score}"
 
-        if self.multiplier_text._label.text != str(f"x{self.engine.multiplier}"):
-            self.multiplier_text._label.text = str(f"x{self.engine.multiplier}")
+        if self.multiplier_text._label.text != f"x{self.engine.multiplier} [{self.engine.combo}]":
+            self.multiplier_text._label.text = f"x{self.engine.multiplier} [{self.engine.combo}]"
 
         move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
 

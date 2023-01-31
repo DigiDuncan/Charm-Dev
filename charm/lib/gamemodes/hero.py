@@ -241,6 +241,8 @@ class HeroChord:
 
     @property
     def valid_shapes(self) -> list[list[bool]]:
+        if 7 in self.frets:
+            return [[False] * 5]
         if len(self.frets) > 1:
             return [[n in self.frets for n in range(5)]]
         else:
@@ -273,8 +275,7 @@ class HeroChart(Chart):
         A chord is defined as all notes occuring at the same tick."""
         c = defaultdict(list)
         for note in self.notes:
-            if note.lane < 5:
-                c[note.tick].append(note)
+            c[note.tick].append(note)
         chord_lists = list(c.values())
         chords = []
         for cl in chord_lists:
@@ -778,7 +779,7 @@ class StrumEvent(Event):
     shape: list[bool]
 
     def __str__(self) -> str:
-        return f"<StrumEvent {self.direction} @ {round(self.time, 5)}: {[n for n, v in enumerate(self.shape) if v is True]}>"
+        return f"<StrumEvent {self.direction} @ {round(self.time, 3)}: {[n for n, v in enumerate(self.shape) if v is True]}>"
 
 class HeroEngine(Engine):
     def __init__(self, chart: Chart, offset: Seconds = 0):
@@ -801,7 +802,8 @@ class HeroEngine(Engine):
         # TODO: this is a stop-gap until I remove mapping entirely.
         self.mapping = [hero_keys.green, hero_keys.red, hero_keys.yellow, hero_keys.blue, hero_keys.orange, hero_keys.strumup, hero_keys.strumdown, hero_keys.power]
 
-        self.current_holds = [False, False, False, False, False]
+        self.current_holds: list[bool] = [False, False, False, False, False]
+        self.tap_available = True
 
     @property
     def multiplier(self) -> int:
@@ -821,6 +823,7 @@ class HeroEngine(Engine):
                 self.current_events.append(e)
                 if n < 5:  # fret button
                     self.current_holds[n] = True
+                    self.tap_available = True
                 elif n in [5, 6]:  # strum buttons
                     # Create strum events tagged with the current held keystate
                     # FIXME: It's likely this becomes a problem in the future!
@@ -834,6 +837,7 @@ class HeroEngine(Engine):
                 self.current_events.append(e)
                 if n < 5:  # fret button
                     self.current_holds[n] = False
+                    self.tap_available = True
         self.key_state = key_states
 
     def calculate_score(self):
@@ -855,12 +859,19 @@ class HeroEngine(Engine):
             if chord.type == "normal" or (chord.type == "hopo" and self.combo == 0):
                 self.process_strum(chord, look_at_strums)
             elif chord.type == "hopo" or chord.type == "tap":
-                self.process_tap(chord)
+                self.process_tap(chord, look_at_strums)
 
         # Missed chords
         missed_chords = [c for c in self.current_chords if self.chart_time > c.time + self.hit_window]
         for chord in missed_chords:
             self.process_missed(chord)
+
+        overstrums = [e for e in self.strum_events if self.chart_time > e.time + self.hit_window]
+        if overstrums:
+            print(f"Overstrum! ({round(overstrums[0].time, 3)})")
+            self.combo = 0
+            for o in overstrums:
+                self.strum_events.remove(o)
 
     def process_strum(self, chord: HeroChord, strum_events: list[StrumEvent]):
         for event in strum_events:
@@ -871,12 +882,15 @@ class HeroEngine(Engine):
                 self.current_chords.remove(chord)
                 self.strum_events.remove(event)
 
-    def process_tap(self, chord: HeroChord):
-        # TODO: ⚠ LITERAL AUTOHIT, NEEDS TO BE REPLACED WITH STUPID LOGIC ⚠
-        chord.hit = True
-        chord.hit_time = chord.time
-        self.score_chord(chord)
-        self.current_chords.remove(chord)
+    def process_tap(self, chord: HeroChord, strum_events: list[StrumEvent]):
+        if self.current_holds in chord.valid_shapes and self.tap_available:
+            chord.hit = True
+            chord.hit_time = self.chart_time
+            self.score_chord(chord)
+            self.current_chords.remove(chord)
+            self.tap_available = False
+        else:
+            self.process_strum(chord, strum_events)
 
     def process_missed(self, chord: HeroChord):
         chord.missed = True
