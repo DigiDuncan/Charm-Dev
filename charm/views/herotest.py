@@ -34,6 +34,7 @@ class HeroTestView(DigiView):
         self.section_text = arcade.Text("", self.window.width - 5, 5, arcade.color.BLACK, 16, align = "right", anchor_x = "right", font_name = "bananaslip plus plus", width=self.window.width)
         self.time_text = arcade.Text("0:00", self.window.width - 5, 35, arcade.color.BLACK, 16, align = "right", anchor_x = "right", font_name = "bananaslip plus plus", width=self.window.width)
         self.score_text = arcade.Text("0", self.window.width - 5, 65, arcade.color.BLACK, font_size=24, anchor_x="right", font_name="bananaslip plus plus")
+        self.multiplier_text = arcade.Text("x1", self.window.width - 5, 95, arcade.color.BLACK, font_size=16, anchor_x="right", font_name="bananaslip plus plus")
 
         # Generate "gum wrapper" background
         self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
@@ -94,6 +95,9 @@ class HeroTestView(DigiView):
         if self.score_text._label.text != str(self.engine.score):
             self.score_text._label.text = str(self.engine.score)
 
+        if self.multiplier_text._label.text != str(f"x{self.engine.multiplier}"):
+            self.multiplier_text._label.text = str(f"x{self.engine.multiplier}")
+
         move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
 
     def on_draw(self):
@@ -109,5 +113,6 @@ class HeroTestView(DigiView):
         self.section_text.draw()
         self.time_text.draw()
         self.score_text.draw()
+        self.multiplier_text.draw()
 
         super().on_draw()

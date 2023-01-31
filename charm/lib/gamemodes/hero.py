@@ -245,8 +245,11 @@ class HeroChord:
             return [[n in self.frets for n in range(5)]]
         else:
             b = [False, True]
-            max_fret = max(self.frets) + 1
-            return [list(i) + ([] * (5 - max_fret)) for i in itertools.product(b, repeat = max_fret)]
+            max_fret = max(self.frets)
+            valid_shape_list = [list(v) for v in itertools.product(b, repeat = max_fret)]
+            append_part = [True] + ([False] * (4 - max_fret))
+            final_list = [v + append_part for v in valid_shape_list]
+            return final_list
 
 class HeroChart(Chart):
     def __init__(self, song: 'Song', difficulty: str, instrument: str, lanes: int, hash: str) -> None:
@@ -270,7 +273,8 @@ class HeroChart(Chart):
         A chord is defined as all notes occuring at the same tick."""
         c = defaultdict(list)
         for note in self.notes:
-            c[note.tick].append(note)
+            if note.lane < 5:
+                c[note.tick].append(note)
         chord_lists = list(c.values())
         chords = []
         for cl in chord_lists:
@@ -791,12 +795,18 @@ class HeroEngine(Engine):
         self.key_state = (False, False, False, False, False, False, False, False)
 
         self.combo = 0
+        self.star_power = False
         self.strum_events: list[StrumEvent] = []
 
         # TODO: this is a stop-gap until I remove mapping entirely.
         self.mapping = [hero_keys.green, hero_keys.red, hero_keys.yellow, hero_keys.blue, hero_keys.orange, hero_keys.strumup, hero_keys.strumdown, hero_keys.power]
 
         self.current_holds = [False, False, False, False, False]
+
+    @property
+    def multiplier(self) -> int:
+        base = min(((self.combo // 10) + 1), 4)
+        return base * 2 if self.star_power else base
 
     def process_keystate(self):
         last_state = self.key_state
@@ -854,7 +864,7 @@ class HeroEngine(Engine):
 
     def score_chord(self, chord: HeroChord):
         if chord.hit:
-            self.score += 50 * ((self.combo % 10) + 1)
+            self.score += 50 * self.multiplier
             self.combo += 1
         elif chord.missed:
             self.combo = 0
