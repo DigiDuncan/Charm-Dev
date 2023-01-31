@@ -839,28 +839,49 @@ class HeroEngine(Engine):
     def calculate_score(self):
         buttons = get_keymap().get_set("hero")  # noqa: F841
 
+        # CURRENTLY MISSING:
+        # Tap scoring
+        # Sutains
+        # Overstrums
+        # Strum leniency
+
         # Get all non-scored notes within the current window
         look_at_chords = [c for c in self.current_chords if c.time <= self.chart_time + self.hit_window]
         look_at_strums = [e for e in self.strum_events if self.chart_time - self.hit_window <= e.time <= self.chart_time + self.hit_window]
 
         for chord in look_at_chords:
-            # Process strums
-            for event in look_at_strums:
-                if event.shape in chord.valid_shapes:
-                    chord.hit = True
-                    chord.hit_time = event.time
-                    self.score_chord(chord)
-                    self.current_chords.remove(chord)
-                    self.strum_events.remove(event)
+            # Strums or HOPOs in strum mode
+            if chord.type == "normal" or (chord.type == "hopo" and self.combo == 0):
+                self.process_strum(chord, look_at_strums)
+            elif chord.type == "hopo" or chord.type == "tap":
+                self.process_tap(chord)
 
         # Missed chords
         missed_chords = [c for c in self.current_chords if self.chart_time > c.time + self.hit_window]
-
         for chord in missed_chords:
-            chord.missed = True
-            chord.hit_time = math.inf
-            self.score_chord(chord)
-            self.current_chords.remove(chord)
+            self.process_missed(chord)
+
+    def process_strum(self, chord: HeroChord, strum_events: list[StrumEvent]):
+        for event in strum_events:
+            if event.shape in chord.valid_shapes:
+                chord.hit = True
+                chord.hit_time = event.time
+                self.score_chord(chord)
+                self.current_chords.remove(chord)
+                self.strum_events.remove(event)
+
+    def process_tap(self, chord: HeroChord):
+        # TODO: ⚠ LITERAL AUTOHIT, NEEDS TO BE REPLACED WITH STUPID LOGIC ⚠
+        chord.hit = True
+        chord.hit_time = chord.time
+        self.score_chord(chord)
+        self.current_chords.remove(chord)
+
+    def process_missed(self, chord: HeroChord):
+        chord.missed = True
+        chord.hit_time = math.inf
+        self.score_chord(chord)
+        self.current_chords.remove(chord)
 
     def score_chord(self, chord: HeroChord):
         if chord.hit:
