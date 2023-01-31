@@ -612,7 +612,7 @@ class HeroLongNoteSprite(HeroNoteSprite):
         self.trail = NoteTrail(self.id, self.position, self.note.time, self.note.length, self.highway.px_per_s,
         color, width = width, upscroll = False, fill_color = color + (60,), curve = True, point_depth = self.highway.note_size)
         self.dead_trail = NoteTrail(self.id, self.position, self.note.time, self.note.length, self.highway.px_per_s,
-        arcade.color.GRAY, width = width, upscroll = False, fill_color = arcade.color.GRAY + (60,), curve = True, point_depth = self.highway.note_size)
+        arcade.color.DARK_SLATE_GRAY, width = width, upscroll = False, fill_color = arcade.color.DARK_GRAY + (60,), curve = True, point_depth = self.highway.note_size)
 
     def update_animation(self, delta_time: float):
         self.trail.set_position(*self.position)
@@ -786,7 +786,7 @@ class HeroEngine(Engine):
         hero_keys = get_keymap().get_set("hero")
         mapping = [hero_keys.green, hero_keys.red, hero_keys.yellow, hero_keys.blue, hero_keys.orange, hero_keys.strumup, hero_keys.strumdown]
         hit_window = 0.050  # 50ms +/-
-        judgements = [Judgement("pass", 50, 100, 1, 1), Judgement("miss", math.inf, 0, -1, -1)]
+        judgements = [Judgement("pass", 50, 100, 1, 1), Judgement("miss", math.inf, 0, 0, -1)]
 
         super().__init__(chart, mapping, hit_window, judgements, offset)
 
