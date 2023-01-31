@@ -346,7 +346,6 @@ class FourKeyEngine(Engine):
     def process_keystate(self):
         last_state = self.key_state
         key_states = get_keymap().get_set("fourkey").state
-        print(key_states)
         if self.last_p1_note in (0, 1, 2, 3) and key_states[self.last_p1_note] is False:
             self.last_p1_note = None
         # ignore spam during front/back porch

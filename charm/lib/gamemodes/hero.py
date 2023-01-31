@@ -842,6 +842,7 @@ class HeroEngine(Engine):
         # CURRENTLY MISSING:
         # Tap scoring
         # Sutains
+        # Sustain drops
         # Overstrums
         # Strum leniency
 
