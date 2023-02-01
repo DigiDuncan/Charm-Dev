@@ -16,7 +16,7 @@ class Highway:
         self.viewport: float = 1
         self.window = arcade.get_window()
 
-        self.camera = Camera(Settings.width, Settings.height)
+        self.camera = Camera(viewport = (0, 0, Settings.width, Settings.height))
         self.camera_viewport = None
         self.song_time: float = 0
 

@@ -24,7 +24,7 @@ class DigiWindow(arcade.Window):
 
         self.debug_log = DebugLog()
         self.log = self.debug_log.layout
-        self.log.position = (5, 5)
+        self.log.position = (5, 5, 0)
 
         self.delta_time = 0.0
         self.time = 0.0
@@ -55,31 +55,31 @@ class DigiWindow(arcade.Window):
 
         arcade.draw_text(" ", 0, 0)  # force font init (fixes lag on first text draw)
 
-        self.debug_camera = arcade.Camera(size[0], size[1])
+        self.debug_camera = arcade.Camera(viewport = (0, 0, size[0], size[1]))
         self.fps_label = pyglet.text.Label("???.? FPS",
-                          font_name='bananaslip plus plus',
+                          font_name='bananaslip plus',
                           font_size=12,
                           x=0, y=self.height,
                           anchor_x='left', anchor_y='top',
-                          color=(0, 0, 0) + (0xFF,))
+                          color=(0, 0, 0, 0xFF))
         self.fps_shadow_label = pyglet.text.Label("???.? FPS",
-                          font_name='bananaslip plus plus',
+                          font_name='bananaslip plus',
                           font_size=12,
                           x=1, y=self.height - 1,
                           anchor_x='left', anchor_y='top',
-                          color=(0xAA, 0xAA, 0xAA) + (0xFF,))
+                          color=(0xAA, 0xAA, 0xAA, 0xFF))
         self.more_info_label = pyglet.text.Label("DEBUG",
-                          font_name='bananaslip plus plus',
+                          font_name='bananaslip plus',
                           font_size=12,
                           x=0, y=self.height - self.fps_label.content_height - 5, multiline=True, width=self.width,
                           anchor_x='left', anchor_y='top',
-                          color=(0, 0, 0) + (0xFF,))
+                          color=(0, 0, 0, 0xFF))
         self.alpha_label = pyglet.text.Label("ALPHA",
-                          font_name='bananaslip plus plus',
+                          font_name='bananaslip plus',
                           font_size=16,
                           x=self.width - 5, y=5,
                           anchor_x='right', anchor_y='bottom',
-                          color=(0, 0, 0) + (32,))
+                          color=(0, 0, 0, 32))
 
         cheats = []
         self.cheats = {c: False for c in cheats}
@@ -89,7 +89,7 @@ class DigiWindow(arcade.Window):
         self.show_view(self.initial_view)
         self.update_rp()
 
-    def update(self, delta_time: float):
+    def on_update(self, delta_time: float):
         self.delta_time = delta_time
         self.time += delta_time
         self.update_rp()
@@ -112,7 +112,7 @@ class DigiWindow(arcade.Window):
         self.debug_camera.use()
         if self.fps_checks % (self.fps_cap / 8) == 0:
             average = statistics.mean(self.fps_averages)
-            self.fps_label.color = arcade.color.BLACK + (0xFF,) if average >= 120 else arcade.color.RED + (0xFF,)
+            self.fps_label.color = arcade.color.BLACK if average >= 120 else arcade.color.RED
             self.fps_label.text = self.fps_shadow_label.text = f"{average:.1f} FPS"
             self.fps_averages.clear()
         else:

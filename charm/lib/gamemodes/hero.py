@@ -610,9 +610,9 @@ class HeroLongNoteSprite(HeroNoteSprite):
         color = NoteColor.from_note(self.note)
         width = self.highway.note_size * 3 if note.lane == 7 else self.highway.note_size  # open notes LARG
         self.trail = NoteTrail(self.id, self.position, self.note.time, self.note.length, self.highway.px_per_s,
-        color, width = width, upscroll = False, fill_color = color + (60,), curve = True, point_depth = self.highway.note_size)
+        color, width = width, upscroll = False, fill_color = color[:3] + (60,), curve = True, point_depth = self.highway.note_size)
         self.dead_trail = NoteTrail(self.id, self.position, self.note.time, self.note.length, self.highway.px_per_s,
-        arcade.color.DARK_SLATE_GRAY, width = width, upscroll = False, fill_color = arcade.color.DARK_GRAY + (60,), curve = True, point_depth = self.highway.note_size)
+        arcade.color.DARK_SLATE_GRAY, width = width, upscroll = False, fill_color = arcade.color.DARK_GRAY[:3] + (60,), curve = True, point_depth = self.highway.note_size)
 
     def update_animation(self, delta_time: float):
         self.trail.set_position(*self.position)

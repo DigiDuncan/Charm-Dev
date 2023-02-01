@@ -17,17 +17,17 @@ class DebugMessage:
     def color(self):
         match self.level:
             case logging.DEBUG:
-                return arcade.color.BABY_BLUE + (0xFF,)
+                return arcade.color.BABY_BLUE
             case logging.INFO:
-                return arcade.color.WHITE + (0xFF,)
+                return arcade.color.WHITE
             case logging.WARN:
-                return arcade.color.YELLOW + (0xFF,)
+                return arcade.color.YELLOW
             case logging.ERROR:
-                return arcade.color.RED + (0xFF,)
+                return arcade.color.RED
             case logging.FATAL:
-                return arcade.color.MAGENTA + (0xFF,)
+                return arcade.color.MAGENTA
             case _:
-                return arcade.color.GREEN + (0xFF,)
+                return arcade.color.GREEN
 
     @property
     def prefix(self):
@@ -46,7 +46,7 @@ class DebugMessage:
                 return "???"
 
     def render(self) -> str:
-        return (f"{{background_color (0, 0, 0, 255)}}{{color {arcade.color.PURPLE + (0xFF,)}}}"
+        return (f"{{background_color (0, 0, 0, 255)}}{{color {arcade.color.PURPLE}}}"
                 f"{self.time} | "
                 f"{{background_color {self.color}}}{{color (0, 0, 0, 255)}}"
                 f"{self.prefix} "

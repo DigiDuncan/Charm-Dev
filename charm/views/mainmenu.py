@@ -13,7 +13,6 @@ from charm.views.parallaxtest import ParallaxView
 from charm.views.fourkeysong import FourKeySongView
 from charm.views.spritetest import SpriteTestView
 from charm.views.subtitletest import SubtitleView
-from charm.views.visualizer import VisualizerView
 
 
 class MainMenuView(DigiView):
@@ -34,7 +33,6 @@ class MainMenuView(DigiView):
                 MainMenuItem("Sprite Test", "test", SpriteTestView(back=self)),
                 MainMenuItem("Lyric Test", "test", SubtitleView(back=self)),
                 MainMenuItem("Parallax Test", "test", ParallaxView(back=self)),
-                MainMenuItem("Visualizer Test", "test", VisualizerView(back=self)),
                 MainMenuItem("Hero Test", "test", HeroTestView(back=self)),
                 MainMenuItem("4K Test", "test", FourKeySongView(songspath / "sm" / "discord", back=self))
             ]
@@ -112,7 +110,7 @@ class MainMenuView(DigiView):
         self.small_logos_backward.draw()
 
         left = ease_quartout(self.size[0], 0, 0.5, 1.5, self.local_time)
-        arcade.draw_lrtb_rectangle_filled(left, self.size[0], (self.size[1] // 4) * 3, self.size[1] // 4, arcade.color.WHITE + (127,))
+        arcade.draw_lrtb_rectangle_filled(left, self.size[0], (self.size[1] // 4) * 3, self.size[1] // 4, arcade.color.WHITE[:3] + (127,))
 
         self.menu.draw()
 

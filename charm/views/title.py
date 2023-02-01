@@ -58,29 +58,29 @@ class TitleView(DigiView):
         # Song details
         self.song_label = arcade.pyglet.text.Label("Run Around The Character Code!\nCamellia feat. nanahira\n3LEEP!",
                           width=540,
-                          font_name='bananaslip plus plus',
+                          font_name='bananaslip plus',
                           font_size=16,
                           x=5, y=5,
                           anchor_x='left', anchor_y='bottom',
                           multiline=True,
-                          color=CharmColors.PURPLE + (0xFF,))
+                          color=CharmColors.PURPLE)
         self.song_label.original_x = self.song_label.x
         self.song_label.x = -self.song_label.width
 
         # Press start prompt
         self.press_label = arcade.pyglet.text.Label("<press start>",
-                          font_name='bananaslip plus plus',
+                          font_name='bananaslip plus',
                           font_size=32,
                           x=self.window.width // 2, y=self.window.height // 4,
                           anchor_x='center', anchor_y='center',
-                          color=CharmColors.PURPLE + (0xFF,))
+                          color=CharmColors.PURPLE)
 
         self.welcome_label = arcade.Text(f"welcome, {getpass.getuser()}!",
-                          font_name='bananaslip plus plus',
+                          font_name='bananaslip plus',
                           font_size=14,
                           start_x=self.window.width // 2, start_y=6,
                           anchor_x='center', anchor_y='bottom',
-                          color=(0, 0, 0) + (0xFF,))
+                          color=(0, 0, 0, 0xFF))
 
     def generate_splash(self):
         if self.egg_roll == 666:
@@ -91,15 +91,15 @@ class TitleView(DigiView):
                           font_size=48,
                           start_x=self.window.width // 2 + 100, start_y=self.window.height // 2,
                           anchor_x='center', anchor_y='top',
-                          color=arcade.color.RED + (0xFF,))
+                          color=arcade.color.RED)
         else:
             self.splash_text = random.choice(self.splashes)
             self.splash_label = arcade.pyglet.text.Label("",
-                            font_name='bananaslip plus plus',
+                            font_name='bananaslip plus',
                             font_size=24,
                             x=self.window.width // 2, y=self.window.height // 2,
                             anchor_x='left', anchor_y='top',
-                            color=CharmColors.PURPLE + (0xFF,))
+                            color=CharmColors.PURPLE)
 
     def on_key_press(self, symbol: int, modifiers: int):
         keymap = get_keymap()

@@ -27,7 +27,7 @@ class MainMenuItem(Sprite):
         self.goto = goto
 
         self.label = arcade.Text(label, 0, 0, CharmColors.PURPLE, anchor_x='center', anchor_y="top",
-                                 font_name="bananaslip plus plus", font_size=24)
+                                 font_name="bananaslip plus", font_size=24)
         self.center_y = Settings.height // 2
         self.jiggle_start = 0
 
@@ -42,7 +42,7 @@ class MainMenu:
 
         self.loading = False
         self.loading_label = arcade.Text("LOADING...", 0, 0, arcade.color.BLACK, anchor_x='center', anchor_y="bottom",
-                                 font_name="bananaslip plus plus", font_size=24)
+                                 font_name="bananaslip plus", font_size=24)
 
         self._selected_id = 0
 

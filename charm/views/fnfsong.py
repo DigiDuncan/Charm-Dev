@@ -82,27 +82,27 @@ class FNFSongView(DigiView):
         with LogSection(logger, "loading text"):
             self.song_time_text = arcade.Text("??:??", (self.size[0] // 2), 10, font_size=24,
                                             anchor_x="center", color=arcade.color.BLACK,
-                                            font_name="bananaslip plus plus")
+                                            font_name="bananaslip plus")
 
             self.score_text = arcade.Text("0", (self.size[0] // 2), self.size[1] - 10, font_size=24,
                                         anchor_x="center", anchor_y="top", color=arcade.color.BLACK,
-                                        font_name="bananaslip plus plus")
+                                        font_name="bananaslip plus")
 
             self.judge_text = arcade.Text("", (self.size[0] // 2), self.size[1] // 2, font_size=48,
                                         anchor_x="center", anchor_y="center", color=arcade.color.BLACK,
-                                        font_name="bananaslip plus plus")
+                                        font_name="bananaslip plus")
 
             self.grade_text = arcade.Text("Clear", (self.size[0] // 2), self.size[1] - 135, font_size=16,
                                         anchor_x="center", anchor_y="center", color=arcade.color.BLACK,
-                                        font_name="bananaslip plus plus")
+                                        font_name="bananaslip plus")
 
             self.pause_text = arcade.Text("PAUSED", (self.size[0] // 2), (self.size[1] // 2), font_size=92,
                                         anchor_x="center", anchor_y="center", color=arcade.color.BLACK,
-                                        font_name="bananaslip plus plus")
+                                        font_name="bananaslip plus")
 
             self.dead_text = arcade.Text("DEAD.", (self.size[0] // 2), (self.size[1] // 3) * 2, font_size=64,
                                         anchor_x="center", anchor_y="center", color=arcade.color.BLACK,
-                                        font_name="bananaslip plus plus")
+                                        font_name="bananaslip plus")
 
         with LogSection(logger, "loading gum wrapper"):
             # Generate "gum wrapper" background
@@ -260,11 +260,11 @@ class FNFSongView(DigiView):
     def spotlight_draw(self):
         arcade.draw_lrtb_rectangle_filled(
             self.spotlight_position - Settings.width / 2, self.spotlight_position, Settings.height, 0,
-            arcade.color.BLACK + (127,)
+            arcade.color.BLACK[:3] + (127,)
         )
         arcade.draw_lrtb_rectangle_filled(
             self.spotlight_position + Settings.width / 2, self.spotlight_position + Settings.width, Settings.height, 0,
-            arcade.color.BLACK + (127,)
+            arcade.color.BLACK[:3] + (127,)
         )
 
     @shows_errors

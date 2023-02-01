@@ -25,7 +25,7 @@ pyglet.options["advanced_font_features"] = True
 arcade.pyglet.options["advanced_font_features"] = True
 
 with pkg_resources.path(charm.data.fonts, "bananaslipplus.otf") as p:
-    arcade.text_pyglet.load_font(str(p))
+    arcade.text.load_font(str(p))
 
 # Set up logging
 logger: logging.Logger = None

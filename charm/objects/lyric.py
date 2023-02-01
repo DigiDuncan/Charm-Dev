@@ -33,9 +33,9 @@ class Subtitle(SSAEvent):
         self.length: Seconds = self.end_time - self.start_time
         self.label = arcade.Text(
             self.plaintext, self.x + self.marginx, self.y + self.marginy,
-            color = (self.ssa_style.primarycolor.r, self.ssa_style.primarycolor.g, self.ssa_style.primarycolor.b),
+            color = (self.ssa_style.primarycolor.r, self.ssa_style.primarycolor.g, self.ssa_style.primarycolor.b, 0xFF),
             font_size = self.ssa_style.fontsize // 3,
-            font_name = "bananaslip plus plus",
+            font_name = "bananaslip plus",
             bold = self.ssa_style.bold,
             italic = self.ssa_style.italic,
             anchor_x = self.anchor_x,

@@ -74,16 +74,16 @@ class SongMenuItem(Sprite):
                     artistalbum = self.album
                 arcade.draw_text(
                     self.title, self.width - self.height / 2 - 5, self.height / 2, arcade.color.BLACK,
-                    font_size=self.height / 3 * (3 / 4), font_name="bananaslip plus plus", anchor_x="right"
+                    font_size=self.height / 3 * (3 / 4), font_name="bananaslip plus", anchor_x="right"
                 )
                 arcade.draw_text(
                     artistalbum, self.width - self.height / 2 - 5, self.height / 2, arcade.color.BLACK,
-                    font_size=self.height / 4 * (3 / 4), font_name="bananaslip plus plus", anchor_x="right", anchor_y="top"
+                    font_size=self.height / 4 * (3 / 4), font_name="bananaslip plus", anchor_x="right", anchor_y="top"
                 )
             else:
                 arcade.draw_text(
                     self.title, self.width - self.height / 2 - 5, self.height / 2, arcade.color.BLACK,
-                    font_size=self.height / 3, font_name="bananaslip plus plus", anchor_x="right", anchor_y="center"
+                    font_size=self.height / 3, font_name="bananaslip plus", anchor_x="right", anchor_y="center"
                 )
 
         logger.info(f"Loaded MenuItem {self.title}")

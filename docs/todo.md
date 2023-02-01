@@ -11,3 +11,5 @@
 [ ] Score saving v0
 [/] Optimize audio loading
 [ ] Optimize NoteTrail
+
+[ ] Make "get_arcade_color_with_alpha"

@@ -48,7 +48,7 @@ class DigiView(View):
         self.local_time = 0.0
         self.fade_in = fade_in
         self.bg_color = bg_color
-        self.camera = arcade.Camera(Settings.width, Settings.height, self.window)
+        self.camera = arcade.Camera(viewport = (0, 0, Settings.width, Settings.height), window = self.window)
         self.debug_options = {
             "camera_scale": 1,
             "box": False}

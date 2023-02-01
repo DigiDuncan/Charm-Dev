@@ -1,7 +1,9 @@
-import arcade
-from charm.lib.keymap import get_keymap
 from pyglet.math import Vec2
+import arcade
 
+from arcade import Camera
+
+from charm.lib.keymap import get_keymap
 from charm.lib.digiview import DigiView
 
 
@@ -9,8 +11,8 @@ class SpriteLayer:
     def __init__(self, sprite_list: arcade.SpriteList, z: float) -> None:
         self.sprite_list = sprite_list
         self._z = z
-        self._camera = arcade.Camera()
-        self._camera.scale = self._z ** 2
+        self._camera = Camera()
+        self._camera.scale = (self._z ** 2, self._z ** 2)
 
     @property
     def z(self) -> float:
@@ -19,7 +21,7 @@ class SpriteLayer:
     @z.setter
     def z(self, value: float):
         self._z = value
-        self._camera.scale = self._z ** 2
+        self._camera.scale = (self._z ** 2, self._z ** 2)
 
 
 class SpriteLayerList:

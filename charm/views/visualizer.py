@@ -101,7 +101,7 @@ class VisualizerView(DigiView):
             star_amount = int(stars_per_screen * (star_height / Settings.height))
             logger.info(f"Generating {star_amount} stars...")
             for i in range(star_amount):
-                sprite = arcade.SpriteCircle(5, arcade.color.WHITE + (255,), True)
+                sprite = arcade.SpriteCircle(5, arcade.color.WHITE, True)
                 sprite.center_x = randint(0, Settings.width)
                 sprite.center_y = randint(-(star_height - Settings.height), Settings.height)
                 self.stars.append(sprite)
@@ -235,14 +235,14 @@ class VisualizerView(DigiView):
                 player_color = colormap[player_note.lane]
                 player_time = player_note.time
                 player_opacity = ease_linear(32, 0, player_time, player_time + self.beat_time, self.song.time)
-                player_color = player_color + (int(player_opacity),)
+                player_color = player_color[:3] + (int(player_opacity),)
                 arcade.draw_xywh_rectangle_filled(Settings.width / 2, 0, Settings.width / 2, Settings.height, player_color)
             enemy_note = self.enemy_chart.lt(self.song.time)
             if enemy_note:
                 enemy_color = colormap[enemy_note.lane]
                 enemy_time = enemy_note.time
                 enemy_opacity = ease_linear(32, 0, enemy_time, enemy_time + self.beat_time, self.song.time)
-                enemy_color = enemy_color + (int(enemy_opacity),)
+                enemy_color = enemy_color[:3] + (int(enemy_opacity),)
                 arcade.draw_xywh_rectangle_filled(0, 0, Settings.width / 2, Settings.height, enemy_color)
 
         # Text
