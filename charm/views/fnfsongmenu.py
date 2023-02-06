@@ -56,7 +56,8 @@ class FNFSongMenuView(DigiView):
         self.album_art.right = self.size[0] - self.album_art_buffer
         self.album_art.original_bottom = self.album_art.bottom = self.size[1] // 2
 
-        self.static = arcade.load_animated_gif(pkg_resources.path(charm.data.images, "static.gif"))
+        with pkg_resources.path(charm.data.images, "static.gif") as p:
+            self.static = arcade.load_animated_gif(p)
         self.static.right = self.size[0] - self.album_art_buffer
         self.static.original_bottom = self.album_art.bottom = self.size[1] // 2
 
