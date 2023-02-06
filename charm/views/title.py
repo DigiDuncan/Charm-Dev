@@ -49,6 +49,8 @@ class TitleView(DigiView):
         self.main_sprites.append(self.logo)
 
         self.splashes = pkg_resources.read_text(charm.data, "splashes.txt").splitlines()
+        self.splash_text = ""
+        self.splash_index = 0
         self.egg_roll = random.randint(1, 1000)
         self.generate_splash()
 
@@ -94,6 +96,7 @@ class TitleView(DigiView):
                           color=arcade.color.RED)
         else:
             self.splash_text = random.choice(self.splashes)
+            self.splash_index = self.splashes.index(self.splash_text)
             self.splash_label = arcade.pyglet.text.Label("",
                             font_name='bananaslip plus',
                             font_size=24,
@@ -110,7 +113,9 @@ class TitleView(DigiView):
         if self.window.debug:
             match symbol:
                 case arcade.key.S:
-                    self.splash_text = random.choice(self.splashes)
+                    self.splash_index += 1
+                    self.splash_index %= len(self.splashes)
+                    self.splash_text = self.splashes[self.splash_index]
                 case arcade.key.T:
                     self.egg_roll = 666 if self.egg_roll != 666 else 0
                     self.generate_splash()
