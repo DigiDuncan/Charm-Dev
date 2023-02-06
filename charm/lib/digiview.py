@@ -78,9 +78,9 @@ class DigiView(View):
         if symbol == keymap.debug:
             self.window.debug = not self.window.debug
             if self.window.debug:
-                self.camera.scale = self.debug_options["camera_scale"]
+                self.camera.scale = (self.debug_options["camera_scale"], self.debug_options["camera_scale"])
             else:
-                self.camera.scale = 1
+                self.camera.scale = (1, 1)
         if self.window.debug and modifiers & arcade.key.MOD_SHIFT:
             match symbol:
                 case arcade.key.Z:  # camera zoom

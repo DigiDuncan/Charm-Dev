@@ -300,8 +300,8 @@ class FourKeyHighway(Highway):
 
 class FourKeyJudgement(Judgement):
     def get_texture(self) -> arcade.Texture:
-        image_path = pkg_resources.path(baseskin, f"judgement-{self.key}.png")
-        tex = arcade.load_texture(image_path, hit_box_algorithm = "None")
+        with pkg_resources.path(baseskin, f"judgement-{self.key}.png") as image_path:
+            tex = arcade.load_texture(image_path, hit_box_algorithm = "None")
         return tex
 
 class FourKeyEngine(Engine):
