@@ -230,6 +230,12 @@ class FNFSongView(DigiView):
 
         self.scene.update(self.tracks.time, delta_time)
 
+        if self.engine.has_died and not self.window.debug:
+            self.back.setup()
+            self.tracks.close()
+            self.window.show_view(self.back)
+            arcade.play_sound(self.window.sounds["back"])
+
     def get_spotlight_position(self, song_time: float):
         focus_pos = {
             1: 0,
