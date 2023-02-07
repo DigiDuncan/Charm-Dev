@@ -30,7 +30,7 @@ class DigiWindow(arcade.Window):
         self.time = 0.0
         self.fps_checks = 0
         self.debug = False
-        self.show_fps = True
+        self.show_fps = False
         self.show_log = False
         self.sounds: dict[str, arcade.Sound] = {}
         self.theme_song: pyglet.media.Player = None

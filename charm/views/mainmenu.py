@@ -7,6 +7,7 @@ from charm.lib.errors import TestError
 from charm.lib.keymap import get_keymap
 from charm.lib.paths import songspath
 from charm.objects.menu import MainMenu, MainMenuItem
+from charm.views.banner import BannerView
 from charm.views.fnfsongmenu import FNFSongMenuView
 from charm.views.herotest import HeroTestView
 from charm.views.parallaxtest import ParallaxView
@@ -30,6 +31,7 @@ class MainMenuView(DigiView):
                 MainMenuItem("Playlists", "playlists", None),
                 MainMenuItem("Songs", "songs", FNFSongMenuView(back=self)),
                 MainMenuItem("Options", "options", None),
+                MainMenuItem("Banner", "test", BannerView(back=self)),
                 MainMenuItem("Sprite Test", "test", SpriteTestView(back=self)),
                 MainMenuItem("Lyric Test", "test", SubtitleView(back=self)),
                 MainMenuItem("Parallax Test", "test", ParallaxView(back=self)),
