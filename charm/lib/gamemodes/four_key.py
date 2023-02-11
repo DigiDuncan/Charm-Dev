@@ -204,11 +204,12 @@ class FourKeyLongNoteSprite(FourKeyNoteSprite):
         self.dead_trail.draw() if self.dead else self.trail.draw()
 
 class FourKeyHighway(Highway):
-    def __init__(self, chart: FourKeyChart, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5, auto=False):
+    def __init__(self, chart: FourKeyChart, engine: FourKeyEngine, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5, auto=False):
         if size is None:
             size = int(Settings.width / (1280 / 400)), Settings.height
 
         super().__init__(chart, pos, size, gap)
+        self.engine = engine
 
         self.viewport = 0.5  # TODO: BPM scaling?
 
@@ -233,6 +234,7 @@ class FourKeyHighway(Highway):
             sprite.alpha = 64
             self.strikeline.append(sprite)
 
+        self.hit_window_mid = self.note_y(0)
         self.hit_window_top = self.note_y(-0.075)
         self.hit_window_bottom = self.note_y(0.075)
 
@@ -291,10 +293,16 @@ class FourKeyHighway(Highway):
         )
         # This is slow, don't loop over things.
         b = self.sprite_buckets.calc_bucket(self.song_time)
+        window = arcade.get_window()
         for bucket in self.sprite_buckets.buckets[b:b+2] + [self.sprite_buckets.overbucket]:
             for note in bucket.sprite_list:
                 if isinstance(note, FourKeyLongNoteSprite) and note.note.time < self.song_time + self.viewport:
+                    if self.engine.key_state[note.note.lane]:
+                        window.ctx.scissor = (0, 0, window.width, self.hit_window_mid)
+                    else:
+                        window.ctx.scissor = None
                     note.draw_trail()
+        window.ctx.scissor = None
         self.sprite_buckets.draw(self.song_time)
         _cam.use()
 

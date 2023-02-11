@@ -46,7 +46,7 @@ class FourKeySongView(DigiView):
             self.engine = FourKeyEngine(self.chart)
 
         with LogSection(logger, "loading highway"):
-            self.highway = FourKeyHighway(self.chart, (0, 0))
+            self.highway = FourKeyHighway(self.chart, self.engine, (0, 0))
             self.highway.x += self.window.width // 2 - self.highway.w // 2  # center the highway
             self.highway.hit_window_top = self.highway.note_y(-self.engine.judgements[-2].seconds)
             self.highway.hit_window_bottom = self.highway.note_y(self.engine.judgements[-2].seconds)
