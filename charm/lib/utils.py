@@ -3,25 +3,20 @@ from typing import Any
 import collections
 import importlib.resources as pkg_resources
 
-import arcade
+import pyglet
 import PIL.Image
 
 
-def int_or_str(i: Any) -> int | str | None:
+def int_or_str(i: Any) -> int | str:
     try:
         o = int(i)
     except ValueError:
-        try:
-            o = str(i)  # Does this ever actually raise ValueError?
-        except ValueError:
-            o = None
+        o = str(i)
     return o
-
 
 def clamp(minVal, val, maxVal):
     """Clamp a `val` to be no lower than `minVal`, and no higher than `maxVal`."""
     return max(minVal, min(maxVal, val))
-
 
 @cache
 def img_from_resource(package: pkg_resources.Package, resource: pkg_resources.Resource) -> PIL.Image.Image:
@@ -30,11 +25,10 @@ def img_from_resource(package: pkg_resources.Package, resource: pkg_resources.Re
         image.load()
     return image
 
-
 @cache
-def pyglet_img_from_resource(package: pkg_resources.Package, resource: pkg_resources.Resource):
+def pyglet_img_from_resource(package: pkg_resources.Package, resource: pkg_resources.Resource) -> pyglet.image.AbstractImage:
     with pkg_resources.open_binary(package, resource) as f:
-        image = arcade.pyglet.image.load("icon.png", file=f)
+        image = pyglet.image.load("icon.png", file=f)
     return image
 
 def map_range(x: float, n1: float, m1: float, n2: float = -1, m2: float = 1) -> float:
@@ -62,3 +56,12 @@ def findone(iterator):
     except StopIteration:
         val = None
     return val
+
+
+RGB = tuple[int, int, int]
+RGBA = tuple[int, int, int, int]
+def color_with_alpha(color: RGB | RGBA, alpha: int):
+    if len(color) == 3:
+        return color + (alpha,)
+    else:
+        return color[:3] + (alpha,)
