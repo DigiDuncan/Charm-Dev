@@ -215,7 +215,7 @@ class FourKeyHighway(Highway):
 
         self.auto = auto
 
-        self.show_hit_window = False
+        self.show_hit_window = True
 
         self.sprite_buckets = SpriteBucketCollection()
         for note in self.notes:
@@ -234,9 +234,9 @@ class FourKeyHighway(Highway):
             sprite.alpha = 64
             self.strikeline.append(sprite)
 
-        self.hit_window_mid = self.note_y(0)
-        self.hit_window_top = self.note_y(-0.075)
-        self.hit_window_bottom = self.note_y(0.075)
+        self.hit_window_mid = self.note_y(0) - (self.note_size / 2)
+        self.hit_window_top = self.note_y(-0.075) - (self.note_size / 2)
+        self.hit_window_bottom = self.note_y(0.075) - (self.note_size / 2)
 
         logger.debug(f"Generated highway for chart {chart.instrument}/{chart.difficulty}.")
 
@@ -291,12 +291,14 @@ class FourKeyHighway(Highway):
             -self.pixel_offset,
             -self.pixel_offset + height
         )
-        # This is slow, don't loop over things.
+        # Draw sustains.
+        # TODO: This might be slow, don't loop over things.
         b = self.sprite_buckets.calc_bucket(self.song_time)
         window = arcade.get_window()
         for bucket in self.sprite_buckets.buckets[b:b+2] + [self.sprite_buckets.overbucket]:
             for note in bucket.sprite_list:
                 if isinstance(note, FourKeyLongNoteSprite) and note.note.time < self.song_time + self.viewport:
+                    # Clip the rendering to the strikeline if the key is being held.
                     if self.engine.key_state[note.note.lane]:
                         window.ctx.scissor = (0, 0, window.width, self.hit_window_mid)
                     else:

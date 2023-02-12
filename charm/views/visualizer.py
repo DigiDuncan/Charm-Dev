@@ -2,12 +2,12 @@ from dataclasses import dataclass
 import importlib.resources as pkg_resources
 import logging
 from random import randint
+import wave
 
 import arcade
 from charm.lib.keymap import get_keymap
-import librosa
 import nindex
-from numpy import ndarray
+import numpy as np
 
 import charm.data.audio
 from charm.lib.adobexml import sprite_from_adobe
@@ -60,22 +60,11 @@ class VisualizerView(DigiView):
         with LogSection(logger, "loading song and waveform"):
             with pkg_resources.path(charm.data.audio, "fourth_wall.wav") as p:
                 self._song = arcade.Sound(p)
-                load = librosa.load(p, mono=True)
-            self.waveform: ndarray[float] = load[0]
-            logger.info(f"Samples loaded: {len(self.waveform)} ({(self.waveform.size * self.waveform.itemsize) / 1000000:.2f}MB)")
-            self.sample_rate: int = load[1]
-
-        # Create an index of samples
-        with LogSection(logger, "indexing samples"):
-            samples: list[SoundPoint] = []
-            for n, s in enumerate(self.waveform):
-                samples.append(SoundPoint((1 / self.sample_rate) * n, s))
-            self.samples = nindex.Index(samples, "time")
-
-        # Create an index of beats
-        with LogSection(logger, "indexing beats"):
-            self.bpm, beats = librosa.beat.beat_track(y = self.waveform, sr = self.sample_rate, units = "time")
-            self.beats = nindex.Index([Beat(t) for t in beats[::2]], "time")
+                f = open(p, "rb")
+                self.wave = wave.open(f, "rb")
+                self.sample_count = self.wave.getnframes()
+                self.sample_rate = self.wave.getframerate()
+            logger.info(f"Samples loaded: {self.sample_count}")
 
         self.chart_available = False
         # Create an index of chart notes
@@ -135,7 +124,7 @@ class VisualizerView(DigiView):
 
         # Settings
         with LogSection(logger, "finalizing setup"):
-            self.multiplier = 250
+            self.multiplier = 1 / 250
             self.y = Settings.height // 2
             self.line_width = 1
             self.x_scale = 2
@@ -161,16 +150,13 @@ class VisualizerView(DigiView):
         super().on_update(delta_time)
         if not self.shown:
             return
-        time = self.song.time
-        sample_index: SoundPoint = self.samples.lt_index(time)
-        if sample_index:
-            all_samples = self.samples.items[sample_index-(Settings.width*self.x_scale-1):sample_index+1:self.x_scale]
-            if all_samples:
-                samples = all_samples[::self.resolution] + [all_samples[-1]]
-                self.pixels = [(n * self.resolution, (s.amplitude * self.multiplier + self.y)) for n, s in enumerate(samples)]
-        last_beat: Beat = self.beats.lt(self.song.time)
-        if last_beat:
-            self.last_beat = last_beat.time
+        self.wave.rewind()
+        self.wave.setpos(int(self.song.time * self.sample_rate))
+        signal_wave = self.wave.readframes(int(Settings.width))
+        samples = np.frombuffer(signal_wave, dtype=np.int16)[::self.resolution * 2]
+        self.pixels = [(n * self.resolution, float(s) * self.multiplier + self.y) for n, s in enumerate(samples)]
+        self.last_beat = self.song.time - (self.song.time % (70 / 60))  # ALSO BAD HARDCODE RN
+        print(self.last_beat, self.song.time)
         enemy_note = self.enemy_chart.lt(self.song.time)
         player_note = self.player_chart.lt(self.song.time)
 
@@ -214,9 +200,9 @@ class VisualizerView(DigiView):
         # Camera zoom
         star_zoom = ease_quartout(1, 0.9, self.last_beat, self.last_beat + self.beat_time, self.song.time)
         cam_zoom = ease_quartout(1.05, 1, self.last_beat, self.last_beat + self.beat_time, self.song.time)
-        self.star_camera.scale = star_zoom
-        self.camera.scale = 1 / cam_zoom
-        self.highway.camera.scale = 1 / cam_zoom
+        self.star_camera.scale = star_zoom, star_zoom
+        self.camera.scale = 1 / cam_zoom, 1 / cam_zoom
+        self.highway.camera.scale = 1 / cam_zoom, 1 / cam_zoom
 
         # Gradient
         self.gradient.draw()

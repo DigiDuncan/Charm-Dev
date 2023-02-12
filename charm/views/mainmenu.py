@@ -14,6 +14,7 @@ from charm.views.parallaxtest import ParallaxView
 from charm.views.fourkeysong import FourKeySongView
 from charm.views.spritetest import SpriteTestView
 from charm.views.subtitletest import SubtitleView
+from charm.views.visualizer import VisualizerView
 
 
 class MainMenuView(DigiView):
@@ -36,7 +37,8 @@ class MainMenuView(DigiView):
                 MainMenuItem("Lyric Test", "test", SubtitleView(back=self)),
                 MainMenuItem("Parallax Test", "test", ParallaxView(back=self)),
                 MainMenuItem("Hero Test", "test", HeroTestView(back=self)),
-                MainMenuItem("4K Test", "test", FourKeySongView(songspath / "sm" / "discord", back=self))
+                MainMenuItem("4K Test", "test", FourKeySongView(songspath / "sm" / "discord", back=self)),
+                MainMenuItem("Scott Test", "test", VisualizerView())
             ]
         )
 
