@@ -523,11 +523,13 @@ class FNFLongNoteSprite(FNFNoteSprite):
 
 
 class FNFHighway(Highway):
-    def __init__(self, chart: FNFChart, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5, auto = False):
+    def __init__(self, chart: FNFChart, engine: FNFEngine, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5, auto = False):
         if size is None:
             size = int(Settings.width / (1280 / 400)), Settings.height
 
         super().__init__(chart, pos, size, gap)
+
+        self.engine = engine
 
         self.viewport = 1 / (chart.notespeed * 0.75)
 
@@ -549,6 +551,8 @@ class FNFHighway(Highway):
             sprite.left = self.lane_x(sprite.note.lane)
             sprite.alpha = 64
             self.strikeline.append(sprite)
+
+        self.hit_window_mid = self.note_y(0) - (self.note_size / 2)
 
         logger.debug(f"Generated highway for chart {chart.instrument}.")
 
@@ -583,10 +587,17 @@ class FNFHighway(Highway):
         )
         # This is slow, don't loop over things.
         b = self.sprite_buckets.calc_bucket(self.song_time)
+        window = arcade.get_window()
         for bucket in self.sprite_buckets.buckets[b:b+2] + [self.sprite_buckets.overbucket]:
             for note in bucket.sprite_list:
                 if isinstance(note, FNFLongNoteSprite) and note.note.time < self.song_time + self.viewport:
+                    # Clip the rendering to the strikeline if the key is being held.
+                    if self.engine.key_state[note.note.lane] or self.auto:
+                        window.ctx.scissor = (0, 0, window.width, self.hit_window_mid)
+                    else:
+                        window.ctx.scissor = None
                     note.draw_trail()
+                window.ctx.scissor = None
         self.sprite_buckets.draw(self.song_time)
         _cam.use()
 
@@ -643,8 +654,8 @@ class FNFSceneManager:
             self.engine = FNFEngine(self.chart)
 
         with LogSection(logger, "creating highways"):
-            self.highway_1 = FNFHighway(self.chart, (((Settings.width // 3) * 2), 0))
-            self.highway_2 = FNFHighway(self.enemy_chart, (10, 0), auto=True)
+            self.highway_1 = FNFHighway(self.chart, self.engine, (((Settings.width // 3) * 2), 0))
+            self.highway_2 = FNFHighway(self.enemy_chart, self.engine, (10, 0), auto=True)
 
         with LogSection(logger, "loading assets"):
             # Characters
