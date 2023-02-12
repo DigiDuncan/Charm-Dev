@@ -215,7 +215,7 @@ class FourKeyHighway(Highway):
 
         self.auto = auto
 
-        self.show_hit_window = True
+        self.show_hit_window = False
 
         self.sprite_buckets = SpriteBucketCollection()
         for note in self.notes:

@@ -97,7 +97,8 @@ class VisualizerView(DigiView):
 
         with LogSection(logger, "creating text"):
             self.text = arcade.Text("Fourth Wall by Jacaris", Settings.width / 4, Settings.height * (0.9),
-            font_name = "Determination Sans", font_size = 32, align="center", anchor_x="center", anchor_y="center", width = Settings.width)
+            font_name = "Determination Sans", font_size = 32, align="center", anchor_x="center", anchor_y="center",
+            width = Settings.width, color = (255, 255, 255, 128))
 
         with LogSection(logger, "making gradient"):
             # Gradient
@@ -130,7 +131,7 @@ class VisualizerView(DigiView):
             self.x_scale = 2
             self.resolution = 4
             self.beat_time = 0.5
-            self.show_text = False
+            self.show_text = True
 
             # RAM
             self.pixels: list[tuple[int, int]] = [(0, 0) * Settings.width]
@@ -151,11 +152,11 @@ class VisualizerView(DigiView):
         if not self.shown:
             return
         self.wave.rewind()
-        self.wave.setpos(int(self.song.time * self.sample_rate))
+        self.wave.setpos(min(int(self.song.time * self.sample_rate), self.sample_count - Settings.width))
         signal_wave = self.wave.readframes(int(Settings.width))
         samples = np.frombuffer(signal_wave, dtype=np.int16)[::self.resolution * 2]
         self.pixels = [(n * self.resolution, float(s) * self.multiplier + self.y) for n, s in enumerate(samples)]
-        self.last_beat = self.song.time - (self.song.time % (70 / 60))  # ALSO BAD HARDCODE RN
+        self.last_beat = self.song.time - (self.song.time % (60 / 72))  # ALSO BAD HARDCODE RN
         enemy_note = self.enemy_chart.lt(self.song.time)
         player_note = self.player_chart.lt(self.song.time)
 
@@ -197,7 +198,7 @@ class VisualizerView(DigiView):
             return
 
         # Camera zoom
-        star_zoom = ease_quartout(1, 0.9, self.last_beat, self.last_beat + self.beat_time, self.song.time)
+        star_zoom = ease_quartout(1, 0.95, self.last_beat, self.last_beat + self.beat_time, self.song.time)
         cam_zoom = ease_quartout(1.05, 1, self.last_beat, self.last_beat + self.beat_time, self.song.time)
         self.star_camera.scale = star_zoom, star_zoom
         self.camera.scale = 1 / cam_zoom, 1 / cam_zoom
