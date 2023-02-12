@@ -56,12 +56,11 @@ class SongMenuItem(Sprite):
 
         self._tex = arcade.Texture.create_empty(f"{self.key}-menuitem", (self._w, self._h))
         super().__init__(texture=self._tex, *args, **kwargs)
-        self._sprite_list = arcade.SpriteList()
-        self._sprite_list.append(self)
+        arcade.get_window().ctx.default_atlas.add(self._tex)
 
         self.position = (0, -Settings.height)
 
-        with self._sprite_list.atlas.render_into(self._tex) as fbo:
+        with arcade.get_window().ctx.default_atlas.render_into(self._tex) as fbo:
             fbo.clear()
             arcade.draw_circle_filled(self.width - self.height / 2, self.height / 2, self.height / 2, CharmColors.FADED_PURPLE)
             arcade.draw_lrtb_rectangle_filled(0, self.width - self.height / 2, self.height, 0, CharmColors.FADED_PURPLE)
