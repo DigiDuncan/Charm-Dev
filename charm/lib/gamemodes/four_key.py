@@ -299,7 +299,7 @@ class FourKeyHighway(Highway):
             for note in bucket.sprite_list:
                 if isinstance(note, FourKeyLongNoteSprite) and note.note.time < self.song_time + self.viewport:
                     # Clip the rendering to the strikeline if the key is being held.
-                    if self.engine.key_state[note.note.lane]:
+                    if self.engine.key_state[note.note.lane] or self.auto:
                         window.ctx.scissor = (0, 0, window.width, self.hit_window_mid)
                     else:
                         window.ctx.scissor = None
