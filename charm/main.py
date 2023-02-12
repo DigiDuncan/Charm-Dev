@@ -2,6 +2,7 @@ import importlib.resources as pkg_resources
 import logging
 
 import arcade
+import arcade.hitbox
 import pyglet
 from digiformatter import logger as digilogger
 
@@ -71,6 +72,8 @@ class CharmGame(DigiWindow):
         for soundname in err:
             with pkg_resources.path(charm.data.audio, f"error-{soundname}.wav") as p:
                 self.sounds["error-" + soundname] = arcade.Sound(p)
+
+        arcade.hitbox.default_algorithm = arcade.hitbox.bounding.BoundingHitBoxAlgorithm()
 
         self.initial_view = TitleView()
 
