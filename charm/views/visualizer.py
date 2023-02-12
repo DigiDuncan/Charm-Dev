@@ -156,7 +156,6 @@ class VisualizerView(DigiView):
         samples = np.frombuffer(signal_wave, dtype=np.int16)[::self.resolution * 2]
         self.pixels = [(n * self.resolution, float(s) * self.multiplier + self.y) for n, s in enumerate(samples)]
         self.last_beat = self.song.time - (self.song.time % (70 / 60))  # ALSO BAD HARDCODE RN
-        print(self.last_beat, self.song.time)
         enemy_note = self.enemy_chart.lt(self.song.time)
         player_note = self.player_chart.lt(self.song.time)
 

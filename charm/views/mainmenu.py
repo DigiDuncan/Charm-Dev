@@ -38,7 +38,7 @@ class MainMenuView(DigiView):
                 MainMenuItem("Parallax Test", "test", ParallaxView(back=self)),
                 MainMenuItem("Hero Test", "test", HeroTestView(back=self)),
                 MainMenuItem("4K Test", "test", FourKeySongView(songspath / "sm" / "discord", back=self)),
-                MainMenuItem("Scott Test", "test", VisualizerView())
+                MainMenuItem("Scott Test", "test", VisualizerView(back=self))
             ]
         )
 
