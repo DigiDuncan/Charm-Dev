@@ -82,7 +82,7 @@ class TitleView(DigiView):
                           font_size=14,
                           start_x=self.window.width // 2, start_y=6,
                           anchor_x='center', anchor_y='bottom',
-                          color=(0, 0, 0, 0xFF))
+                          color=arcade.color.BLACK)
 
     def generate_splash(self):
         if self.egg_roll == 666:
