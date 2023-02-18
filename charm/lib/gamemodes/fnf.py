@@ -21,7 +21,7 @@ from charm.lib.generic.highway import Highway
 from charm.lib.generic.song import BPMChangeEvent, Chart, Event, Metadata, Milliseconds, Note, Seconds, Song
 from charm.lib.keymap import get_keymap
 from charm.lib.logsection import LogSection
-from charm.lib.paths import modsfolder, songspath
+from charm.lib.paths import modsfolder
 from charm.lib.settings import Settings
 from charm.lib.spritebucket import SpriteBucketCollection
 from charm.lib.utils import clamp, img_from_resource
@@ -143,17 +143,12 @@ class FNFSong(Song):
         self.charts: list[FNFChart] = []
 
     @classmethod
-    def get_metadata(cls, k: str, s: str) -> Metadata:
-        """Legacy. Gets metadata from a chart file."""
-        j: SongFileJson = json.loads(s)
-        hash = sha1(bytes(json.dumps(j), encoding='utf-8')).hexdigest()
-        song = j["song"]
-        title = song["song"].replace("-", " ").title()
+    def get_metadata(cls, folder: Path) -> Metadata:
+        """Gets metadata from a chart file."""
+        title = folder.stem.replace("-", " ").title()
         artist = ""
         album = ""
-        path = songspath / "fnf" / k
-
-        return Metadata(title, artist, album, hash = hash, path = path)
+        return Metadata(title, artist, album, hash = f"fnf-{title}", path = folder, gamemode = "fnf")
 
     @classmethod
     def parse(cls, path: Path, mod: FNFMod = None) -> FNFSong:

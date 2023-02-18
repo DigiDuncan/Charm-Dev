@@ -5,13 +5,12 @@ from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView, shows_errors
 from charm.lib.errors import TestError
 from charm.lib.keymap import get_keymap
-from charm.lib.paths import songspath
 from charm.objects.menu import MainMenu, MainMenuItem
 from charm.views.banner import BannerView
 from charm.views.fnfsongmenu import FNFSongMenuView
+from charm.views.fourkeysongmenu import FourKeySongMenuView
 from charm.views.herotest import HeroTestView
 from charm.views.parallaxtest import ParallaxView
-from charm.views.fourkeysong import FourKeySongView
 from charm.views.spritetest import SpriteTestView
 from charm.views.subtitletest import SubtitleView
 from charm.views.visualizer import VisualizerView
@@ -30,14 +29,14 @@ class MainMenuView(DigiView):
         self.menu = MainMenu(
             [
                 MainMenuItem("Playlists", "playlists", None),
-                MainMenuItem("Songs", "songs", FNFSongMenuView(back=self)),
+                MainMenuItem("FNF Songs", "songs", FNFSongMenuView(back=self)),
+                MainMenuItem("4K Songs", "songs", FourKeySongMenuView(back=self)),
                 MainMenuItem("Options", "options", None),
                 MainMenuItem("Banner", "test", BannerView(back=self)),
                 MainMenuItem("Sprite Test", "test", SpriteTestView(back=self)),
                 MainMenuItem("Lyric Test", "test", SubtitleView(back=self)),
                 MainMenuItem("Parallax Test", "test", ParallaxView(back=self)),
                 MainMenuItem("Hero Test", "test", HeroTestView(back=self)),
-                MainMenuItem("4K Test", "test", FourKeySongView(songspath / "sm" / "discord", back=self)),
                 MainMenuItem("Scott Test", "test", VisualizerView(back=self))
             ]
         )
@@ -72,6 +71,8 @@ class MainMenuView(DigiView):
                     self.menu.selected.jiggle_start = self.local_time
             case arcade.key.E:
                 raise TestError("You hit the E button! Don't do that.")
+            case arcade.key.F24:
+                raise TestError("F24, let's go!")
 
         return super().on_key_press(symbol, modifiers)
 

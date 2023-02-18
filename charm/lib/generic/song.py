@@ -26,6 +26,7 @@ class Metadata:
     mod: str = None
     hash: str = None
     path: Path = None
+    gamemode: str = None
 
     def get(self, key, default = None):
         """Basically a duplicate of dict.get()"""
@@ -142,11 +143,11 @@ class Song:
         if difficulty is None and instrument is None:
             raise ValueError(".get_chart() called with no arguments!")
         elif difficulty is not None and instrument is not None:
-            return next(c for c in self.charts if c.difficulty == difficulty and c.instrument == instrument)
+            return next((c for c in self.charts if c.difficulty == difficulty and c.instrument == instrument), None)
         elif difficulty is not None:
-            return next(c for c in self.charts if c.difficulty == difficulty)
+            return next((c for c in self.charts if c.difficulty == difficulty), None)
         elif instrument is not None:
-            return next(c for c in self.charts if c.instrument == instrument)
+            return next((c for c in self.charts if c.instrument == instrument), None)
 
     def events_by_type(self, t: type):
         return [e for e in self.events if isinstance(e, t)]

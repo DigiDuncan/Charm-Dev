@@ -57,9 +57,19 @@ class NoChartsError(CharmException):
         super().__init__("No charts found!", f"No charts found for song '{song_name}'", "error", *args)
 
 
+class NoMetadataError(CharmException):
+    def __init__(self, song_name: str, *args: object):
+        super().__init__("No metadata found!", f"No metadata found for song '{song_name}'", "error", *args)
+
+
 class ChartParseError(CharmException):
     def __init__(self, line_num: int, show_message: str, *args: object):
         super().__init__("Chart parsing error!", f"[Line {line_num}] " + show_message, "error", *args)
+
+
+class MetadataParseError(CharmException):
+    def __init__(self, show_message: str, *args: object):
+        super().__init__("Metadata parsing error!", show_message, "error", *args)
 
 
 class ChartPostReadParseError(CharmException):

@@ -18,7 +18,7 @@ from charm.objects.songmenu import SongMenu
 from charm.views.fourkeysong import FourKeySongView
 
 
-class FNFSongMenuView(DigiView):
+class FourKeySongMenuView(DigiView):
     def __init__(self, *args, **kwargs):
         super().__init__(fade_in=0.5, bg_color=CharmColors.FADED_GREEN, *args, **kwargs)
 
@@ -35,16 +35,21 @@ class FNFSongMenuView(DigiView):
         self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
 
         self.songs: list[Song] = []
-        rootdir = Path(songspath / "fnf")
+        rootdir = Path(songspath / "4k")
         dir_list = [d for d in rootdir.glob('**/*') if d.is_dir()]
         for d in dir_list:
-            k = d.name
-            if (d / f"{k}.ssc").exists():
-                with open(d / f"{k}.ssc", encoding="utf-8") as chart:
-                    c = chart.read()
-                    songdata = FourKeySong.get_metadata(k, c)
+            k = d.stem
+            try:
+                if (d / f"{k}.ssc").exists():
+                    songdata = FourKeySong.get_metadata(d)
                     self.songs.append(songdata)
-                    break
+                    continue
+                if (d / f"{k}.sm").exists():
+                    songdata = FourKeySong.get_metadata(d)
+                    self.songs.append(songdata)
+                    continue
+            except Exception:
+                continue
 
         self.menu = SongMenu(self.songs)
         self.menu.sort("title")
@@ -55,7 +60,8 @@ class FNFSongMenuView(DigiView):
         self.album_art.right = self.size[0] - self.album_art_buffer
         self.album_art.original_bottom = self.album_art.bottom = self.size[1] // 2
 
-        self.static = arcade.load_animated_gif(pkg_resources.path(charm.data.images, "static.gif"))
+        with pkg_resources.path(charm.data.images, "static.gif") as p:
+            self.static = arcade.load_animated_gif(p)
         self.static.right = self.size[0] - self.album_art_buffer
         self.static.original_bottom = self.album_art.bottom = self.size[1] // 2
 

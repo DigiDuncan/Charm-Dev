@@ -7,6 +7,7 @@ import arcade
 from charm.lib.anim import ease_circout
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView, shows_errors
+from charm.lib.errors import NoChartsError
 from charm.lib.gamemodes.four_key import FourKeySong, FourKeyHighway, FourKeyEngine
 from charm.lib.keymap import get_keymap
 from charm.lib.logsection import LogSection
@@ -40,7 +41,13 @@ class FourKeySongView(DigiView):
 
         with LogSection(logger, "loading song data"):
             self.sm_song = FourKeySong.parse(self.song_path)
-            self.chart = self.sm_song.get_chart("Challenge")
+            for diff in ["Edit", "Challenge", "Expert", "Difficult", "Hard", "Basic", "Medium", "Beginner", "Easy"]:
+                self.chart = self.sm_song.get_chart(diff)
+                if self.chart is not None:
+                    break
+            if self.chart is None:
+                logger.warn(str([c.difficulty for c in self.sm_song.charts]))
+                raise NoChartsError(self.sm_song.metadata.title)
 
         with LogSection(logger, "loading engine"):
             self.engine = FourKeyEngine(self.chart)

@@ -41,11 +41,9 @@ class FNFSongMenuView(DigiView):
             k = d.name
             for diff, suffix in [("expert", "-ex"), ("hard", "-hard"), ("normal", ""), ("easy", "-easy")]:
                 if (d / f"{k}{suffix}.json").exists():
-                    with open(d / f"{k}{suffix}.json", encoding="utf-8") as chart:
-                        c = chart.read()
-                        songdata = FNFSong.get_metadata(k, c)
-                        self.songs.append(songdata)
-                        break
+                    songdata = FNFSong.get_metadata(d)
+                    self.songs.append(songdata)
+                    break
 
         self.menu = SongMenu(self.songs)
         self.menu.sort("title")

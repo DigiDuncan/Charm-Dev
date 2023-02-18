@@ -152,11 +152,14 @@ class VisualizerView(DigiView):
         super().on_update(delta_time)
         if not self.shown:
             return
+
+        # Waveform
         self.wave.rewind()
         self.wave.setpos(min(int(self.song.time * self.sample_rate), self.sample_count - Settings.width))
         signal_wave = self.wave.readframes(int(Settings.width))
         samples = np.frombuffer(signal_wave, dtype=np.int16)[::self.resolution * 2]
         self.pixels = [(n * self.resolution, float(s) * self.multiplier + self.y) for n, s in enumerate(samples)]
+
         self.last_beat = self.song.time - (self.song.time % (60 / 72))  # ALSO BAD HARDCODE RN
         enemy_note = self.enemy_chart.lt(self.song.time)
         player_note = self.player_chart.lt(self.song.time)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.resources as pkg_resources
+import itertools
 import logging
 import math
 from dataclasses import dataclass
@@ -116,7 +117,7 @@ class FourKeySong(Song):
     @classmethod
     def parse(cls, folder: Path) -> "FourKeySong":
         # OK, figure out what chart file to use.
-        files = folder.glob("*.ssc") or folder.glob("*.sm")
+        files = itertools.chain(folder.glob("*.ssc"), folder.glob("*.sm"))
         sm_file = next(files)
         with open(sm_file, "r") as f:
             sm = simfile.load(f)
@@ -156,8 +157,22 @@ class FourKeySong(Song):
 
         return song
 
-    def get_metadata(self) -> Metadata:
-        pass
+    @classmethod
+    def get_metadata(self, folder: Path) -> Metadata:
+        # OK, figure out what chart file to use.
+        files = itertools.chain(folder.glob("*.ssc"), folder.glob("*.sm"))
+        sm_file = next(files)
+        with open(sm_file, "r") as f:
+            sm = simfile.load(f)
+        title = sm.title
+        artist = sm.artist
+        album = sm.cdtitle
+        length = sm.get("musiclength", 0)
+        genre = sm.genre
+        charter = sm.credit
+        return Metadata(title, artist, album,
+            length = length, genre = genre, charter = charter, path = folder,
+            gamemode = "4k")
 
 class FourKeyNoteSprite(arcade.Sprite):
     def __init__(self, note: FourKeyNote, highway: FourKeyHighway, height=128, *args, **kwargs):

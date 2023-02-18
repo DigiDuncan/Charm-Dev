@@ -1,3 +1,4 @@
+from hashlib import sha1
 import io
 import logging
 import requests
@@ -26,12 +27,14 @@ class SongMenuItem(Sprite):
         self.album = song.album
 
         # Make a real hash, probably on Song.
-        self.key = song.hash
+        self.key = sha1((str(self.title) + str(self.artist) + str(self.album)).encode()).hexdigest()
 
         art_path = None
         art_paths = [Path(song.path / "album.jpg"),
                      Path(song.path / "album.png"),
-                     Path(song.path / "album.gif")]
+                     Path(song.path / "album.gif"),
+                     Path(song.path / f"{song.title}-jacket.jpg"),
+                     Path(song.path / f"{song.title}-jacket.png"),]
         for p in art_paths:
             if p.is_file():
                 art_path = p
@@ -64,10 +67,10 @@ class SongMenuItem(Sprite):
             fbo.clear()
             arcade.draw_circle_filled(self.width - self.height / 2, self.height / 2, self.height / 2, CharmColors.FADED_PURPLE)
             arcade.draw_lrtb_rectangle_filled(0, self.width - self.height / 2, self.height, 0, CharmColors.FADED_PURPLE)
-            if (self.artist != "" or self.album != ""):
-                if self.artist != "":
+            if (self.artist or self.album):
+                if self.artist:
                     # add the comma
-                    artistalbum = self.artist + ", " + self.album
+                    artistalbum = self.artist + ", " + str(self.album)
                 else:
                     # only album name
                     artistalbum = self.album

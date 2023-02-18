@@ -3,6 +3,7 @@ from functools import cache
 from typing import cast, TypedDict
 from dataclasses import dataclass
 from pathlib import Path
+import configparser
 import itertools
 import logging
 import math
@@ -14,7 +15,7 @@ import arcade
 
 from charm.lib.anim import ease_linear
 from charm.lib.charm import load_missing_texture
-from charm.lib.errors import ChartParseError, ChartPostReadParseError, NoChartsError
+from charm.lib.errors import ChartParseError, ChartPostReadParseError, NoChartsError, NoMetadataError, MetadataParseError
 from charm.lib.generic.engine import DigitalKeyEvent, Engine, Judgement
 from charm.lib.generic.highway import Highway
 from charm.lib.generic.song import Chart, Event, Metadata, Note, Seconds, Song
@@ -370,6 +371,24 @@ class HeroSong(Song):
         self.indexes_by_time: IndexDict = {}
         self.resolution: int = 192
         self.metadata = Metadata("Unknown Title")
+
+    def get_metadata(self, folder: Path):
+        if not (folder / "song.ini").exists():
+            raise NoMetadataError(folder.stem)
+        parser = configparser.ConfigParser(str((folder / "song.ini").absolute()))
+        if "song" not in parser:
+            raise MetadataParseError("Song header not found in metadata!")
+        song = parser["song"]
+        title = song["name"]
+        artist = song["artist"]
+        album = song["album"]
+        length = song.getfloat("song_length") / 1000
+        genre = song["genre"]
+        year = song.getint("year")
+        charter = song["charter"]
+        return Metadata(title, artist, album,
+            length = length, genre = genre, year = year, charter = charter, path = folder,
+            gamemode = "hero")
 
     @classmethod
     def parse(cls, path: Path) -> "HeroSong":
