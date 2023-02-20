@@ -403,9 +403,8 @@ class HeroSong(Song):
         charts: dict[str, HeroChart] = {}
         events: list[Event] = []
 
+        current_header = None
         line_num = 0
-        last_line_type = None  # noqa: F841 (unused)
-        last_header = None
         sync_track: list[BPMChangeTickEvent] = []
 
         for line in chartfile:
@@ -420,11 +419,11 @@ class HeroSong(Song):
                 header = m.group(1)
                 if header not in VALID_HEADERS:
                     raise ChartParseError(line_num, f"{header} is not a valid header.")
-                if last_header is None and header != "Song":
+                if current_header is None and header != "Song":
                     raise ChartParseError(line_num, "First header must be Song.")
-                last_header = header
+                current_header = header
             # Parse metadata
-            elif last_header == "Song":
+            elif current_header == "Song":
                 if m := re.match(RE_DATA, line):
                     match m.group(1):
                         case "Resolution":
@@ -456,7 +455,7 @@ class HeroSong(Song):
                             logger.debug(f"Unrecognized .chart metadata {line!r}")
                 else:
                     raise ChartParseError(line_num, f"Non-metadata found in metadata section: {line!r}")
-            elif last_header == "SyncTrack":
+            elif current_header == "SyncTrack":
                 if m := re.match(RE_A, line):
                     # ignore anchor events [only used for charting]
                     continue
@@ -483,7 +482,7 @@ class HeroSong(Song):
                 else:
                     raise ChartParseError(line_num, f"Non-sync event in SyncTrack: {line!r}")
             # Events sections
-            elif last_header == "Events":
+            elif current_header == "Events":
                 # Section events
                 if m := re.match(RE_SECTION, line):
                     tick, name = m.groups()
@@ -506,10 +505,10 @@ class HeroSong(Song):
                     raise ChartParseError(line_num, f"Non-event in Events: {line!r}")
             else:
                 # We are in a chart section
-                diff, inst = DIFF_INST_MAP[last_header]
-                if last_header not in charts:
-                    charts[last_header] = HeroChart(None, diff, inst, 5, None)
-                chart = charts[last_header]
+                diff, inst = DIFF_INST_MAP[current_header]
+                if current_header not in charts:
+                    charts[current_header] = HeroChart(None, diff, inst, 5, None)
+                chart = charts[current_header]
                 # Track events
                 if m := re.match(RE_TRACK_E, line):
                     tick, text = m.groups()
@@ -537,7 +536,7 @@ class HeroSong(Song):
                         chart.events.append(StarpowerEvent(seconds, tick, length, sec_length))
                     # Ignoring non-SP events for now...
                 else:
-                    raise ChartParseError(line_num, f"Non-chart event in {last_header}: {line!r}")
+                    raise ChartParseError(line_num, f"Non-chart event in {current_header}: {line!r}")
 
         # Finalize
         song = HeroSong(metadata.path)
