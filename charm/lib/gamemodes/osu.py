@@ -21,9 +21,9 @@ RE_HIT_SAMPLE = f"({INT}):({INT}):({INT}):({INT}):(.+)?"
 RE_HIT_CIRCLE = f"({INT}),({INT}),({INT}),({INT}),({INT})(,{RE_HIT_SAMPLE})?"
 RE_PIPE_SEP_INT = r"\d+(\|\d+)*"
 RE_PIPE_SEP_COLON_SEP_INT = r"(\d+:\d+)(\|\d+:\d+)*"
-RE_SLIDER = f"({INT}),({INT}),({INT}),({INT}),({INT}),(([BCLP])(\\|\\d+:\\d+)+),({INT}),({NUM}),({RE_PIPE_SEP_INT}),({RE_PIPE_SEP_COLON_SEP_INT}),(,{RE_HIT_SAMPLE})?"
-RE_SPINNER = f"({INT}),({INT}),({INT}),({INT}),({INT}),({INT})(,{RE_HIT_SAMPLE})?"
-RE_HOLD = f"({INT}),({INT}),({INT}),({INT}),({INT}),({INT}):({RE_HIT_SAMPLE})?"
+RE_SLIDER = f"({INT}),({INT}),({INT}),({INT}),({INT}),(([BCLP])(\\|\\d+:\\d+)+),({INT}),({NUM}),({RE_PIPE_SEP_INT}),({RE_PIPE_SEP_COLON_SEP_INT})(,{RE_HIT_SAMPLE})?"
+RE_SPINNER = f"({INT}),({INT}),({INT}),({INT}),({INT}),({INT}),({RE_HIT_SAMPLE})"
+RE_HOLD = f"({INT}),({INT}),({INT}),({INT}),({INT}),({INT}):({RE_HIT_SAMPLE})"
 
 logger = logging.getLogger("charm")
 
@@ -120,6 +120,7 @@ class OsuSlider(OsuHitObject):
     slides: int
     length: float
     edge_sounds: list[int]
+    edge_sets: list[str]
     hit_sample: OsuHitSample
 
 @dataclass
@@ -369,23 +370,31 @@ class RawOsuChart:
                 # Ignoring colors for now.
                 pass
             elif current_header == "HitObjects":
+                # x,y,time,type,hitSound
+                # x,y,time,type,hitSound,hitSample
                 if m := re.match(RE_HIT_CIRCLE, line):
                     x = int(m.group(1))
                     y = int(m.group(2))
                     time = int(m.group(3)) / 1000
                     object_type = int(m.group(4))
                     hit_sound = int(m.group(5))
-                    hit_sample_data = int(m.group(6))
-                    m2 = re.match(RE_HIT_SAMPLE, hit_sample_data)
-                    normal_set = m2.group(1)
-                    addition_set = m2.group(2)
-                    index = m2.group(3)
-                    volume = m2.group(4)
-                    filename = m2.group(5) or None
+                    hit_sample_data = m.group(6)
+                    if hit_sample_data:
+                        m2 = re.match(RE_HIT_SAMPLE, hit_sample_data)
+                        normal_set = m2.group(1)
+                        addition_set = m2.group(2)
+                        index = m2.group(3)
+                        volume = m2.group(4)
+                        filename = m2.group(5) or None
+                        hit_sample = OsuHitSample(normal_set, addition_set, index, volume, filename)
+                    else:
+                        hit_sample = OsuHitSample()
                     chart.hit_objects.append(
-                        OsuHitCircle(x, y, time, object_type, hit_sound,
-                            OsuHitSample(normal_set, addition_set, index, volume, filename))
+                        OsuHitCircle(x, y, time, object_type, hit_sound, hit_sample)
                     )
+                # MAKING THE ASSUMPTION THESE REQUIRE HITSAMPLE
+                # OTHERWISE IT WOULD BE INDESCERABLE FROM A SPINNER
+                # x,y,time,type,hitSound,endTime:hitSample
                 elif m := re.match(RE_HOLD, line):
                     x = int(m.group(1))
                     y = int(m.group(2))
@@ -393,6 +402,7 @@ class RawOsuChart:
                     object_type = int(m.group(4))
                     hit_sound = int(m.group(5))
                     end_time = int(m.group(6)) / 1000
+                    hit_sample_data = m.group(7)
                     m2 = re.match(RE_HIT_SAMPLE, hit_sample_data)
                     normal_set = m2.group(1)
                     addition_set = m2.group(2)
@@ -403,12 +413,61 @@ class RawOsuChart:
                         OsuHold(x, y, time, object_type, hit_sound, end_time,
                             OsuHitSample(normal_set, addition_set, index, volume, filename))
                     )
+                # x,y,time,type,hitSound,curveType|curvePoints,slides,length,edgeSounds,edgeSets
+                # x,y,time,type,hitSound,curveType|curvePoints,slides,length,edgeSounds,edgeSets,hitSample
                 elif m := re.match(RE_SLIDER, line):
                     # ignore for now
-                    pass
+                    splits = line.split(",")
+                    x = int(splits[0])
+                    y = int(splits[1])
+                    time = int(splits[2]) / 1000
+                    object_type = int(splits[3])
+                    hit_sound = int(splits[4])
+                    curve_part = splits[5]
+                    curve_splits = curve_part.split("|")
+                    curve_type = curve_splits[0]
+                    curve_points = [OsuPoint(float(p.split(":")[0]), float(p.split(":")[1])) for p in curve_splits[1:]]
+                    slides = splits[6]
+                    length = splits[7]
+                    edge_sounds = [int(e) for e in splits[8].split("|")]
+                    edge_sets = splits[9].split("|")
+                    hit_sample_data = splits[10] if len(splits) == 9 else None
+                    if hit_sample_data:
+                        m2 = re.match(RE_HIT_SAMPLE, hit_sample_data)
+                        normal_set = m2.group(1)
+                        addition_set = m2.group(2)
+                        index = m2.group(3)
+                        volume = m2.group(4)
+                        filename = m2.group(5) or None
+                        hit_sample = OsuHitSample(normal_set, addition_set, index, volume, filename)
+                    else:
+                        hit_sample = OsuHitSample()
+                    chart.hit_objects.append(
+                        OsuSlider(x, y, time, object_type, hit_sound,
+                        curve_type, curve_points, slides, length, edge_sounds, edge_sets, hit_sample)
+                    )
+                # MAKING THE ASSUMPTION THESE REQUIRE HITSAMPLE
+                # OTHERWISE IT WOULD BE INDESCERABLE FROM A HOLD
+                # x,y,time,type,hitSound,endTime,hitSample
                 elif m := re.match(RE_SPINNER, line):
                     # ignore for now
-                    pass
+                    x = int(m.group(1))
+                    y = int(m.group(2))
+                    time = int(m.group(3)) / 1000
+                    object_type = int(m.group(4))
+                    hit_sound = int(m.group(5))
+                    end_time = int(m.group(6)) / 1000
+                    hit_sample_data = m.group(7)
+                    m2 = re.match(RE_HIT_SAMPLE, hit_sample_data)
+                    normal_set = m2.group(1)
+                    addition_set = m2.group(2)
+                    index = m2.group(3)
+                    volume = m2.group(4)
+                    filename = m2.group(5) or None
+                    hit_sample = OsuHitSample(normal_set, addition_set, index, volume, filename)
+                    chart.hit_objects.append(
+                        OsuSpinner(x, y, time, object_type, end_time, hit_sound, hit_sample)
+                    )
                 else:
                     raise ChartParseError(line_num, f"Unknown hold object '{line}'.")
             else:
