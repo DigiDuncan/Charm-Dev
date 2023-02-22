@@ -151,10 +151,10 @@ class FNFSong(Song):
         return Metadata(title, artist, album, hash = f"fnf-{title}", path = folder, gamemode = "fnf")
 
     @classmethod
-    def parse(cls, path: Path, mod: FNFMod = None) -> FNFSong:
-        folder_path = Path(path)
+    def parse(cls, folder: Path, mod: FNFMod = None) -> FNFSong:
+        folder_path = Path(folder)
         stem = folder_path.stem
-        song = FNFSong(path)
+        song = FNFSong(folder)
 
         charts = song.path.glob(f"./{stem}*.json")
         parsed_charts = [cls.parse_chart(chart, song) for chart in charts]
@@ -163,7 +163,7 @@ class FNFSong(Song):
                 song.charts.append(chart)
 
         if not song.charts:
-            raise NoChartsError(path)
+            raise NoChartsError(folder)
 
         # Global attributes that are stored per-chart, for some reason.
         chart: FNFChart = song.charts[0]
@@ -173,16 +173,16 @@ class FNFSong(Song):
         return song
 
     @classmethod
-    def parse_chart(cls, file_path: Path, song: FNFSong) -> list[FNFChart]:
-        with open(file_path) as p:
+    def parse_chart(cls, path: Path, song: FNFSong) -> list[FNFChart]:
+        with open(path) as p:
             j: SongFileJson = json.load(p)
         fnf_overrides = None
-        override_path = file_path.parent / "fnf.json"
+        override_path = path.parent / "fnf.json"
         if override_path.exists() and override_path.is_file():
             with open(override_path) as f:
                 fnf_overrides = json.load(f)
         hash = sha1(bytes(json.dumps(j), encoding="utf-8")).hexdigest()
-        difficulty = file_path.stem.rsplit("-", 1)[1] if "-" in file_path.stem else "normal"
+        difficulty = path.stem.rsplit("-", 1)[1] if "-" in path.stem else "normal"
         songdata = j["song"]
 
         name = songdata["song"].replace("-", " ").title()
