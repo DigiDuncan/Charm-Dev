@@ -9,8 +9,8 @@ import charm.data.images
 from charm.lib.anim import ease_quartout
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView, shows_errors
+from charm.lib.gamemodes.sm import SMSong
 from charm.lib.generic.song import Song
-from charm.lib.gamemodes.four_key import FourKeySong
 from charm.lib.keymap import get_keymap
 from charm.lib.paths import songspath
 from charm.lib.settings import Settings
@@ -41,11 +41,11 @@ class FourKeySongMenuView(DigiView):
             k = d.stem
             try:
                 if (d / f"{k}.ssc").exists():
-                    songdata = FourKeySong.get_metadata(d)
+                    songdata = SMSong.get_metadata(d)
                     self.songs.append(songdata)
                     continue
                 if (d / f"{k}.sm").exists():
-                    songdata = FourKeySong.get_metadata(d)
+                    songdata = SMSong.get_metadata(d)
                     self.songs.append(songdata)
                     continue
             except Exception:
