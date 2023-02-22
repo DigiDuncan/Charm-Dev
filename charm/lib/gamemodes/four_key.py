@@ -5,6 +5,7 @@ import logging
 import math
 from dataclasses import dataclass
 from functools import cache
+from pathlib import Path
 from statistics import mean
 
 import arcade
@@ -93,7 +94,13 @@ class FourKeyChart(Chart):
         self.song: FourKeySong = song
 
 class FourKeySong(Song):
-    pass
+    def __init__(self, path: Path):
+        """A generic four-key song. Don't use this raw, use a subclass instead."""
+        super().__init__(path)
+
+    @classmethod
+    def parse(cls, folder: Path):
+        raise NotImplementedError
 
 class FourKeyNoteSprite(arcade.Sprite):
     def __init__(self, note: FourKeyNote, highway: FourKeyHighway, height=128, *args, **kwargs):
