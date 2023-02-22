@@ -84,6 +84,10 @@ class OsuHitObject:
     def new_combo(self) -> bool:
         return bool(self.hit_sound & 0b100)
 
+    def get_lane(self, lanes: int) -> int:
+        lane_calc = math.floor(self.x * lanes / 512)
+        return clamp(0, lane_calc, lanes - 1)
+
     def __lt__(self, other: "OsuHitObject") -> bool:
         return (self.time, self.x, other.y) < (other.time, other.x, other.y)
 
@@ -142,10 +146,6 @@ class OsuHold(OsuHitObject):
     @property
     def length(self) -> Seconds:
         return self.end_time - self.time
-
-    def get_lane(self, lanes: int) -> int:
-        lane_calc = math.floor(self.x * lanes / 512)
-        return clamp(0, lane_calc, lanes - 1)
 
 @dataclass
 class OsuGeneralData:
