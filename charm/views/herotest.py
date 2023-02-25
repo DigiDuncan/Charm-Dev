@@ -1,6 +1,7 @@
 import logging
 
 import arcade
+from pyglet.graphics import Batch
 
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView
@@ -29,12 +30,14 @@ class HeroTestView(DigiView):
         self.highway = HeroHighway(self.chart, (0, 0), auto = False)
         self.highway.x += self.window.width // 2 - self.highway.w // 2
 
+        self.text_batch = Batch()
+
         metadata_string = f"{self.hero_song.metadata.title}\n{self.hero_song.metadata.artist}\n{self.hero_song.metadata.album}"
-        self.metadata_text = arcade.Text(metadata_string, 5, 5, arcade.color.BLACK, 16, align = "left", anchor_x = "left", anchor_y = "bottom", multiline = True, font_name = "bananaslip plus", width=self.window.width)
-        self.section_text = arcade.Text("", self.window.width - 5, 5, arcade.color.BLACK, 16, align = "right", anchor_x = "right", font_name = "bananaslip plus", width=self.window.width)
-        self.time_text = arcade.Text("0:00", self.window.width - 5, 35, arcade.color.BLACK, 16, align = "right", anchor_x = "right", font_name = "bananaslip plus", width=self.window.width)
-        self.score_text = arcade.Text("0", self.window.width - 5, 65, arcade.color.BLACK, font_size=24, anchor_x="right", font_name="bananaslip plus")
-        self.multiplier_text = arcade.Text("x1", self.window.width - 5, 95, arcade.color.BLACK, font_size=16, anchor_x="right", font_name="bananaslip plus")
+        self.metadata_text = arcade.Text(metadata_string, 5, 5, arcade.color.BLACK, 16, align = "left", anchor_x = "left", anchor_y = "bottom", multiline = True, font_name = "bananaslip plus", width=self.window.width, batch = self.text_batch)
+        self.section_text = arcade.Text("", self.window.width - 5, 5, arcade.color.BLACK, 16, anchor_x = "right", font_name = "bananaslip plus", width=self.window.width, batch = self.text_batch)
+        self.time_text = arcade.Text("0:00", self.window.width - 5, 35, arcade.color.BLACK, 16, anchor_x = "right", font_name = "bananaslip plus", width=self.window.width, batch = self.text_batch)
+        self.score_text = arcade.Text("0", self.window.width - 5, 65, arcade.color.BLACK, 24, anchor_x = "right", font_name = "bananaslip plus", width=self.window.width, batch = self.text_batch)
+        self.multiplier_text = arcade.Text("x1", self.window.width - 5, 95, arcade.color.BLACK, 16, anchor_x = "right", font_name = "bananaslip plus", width=self.window.width, batch = self.text_batch)
 
         # Generate "gum wrapper" background
         self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
@@ -109,10 +112,6 @@ class HeroTestView(DigiView):
         self.small_logos_backward.draw()
 
         self.highway.draw()
-        self.metadata_text.draw()
-        self.section_text.draw()
-        self.time_text.draw()
-        self.score_text.draw()
-        self.multiplier_text.draw()
+        self.text_batch.draw()
 
         super().on_draw()
