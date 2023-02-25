@@ -133,9 +133,9 @@ class NoteTrail(MultiLineRenderer):
         self.sprite = None
         if self.curve:
             self.texture = arcade.Texture.create_empty(f"_line_renderer_{self.color}_{self.fill_color}_{self.width}_{self.point_depth}", (self.width, self.point_depth))
-            self.sprite = arcade.Sprite(texture = self.texture)
+            self.sprite = arcade.Sprite(self.texture)
             offset = -self.point_depth / 2 if self.upscroll else self.point_depth / 2
-            self.sprite.set_position(self.note_center[0], self._trail_end + offset)
+            self.sprite.position = (self.note_center[0], self._trail_end + offset)
             self.curve_cap = arcade.SpriteList()
             self.curve_cap.append(self.sprite)
         self.generate_fill()
@@ -163,9 +163,9 @@ class NoteTrail(MultiLineRenderer):
             with self.curve_cap.atlas.render_into(self.texture) as fbo:
                 fbo.clear()
                 if self.fill_color:
-                    arcade.shape_list.draw_arc_filled(self.width / 2, 0, self.width - self.thickness * 2,
+                    arcade.draw_arc_filled(self.width / 2, 0, self.width - self.thickness * 2,
                                            self.point_depth - self.thickness, self.fill_color, 0, 180)
-                arcade.shape_list.draw_arc_outline(self.width / 2, 0, self.width - self.thickness * 2,
+                arcade.draw_arc_outline(self.width / 2, 0, self.width - self.thickness * 2,
                                         self.point_depth - self.thickness, self.color, 0, 180, self.thickness * 2)
             ctx.blend_func = ctx.BLEND_DEFAULT
 
