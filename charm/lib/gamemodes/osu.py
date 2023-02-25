@@ -274,6 +274,7 @@ class RawOsuChart:
 
     @classmethod
     def parse(cls, path: Path) -> "RawOsuChart":
+        """https://osu.ppy.sh/wiki/en/Client/File_formats/Osu_(file_format)"""
         with open(path) as p:
             lines = p.readlines()
 
