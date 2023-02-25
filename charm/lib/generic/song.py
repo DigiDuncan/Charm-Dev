@@ -114,6 +114,14 @@ class BPMChangeEvent(Event):
     * `time: float`: event start in seconds."""
     new_bpm: float
 
+    @property
+    def beat_length(self) -> Seconds:
+        return 1 / (self.new_bpm / 60)
+
+    @beat_length.setter
+    def beat_length(self, v: Seconds):
+        self.new_bpm = (1 / v) * 60
+
 
 class Chart:
     """A collection of notes and events, with helpful metadata."""
