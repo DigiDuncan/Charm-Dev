@@ -701,7 +701,8 @@ class HeroHighway(Highway):
         self._pixel_offset += (self.px_per_s * delta_draw_time)
         self.last_update_time = self.song_time
 
-        self.highway_camera.move((0.0, -self.pixel_offset))
+        self.highway_camera.move((0.0, self.pixel_offset))
+        self.highway_camera.update()
 
         if self.auto:
             # while self.note_sprites[self.note_index].note.time < self.song_time - 0.050:

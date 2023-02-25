@@ -196,6 +196,7 @@ class FourKeyHighway(Highway):
         self.last_update_time = self.song_time
 
         self.highway_camera.move((0.0, -self.pixel_offset))
+        self.highway_camera.update()
 
     @property
     def pixel_offset(self):
