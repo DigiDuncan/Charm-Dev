@@ -599,7 +599,7 @@ def load_note_texture(note_type, note_lane, height):
     except Exception as e:
         logger.error(f"Unable to load texture: {image_name} | {e}")
         return load_missing_texture(height, height)
-    return arcade.Texture(f"_heronote_{image_name}", image=image, hit_box_algorithm=None)
+    return arcade.Texture(image)
 
 class HeroNoteSprite(arcade.Sprite):
     def __init__(self, note: HeroNote, highway: "HeroHighway", height = 128, *args, **kwargs):

@@ -52,7 +52,7 @@ class SongMenuItem(Sprite):
         if (album_art_img.width != 200 or album_art_img.height != 200):
             album_art_img = album_art_img.resize((200, 200))
 
-        self.album_art = arcade.Texture(f"{self.key}-albumart", album_art_img, hit_box_algorithm=None)
+        self.album_art = arcade.Texture(album_art_img)
 
         self._w = w if w else Settings.width // 2
         self._h = h if h else Settings.height // 8

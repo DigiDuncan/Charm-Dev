@@ -31,9 +31,8 @@ def generate_missing_texture_image(w: int, h: int) -> PIL.Image.Image:
 
 @cache
 def load_missing_texture(height: int, width: int):
-    image_name = f"{width}x{height}"
     image = generate_missing_texture_image(height, width)
-    return arcade.Texture(f"_missing_{image_name}", image=image, hit_box_algorithm=None)
+    return arcade.Texture(image)
 
 
 @cache
@@ -42,7 +41,7 @@ def generate_gum_wrapper(size: tuple[int], buffer: int = 20, alpha = 128) -> tup
     small_logos_forward = arcade.SpriteList()
     small_logos_backward = arcade.SpriteList()
     small_logo_img = img_from_resource(charm.data.images, "small-logo.png")
-    small_logo_texture = arcade.Texture("small_logo", small_logo_img)
+    small_logo_texture = arcade.Texture(small_logo_img)
     sprites_horiz = math.ceil(size[0] / small_logo_texture.width)
     sprites_vert = math.ceil(size[1] / small_logo_texture.height / 1.5)
     logo_width = small_logo_texture.width + buffer

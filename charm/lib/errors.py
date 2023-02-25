@@ -26,7 +26,7 @@ class CharmException(Exception):
 
     def get_sprite(self) -> Sprite:
         _tex = arcade.Texture.create_empty(f"_error-{self.title}-{self.show_message}", (500, 200))
-        _icon_tex = arcade.Texture(f"_error_icon_{self._icon}", self.icon)
+        _icon_tex = arcade.Texture(self.icon)
         sprite = Sprite(texture=_tex)
         _sprite_list = arcade.SpriteList()
         _sprite_list.append(sprite)

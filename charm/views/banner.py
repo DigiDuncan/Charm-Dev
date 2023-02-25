@@ -21,7 +21,7 @@ class BannerView(DigiView):
 
         # Set up main logo
         logo_img = img_from_resource(charm.data.images, "logo.png")
-        logo_texture = arcade.Texture("logo", logo_img)
+        logo_texture = arcade.Texture(logo_img)
         self.logo = arcade.Sprite(texture=logo_texture)
         self.logo.scale = 1 / 3
         self.logo.center_x = self.size[0] // 2

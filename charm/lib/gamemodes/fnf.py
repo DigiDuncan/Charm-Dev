@@ -468,7 +468,7 @@ def load_note_texture(note_type, note_lane, height):
     except Exception:
         logger.error(f"Unable to load texture: {image_name}")
         return load_missing_texture(height, height)
-    return arcade.Texture(f"_fnfnote_{image_name}", image=image, hit_box_algorithm=None)
+    return arcade.Texture(image)
 
 
 class FNFNoteSprite(arcade.Sprite):

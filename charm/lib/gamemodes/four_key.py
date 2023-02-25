@@ -78,7 +78,7 @@ def load_note_texture(note_type, note_lane, height):
     except Exception:
         logger.error(f"Unable to load texture: {image_name}")
         return load_missing_texture(height, height)
-    return arcade.Texture(f"_fnfnote_{image_name}", image=image, hit_box_algorithm=None)
+    return arcade.Texture(image)
 
 @dataclass
 class FourKeyNote(Note):
@@ -249,7 +249,7 @@ class FourKeyHighway(Highway):
 class FourKeyJudgement(Judgement):
     def get_texture(self) -> arcade.Texture:
         with pkg_resources.path(baseskin, f"judgement-{self.key}.png") as image_path:
-            tex = arcade.load_texture(image_path, hit_box_algorithm = "None")
+            tex = arcade.load_texture(image_path)
         return tex
 
 class FourKeyEngine(Engine):
