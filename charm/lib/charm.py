@@ -47,7 +47,7 @@ def generate_gum_wrapper(size: tuple[int], buffer: int = 20, alpha = 128) -> tup
     logo_width = small_logo_texture.width + buffer
     for i in range(sprites_vert):
         for j in range(sprites_horiz):
-            s = arcade.Sprite(texture=small_logo_texture)
+            s = arcade.Sprite(small_logo_texture)
             s.original_bottom = s.bottom = small_logo_texture.height * i * 1.5
             s.original_left = s.left = logo_width * (j - 2)
             if i % 2:

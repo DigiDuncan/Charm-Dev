@@ -58,7 +58,7 @@ class SongMenuItem(Sprite):
         self._h = h if h else Settings.height // 8
 
         self._tex = arcade.Texture.create_empty(f"{self.key}-menuitem", (self._w, self._h))
-        super().__init__(texture=self._tex, *args, **kwargs)
+        super().__init__(self._tex, *args, **kwargs)
         arcade.get_window().ctx.default_atlas.add(self._tex)
 
         self.position = (0, -Settings.height)

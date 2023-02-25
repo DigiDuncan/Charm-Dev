@@ -477,7 +477,7 @@ class FNFNoteSprite(arcade.Sprite):
         self.note.sprite = self
         self.highway: FNFHighway = highway
         tex = load_note_texture(note.type, note.lane, height)
-        super().__init__(texture=tex, *args, **kwargs)
+        super().__init__(tex, *args, **kwargs)
         if self.note.type == "sustain":
             self.alpha = 0
 
@@ -572,7 +572,7 @@ class FNFHighway(Highway):
 
     def draw(self):
         _cam = arcade.get_window().current_camera
-        self.strikeline_camera.use()
+        self.static_camera.use()
         self.strikeline.draw()
         self.highway_camera.use()
         # This is slow, don't loop over things.

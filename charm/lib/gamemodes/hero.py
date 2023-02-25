@@ -606,7 +606,7 @@ class HeroNoteSprite(arcade.Sprite):
         self.note: HeroNote = note
         self.highway: HeroHighway = highway
         tex = load_note_texture(note.type, note.lane, height)
-        super().__init__(texture=tex, *args, **kwargs)
+        super().__init__(tex, *args, **kwargs)
 
     def __lt__(self, other: "HeroNoteSprite"):
         return self.note.time < other.note.time
@@ -745,7 +745,7 @@ class HeroHighway(Highway):
 
     def draw(self):
         _cam = arcade.get_window().current_camera
-        self.strikeline_camera.use()
+        self.static_camera.use()
         arcade.draw_lrtb_rectangle_filled(self.x, self.x + self.w,
                                           self.y + self.h, self.y,
                                           self.color)

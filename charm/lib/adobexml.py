@@ -120,6 +120,7 @@ class AdobeSprite(Sprite):
         self.texture_map: dict[Subtexture, int] = {}
         textures = []
         for n, st in enumerate(self._ata.subtextures):
+            logger.debug(f"loading texture {st.name}")
             if st.frame_width is not None and st.frame_height is not None:
                 # FIXME: I'm essentially abusing .load_texture() here.
                 # I should probably be doing the cropping and caching myself,
@@ -127,12 +128,12 @@ class AdobeSprite(Sprite):
                 # a texture here and basically throwing it away.
                 # This also noticably increases load time the first time you load
                 # a paticular AdobeSprite.
-                tx = arcade.load_texture(self._image_path, st.x, st.y, st.width, st.height, hit_box_algorithm=None)
+                tx = arcade.load_texture(self._image_path, x = st.x, y = st.y, width = st.width, height = st.height)
                 im = PIL.Image.new("RGBA", (st.frame_width, st.frame_height))
                 im.paste(tx.image, (-st.frame_x, -st.frame_y))
                 tx = arcade.Texture(im)
             else:
-                tx = arcade.load_texture(self._image_path, st.x, st.y, st.width, st.height, hit_box_algorithm=None)
+                tx = arcade.load_texture(self._image_path, x = st.x, y = st.y, width = st.width, height = st.height)
             if debug:
                 draw = PIL.ImageDraw.ImageDraw(tx.image)
                 draw.rectangle((0, 0, tx.image.width - 1, tx.image.height - 1), outline = arcade.color.RED)

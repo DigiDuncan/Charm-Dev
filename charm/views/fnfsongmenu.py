@@ -50,7 +50,7 @@ class FNFSongMenuView(DigiView):
         self.menu.selected_id = 0
         self.selection_changed = 0
 
-        self.album_art = arcade.Sprite(texture=self.menu.selected.album_art)
+        self.album_art = arcade.Sprite(self.menu.selected.album_art)
         self.album_art.right = self.size[0] - self.album_art_buffer
         self.album_art.original_bottom = self.album_art.bottom = self.size[1] // 2
 

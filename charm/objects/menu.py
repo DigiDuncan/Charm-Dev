@@ -23,7 +23,7 @@ class MainMenuItem(Sprite):
             self.icon = generate_missing_texture_image(width, width)
         self.icon = PIL.ImageOps.expand(self.icon, border=border_width, fill=border_color)
         tex = arcade.Texture(self.icon)
-        super().__init__(texture=tex, *args, **kwargs)
+        super().__init__(tex, *args, **kwargs)
 
         self.goto = goto
 

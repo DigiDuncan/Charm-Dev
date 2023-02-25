@@ -11,7 +11,7 @@ class TransparencyWindow(arcade.Window):
 
         # No transparency
         self.texture = arcade.Texture.create_empty("the_texture_1", (100, 100))
-        self.sprite = arcade.Sprite(texture=self.texture)
+        self.sprite = arcade.Sprite(self.texture)
         self.sprite.position = (100, 360)
         self.sprite_list = arcade.SpriteList()
         self.sprite_list.append(self.sprite)
@@ -23,7 +23,7 @@ class TransparencyWindow(arcade.Window):
 
         # Transparency
         self.texture2 = arcade.Texture.create_empty("the_texture_2", (100, 100))
-        self.sprite2 = arcade.Sprite(texture=self.texture2)
+        self.sprite2 = arcade.Sprite(self.texture2)
         self.sprite2.position = (1180, 360)
         self.sprite_list2 = arcade.SpriteList()
         self.sprite_list2.append(self.sprite2)

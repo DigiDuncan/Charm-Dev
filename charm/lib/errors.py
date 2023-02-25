@@ -22,12 +22,12 @@ class CharmException(Exception):
         self.icon = img_from_resource(charm.data.images.errors, f"{icon}.png")
         self.icon.resize((32, 32), PIL.Image.LANCZOS)
         self.sprite = self.get_sprite()
-        self.sprite.set_position(Settings.width / 2, Settings.height / 2)
+        self.sprite.position = (Settings.width / 2, Settings.height / 2)
 
     def get_sprite(self) -> Sprite:
         _tex = arcade.Texture.create_empty(f"_error-{self.title}-{self.show_message}", (500, 200))
         _icon_tex = arcade.Texture(self.icon)
-        sprite = Sprite(texture=_tex)
+        sprite = Sprite(_tex)
         _sprite_list = arcade.SpriteList()
         _sprite_list.append(sprite)
 

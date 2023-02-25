@@ -127,7 +127,7 @@ class NoteTrail(MultiLineRenderer):
         self.line_renderer1 = LineRenderer([Point(p) for p in points1], self.color, self.thickness)
         self.line_renderer2 = LineRenderer([Point(p) for p in points2], self.color, self.thickness)
 
-        self.rectangles = arcade.ShapeElementList()
+        self.rectangles = arcade.shape_list.ShapeElementList()
         self.curve_cap = None
         self.texture = None
         self.sprite = None
@@ -145,17 +145,17 @@ class NoteTrail(MultiLineRenderer):
         super().__init__({f"{nid}_left": self.line_renderer1, f"{nid}_right": self.line_renderer2})
 
     def generate_fill(self):
-        self.rectangles = arcade.ShapeElementList()
+        self.rectangles = arcade.shape_list.ShapeElementList()
         if self.fill_color:
             mid_point_x = (self.left_x + self.right_x) / 2
             mid_point_y = (self.note_center[1] + self._trail_end) / 2
-            rect = arcade.create_rectangle_filled(mid_point_x, mid_point_y, self.width - self.thickness, self._trail_length, self.fill_color)
+            rect = arcade.shape_list.create_rectangle_filled(mid_point_x, mid_point_y, self.width - self.thickness, self._trail_length, self.fill_color)
             self.rectangles.append(rect)
             if not self.curve:
                 tri_left = (self.left_x + self.thickness, self._trail_end)
                 tri_right = (self.right_x - self.thickness, self._trail_end)
                 tri_bottom = (self.note_center[0], self._point_tip)
-                self.rectangles.append(arcade.create_polygon([tri_left, tri_right, tri_bottom], self.fill_color))
+                self.rectangles.append(arcade.shape_list.create_polygon([tri_left, tri_right, tri_bottom], self.fill_color))
         if self.curve:
             window = arcade.get_window()
             ctx = window.ctx
@@ -163,9 +163,9 @@ class NoteTrail(MultiLineRenderer):
             with self.curve_cap.atlas.render_into(self.texture) as fbo:
                 fbo.clear()
                 if self.fill_color:
-                    arcade.draw_arc_filled(self.width / 2, 0, self.width - self.thickness * 2,
+                    arcade.shape_list.draw_arc_filled(self.width / 2, 0, self.width - self.thickness * 2,
                                            self.point_depth - self.thickness, self.fill_color, 0, 180)
-                arcade.draw_arc_outline(self.width / 2, 0, self.width - self.thickness * 2,
+                arcade.shape_list.draw_arc_outline(self.width / 2, 0, self.width - self.thickness * 2,
                                         self.point_depth - self.thickness, self.color, 0, 180, self.thickness * 2)
             ctx.blend_func = ctx.BLEND_DEFAULT
 
