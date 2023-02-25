@@ -20,18 +20,18 @@ class CharmColors:
 
 
 @cache
-def generate_missing_texture_image(w, h) -> PIL.Image.Image:
+def generate_missing_texture_image(w: int, h: int) -> PIL.Image.Image:
     """Generate a classic missing texture of wxh."""
-    mt = PIL.Image.new("RGB", (w, h), arcade.color.MAGENTA)
+    mt = PIL.Image.new("RGBA", (w, h), arcade.color.BLACK)
     d = PIL.ImageDraw.Draw(mt)
-    d.rectangle((0, h // 2, w // 2, h), arcade.color.BLACK)
-    d.rectangle((w // 2, 0, w, h // 2), arcade.color.BLACK)
+    d.rectangle(((0, 0), (w // 2 - 1, h // 2 - 1)), arcade.color.MAGENTA)  # upper left
+    d.rectangle(((w // 2, h // 2), (w, h)), arcade.color.MAGENTA)          # lower right
     return mt
 
 
 @cache
-def load_missing_texture(height, width):
-    image_name = f"{height}x{width}"
+def load_missing_texture(height: int, width: int):
+    image_name = f"{width}x{height}"
     image = generate_missing_texture_image(height, width)
     return arcade.Texture(f"_missing_{image_name}", image=image, hit_box_algorithm=None)
 
