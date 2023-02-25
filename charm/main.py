@@ -73,7 +73,7 @@ class CharmGame(DigiWindow):
             with pkg_resources.path(charm.data.audio, f"error-{soundname}.wav") as p:
                 self.sounds["error-" + soundname] = arcade.Sound(p)
 
-        arcade.hitbox.default_algorithm = arcade.hitbox.bounding.BoundingHitBoxAlgorithm()
+        arcade.hitbox.default_algorithm = arcade.hitbox.algo_bounding_box
 
         self.initial_view = TitleView()
 
