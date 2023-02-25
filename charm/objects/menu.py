@@ -1,6 +1,7 @@
 import math
-from arcade import Color, Sprite
 import arcade
+from arcade import Sprite
+from arcade.types import Color
 import PIL.Image, PIL.ImageOps  # noqa: E401
 
 import charm.data.icons

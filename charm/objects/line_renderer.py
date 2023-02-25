@@ -1,6 +1,7 @@
 from typing import Hashable
 
 import arcade
+from arcade.types import Color
 
 TuplePoint = tuple[int | float, int | float]
 Seconds = float
@@ -32,7 +33,7 @@ class Point:
         return f"Point({self.x}, {self.y})"
 
 class LineRenderer:
-    def __init__(self, points: list[Point], color: arcade.Color, width: float):
+    def __init__(self, points: list[Point], color: Color, width: float):
         self.points: list[Point] = points
         self.color = color
         self.width = width
@@ -79,9 +80,9 @@ class MultiLineRenderer:
 
 class NoteTrail(MultiLineRenderer):
     def __init__(self, note_id: Hashable, note_center: Point, time_start: Seconds, length: Seconds,
-                 px_per_s: float, color: arcade.Color, point_depth: float = 50, width: float = 100,
+                 px_per_s: float, color: Color, point_depth: float = 50, width: float = 100,
                  *, resolution: int = 5, thickness: int = 3, upscroll = False,
-                 fill_color: arcade.Color | None = None, curve = False):
+                 fill_color: Color | None = None, curve = False):
 
         self.note_id = note_id
         self.note_center = note_center
