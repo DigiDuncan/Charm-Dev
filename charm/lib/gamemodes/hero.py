@@ -701,6 +701,8 @@ class HeroHighway(Highway):
         self._pixel_offset += (self.px_per_s * delta_draw_time)
         self.last_update_time = self.song_time
 
+        self.highway_camera.move((0.0, -self.pixel_offset))
+
         if self.auto:
             # while self.note_sprites[self.note_index].note.time < self.song_time - 0.050:
             #     self.note_index += 1
@@ -743,7 +745,7 @@ class HeroHighway(Highway):
 
     def draw(self):
         _cam = arcade.get_window().current_camera
-        self.camera.use()
+        self.strikeline_camera.use()
         arcade.draw_lrtb_rectangle_filled(self.x, self.x + self.w,
                                           self.y + self.h, self.y,
                                           self.color)
@@ -753,15 +755,8 @@ class HeroHighway(Highway):
             px = self.note_y(beat.time) - (self.note_size / 2)
             arcade.draw_line(self.x, px, self.x + self.w, px, arcade.color.DARK_GRAY, 3 if beat.major else 1)
         self.strikeline.draw()
-        vp = arcade.get_viewport()
-        height = vp[3] - vp[2]
-        arcade.set_viewport(
-            0,
-            Settings.width,
-            self.pixel_offset,
-            self.pixel_offset + height
-        )
-        self.camera_viewport = arcade.get_viewport()
+
+        self.highway_camera.use()
         b = self.sprite_buckets.calc_bucket(self.song_time)
         for bucket in self.sprite_buckets.buckets[b:b+2] + [self.sprite_buckets.overbucket]:
             for note in bucket.sprite_list:

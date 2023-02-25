@@ -195,6 +195,8 @@ class FourKeyHighway(Highway):
         self._pixel_offset += (self.px_per_s * delta_draw_time)
         self.last_update_time = self.song_time
 
+        self.highway_camera.move((0.0, -self.pixel_offset))
+
     @property
     def pixel_offset(self):
         # TODO: Replace with better pixel_offset calculation
@@ -217,7 +219,7 @@ class FourKeyHighway(Highway):
 
     def draw(self):
         _cam = arcade.get_window().current_camera
-        self.camera.use()
+        self.strikeline_camera.use()
         arcade.draw_lrtb_rectangle_filled(self.x, self.x + self.w,
                                           self.y + self.h, self.y,
                                           (0, 0, 0, 128))
@@ -226,14 +228,7 @@ class FourKeyHighway(Highway):
                                               self.hit_window_top, self.hit_window_bottom,
                                               (255, 0, 0, 128))
         self.strikeline.draw()
-        vp = arcade.get_viewport()
-        height = vp[3] - vp[2]
-        arcade.set_viewport(
-            0,
-            Settings.width,
-            -self.pixel_offset,
-            -self.pixel_offset + height
-        )
+        self.highway_camera.use()
         # Draw sustains.
         # TODO: This might be slow, don't loop over things.
         b = self.sprite_buckets.calc_bucket(self.song_time)

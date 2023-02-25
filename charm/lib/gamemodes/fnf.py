@@ -563,6 +563,8 @@ class FNFHighway(Highway):
         self._pixel_offset += (self.px_per_s * delta_draw_time)
         self.last_update_time = self.song_time
 
+        self.highway_camera.move((0.0, -self.pixel_offset))
+
     @property
     def pixel_offset(self):
         # TODO: Replace with better pixel_offset calculation
@@ -570,16 +572,9 @@ class FNFHighway(Highway):
 
     def draw(self):
         _cam = arcade.get_window().current_camera
-        self.camera.use()
+        self.strikeline_camera.use()
         self.strikeline.draw()
-        vp = arcade.get_viewport()
-        height = vp[3] - vp[2]
-        arcade.set_viewport(
-            0,
-            Settings.width,
-            -self.pixel_offset,
-            -self.pixel_offset + height
-        )
+        self.highway_camera.use()
         # This is slow, don't loop over things.
         b = self.sprite_buckets.calc_bucket(self.song_time)
         window = arcade.get_window()

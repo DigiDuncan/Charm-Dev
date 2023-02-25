@@ -1,5 +1,4 @@
 import arcade
-from arcade import Camera
 
 from charm.lib.settings import Settings
 from charm.lib.generic.song import Chart
@@ -16,8 +15,8 @@ class Highway:
         self.viewport: float = 1
         self.window = arcade.get_window()
 
-        self.camera = Camera(viewport = (0, 0, Settings.width, Settings.height))
-        self.camera_viewport = None
+        self.static_camera = arcade.SimpleCamera()
+        self.highway_camera = arcade.SimpleCamera()
         self.song_time: float = 0
 
     @property
