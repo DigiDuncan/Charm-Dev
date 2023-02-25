@@ -36,6 +36,7 @@ class OsuTimingPoint(BPMChangeEvent):
     volume: float = 1
     uninherited: bool = False
     effects: int = 0
+    slider_velocity_multipler: float = 1
 
     @property
     def kiai_time(self) -> bool:
@@ -82,7 +83,19 @@ class OsuHitObject:
 
     @property
     def new_combo(self) -> bool:
-        return bool(self.hit_sound & 0b100)
+        return bool(self.object_type & 0b100)
+
+    @property
+    def combo_skip(self) -> int:
+        return (self.object_type & 0b1110000) >> 4
+
+    @property
+    def taiko_kat(self) -> bool:
+        return self.hit_sound_clap or self.hit_sound_whistle
+
+    @property
+    def taiko_large(self) -> bool:
+        return self.hit_sound_finish
 
     def get_lane(self, lanes: int) -> int:
         lane_calc = math.floor(self.x * lanes / 512)
@@ -99,18 +112,6 @@ class OsuHitCircle(OsuHitObject):
     """A standard osu! note."""
     hit_sample: OsuHitSample
 
-    @property
-    def taiko_note(self) -> str:
-        if self.hit_sound_clap or self.hit_sound_whistle:
-            return "kat"
-        return "don"
-
-    @property
-    def taiko_large(self) -> bool:
-        # The documentation is confusing on this.
-        # https://osu.ppy.sh/wiki/en/Client/File_formats/Osu_(file_format)#osu!taiko
-        return False
-
 @dataclass
 class OsuPoint:
     x: float
@@ -122,10 +123,16 @@ class OsuSlider(OsuHitObject):
     curve_type: Literal['B', 'C', 'L', 'P']
     curve_points: list[OsuPoint]
     slides: int
-    length: float
+    px_length: float
     edge_sounds: list[int]
     edge_sets: list[str]
     hit_sample: OsuHitSample
+
+    end_time: Seconds = None
+
+    @property
+    def length(self) -> Seconds:
+        return self.end_time - self.time
 
 @dataclass
 class OsuSpinner(OsuHitObject):
@@ -346,24 +353,25 @@ class RawOsuChart:
             elif current_header == "TimingPoints":
                 if m := re.match(RE_TIMING_POINT, line):
                     uninherited = bool(m.group(7))
+                    time = int(m.group(1)) / 1000
+                    beat_length = float(m.group(2))
+                    meter = int(m.group(3))
+                    sample_set = int(m.group(4))
+                    sample_index = int(m.group(5))
+                    volume = int(m.group(6)) / 100
+                    effects = int(m.group(8))
                     if uninherited:
-                        time = int(m.group(1)) / 1000
-                        beat_length = float(m.group(2))
-                        meter = int(m.group(3))
-                        sample_set = int(m.group(4))
-                        sample_index = int(m.group(5))
-                        volume = int(m.group(6)) / 100
-                        effects = int(m.group(8))
-
                         bpm = (1 / beat_length * 1000 * 60)
-
                         chart.timing_points.append(
                             OsuTimingPoint(time, bpm, meter, sample_set, sample_index, volume, uninherited, effects)
                         )
                     else:
-                        # Ignoring inherited events for now until I figure out
-                        # why they're important. Something about slider timing?
-                        pass
+                        slider_vel = 1 / (beat_length / -100)
+                        current_timing_point = chart.timing_points[-1]
+                        chart.timing_points.append(
+                            OsuTimingPoint(time, current_timing_point.new_bpm, meter, sample_set, sample_index, volume, uninherited, effects, slider_vel)
+                        )
+
                 else:
                     raise ChartParseError(line_num, f"Unparseable timing point '{line}'.")
             elif current_header == "Colours":
@@ -381,10 +389,10 @@ class RawOsuChart:
                     hit_sample_data = m.group(6)
                     if hit_sample_data:
                         m2 = re.match(RE_HIT_SAMPLE, hit_sample_data)
-                        normal_set = m2.group(1)
-                        addition_set = m2.group(2)
-                        index = m2.group(3)
-                        volume = m2.group(4)
+                        normal_set = int(m2.group(1))
+                        addition_set = int(m2.group(2))
+                        index = int(m2.group(3))
+                        volume = int(m2.group(4))
                         filename = m2.group(5) or None
                         hit_sample = OsuHitSample(normal_set, addition_set, index, volume, filename)
                     else:
@@ -393,7 +401,7 @@ class RawOsuChart:
                         OsuHitCircle(x, y, time, object_type, hit_sound, hit_sample)
                     )
                 # MAKING THE ASSUMPTION THESE REQUIRE HITSAMPLE
-                # OTHERWISE IT WOULD BE INDESCERABLE FROM A SPINNER
+                # OTHERWISE IT WOULD BE INDESCERNABLE FROM A SPINNER
                 # x,y,time,type,hitSound,endTime:hitSample
                 elif m := re.match(RE_HOLD, line):
                     x = int(m.group(1))
@@ -404,10 +412,10 @@ class RawOsuChart:
                     end_time = int(m.group(6)) / 1000
                     hit_sample_data = m.group(7)
                     m2 = re.match(RE_HIT_SAMPLE, hit_sample_data)
-                    normal_set = m2.group(1)
-                    addition_set = m2.group(2)
-                    index = m2.group(3)
-                    volume = m2.group(4)
+                    normal_set = int(m2.group(1))
+                    addition_set = int(m2.group(2))
+                    index = int(m2.group(3))
+                    volume = int(m2.group(4))
                     filename = m2.group(5) or None
                     chart.hit_objects.append(
                         OsuHold(x, y, time, object_type, hit_sound, end_time,
@@ -427,27 +435,27 @@ class RawOsuChart:
                     curve_splits = curve_part.split("|")
                     curve_type = curve_splits[0]
                     curve_points = [OsuPoint(float(p.split(":")[0]), float(p.split(":")[1])) for p in curve_splits[1:]]
-                    slides = splits[6]
-                    length = splits[7]
+                    slides = int(splits[6])
+                    px_length = int(splits[7])
                     edge_sounds = [int(e) for e in splits[8].split("|")]
                     edge_sets = splits[9].split("|")
                     hit_sample_data = splits[10] if len(splits) == 9 else None
                     if hit_sample_data:
                         m2 = re.match(RE_HIT_SAMPLE, hit_sample_data)
-                        normal_set = m2.group(1)
-                        addition_set = m2.group(2)
-                        index = m2.group(3)
-                        volume = m2.group(4)
+                        normal_set = int(m2.group(1))
+                        addition_set = int(m2.group(2))
+                        index = int(m2.group(3))
+                        volume = int(m2.group(4))
                         filename = m2.group(5) or None
                         hit_sample = OsuHitSample(normal_set, addition_set, index, volume, filename)
                     else:
                         hit_sample = OsuHitSample()
                     chart.hit_objects.append(
                         OsuSlider(x, y, time, object_type, hit_sound,
-                        curve_type, curve_points, slides, length, edge_sounds, edge_sets, hit_sample)
+                        curve_type, curve_points, slides, px_length, edge_sounds, edge_sets, hit_sample)
                     )
                 # MAKING THE ASSUMPTION THESE REQUIRE HITSAMPLE
-                # OTHERWISE IT WOULD BE INDESCERABLE FROM A HOLD
+                # OTHERWISE IT WOULD BE INDESCERNABLE FROM A HOLD
                 # x,y,time,type,hitSound,endTime,hitSample
                 elif m := re.match(RE_SPINNER, line):
                     # ignore for now
@@ -459,10 +467,10 @@ class RawOsuChart:
                     end_time = int(m.group(6)) / 1000
                     hit_sample_data = m.group(7)
                     m2 = re.match(RE_HIT_SAMPLE, hit_sample_data)
-                    normal_set = m2.group(1)
-                    addition_set = m2.group(2)
-                    index = m2.group(3)
-                    volume = m2.group(4)
+                    normal_set = int(m2.group(1))
+                    addition_set = int(m2.group(2))
+                    index = int(m2.group(3))
+                    volume = int(m2.group(4))
                     filename = m2.group(5) or None
                     hit_sample = OsuHitSample(normal_set, addition_set, index, volume, filename)
                     chart.hit_objects.append(
@@ -474,3 +482,7 @@ class RawOsuChart:
                 raise ChartParseError(line_num, f"Unknown header '{current_header}'.")
 
         return chart
+
+    def calculate_slider_length(self, time: Seconds, slider: OsuSlider) -> Seconds:
+        latest_timing_point = [t for t in self.timing_points if t.time <= time][-1]
+        return (slider.px_length / (self.difficulty.slider_multiplier * 100 * latest_timing_point.slider_velocity_multipler) * latest_timing_point.beat_length) * slider.slides
