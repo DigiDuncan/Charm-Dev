@@ -83,7 +83,7 @@ class VisualizerView(DigiView):
 
         # Create background stars
         with LogSection(logger, "creating stars"):
-            self.star_camera = arcade.Camera()
+            self.star_camera = arcade.SimpleCamera()
             self.stars = arcade.SpriteList()
             self.scroll_speed = 20  # px/s
             stars_per_screen = 100
@@ -103,7 +103,7 @@ class VisualizerView(DigiView):
 
         with LogSection(logger, "making gradient"):
             # Gradient
-            self.gradient = arcade.create_rectangle_filled_with_colors(
+            self.gradient = arcade.shape_list.create_rectangle_filled_with_colors(
                 [(-250, Settings.height), (Settings.width + 250, Settings.height), (Settings.width + 250, -250), (-250, -250)],
                 [arcade.color.BLACK, arcade.color.BLACK, arcade.color.DARK_PASTEL_PURPLE, arcade.color.DARK_PASTEL_PURPLE]
             )
@@ -206,7 +206,7 @@ class VisualizerView(DigiView):
         cam_zoom = ease_quartout(1.05, 1, self.last_beat, self.last_beat + self.beat_time, self.song.time)
         self.star_camera.scale = star_zoom, star_zoom
         self.camera.scale = 1 / cam_zoom, 1 / cam_zoom
-        self.highway.camera.scale = 1 / cam_zoom, 1 / cam_zoom
+        # self.highway.highway_camera.scale = 1 / cam_zoom, 1 / cam_zoom
 
         # Gradient
         self.gradient.draw()
