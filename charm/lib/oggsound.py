@@ -9,7 +9,7 @@ from arcade.resources import resolve_resource_path
 pyogg_decoder = PyOggDecoder()
 
 class OGGSound(Sound):
-    """This class represents a sound you can play."""
+    """This class represents an OGG sound you can play."""
     def __init__(self, file_name: Union[str, Path], streaming: bool = False):
         self.file_name: str = ""
         file_name = resolve_resource_path(file_name)

@@ -120,7 +120,6 @@ class AdobeSprite(Sprite):
         self.texture_map: dict[Subtexture, int] = {}
         textures = []
         for n, st in enumerate(self._ata.subtextures):
-            logger.debug(f"loading texture {st.name}")
             if st.frame_width is not None and st.frame_height is not None:
                 # FIXME: I'm essentially abusing .load_texture() here.
                 # I should probably be doing the cropping and caching myself,

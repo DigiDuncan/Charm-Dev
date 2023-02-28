@@ -105,7 +105,7 @@ class DigiView(View):
         if self.local_time <= self.fade_in:
             alpha = ease_linear(255, 0, 0, self.fade_in, self.local_time)
             arcade.draw_lrtb_rectangle_filled(0, Settings.width, Settings.height, 0,
-                                              (0, 0, 0, alpha))
+                                             (0, 0, 0, alpha))
 
         if self.window.debug and self.debug_options["box"]:
             arcade.draw_lrtb_rectangle_outline(0, Settings.width, Settings.height, 0, arcade.color.RED, 3)
