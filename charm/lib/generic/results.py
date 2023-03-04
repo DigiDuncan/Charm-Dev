@@ -32,7 +32,7 @@ class Heatmap(arcade.Sprite):
         center = hit_window + 1
 
         self._tex = arcade.Texture.create_empty("_heatmap", (width, height))
-        super().__init__(texture = self._tex)
+        super().__init__(self._tex)
         self._sprite_list = arcade.SpriteList()
         self._sprite_list.append(self)
 
