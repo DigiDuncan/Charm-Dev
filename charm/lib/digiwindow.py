@@ -45,12 +45,12 @@ class DigiWindow(arcade.Window):
         self.last_rp_time = 0
         self.current_rp_state = ":jiggycat:"
         self._rp_stale = True
-        if self.rpc:
-            try:
-                self.rpc.connect()
-                self.rpc_connected = True
-            except pypresence.DiscordError:
-                logger.warn("Discord could not connect the rich presence.")
+        # if self.rpc:
+        #     try:
+        #         self.rpc.connect()
+        #         self.rpc_connected = True
+        #     except pypresence.DiscordError:
+        #         logger.warn("Discord could not connect the rich presence.")
 
         self.fps_averages = []
 
