@@ -1,6 +1,7 @@
 import logging
 import statistics
 import typing
+from typing import Optional
 
 import arcade
 import pyglet
@@ -33,7 +34,7 @@ class DigiWindow(arcade.Window):
         self.show_fps = False
         self.show_log = False
         self.sounds: dict[str, arcade.Sound] = {}
-        self.theme_song: pyglet.media.Player = None
+        self.theme_song: Optional[pyglet.media.Player] = None
 
         # Discord RP
         try:
@@ -94,8 +95,8 @@ class DigiWindow(arcade.Window):
         self.time += delta_time
         self.update_rp()
 
-    def update_rp(self, new_state: str = None):
-        if not self.rpc_connected:
+    def update_rp(self, new_state: Optional[str] = None):
+        if not self.rpc or not self.rpc_connected:
             return
         if new_state and self.current_rp_state != new_state:
             self.current_rp_state = new_state
