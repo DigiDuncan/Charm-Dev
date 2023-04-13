@@ -17,7 +17,7 @@ class CharmException(Exception):
         try:
             arcade.get_window()
         except RuntimeError:
-            # If we aren't in an arcade Window (e.g., unit esting) we don't need the sprite stuff.
+            # If we aren't in an arcade Window (e.g., unit testing) we don't need the sprite stuff.
             return
         self.icon = img_from_resource(charm.data.images.errors, f"{icon}.png")
         self.icon.resize((32, 32), PIL.Image.LANCZOS)
@@ -25,13 +25,14 @@ class CharmException(Exception):
         self.sprite.position = (Settings.width / 2, Settings.height / 2)
 
     def get_sprite(self) -> Sprite:
+        window = arcade.get_window()
         _tex = arcade.Texture.create_empty(f"_error-{self.title}-{self.show_message}", (500, 200))
+        default_atlas = window.ctx.default_atlas
+        default_atlas.add(_tex)
         _icon_tex = arcade.Texture(self.icon)
         sprite = Sprite(_tex)
-        _sprite_list = arcade.SpriteList()
-        _sprite_list.append(sprite)
 
-        with _sprite_list.atlas.render_into(_tex) as fbo:
+        with default_atlas.render_into(_tex) as fbo:
             fbo.clear()
             arcade.draw_lrtb_rectangle_filled(0, 500, 200, 0, arcade.color.BLANCHED_ALMOND)
             arcade.draw_lrtb_rectangle_filled(0, 500, 200, 150, arcade.color.BRANDEIS_BLUE)
