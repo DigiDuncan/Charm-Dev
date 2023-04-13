@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import Enum
 from functools import cache
 from pathlib import Path
 import logging
@@ -20,7 +21,7 @@ import charm.data.images.skins.taiko as taikoskin
 
 logger = logging.getLogger("charm")
 
-class NoteType:
+class NoteType(Enum):
     DON = "don"
     KAT = "kat"
     DRUMROLL = "drumroll"
