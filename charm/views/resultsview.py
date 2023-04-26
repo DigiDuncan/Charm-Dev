@@ -52,6 +52,9 @@ class ResultsView(DigiView):
         self.heatmap.bottom = 10
         self.heatmap.right = self.window.width - 10
 
+        self.sprites = arcade.SpriteList()
+        self.sprites.append(self.heatmap)
+
         # Generate "gum wrapper" background
         self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
         self.success = True
@@ -88,6 +91,6 @@ class ResultsView(DigiView):
         self.score_text.draw()
         self.data_text.draw()
         self.judgements_text.draw()
-        self.heatmap.draw()
+        self.sprites.draw()
 
         super().on_draw()
