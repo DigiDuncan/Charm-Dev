@@ -46,11 +46,11 @@ class DebugMessage:
                 return "???"
 
     def render(self) -> str:
-        return (f"{{background_color (0, 0, 0, 255)}}{{color {arcade.color.PURPLE}}}"
+        return (f"{{background_color (0, 0, 0, 255)}}{{color (128, 0, 128, 255)}}"
                 f"{self.time} | "
-                f"{{background_color {self.color}}}{{color (0, 0, 0, 255)}}"
+                f"{{background_color {self.color[:]}}}{{color (0, 0, 0, 255)}}"
                 f"{self.prefix} "
-                f"{{background_color (0, 0, 0, 255)}}{{color {self.color}}}"
+                f"{{background_color (0, 0, 0, 255)}}{{color {self.color[:]}}}"
                 f"{self.message}")
 
 
