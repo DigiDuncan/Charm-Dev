@@ -34,6 +34,7 @@ class NoteType:
     DEATH = "death"
     HEAL = "heal"
     CAUTION = "caution"
+    STRIKELINE = "strikeline"
 
 
 class NoteColor:
@@ -180,7 +181,7 @@ class FourKeyHighway(Highway):
 
         self.strikeline = arcade.SpriteList()
         for i in [0, 1, 2, 3]:
-            sprite = FourKeyNoteSprite(FourKeyNote(self.chart, 0, i, 0), self, self.note_size)
+            sprite = FourKeyNoteSprite(FourKeyNote(self.chart, 0, i, 0, "strikeline"), self, self.note_size)
             sprite.top = self.strikeline_y
             sprite.left = self.lane_x(sprite.note.lane)
             sprite.alpha = 64
