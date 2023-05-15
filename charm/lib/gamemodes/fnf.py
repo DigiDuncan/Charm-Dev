@@ -58,6 +58,7 @@ class NoteType:
     HEAL = "heal"
     CAUTION = "caution"
 
+
 class NoteColor:
     GREEN = arcade.color.LIME_GREEN
     RED = arcade.color.RED
@@ -95,6 +96,7 @@ class NoteColor:
 @dataclass
 class CameraFocusEvent(Event):
     focused_player: int
+
 
 @dataclass
 class FNFNote(Note):
@@ -250,10 +252,10 @@ class FNFSong(Song):
             # Lanemap: (player, lane, type)
             # TODO: overrides for this
             if fnf_overrides:
-                lanemap = [[l[0], l[1], getattr(NoteType, l[2])] for l in fnf_overrides["lanes"]]
+                lanemap = [[lane[0], lane[1], getattr(NoteType, lane[2])] for lane in fnf_overrides["lanes"]]
             else:
                 lanemap: list[tuple[int, int, NoteType]] = [(0, 0, NoteType.NORMAL), (0, 1, NoteType.NORMAL), (0, 2, NoteType.NORMAL), (0, 3, NoteType.NORMAL),
-                                                        (1, 0, NoteType.NORMAL), (1, 1, NoteType.NORMAL), (1, 2, NoteType.NORMAL), (1, 3, NoteType.NORMAL)]
+                                                            (1, 0, NoteType.NORMAL), (1, 1, NoteType.NORMAL), (1, 2, NoteType.NORMAL), (1, 3, NoteType.NORMAL)]
             # Actually make two charts
             sectionNotes = section["sectionNotes"]
             for note in sectionNotes:
@@ -504,9 +506,9 @@ class FNFLongNoteSprite(FNFNoteSprite):
 
         color = NoteColor.from_note(self.note)
         self.trail = NoteTrail(self.id, self.position, self.note.time, self.note.length, self.highway.px_per_s,
-        color, width = self.highway.note_size, upscroll = True, fill_color = color[:3] + (60,), resolution = 100)
+                               color, width = self.highway.note_size, upscroll = True, fill_color = color[:3] + (60,), resolution = 100)
         self.dead_trail = NoteTrail(self.id, self.position, self.note.time, self.note.length, self.highway.px_per_s,
-        arcade.color.GRAY, width = self.highway.note_size, upscroll = True, fill_color = arcade.color.GRAY[:3] + (60,), resolution = 100)
+                                    arcade.color.GRAY, width = self.highway.note_size, upscroll = True, fill_color = arcade.color.GRAY[:3] + (60,), resolution = 100)
 
     def update_animation(self, delta_time: float):
         self.trail.set_position(*self.position)
@@ -579,7 +581,7 @@ class FNFHighway(Highway):
         # This is slow, don't loop over things.
         b = self.sprite_buckets.calc_bucket(self.song_time)
         window = arcade.get_window()
-        for bucket in self.sprite_buckets.buckets[b:b+2] + [self.sprite_buckets.overbucket]:
+        for bucket in self.sprite_buckets.buckets[b:b+2] + [self.sprite_buckets.overbucket]:  # noqa:E226
             for note in bucket.sprite_list:
                 if isinstance(note, FNFLongNoteSprite) and note.note.time < self.song_time + self.viewport:
                     # Clip the rendering to the strikeline if the key is being held.

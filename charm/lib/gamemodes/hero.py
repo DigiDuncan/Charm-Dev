@@ -54,6 +54,7 @@ VALID_HEADERS = list(DIFF_INST_MAP.keys()) + SPECIAL_HEADERS
 
 Ticks = int
 
+
 class IndexDict(TypedDict):
     bpm: Index
     time_sig: Index
@@ -62,12 +63,14 @@ class IndexDict(TypedDict):
     note: Index
     chord: Index
 
+
 @dataclass
 class TickEvent(Event):
     tick: int
 
     def __lt__(self, other: "TickEvent") -> bool:
         return self.tick < other.tick
+
 
 @dataclass
 class TSEvent(TickEvent):
@@ -78,36 +81,44 @@ class TSEvent(TickEvent):
     def time_sig(self) -> tuple[int, int]:
         return (self.numerator, self.denominator)
 
+
 @dataclass
 class TextEvent(TickEvent):
     text: str
+
 
 @dataclass
 class SectionEvent(TickEvent):
     name: str
 
+
 @dataclass
 class LyricEvent(TickEvent):
     text: str
+
 
 @dataclass
 class StarpowerEvent(TickEvent):
     tick_length: Ticks
     length: Seconds
 
+
 @dataclass
 class SoloEvent(TickEvent):
     tick_length: Ticks
     length: Seconds
 
+
 @dataclass
 class BPMChangeTickEvent(TickEvent):
     new_bpm: float
+
 
 @dataclass
 class BeatEvent(TickEvent):
     id: int
     major: bool = True
+
 
 @dataclass
 class RawBPMEvent:
@@ -116,6 +127,7 @@ class RawBPMEvent:
     mbpm: int
 
 # ---
+
 
 def tick_to_seconds(current_tick: Ticks, sync_track: list[BPMChangeTickEvent], resolution: int = 192, offset = 0) -> Seconds:
     """Takes a tick (and an associated sync_track,) and returns its position in seconds as a float."""
@@ -129,6 +141,7 @@ def tick_to_seconds(current_tick: Ticks, sync_track: list[BPMChangeTickEvent], r
     bps = last_bpm_event.new_bpm / 60
     seconds = tick_delta / (resolution * bps)
     return seconds + offset + last_bpm_event.time
+
 
 class NoteColor:
     GREEN = arcade.color.LIME_GREEN
@@ -156,6 +169,7 @@ class NoteColor:
             case _:
                 return arcade.color.BLACK
 
+
 @dataclass
 class HeroNote(Note):
     tick: int = None
@@ -170,6 +184,7 @@ class HeroNote(Note):
 
     def __repr__(self) -> str:
         return self.__str__()
+
 
 class HeroChord:
     """A data object to hold notes and have useful functions for manipulating and reading them."""
@@ -253,6 +268,7 @@ class HeroChord:
             append_part = [True] + ([False] * (4 - max_fret))
             final_list = [v + append_part for v in valid_shape_list]
             return final_list
+
 
 class HeroChart(Chart):
     def __init__(self, song: 'Song', difficulty: str, instrument: str, lanes: int, hash: str) -> None:

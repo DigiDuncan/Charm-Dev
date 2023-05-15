@@ -40,7 +40,7 @@ class OsuTimingPoint(BPMChangeEvent):
 
     @property
     def kiai_time(self) -> bool:
-        return bool(self.effects & 0b1)
+        return bool(self.effects & 0b0001)
 
     @property
     def omit_barline(self) -> bool:
@@ -67,15 +67,15 @@ class OsuHitObject:
 
     @property
     def hit_sound_normal(self) -> bool:
-        return bool(self.hit_sound & 0b1)
+        return bool(self.hit_sound & 0b0001)
 
     @property
     def hit_sound_whistle(self) -> bool:
-        return bool(self.hit_sound & 0b10)
+        return bool(self.hit_sound & 0b0010)
 
     @property
     def hit_sound_finish(self) -> bool:
-        return bool(self.hit_sound & 0b100)
+        return bool(self.hit_sound & 0b0100)
 
     @property
     def hit_sound_clap(self) -> bool:
@@ -83,7 +83,7 @@ class OsuHitObject:
 
     @property
     def new_combo(self) -> bool:
-        return bool(self.object_type & 0b100)
+        return bool(self.object_type & 0b0100)
 
     @property
     def combo_skip(self) -> int:

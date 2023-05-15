@@ -27,12 +27,14 @@ from charm.objects.line_renderer import NoteTrail
 
 logger = logging.getLogger("charm")
 
+
 class NoteType:
     NORMAL = "normal"
     BOMB = "bomb"
     DEATH = "death"
     HEAL = "heal"
     CAUTION = "caution"
+
 
 class NoteColor:
     GREEN = arcade.color.LIME_GREEN
@@ -67,6 +69,7 @@ class NoteColor:
             case _:
                 return arcade.color.BLACK
 
+
 @cache
 def load_note_texture(note_type, note_lane, height):
     image_name = f"{note_type}-{note_lane + 1}"
@@ -80,6 +83,7 @@ def load_note_texture(note_type, note_lane, height):
         return load_missing_texture(height, height)
     return arcade.Texture(image)
 
+
 @dataclass
 class FourKeyNote(Note):
     parent: FourKeyNote = None
@@ -88,10 +92,12 @@ class FourKeyNote(Note):
     def __lt__(self, other):
         return (self.time, self.lane, self.type) < (other.time, other.lane, other.type)
 
+
 class FourKeyChart(Chart):
     def __init__(self, song: 'Song', difficulty, hash: str):
         super().__init__(song, "4k", difficulty, "4k", 4, hash)
         self.song: FourKeySong = song
+
 
 class FourKeySong(Song):
     def __init__(self, path: Path):
@@ -101,6 +107,7 @@ class FourKeySong(Song):
     @classmethod
     def parse(cls, folder: Path):
         raise NotImplementedError
+
 
 class FourKeyNoteSprite(arcade.Sprite):
     def __init__(self, note: FourKeyNote, highway: FourKeyHighway, height=128, *args, **kwargs):
@@ -124,6 +131,7 @@ class FourKeyNoteSprite(arcade.Sprite):
         if self.note.hit:
             self.alpha = 0
 
+
 class FourKeyLongNoteSprite(FourKeyNoteSprite):
     id = 0
 
@@ -134,9 +142,9 @@ class FourKeyLongNoteSprite(FourKeyNoteSprite):
 
         color = NoteColor.from_note(self.note)
         self.trail = NoteTrail(self.id, self.position, self.note.time, self.note.length, self.highway.px_per_s,
-        color, width=self.highway.note_size, upscroll=True, fill_color=color[:3] + (60,), resolution=100)
+                               color, width=self.highway.note_size, upscroll=True, fill_color=color[:3] + (60,), resolution=100)
         self.dead_trail = NoteTrail(self.id, self.position, self.note.time, self.note.length, self.highway.px_per_s,
-        arcade.color.GRAY, width=self.highway.note_size, upscroll=True, fill_color=arcade.color.GRAY[:3] + (60,), resolution=100)
+                                    arcade.color.GRAY, width=self.highway.note_size, upscroll=True, fill_color=arcade.color.GRAY[:3] + (60,), resolution=100)
 
     def update_animation(self, delta_time: float):
         self.trail.set_position(*self.position)
@@ -145,6 +153,7 @@ class FourKeyLongNoteSprite(FourKeyNoteSprite):
 
     def draw_trail(self):
         self.dead_trail.draw() if self.dead else self.trail.draw()
+
 
 class FourKeyHighway(Highway):
     def __init__(self, chart: FourKeyChart, engine: FourKeyEngine, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5, auto=False):
@@ -234,7 +243,7 @@ class FourKeyHighway(Highway):
         # TODO: This might be slow, don't loop over things.
         b = self.sprite_buckets.calc_bucket(self.song_time)
         window = arcade.get_window()
-        for bucket in self.sprite_buckets.buckets[b:b+2] + [self.sprite_buckets.overbucket]:
+        for bucket in self.sprite_buckets.buckets[b:b+2] + [self.sprite_buckets.overbucket]:  # noqa:E226
             for note in bucket.sprite_list:
                 if isinstance(note, FourKeyLongNoteSprite) and note.note.time < self.song_time + self.viewport:
                     # Clip the rendering to the strikeline if the key is being held.
@@ -247,11 +256,13 @@ class FourKeyHighway(Highway):
         self.sprite_buckets.draw(self.song_time)
         _cam.use()
 
+
 class FourKeyJudgement(Judgement):
     def get_texture(self) -> arcade.Texture:
         with pkg_resources.path(baseskin, f"judgement-{self.key}.png") as image_path:
             tex = arcade.load_texture(image_path)
         return tex
+
 
 class FourKeyEngine(Engine):
     def __init__(self, chart: FourKeyChart, offset: Seconds = -0.025):  # TODO: Set this dynamically
@@ -260,13 +271,13 @@ class FourKeyEngine(Engine):
         mapping = [fk.key1, fk.key2, fk.key3, fk.key4]
         judgements = [
             #               ("name",           "key"             ms, score,  acc, hp=0)
-            FourKeyJudgement("Super Charming", "supercharming",  10,  1000,    1, 0.04),
-            FourKeyJudgement("Charming",       "charming",       25,  1000,  0.9, 0.04),
-            FourKeyJudgement("Excellent",      "excellent",      35,   800,  0.8, 0.03),
-            FourKeyJudgement("Great",          "great",          45,   600,  0.7, 0.02),
-            FourKeyJudgement("Good",           "good",           60,   400,  0.6, 0.01),
-            FourKeyJudgement("OK",             "ok",             75,   200,  0.5,    0),
-            FourKeyJudgement("Miss",           "miss",     math.inf,     0,    0, -0.1)
+            FourKeyJudgement("Super Charming", "supercharming", 10, 1000, 1, 0.04),
+            FourKeyJudgement("Charming", "charming", 25, 1000, 0.9, 0.04),
+            FourKeyJudgement("Excellent", "excellent", 35, 800, 0.8, 0.03),
+            FourKeyJudgement("Great", "great", 45, 600, 0.7, 0.02),
+            FourKeyJudgement("Good", "good", 60, 400, 0.6, 0.01),
+            FourKeyJudgement("OK", "ok", 75, 200, 0.5, 0),
+            FourKeyJudgement("Miss", "miss", math.inf, 0, 0, -0.1)
         ]
         super().__init__(chart, mapping, hit_window, judgements, offset)
 
