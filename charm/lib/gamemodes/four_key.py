@@ -168,6 +168,7 @@ class FourKeyHighway(Highway):
 
         self.auto = auto
 
+        self.bg_color = (0, 0, 0, 128)
         self.show_hit_window = False
 
         self.sprite_buckets = SpriteBucketCollection()
@@ -233,7 +234,7 @@ class FourKeyHighway(Highway):
         self.static_camera.use()
         arcade.draw_lrtb_rectangle_filled(self.x, self.x + self.w,
                                           self.y + self.h, self.y,
-                                          (0, 0, 0, 128))
+                                          self.bg_color)
         if self.show_hit_window:
             arcade.draw_lrtb_rectangle_filled(self.x, self.x + self.w,
                                               self.hit_window_top, self.hit_window_bottom,

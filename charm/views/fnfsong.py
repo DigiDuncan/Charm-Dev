@@ -59,6 +59,16 @@ class FNFSongView(DigiView):
             if not self.songdata:
                 raise ValueError("No valid chart found!")
 
+        with LogSection(logger, "loading engine"):
+            self.engine = FNFEngine(self.songdata.charts[0])
+
+        with LogSection(logger, "loading highways"):
+            self.highway_1 = FourKeyHighway(self.songdata.charts[0], self.engine, (self.window.width / 3 * 2, 0))
+            self.highway_2 = FourKeyHighway(self.songdata.charts[1], self.engine, (0, 0), auto = True)
+
+            self.highway_1.bg_color = (0, 0, 0, 0)
+            self.highway_2.bg_color = (0, 0, 0, 0)
+
         with LogSection(logger, "loading sound"):
             soundfiles = [f for f in path.iterdir() if f.is_file() and f.suffix in [".ogg", ".mp3", ".wav"]]
             trackfiles = []
@@ -127,7 +137,7 @@ class FNFSongView(DigiView):
             i = self.engine.mapping.index(symbol)
             self.key_state[i] = press
             self.highway_1.strikeline[i].alpha = 255 if press else 64
-        self.engine.process_keystate(self.key_state)
+        self.engine.process_keystate()
 
     @shows_errors
     def on_key_press(self, symbol: int, modifiers: int):
@@ -172,17 +182,20 @@ class FNFSongView(DigiView):
             self.song_time_text._label.text = time
         if self.score_text._label.text != str(self.engine.score):
             self.score_text._label.text = str(self.engine.score)
-        if self.judge_text._label.text != self.engine.latest_judgement:
-            self.judge_text._label.text = self.engine.latest_judgement
+        if self.judge_text._label.text != str(self.engine.latest_judgement):
+            self.judge_text._label.text = str(self.engine.latest_judgement)
 
         self.get_spotlight_position(self.tracks.time)
 
-        self.judge_text.y = anim.ease_circout((self.size[1] // 2) + 20, self.size[1] // 2, self.engine.latest_judgement_time, self.engine.latest_judgement_time + 0.25, self.engine.chart_time)
-        self.judge_text.color = tuple(self.judge_text.color[0:3]) + (int(anim.ease_circout(255, 0, self.engine.latest_judgement_time + 0.25, self.engine.latest_judgement_time + 0.5, self.engine.chart_time)),)
+        jt = self.engine.latest_judgement_time if self.engine.latest_judgement_time is not None else 0
+        self.judge_text.y = anim.ease_circout((self.size[1] // 2) + 20, self.size[1] // 2, self.engine.latest_judgement_time, jt + 0.25, self.engine.chart_time)
+        self.judge_text.color = tuple(self.judge_text.color[0:3]) + (int(anim.ease_circout(255, 0, jt + 0.25, jt + 0.5, self.engine.chart_time)),)
         if self.engine.accuracy is not None:
             if self.grade_text._label.text != f"{self.engine.fc_type} | {round(self.engine.accuracy * 100, 2)}% ({self.engine.grade})":
                 self.grade_text._label.text = f"{self.engine.fc_type} | {round(self.engine.accuracy * 100, 2)}% ({self.engine.grade})"
 
+        self.engine.update(self.tracks.time)
+        self.engine.calculate_score()
         self.highway_1.update(self.tracks.time)
         self.highway_2.update(self.tracks.time)
 
