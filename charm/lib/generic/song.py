@@ -23,7 +23,7 @@ class Metadata:
     charter: str = None
     preview_start: Seconds = None
     preview_end: Seconds = None
-    mod: str = None
+    source: str = None
     hash: str = None
     path: Path = None
     gamemode: str = None
