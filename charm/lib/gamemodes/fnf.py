@@ -11,8 +11,8 @@ from typing import Optional, TypedDict
 import arcade
 
 from charm.lib.errors import NoChartsError, UnknownLanesError
-from charm.lib.gamemodes.four_key import FourKeyChart, FourKeyEngine, FourKeyJudgement, FourKeyLongNoteSprite, FourKeyNote, FourKeyNoteSprite
-from charm.lib.generic.engine import DigitalKeyEvent, Judgement
+from charm.lib.gamemodes.four_key import FourKeyChart, FourKeyEngine, FourKeyJudgement, \
+    FourKeyLongNoteSprite, FourKeyNote, FourKeyNoteSprite
 from charm.lib.generic.song import BPMChangeEvent, Event, Metadata, Milliseconds, Seconds, Song
 from charm.lib.utils import clamp
 
@@ -102,13 +102,15 @@ class FNFJudgement(FourKeyJudgement):
 
 class FNFChart(FourKeyChart):
     def __init__(self, song: FNFSong, difficulty: str, player: int, speed: float, hash: str):
-        super().__init__(song, "fnf", difficulty, f"player{player}", 4, hash)
+        super().__init__(song, difficulty, hash)
         self.player1 = "bf"
         self.player2 = "dad"
         self.spectator = "gf"
         self.stage = "stage"
         self.notespeed = speed
         self.hash = hash
+
+        self.instrument = f"fnf-player-{player}"
 
         self.notes: list[FNFNote] = []
 
@@ -190,13 +192,6 @@ class FNFSong(Song):
         section_starts = []
         unknown_lanes = []
 
-        # hardcode_search = (h for h in hardcodes if h.hash == returnsong.hash)
-        # hardcode = next(hardcode_search, None)
-
-        # if hardcode:
-        #     returnsong.metadata["artist"] = hardcode.author
-        #     returnsong.metadata["album"] = hardcode.mod_name
-
         for section in sections:
             # There's a changeBPM event but like, it always has to be paired
             # with a bpm, so it's pointless anyway
@@ -227,7 +222,6 @@ class FNFSong(Song):
                 last_focus = focused
 
             # Lanemap: (player, lane, type)
-            # TODO: overrides for this
             if fnf_overrides:
                 lanemap = [[lane[0], lane[1], getattr(NoteType, lane[2])] for lane in fnf_overrides["lanes"]]
             else:
@@ -299,24 +293,6 @@ class FNFEngine(FourKeyEngine):
         hit_window = 0.166
         super().__init__(chart, offset)
         self.hit_window = hit_window
-
-        self.min_hp = 0
-        self.hp = 1
-        self.max_hp = 2
-        self.bomb_hp = 0.5
-        self.heal_hp = 0.5
-
-        self.has_died = False
-
-        self.latest_judgement = ""
-        self.latest_judgement_time = 0
-        self.all_judgements: list[tuple[Seconds, Seconds, Judgement]] = []
-
-        self.current_notes: list[FNFNote] = self.chart.notes.copy()
-        self.current_events: list[DigitalKeyEvent] = []
-
-        self.last_p1_note = None
-        self.last_note_missed = False
 
     def calculate_score(self):
         # Get all non-scored notes within the current window
