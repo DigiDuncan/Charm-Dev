@@ -7,7 +7,7 @@ from charm.lib import anim
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView, shows_errors
 from charm.lib.gamemodes.fnf import CameraFocusEvent, FNFEngine, FNFSong
-from charm.lib.gamemodes.four_key import FourKeyHighway
+from charm.lib.gamemodes.four_key import FourKeyHighway, load_note_texture
 from charm.lib.keymap import get_keymap
 from charm.lib.logsection import LogSection
 from charm.lib.oggsound import OGGSound
@@ -144,6 +144,7 @@ class FNFSongView(DigiView):
         if symbol in self.engine.mapping:
             i = self.engine.mapping.index(symbol)
             self.highway_1.strikeline[i].alpha = 255 if press else 64
+            self.highway_1.strikeline[i].texture = load_note_texture("normal" if press else "strikeline", i, self.highway_1.note_size)
             if self.tracks.playing:
                 self.engine.process_keystate()
 
@@ -205,6 +206,11 @@ class FNFSongView(DigiView):
             self.judgement_sprite.center_y = anim.ease_circout(self.judgement_jump_pos, self.judgement_land_pos, judgement_time, judgement_time + 0.25, self.tracks.time)
             self.judgement_sprite.alpha = anim.ease_circout(255, 0, judgement_time + 0.5, judgement_time + 1, self.tracks.time)
             self.judgement_sprite.set_texture(judgement_index)
+
+        # FC type, etc.
+        if self.engine.accuracy is not None:
+            if self.grade_text._label.text != f"{self.engine.fc_type} | {round(self.engine.accuracy * 100, 2)}% ({self.engine.grade})":
+                self.grade_text._label.text = f"{self.engine.fc_type} | {round(self.engine.accuracy * 100, 2)}% ({self.engine.grade})"
 
         if self.engine.has_died and not self.window.debug:
             self.back.setup()
