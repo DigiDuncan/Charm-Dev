@@ -39,7 +39,6 @@ class FNFSongView(DigiView):
         self.go_to_spotlight_position: int = 0
         self.spotlight_position: float = 0
         self.hp_bar_length: float = 250
-        self.key_state: tuple[bool, bool, bool, bool] = [False] * 4
         self.paused: bool = False
         self.show_text: bool = True
         self.logo_width: int = None
@@ -116,8 +115,6 @@ class FNFSongView(DigiView):
 
             self.hp_bar_length = 250
 
-            self.key_state = [False] * 4
-
             self.paused = False
             self.show_text = True
 
@@ -133,11 +130,16 @@ class FNFSongView(DigiView):
 
     @shows_errors
     def on_key_something(self, symbol: int, modifiers: int, press: bool):
+        # AWFUL HACK: CRIME
+        # (Why is this not being detected and handled by the keymapper??)
+        for key in get_keymap().get_set("fourkey"):
+            if symbol == key:
+                key.state = press
         if symbol in self.engine.mapping:
             i = self.engine.mapping.index(symbol)
-            self.key_state[i] = press
             self.highway_1.strikeline[i].alpha = 255 if press else 64
-        self.engine.process_keystate()
+            if self.tracks.playing:
+                self.engine.process_keystate()
 
     @shows_errors
     def on_key_press(self, symbol: int, modifiers: int):
@@ -188,7 +190,7 @@ class FNFSongView(DigiView):
         self.get_spotlight_position(self.tracks.time)
 
         jt = self.engine.latest_judgement_time if self.engine.latest_judgement_time is not None else 0
-        self.judge_text.y = anim.ease_circout((self.size[1] // 2) + 20, self.size[1] // 2, self.engine.latest_judgement_time, jt + 0.25, self.engine.chart_time)
+        self.judge_text.y = anim.ease_circout((self.size[1] // 2) + 20, self.size[1] // 2, jt, jt + 0.25, self.engine.chart_time)
         self.judge_text.color = tuple(self.judge_text.color[0:3]) + (int(anim.ease_circout(255, 0, jt + 0.25, jt + 0.5, self.engine.chart_time)),)
         if self.engine.accuracy is not None:
             if self.grade_text._label.text != f"{self.engine.fc_type} | {round(self.engine.accuracy * 100, 2)}% ({self.engine.grade})":
