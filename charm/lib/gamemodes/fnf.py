@@ -289,10 +289,19 @@ class FNFSong(Song):
 
 
 class FNFEngine(FourKeyEngine):
-    def __init__(self, chart: FNFChart, offset: Seconds = -0.075):  # FNF defaults to a 75ms input offset.
+    def __init__(self, chart: FNFChart, offset: Seconds = -0.075):  # FNF defaults to a 75ms input offset. >:(
         hit_window = 0.166
+        judgements = [
+            #           ("name",  "key"    ms,       score, acc,   hp=0)
+            FNFJudgement("sick",  "sick",  45,       350,   1,     0.04),
+            FNFJudgement("good",  "good",  90,       200,   0.75),
+            FNFJudgement("bad",   "bad",   135,      100,   0.5,  -0.03),
+            FNFJudgement("awful", "awful", 166,      50,    -1,   -0.06),  # I'm not calling this "s***", it's not funny.
+            FNFJudgement("miss",  "miss",  math.inf, 0,     -1,   -0.1)
+        ]
         super().__init__(chart, offset)
         self.hit_window = hit_window
+        self.judgements = judgements
 
     def calculate_score(self):
         # Get all non-scored notes within the current window
