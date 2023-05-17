@@ -14,6 +14,7 @@ from charm.lib.oggsound import OGGSound
 from charm.lib.settings import Settings
 from charm.lib.trackcollection import TrackCollection
 from charm.lib.utils import map_range
+from charm.views.resultsview import ResultsView
 
 logger = logging.getLogger("charm")
 
@@ -168,6 +169,13 @@ class FNFSongView(DigiView):
                 self.tracks.log_sync()
             case arcade.key.KEY_8:
                 self.distractions = not self.distractions
+        if self.window.debug:
+            if modifiers & arcade.key.MOD_SHIFT:
+                match symbol:
+                    case arcade.key.H:
+                        self.highway_1.show_hit_window = not self.highway_1.show_hit_window
+                    case arcade.key.R:
+                        self.show_results()
 
         self.on_key_something(symbol, modifiers, True)
         return super().on_key_press(symbol, modifiers)
@@ -176,6 +184,12 @@ class FNFSongView(DigiView):
     def on_key_release(self, symbol: int, modifiers: int):
         self.on_key_something(symbol, modifiers, False)
         return super().on_key_release(symbol, modifiers)
+
+    def show_results(self):
+        self.tracks.close()
+        results_view = ResultsView(self.engine.generate_results(), back = self.back)
+        results_view.setup()
+        self.window.show_view(results_view)
 
     @shows_errors
     def on_update(self, delta_time):
@@ -217,6 +231,9 @@ class FNFSongView(DigiView):
             self.tracks.close()
             self.window.show_view(self.back)
             arcade.play_sound(self.window.sounds["back"])
+
+        if self.tracks.time >= self.tracks.duration:
+            self.show_results()
 
     def get_spotlight_position(self, song_time: float):
         focus_pos = {
