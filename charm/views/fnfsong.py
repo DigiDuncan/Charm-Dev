@@ -29,7 +29,6 @@ class FNFSongView(DigiView):
         self.tracks: TrackCollection = None
         self.song_time_text: arcade.Text = None
         self.score_text: arcade.Text = None
-        self.judge_text: arcade.Text = None
         self.grade_text: arcade.Text = None
         self.pause_text: arcade.Text = None
         self.dead_text: arcade.Text = None
@@ -86,10 +85,6 @@ class FNFSongView(DigiView):
                                         anchor_x="center", anchor_y="top", color=arcade.color.BLACK,
                                         font_name="bananaslip plus")
 
-            self.judge_text = arcade.Text("", (self.size[0] // 2), self.size[1] // 2, font_size=48,
-                                        anchor_x="center", anchor_y="center", color=arcade.color.BLACK,
-                                        font_name="bananaslip plus")
-
             self.grade_text = arcade.Text("Clear", (self.size[0] // 2), self.size[1] - 135, font_size=16,
                                         anchor_x="center", anchor_y="center", color=arcade.color.BLACK,
                                         font_name="bananaslip plus")
@@ -105,6 +100,17 @@ class FNFSongView(DigiView):
         with LogSection(logger, "loading gum wrapper"):
             # Generate "gum wrapper" background
             self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
+
+        with LogSection(logger, "loading judgements"):
+            judgement_textures: list[arcade.Texture] = [j.get_texture() for j in self.engine.judgements]
+            self.judgement_sprite = arcade.Sprite(judgement_textures[0])
+            self.judgement_sprite.textures = judgement_textures
+            self.judgement_sprite.scale = (self.highway_1.w * 0.8) / self.judgement_sprite.width
+            self.judgement_sprite.center_x = self.window.width / 2
+            self.judgement_sprite.center_y = self.window.height / 4
+            self.judgement_jump_pos = self.judgement_sprite.center_y + 25
+            self.judgement_land_pos = self.judgement_sprite.center_y
+            self.judgement_sprite.alpha = 0
 
         with LogSection(logger, "finalizing"):
             self.last_camera_event = CameraFocusEvent(0, 2)
@@ -184,22 +190,21 @@ class FNFSongView(DigiView):
             self.song_time_text._label.text = time
         if self.score_text._label.text != str(self.engine.score):
             self.score_text._label.text = str(self.engine.score)
-        if self.judge_text._label.text != str(self.engine.latest_judgement):
-            self.judge_text._label.text = str(self.engine.latest_judgement)
 
         self.get_spotlight_position(self.tracks.time)
-
-        jt = self.engine.latest_judgement_time if self.engine.latest_judgement_time is not None else 0
-        self.judge_text.y = anim.ease_circout((self.size[1] // 2) + 20, self.size[1] // 2, jt, jt + 0.25, self.engine.chart_time)
-        self.judge_text.color = tuple(self.judge_text.color[0:3]) + (int(anim.ease_circout(255, 0, jt + 0.25, jt + 0.5, self.engine.chart_time)),)
-        if self.engine.accuracy is not None:
-            if self.grade_text._label.text != f"{self.engine.fc_type} | {round(self.engine.accuracy * 100, 2)}% ({self.engine.grade})":
-                self.grade_text._label.text = f"{self.engine.fc_type} | {round(self.engine.accuracy * 100, 2)}% ({self.engine.grade})"
 
         self.engine.update(self.tracks.time)
         self.engine.calculate_score()
         self.highway_1.update(self.tracks.time)
         self.highway_2.update(self.tracks.time)
+
+        # Judgement
+        judgement_index = self.engine.judgements.index(self.engine.latest_judgement) if self.engine.latest_judgement else 0
+        judgement_time = self.engine.latest_judgement_time
+        if judgement_time:
+            self.judgement_sprite.center_y = anim.ease_circout(self.judgement_jump_pos, self.judgement_land_pos, judgement_time, judgement_time + 0.25, self.tracks.time)
+            self.judgement_sprite.alpha = anim.ease_circout(255, 0, judgement_time + 0.5, judgement_time + 1, self.tracks.time)
+            self.judgement_sprite.set_texture(judgement_index)
 
         if self.engine.has_died and not self.window.debug:
             self.back.setup()
@@ -257,7 +262,6 @@ class FNFSongView(DigiView):
         if self.show_text:
             self.song_time_text.draw()
             self.score_text.draw()
-            self.judge_text.draw()
             self.grade_text.draw()
             if self.engine.has_died:
                 self.dead_text.draw()
@@ -271,5 +275,7 @@ class FNFSongView(DigiView):
         if self.distractions:
             self.spotlight_draw()
         self.highway_1.draw()
+
+        self.judgement_sprite.draw()
 
         super().on_draw()

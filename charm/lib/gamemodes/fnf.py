@@ -372,7 +372,7 @@ class FNFEngine(FourKeyEngine):
 
         # Judge the player
         rt = abs(note.hit_time - note.time)
-        self.latest_judgement = j.name
+        self.latest_judgement = j
         self.latest_judgement_time = self.chart_time
         self.all_judgements.append((self.latest_judgement_time, rt, self.latest_judgement))
 
