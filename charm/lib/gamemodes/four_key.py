@@ -12,7 +12,7 @@ import arcade
 import PIL
 import PIL.ImageFilter
 
-import charm.data.images.skins.fnf as fnfskin
+import charm.data.images.skins.fourkey as fourkeyskin
 import charm.data.images.skins.base as baseskin
 from charm.lib.charm import load_missing_texture
 from charm.lib.generic.engine import DigitalKeyEvent, Engine, Judgement
@@ -75,7 +75,7 @@ class NoteColor:
 def load_note_texture(note_type, note_lane, height):
     image_name = f"{note_type}-{note_lane + 1}"
     try:
-        image = img_from_resource(fnfskin, image_name + ".png")
+        image = img_from_resource(fourkeyskin, image_name + ".png")
         if image.height != height:
             width = int((height / image.height) * image.width)
             image = image.resize((width, height), PIL.Image.LANCZOS)

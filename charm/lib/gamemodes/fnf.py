@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.resources as pkg_resources
 import json
 import logging
 import math
@@ -15,6 +16,7 @@ from charm.lib.gamemodes.four_key import FourKeyChart, FourKeyEngine, FourKeyJud
     FourKeyLongNoteSprite, FourKeyNote, FourKeyNoteSprite
 from charm.lib.generic.song import BPMChangeEvent, Event, Metadata, Milliseconds, Seconds, Song
 from charm.lib.utils import clamp
+import charm.data.images.skins.fnf as fnfskin
 
 logger = logging.getLogger("charm")
 
@@ -94,10 +96,10 @@ class FNFNote(FourKeyNote):
 
 
 class FNFJudgement(FourKeyJudgement):
-    pass
-    # @property
-    # def image_name(self) -> str:
-    #     return f"judge-{self.name}"
+    def get_texture(self) -> arcade.Texture:
+        with pkg_resources.path(fnfskin, f"judgement-{self.key}.png") as image_path:
+            tex = arcade.load_texture(image_path)
+        return tex
 
 
 class FNFChart(FourKeyChart):
