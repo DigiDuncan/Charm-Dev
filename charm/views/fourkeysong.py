@@ -8,7 +8,7 @@ from charm.lib.anim import ease_circout
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView, shows_errors
 from charm.lib.errors import NoChartsError
-from charm.lib.gamemodes.four_key import FourKeyHighway, FourKeyEngine
+from charm.lib.gamemodes.four_key import FourKeyHighway, FourKeyEngine, load_note_texture
 from charm.lib.gamemodes.sm import SMEngine, SMSong
 from charm.lib.keymap import get_keymap
 from charm.lib.logsection import LogSection
@@ -95,6 +95,7 @@ class FourKeySongView(DigiView):
         if symbol in self.engine.mapping:
             i = self.engine.mapping.index(symbol)
             self.highway.strikeline[i].alpha = 255 if press else 64
+            self.highway_1.strikeline[i].texture = load_note_texture("normal" if press else "strikeline", i, self.highway_1.note_size)
             if self.tracks.playing:
                 self.engine.process_keystate()
 

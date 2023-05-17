@@ -6,13 +6,15 @@ import arcade
 from charm.lib import anim
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView, shows_errors
-from charm.lib.gamemodes.fnf import CameraFocusEvent, FNFEngine, FNFHighway, FNFSceneManager, FNFSong
+from charm.lib.gamemodes.fnf import CameraFocusEvent, FNFEngine, FNFSong
+from charm.lib.gamemodes.four_key import FourKeyHighway, load_note_texture
 from charm.lib.keymap import get_keymap
 from charm.lib.logsection import LogSection
 from charm.lib.oggsound import OGGSound
 from charm.lib.settings import Settings
 from charm.lib.trackcollection import TrackCollection
 from charm.lib.utils import map_range
+from charm.views.resultsview import ResultsView
 
 logger = logging.getLogger("charm")
 
@@ -22,13 +24,12 @@ class FNFSongView(DigiView):
         super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, *args, **kwargs)
         self.path = path
         self.engine: FNFEngine = None
-        self.highway_1: FNFHighway = None
-        self.highway_2: FNFHighway = None
+        self.highway_1: FourKeyHighway = None
+        self.highway_2: FourKeyHighway = None
         self.songdata: FNFSong = None
         self.tracks: TrackCollection = None
         self.song_time_text: arcade.Text = None
         self.score_text: arcade.Text = None
-        self.judge_text: arcade.Text = None
         self.grade_text: arcade.Text = None
         self.pause_text: arcade.Text = None
         self.dead_text: arcade.Text = None
@@ -38,10 +39,6 @@ class FNFSongView(DigiView):
         self.go_to_spotlight_position: int = 0
         self.spotlight_position: float = 0
         self.hp_bar_length: float = 250
-        self.key_state: tuple[bool, bool, bool, bool] = [False] * 4
-        self.player_sprite: arcade.Sprite = None
-        self.player_anim: int = None
-        self.player_anim_missed: bool = False
         self.paused: bool = False
         self.show_text: bool = True
         self.logo_width: int = None
@@ -49,7 +46,6 @@ class FNFSongView(DigiView):
         self.small_logos_backward: arcade.SpriteList = None
         self.distractions = True
 
-        self.scene: FNFSceneManager = None
         self.success = False
 
     @shows_errors
@@ -62,13 +58,15 @@ class FNFSongView(DigiView):
             if not self.songdata:
                 raise ValueError("No valid chart found!")
 
-        with LogSection(logger, "scene"):
-            self.scene = FNFSceneManager(self.songdata.charts[0])
+        with LogSection(logger, "loading engine"):
+            self.engine = FNFEngine(self.songdata.charts[0])
 
-        self.highway_1 = self.scene.highway_1
-        self.highway_2 = self.scene.highway_2
-        self.engine = self.scene.engine
-        self.player_sprite = self.scene.player_sprite
+        with LogSection(logger, "loading highways"):
+            self.highway_1 = FourKeyHighway(self.songdata.charts[0], self.engine, (self.window.width / 3 * 2, 0))
+            self.highway_2 = FourKeyHighway(self.songdata.charts[1], self.engine, (0, 0), auto = True)
+
+            self.highway_1.bg_color = (0, 0, 0, 0)
+            self.highway_2.bg_color = (0, 0, 0, 0)
 
         with LogSection(logger, "loading sound"):
             soundfiles = [f for f in path.iterdir() if f.is_file() and f.suffix in [".ogg", ".mp3", ".wav"]]
@@ -88,10 +86,6 @@ class FNFSongView(DigiView):
                                         anchor_x="center", anchor_y="top", color=arcade.color.BLACK,
                                         font_name="bananaslip plus")
 
-            self.judge_text = arcade.Text("", (self.size[0] // 2), self.size[1] // 2, font_size=48,
-                                        anchor_x="center", anchor_y="center", color=arcade.color.BLACK,
-                                        font_name="bananaslip plus")
-
             self.grade_text = arcade.Text("Clear", (self.size[0] // 2), self.size[1] - 135, font_size=16,
                                         anchor_x="center", anchor_y="center", color=arcade.color.BLACK,
                                         font_name="bananaslip plus")
@@ -108,6 +102,17 @@ class FNFSongView(DigiView):
             # Generate "gum wrapper" background
             self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
 
+        with LogSection(logger, "loading judgements"):
+            judgement_textures: list[arcade.Texture] = [j.get_texture() for j in self.engine.judgements]
+            self.judgement_sprite = arcade.Sprite(judgement_textures[0])
+            self.judgement_sprite.textures = judgement_textures
+            self.judgement_sprite.scale = (self.highway_1.w * 0.8) / self.judgement_sprite.width
+            self.judgement_sprite.center_x = self.window.width / 2
+            self.judgement_sprite.center_y = self.window.height / 4
+            self.judgement_jump_pos = self.judgement_sprite.center_y + 25
+            self.judgement_land_pos = self.judgement_sprite.center_y
+            self.judgement_sprite.alpha = 0
+
         with LogSection(logger, "finalizing"):
             self.last_camera_event = CameraFocusEvent(0, 2)
             self.last_spotlight_position = 0
@@ -116,15 +121,6 @@ class FNFSongView(DigiView):
             self.spotlight_position = 0
 
             self.hp_bar_length = 250
-
-            self.key_state = [False] * 4
-
-            self.player_sprite.set_animation("BF idle dance")
-            self.player_sprite.scale = 0.5
-            self.player_sprite.right = Settings.width - 10
-            self.player_sprite.bottom = 10
-            self.player_anim = None
-            self.player_anim_missed = False
 
             self.paused = False
             self.show_text = True
@@ -141,11 +137,17 @@ class FNFSongView(DigiView):
 
     @shows_errors
     def on_key_something(self, symbol: int, modifiers: int, press: bool):
+        # AWFUL HACK: CRIME
+        # (Why is this not being detected and handled by the keymapper??)
+        for key in get_keymap().get_set("fourkey"):
+            if symbol == key:
+                key.state = press
         if symbol in self.engine.mapping:
             i = self.engine.mapping.index(symbol)
-            self.key_state[i] = press
             self.highway_1.strikeline[i].alpha = 255 if press else 64
-        self.engine.process_keystate(self.key_state)
+            self.highway_1.strikeline[i].texture = load_note_texture("normal" if press else "strikeline", i, self.highway_1.note_size)
+            if self.tracks.playing:
+                self.engine.process_keystate()
 
     @shows_errors
     def on_key_press(self, symbol: int, modifiers: int):
@@ -167,6 +169,13 @@ class FNFSongView(DigiView):
                 self.tracks.log_sync()
             case arcade.key.KEY_8:
                 self.distractions = not self.distractions
+        if self.window.debug:
+            if modifiers & arcade.key.MOD_SHIFT:
+                match symbol:
+                    case arcade.key.H:
+                        self.highway_1.show_hit_window = not self.highway_1.show_hit_window
+                    case arcade.key.R:
+                        self.show_results()
 
         self.on_key_something(symbol, modifiers, True)
         return super().on_key_press(symbol, modifiers)
@@ -175,6 +184,12 @@ class FNFSongView(DigiView):
     def on_key_release(self, symbol: int, modifiers: int):
         self.on_key_something(symbol, modifiers, False)
         return super().on_key_release(symbol, modifiers)
+
+    def show_results(self):
+        self.tracks.close()
+        results_view = ResultsView(self.engine.generate_results(), back = self.back)
+        results_view.setup()
+        self.window.show_view(results_view)
 
     @shows_errors
     def on_update(self, delta_time):
@@ -190,51 +205,35 @@ class FNFSongView(DigiView):
             self.song_time_text._label.text = time
         if self.score_text._label.text != str(self.engine.score):
             self.score_text._label.text = str(self.engine.score)
-        if self.judge_text._label.text != self.engine.latest_judgement:
-            self.judge_text._label.text = self.engine.latest_judgement
 
         self.get_spotlight_position(self.tracks.time)
 
-        self.judge_text.y = anim.ease_circout((self.size[1] // 2) + 20, self.size[1] // 2, self.engine.latest_judgement_time, self.engine.latest_judgement_time + 0.25, self.engine.chart_time)
-        self.judge_text.color = tuple(self.judge_text.color[0:3]) + (int(anim.ease_circout(255, 0, self.engine.latest_judgement_time + 0.25, self.engine.latest_judgement_time + 0.5, self.engine.chart_time)),)
+        self.engine.update(self.tracks.time)
+        self.engine.calculate_score()
+        self.highway_1.update(self.tracks.time)
+        self.highway_2.update(self.tracks.time)
+
+        # Judgement
+        judgement_index = self.engine.judgements.index(self.engine.latest_judgement) if self.engine.latest_judgement else 0
+        judgement_time = self.engine.latest_judgement_time
+        if judgement_time:
+            self.judgement_sprite.center_y = anim.ease_circout(self.judgement_jump_pos, self.judgement_land_pos, judgement_time, judgement_time + 0.25, self.tracks.time)
+            self.judgement_sprite.alpha = anim.ease_circout(255, 0, judgement_time + 0.5, judgement_time + 1, self.tracks.time)
+            self.judgement_sprite.set_texture(judgement_index)
+
+        # FC type, etc.
         if self.engine.accuracy is not None:
             if self.grade_text._label.text != f"{self.engine.fc_type} | {round(self.engine.accuracy * 100, 2)}% ({self.engine.grade})":
                 self.grade_text._label.text = f"{self.engine.fc_type} | {round(self.engine.accuracy * 100, 2)}% ({self.engine.grade})"
-
-        if (self.engine.last_p1_note, self.engine.last_note_missed) != (self.player_anim, self.player_anim_missed):
-            # logger.debug(f"animation changed from {(self.engine.last_p1_note, self.engine.last_note_missed)} to {(self.boyfriend_anim, self.boyfriend_anim_missed)}")
-            if self.engine.last_p1_note is None:
-                self.player_sprite.set_animation("BF idle dance")
-                self.player_anim = None
-            else:
-                a = ""
-                match self.engine.last_p1_note:
-                    case 0:
-                        a = "BF NOTE LEFT"
-                        self.player_anim = self.engine.last_p1_note
-                    case 1:
-                        a = "BF NOTE DOWN"
-                        self.player_anim = self.engine.last_p1_note
-                    case 2:
-                        a = "BF NOTE UP"
-                        self.player_anim = self.engine.last_p1_note
-                    case 3:
-                        a = "BF NOTE RIGHT"
-                        self.player_anim = self.engine.last_p1_note
-                if self.engine.last_note_missed:
-                    a += " MISS"
-                    self.player_anim_missed = True
-                else:
-                    self.player_anim_missed = False
-                self.player_sprite.set_animation(a)
-
-        self.scene.update(self.tracks.time, delta_time)
 
         if self.engine.has_died and not self.window.debug:
             self.back.setup()
             self.tracks.close()
             self.window.show_view(self.back)
             arcade.play_sound(self.window.sounds["back"])
+
+        if self.tracks.time >= self.tracks.duration:
+            self.show_results()
 
     def get_spotlight_position(self, song_time: float):
         focus_pos = {
@@ -282,12 +281,10 @@ class FNFSongView(DigiView):
         if self.distractions:
             self.small_logos_forward.draw()
             self.small_logos_backward.draw()
-            self.player_sprite.draw()
 
         if self.show_text:
             self.song_time_text.draw()
             self.score_text.draw()
-            self.judge_text.draw()
             self.grade_text.draw()
             if self.engine.has_died:
                 self.dead_text.draw()
@@ -301,5 +298,7 @@ class FNFSongView(DigiView):
         if self.distractions:
             self.spotlight_draw()
         self.highway_1.draw()
+
+        self.judgement_sprite.draw()
 
         super().on_draw()

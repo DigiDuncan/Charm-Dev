@@ -14,7 +14,8 @@ from charm.lib.adobexml import sprite_from_adobe
 from charm.lib.anim import ease_linear, ease_quartout
 from charm.lib.digiview import DigiView
 from charm.lib.logsection import LogSection
-from charm.lib.gamemodes.fnf import FNFEngine, FNFHighway, FNFNote, FNFSong
+from charm.lib.gamemodes.four_key import FourKeyHighway
+from charm.lib.gamemodes.fnf import FNFEngine, FNFNote, FNFSong
 from charm.lib.paths import songspath
 from charm.lib.settings import Settings
 
@@ -79,7 +80,7 @@ class VisualizerView(DigiView):
                 self.enemy_chart = nindex.Index(enemy_chart.notes, "time")
             with LogSection(logger, "generating highway"):
                 self.engine = FNFEngine(self.songdata.charts[0])
-                self.highway = FNFHighway(self.songdata.charts[0], self.engine, (((Settings.width // 3) * 2), 0), auto = True)
+                self.highway = FourKeyHighway(self.songdata.charts[0], self.engine, (((Settings.width // 3) * 2), 0), auto = True)
 
         # Create background stars
         with LogSection(logger, "creating stars"):
