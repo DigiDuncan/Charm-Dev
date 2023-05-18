@@ -112,7 +112,7 @@ class FNFChart(FourKeyChart):
         self.notespeed = speed
         self.hash = hash
 
-        self.instrument = f"fnf-player-{player}"
+        self.instrument = f"fnf-player{player}"
 
         self.notes: list[FNFNote] = []
 
@@ -287,7 +287,7 @@ class FNFSong(Song):
         return charts
 
     def get_chart(self, player, difficulty):
-        return next((c for c in self.charts if c.difficulty == difficulty and c.instrument == f"player{player}"), None)
+        return next((c for c in self.charts if c.difficulty == difficulty and c.instrument == f"fnf-player{player}"), None)
 
 
 class FNFEngine(FourKeyEngine):
