@@ -189,8 +189,8 @@ class FourKeyHighway(Highway):
             self.strikeline.append(sprite)
 
         self.hit_window_mid = self.note_y(0) - (self.note_size / 2)
-        self.hit_window_top = self.note_y(-0.075) - (self.note_size / 2)
-        self.hit_window_bottom = self.note_y(0.075) - (self.note_size / 2)
+        self.hit_window_top = self.note_y(-self.engine.hit_window) - (self.note_size / 2)
+        self.hit_window_bottom = self.note_y(self.engine.hit_window) - (self.note_size / 2)
 
         logger.debug(f"Generated highway for chart {chart.instrument}/{chart.difficulty}.")
 
