@@ -81,6 +81,7 @@ class VisualizerView(DigiView):
             with LogSection(logger, "generating highway"):
                 self.engine = FNFEngine(self.songdata.charts[0])
                 self.highway = FourKeyHighway(self.songdata.charts[0], self.engine, (((Settings.width // 3) * 2), 0), auto = True)
+                self.highway.bg_color = (0, 0, 0, 0)
 
         # Create background stars
         with LogSection(logger, "creating stars"):

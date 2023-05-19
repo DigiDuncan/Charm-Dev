@@ -159,7 +159,7 @@ class AdobeSprite(Sprite):
         # TODO: Can be very slow.
         for texture in self.textures:
             self.texture = texture
-            self.hit_box = self.texture.hit_box_points
+            self.hit_box = arcade.hitbox.HitBox(self.texture.hit_box_points, (self.center_x, self.center_y))
             # logger.info(f"Cached texture {texture.name}")
 
     def set_animation(self, name: str):
@@ -203,7 +203,7 @@ class AdobeSprite(Sprite):
             # Is there an animation override to be played once?
             if self._current_once_animation:
                 self.set_texture(self._current_once_animation.pop(0))
-                self.hit_box = self.texture.hit_box_points
+                self.hit_box = arcade.hitbox.HitBox(self.texture.hit_box_points, (self.center_x, self.center_y))
                 self._animation_time = 0
             # If not, an animation override?
             elif self._current_animation_override:
@@ -214,7 +214,7 @@ class AdobeSprite(Sprite):
                 self._current_animation_index %= len(self._current_animation_override)
 
                 self.set_texture(self._current_animation_override[self._current_animation_index])
-                self.hit_box = self.texture.hit_box_points
+                self.hit_box = arcade.hitbox.HitBox(self.texture.hit_box_points, (self.center_x, self.center_y))
                 self._animation_time = 0
             # If not, is there a normal animation?
             elif self._current_animation:
@@ -225,7 +225,7 @@ class AdobeSprite(Sprite):
                 self._current_animation_index %= len(self._current_animation)
 
                 self.set_texture(self._current_animation[self._current_animation_index])
-                self.hit_box = self.texture.hit_box_points
+                self.hit_box = arcade.hitbox.HitBox(self.texture.hit_box_points, (self.center_x, self.center_y))
                 self._animation_time = 0
             # Set anchors
             if self.anchors:
