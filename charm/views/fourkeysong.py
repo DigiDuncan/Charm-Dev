@@ -95,7 +95,7 @@ class FourKeySongView(DigiView):
         if symbol in self.engine.mapping:
             i = self.engine.mapping.index(symbol)
             self.highway.strikeline[i].alpha = 255 if press else 64
-            self.highway_1.strikeline[i].texture = load_note_texture("normal" if press else "strikeline", i, self.highway_1.note_size)
+            self.highway.strikeline[i].texture = load_note_texture("normal" if press else "strikeline", i, self.highway.note_size)
             if self.tracks.playing:
                 self.engine.process_keystate()
 

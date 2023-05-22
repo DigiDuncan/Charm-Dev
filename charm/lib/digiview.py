@@ -85,7 +85,7 @@ class DigiView(View):
             match symbol:
                 case arcade.key.Z:  # camera zoom
                     self.debug_options["camera_scale"] = 2 if self.debug_options["camera_scale"] == 1 else 1
-                    self.camera.scale = self.debug_options["camera_scale"]
+                    self.camera.scale = (self.debug_options["camera_scale"], self.debug_options["camera_scale"])
                 case arcade.key.B:  # camera outline
                     self.debug_options["box"] = not self.debug_options["box"]
                 case arcade.key.A:  # show atlas
