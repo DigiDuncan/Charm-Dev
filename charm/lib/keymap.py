@@ -1,7 +1,7 @@
 from typing import Optional, Union
 import arcade.key
 from arcade.key import RETURN, ENTER, ESCAPE, BACKSPACE, D, F, J, K, KEY_7, GRAVE, \
-    KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, UP, DOWN, RSHIFT, SPACE
+    KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, UP, DOWN, RSHIFT, SPACE, F11
 from charm.lib.utils import findone
 from charm.lib.errors import MultipleKeyBindsError, ExclusiveKeyBindError, \
     KeyUnboundError, ActionNameConflictError, ActionNotFoundError, SameInputMultipleError, \
@@ -61,6 +61,7 @@ class KeyMap:
             Action('back', [ESCAPE, BACKSPACE], True, True, True),
             Action('debug', [GRAVE, KEY_7], False, True, True),
             Action('pause', [SPACE], True, False, True),
+            Action('fullscreen', [F11], True, False, True),
             Action('fourkey_1', [D], False, False, False),
             Action('fourkey_2', [F], False, False, False),
             Action('fourkey_3', [J], False, False, False),

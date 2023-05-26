@@ -81,6 +81,10 @@ class DigiView(View):
                 self.camera.scale = (self.debug_options["camera_scale"], self.debug_options["camera_scale"])
             else:
                 self.camera.scale = (1, 1)
+        elif symbol == keymap.fullscreen:
+            self.window.set_fullscreen(not self.window.fullscreen)
+            width, height = self.window.get_size()
+            self.window.set_viewport(0, width, 0, height)
         if self.window.debug and modifiers & arcade.key.MOD_SHIFT:
             match symbol:
                 case arcade.key.Z:  # camera zoom
