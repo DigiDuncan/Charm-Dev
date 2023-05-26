@@ -8,6 +8,7 @@ from pyglet.graphics import Batch
 
 import charm.data.images
 from charm.lib.generic.song import Metadata
+from charm.lib.utils import clamp
 
 batch = Batch()
 
@@ -50,19 +51,56 @@ class SongMenu:
         self.labels: dict[Metadata, SongLabelWrapper] = {}
 
         self.spritelist = SpriteList()
-        for i in range(20):
+        for i in range(21):
             with pkg_resources.path(charm.data.images, "menu_card.png") as p:
                 self.spritelist.append(Sprite(p, 0.5))
 
+        self.buffer = 5
+        self.min_factor = 3.5
+        self.max_factor = 1.3
+        self.offset = 0.25
+        self.in_sin = 0.1666
+        self.out_sin = 0.25
+        self.shift = -0.125
+        self.move_forward = 0.1
+
+        self.y_shift = 0
+
+        self.center_sprite_index = len(self.spritelist) // 2
+        center_sprite = self.spritelist[self.center_sprite_index]
+        center_sprite.center_y = arcade.get_window().height / 2 + self.y_shift
         for n, s in enumerate(self.spritelist):
-            if n == 0:
-                s.bottom = 5
+            if n == self.center_sprite_index:
+                s.right = self.current_y_to_x(s.center_y) + (self.move_forward * arcade.get_window().width)
             else:
-                s.bottom = self.spritelist[n - 1].top + 5
-            w, h = arcade.get_window().size
-            p = 0.75
-            s.right = max(p, math.cos(s.center_y / (h / (math.pi / 2)) - 0.8)) * (w / 1.75)
+                diff = n - self.center_sprite_index
+                s.center_y = center_sprite.center_y - (s.height * diff) - (self.buffer * diff) + self.y_shift
+                s.right = self.current_y_to_x(s.center_y)
+
+        self.points = [(self.current_y_to_x(i), i) for i in range(-720, 720 * 2)]
+
+    def current_y_to_x(self, y: float) -> float:
+        w, h = arcade.get_window().size
+        y /= w
+        minimum = w / self.min_factor
+        maximum = w / self.max_factor
+        x = math.sin(y / self.in_sin + self.shift) * self.out_sin + self.offset
+        x *= w
+        return clamp(minimum, x, maximum)
+
+    def update(self, delta_time: float):
+        for n, s in enumerate(self.spritelist):
+            if n == self.center_sprite_index:
+                s.center_y = arcade.get_window().height / 2 + self.y_shift
+                s.right = self.current_y_to_x(s.center_y) + (self.move_forward * arcade.get_window().width)
+            else:
+                diff = n - self.center_sprite_index
+                s.center_y = self.spritelist[self.center_sprite_index].center_y - (s.height * diff) - (self.buffer * diff) + self.y_shift
+                s.right = self.current_y_to_x(s.center_y)
+        self.points = [(self.current_y_to_x(i), i) for i in range(-720, 720 * 2, 4)]
 
     def draw(self):
         self.spritelist.draw()
+        arcade.draw_line(0, 720 / 2, 1280, 720 / 2, arcade.color.BLUE, 5)
+        arcade.draw_line_strip(self.points, arcade.color.RED, 5)
         batch.draw()
