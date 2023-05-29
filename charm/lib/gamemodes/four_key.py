@@ -232,12 +232,12 @@ class FourKeyHighway(Highway):
     def draw(self):
         _cam = arcade.get_window().current_camera
         self.static_camera.use()
-        arcade.draw_lrtb_rectangle_filled(self.x, self.x + self.w,
-                                          self.y + self.h, self.y,
+        arcade.draw_lrbt_rectangle_filled(self.x, self.x + self.w,
+                                          self.y, self.y + self.h,
                                           self.bg_color)
         if self.show_hit_window:
-            arcade.draw_lrtb_rectangle_filled(self.x, self.x + self.w,
-                                              self.hit_window_top, self.hit_window_bottom,
+            arcade.draw_lrbt_rectangle_filled(self.x, self.x + self.w,
+                                              self.hit_window_bottom, self.hit_window_top,
                                               (255, 0, 0, 128))
         self.strikeline.draw()
         self.highway_camera.use()

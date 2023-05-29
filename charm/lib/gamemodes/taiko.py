@@ -183,8 +183,8 @@ class TaikoHighway(Highway):
     def draw(self):
         _cam = arcade.get_window().current_camera
         self.static_camera.use()
-        arcade.draw_lrtb_rectangle_filled(self.x, self.x + self.w,
-                                          self.y + self.h, self.y,
+        arcade.draw_lrbt_rectangle_filled(self.x, self.x + self.w,
+                                          self.y, self.y + self.h,
                                           self.color)
         self.strikeline.draw()
 

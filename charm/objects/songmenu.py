@@ -67,7 +67,7 @@ class SongMenuItem(Sprite):
         with arcade.get_window().ctx.default_atlas.render_into(self._tex) as fbo:
             fbo.clear()
             arcade.draw_circle_filled(self.width - self.height / 2, self.height / 2, self.height / 2, CharmColors.FADED_PURPLE)
-            arcade.draw_lrtb_rectangle_filled(0, self.width - self.height / 2, self.height, 0, CharmColors.FADED_PURPLE)
+            arcade.draw_lrbt_rectangle_filled(0, self.width - self.height / 2, 0, self.height, CharmColors.FADED_PURPLE)
             if (self.artist or self.album):
                 if self.artist:
                     # add the comma

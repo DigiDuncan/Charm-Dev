@@ -763,8 +763,8 @@ class HeroHighway(Highway):
     def draw(self):
         _cam = arcade.get_window().current_camera
         self.static_camera.use()
-        arcade.draw_lrtb_rectangle_filled(self.x, self.x + self.w,
-                                          self.y + self.h, self.y,
+        arcade.draw_lrbt_rectangle_filled(self.x, self.x + self.w,
+                                          self.y, self.y + self.h,
                                           self.color)
         current_beat_idx = self.chart.song.indexes_by_time["beat"].lteq_index(self.song_time)
         last_beat_idx = self.chart.song.indexes_by_time["beat"].lteq_index(self.song_time + self.viewport)

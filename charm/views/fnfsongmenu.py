@@ -120,7 +120,7 @@ class FNFSongMenuView(DigiView):
         self.small_logos_backward.draw()
 
         bottom = ease_quartout(self.size[1], 0, 0.5, 1.5, self.local_time)
-        arcade.draw_lrtb_rectangle_filled(self.album_art.left - self.album_art_buffer, self.size[0], self.size[1], bottom, arcade.color.WHITE[:3] + (127,))
+        arcade.draw_lrbt_rectangle_filled(self.album_art.left - self.album_art_buffer, self.size[0], bottom, self.size[1], arcade.color.WHITE[:3] + (127,))
 
         self.menu.draw()
         if self.local_time < self.selection_changed + self.static_time:

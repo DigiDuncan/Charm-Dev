@@ -42,7 +42,7 @@ class TransparencyWindow(arcade.Window):
     def on_draw(self):
         self.clear(arcade.color.GRAY)
         if self.show_bar:
-            arcade.draw_lrtb_rectangle_filled(0, 1280, 460, 260, (0, 0, 0, 128))
+            arcade.draw_lrbt_rectangle_filled(0, 1280, 260, 460, (0, 0, 0, 128))
         self.sprite_list.draw()
         self.sprite_list2.draw()
 

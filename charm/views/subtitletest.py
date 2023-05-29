@@ -58,8 +58,8 @@ class SubtitleView(DigiView):
         self.small_logos_forward.draw()
         self.small_logos_backward.draw()
 
-        arcade.draw_lrtb_rectangle_filled(
-            0, self.window.width, self.window.height, 0,
+        arcade.draw_lrbt_rectangle_filled(
+            0, self.window.width, 0, self.window.height,
             (0, 0, 0, 127)
         )
 
