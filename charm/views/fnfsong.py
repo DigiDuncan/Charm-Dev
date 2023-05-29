@@ -11,7 +11,6 @@ from charm.lib.gamemodes.four_key import FourKeyHighway, load_note_texture
 from charm.lib.keymap import get_keymap
 from charm.lib.logsection import LogSection
 from charm.lib.oggsound import OGGSound
-from charm.lib.settings import Settings
 from charm.lib.trackcollection import TrackCollection
 from charm.lib.utils import map_range
 from charm.views.resultsview import ResultsView
@@ -238,7 +237,7 @@ class FNFSongView(DigiView):
     def get_spotlight_position(self, song_time: float):
         focus_pos = {
             1: 0,
-            0: Settings.width // 2
+            0: self.window.width // 2
         }
         cameraevents = [e for e in self.songdata.charts[0].events if isinstance(e, CameraFocusEvent) and e.time < self.tracks.time + 0.25]
         if cameraevents:
@@ -264,11 +263,11 @@ class FNFSongView(DigiView):
 
     def spotlight_draw(self):
         arcade.draw_lrtb_rectangle_filled(
-            self.spotlight_position - Settings.width / 2, self.spotlight_position, Settings.height, 0,
+            self.spotlight_position - self.window.width / 2, self.spotlight_position, self.window.height, 0,
             arcade.color.BLACK[:3] + (127,)
         )
         arcade.draw_lrtb_rectangle_filled(
-            self.spotlight_position + Settings.width / 2, self.spotlight_position + Settings.width, Settings.height, 0,
+            self.spotlight_position + self.window.width / 2, self.spotlight_position + self.window.width, self.window.height, 0,
             arcade.color.BLACK[:3] + (127,)
         )
 

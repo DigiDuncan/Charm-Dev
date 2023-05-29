@@ -9,7 +9,6 @@ from charm.lib.anim import ease_linear
 from charm.lib.digiwindow import DigiWindow
 from charm.lib.errors import CharmException, GenericError
 from charm.lib.keymap import get_keymap
-from charm.lib.settings import Settings
 
 logger = logging.getLogger("charm")
 
@@ -48,7 +47,7 @@ class DigiView(View):
         self.local_time = 0.0
         self.fade_in = fade_in
         self.bg_color = bg_color
-        self.camera = arcade.Camera(viewport = (0, 0, Settings.width, Settings.height), window = self.window)
+        self.camera = arcade.Camera(viewport = (0, 0, self.window.width, self.window.height), window = self.window)
         self.debug_options = {
             "camera_scale": 1,
             "box": False}
@@ -108,11 +107,11 @@ class DigiView(View):
     def on_draw(self):
         if self.local_time <= self.fade_in:
             alpha = ease_linear(255, 0, 0, self.fade_in, self.local_time)
-            arcade.draw_lrtb_rectangle_filled(0, Settings.width, Settings.height, 0,
+            arcade.draw_lrtb_rectangle_filled(0, self.window.width, self.window.height, 0,
                                              (0, 0, 0, alpha))
 
         if self.window.debug and self.debug_options["box"]:
-            arcade.draw_lrtb_rectangle_outline(0, Settings.width, Settings.height, 0, arcade.color.RED, 3)
+            arcade.draw_lrtb_rectangle_outline(0, self.window.width, self.window.height, 0, arcade.color.RED, 3)
 
         self.window.debug_draw()
 

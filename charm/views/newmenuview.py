@@ -4,7 +4,6 @@ import arcade
 
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView
-# from charm.lib.settings import Settings
 from charm.objects.songmenu2 import SongMenu
 
 logger = logging.getLogger("charm")

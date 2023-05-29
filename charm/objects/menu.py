@@ -8,7 +8,6 @@ import charm.data.icons
 from charm.lib.anim import ease_circout
 from charm.lib.charm import CharmColors, generate_missing_texture_image
 from charm.lib.digiview import DigiView
-from charm.lib.settings import Settings
 from charm.lib.utils import img_from_resource
 
 
@@ -29,13 +28,14 @@ class MainMenuItem(Sprite):
 
         self.label = arcade.Text(label, 0, 0, CharmColors.PURPLE, anchor_x='center', anchor_y="top",
                                  font_name="bananaslip plus", font_size=24)
-        self.center_y = Settings.height // 2
+        self.center_y = arcade.get_window().height // 2
         self.jiggle_start = 0
 
 
 class MainMenu:
     def __init__(self, items: list[MainMenuItem] = []) -> None:
         self.items = items
+        self.window = arcade.get_window()
 
         self.sprite_list = arcade.SpriteList()
         for item in self.items:
@@ -82,7 +82,7 @@ class MainMenu:
     def update(self, local_time: float):
         self.local_time = local_time
         current = self.items[self.selected_id]
-        current.center_x = ease_circout(self.old_pos[current][0], Settings.width // 2, self.move_start, self.move_end, self.local_time)
+        current.center_x = ease_circout(self.old_pos[current][0], self.window.width // 2, self.move_start, self.move_end, self.local_time)
         current.scale = ease_circout(self.old_pos[current][1], 1, self.move_start, self.move_end, self.local_time)
         current.alpha = ease_circout(self.old_pos[current][2], 255, self.move_start, self.move_end, self.local_time)
         current.label.x = current.center_x
@@ -90,7 +90,7 @@ class MainMenu:
         self.loading_label.x = current.center_x
         self.loading_label.y = current.top
 
-        x_bumper = Settings.width // 4
+        x_bumper = self.window.width // 4
 
         for n, item in enumerate(self.items):
             rel_id = n - self.selected_id

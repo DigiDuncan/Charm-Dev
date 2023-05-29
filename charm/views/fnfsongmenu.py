@@ -13,7 +13,6 @@ from charm.lib.generic.song import Song
 from charm.lib.gamemodes.fnf import FNFSong
 from charm.lib.keymap import get_keymap
 from charm.lib.paths import songspath
-from charm.lib.settings import Settings
 from charm.objects.songmenu import SongMenu
 from charm.views.fnfsong import FNFSongView
 
@@ -22,7 +21,7 @@ class FNFSongMenuView(DigiView):
     def __init__(self, *args, **kwargs):
         super().__init__(fade_in=0.5, bg_color=CharmColors.FADED_GREEN, *args, **kwargs)
 
-        self.album_art_buffer = Settings.width // 20
+        self.album_art_buffer = self.window.width // 20
         self.static_time = 0.25
 
     @shows_errors

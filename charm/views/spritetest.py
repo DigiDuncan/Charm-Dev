@@ -5,7 +5,6 @@ from charm.lib.adobexml import sprite_from_adobe
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView
 from charm.lib.keymap import get_keymap
-from charm.lib.settings import Settings
 
 
 class SpriteTestView(DigiView):
@@ -24,8 +23,8 @@ class SpriteTestView(DigiView):
         self.sprite.left = 0
         self.sprite.set_animation(SPRITE_ANIM)
         self.anims = cycle(self.sprite.animations)
-        self.anim_label = arcade.Text(SPRITE_ANIM, Settings.width // 2, Settings.height, font_size = 24, color = arcade.color.BLACK, anchor_x="center", anchor_y="top")
-        self.data_label = arcade.Text("", Settings.width, 0, font_size = 24, color = arcade.color.BLACK, anchor_x="right", anchor_y="bottom", multiline=True, width=Settings.width, align="right")
+        self.anim_label = arcade.Text(SPRITE_ANIM, self.window.width // 2, self.window.height, font_size = 24, color = arcade.color.BLACK, anchor_x="center", anchor_y="top")
+        self.data_label = arcade.Text("", self.window.width, 0, font_size = 24, color = arcade.color.BLACK, anchor_x="right", anchor_y="bottom", multiline=True, width=self.window.width, align="right")
 
         self.fps = self.sprite.fps
         self.paused = False

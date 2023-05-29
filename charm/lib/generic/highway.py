@@ -1,6 +1,5 @@
 import arcade
 
-from charm.lib.settings import Settings
 from charm.lib.generic.song import Chart
 
 class Highway:
@@ -9,11 +8,11 @@ class Highway:
         self.notes = self.chart.notes
 
         self._pos = pos
-        self.size = size if size is not None else (Settings.width // 3, Settings.height)
         self.gap = gap
         self.downscroll = downscroll
         self.viewport: float = 1
         self.window = arcade.get_window()
+        self.size = size if size is not None else (self.window.width // 3, self.window.height)
 
         self.static_camera = arcade.SimpleCamera()
         self.highway_camera = arcade.SimpleCamera()

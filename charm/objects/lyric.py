@@ -6,10 +6,8 @@ import pysubs2
 from pysubs2 import SSAEvent, SSAFile
 
 from charm.lib.generic.song import Seconds
-from charm.lib.settings import Settings
 
 re_karaoke = re.compile(r"{\\(kf?)(\d+)}([^{}]+)")
-
 
 class Subtitle(SSAEvent):
     def __init__(self, event: SSAEvent, file: SSAFile):
@@ -41,7 +39,7 @@ class Subtitle(SSAEvent):
             anchor_x = self.anchor_x,
             anchor_y = self.anchor_y,
             align = self.anchor_x,
-            width = Settings.width
+            width = arcade.get_window().width
         )
 
     @property
@@ -50,31 +48,31 @@ class Subtitle(SSAEvent):
             # `alignment` is a number 1-9 in "numpad positioning"
             case 7:
                 # top left
-                return (0, Settings.height)
+                return (0, window.height)
             case 8:
                 # top center
-                return (Settings.width / 2, Settings.height)
+                return (window.width / 2, window.height)
             case 9:
                 # top right
-                return (Settings.width, Settings.height)
+                return (window.width, window.height)
             case 4:
                 # middle left
-                return (0, Settings.height / 2)
+                return (0, window.height / 2)
             case 5:
                 # middle center
-                return (Settings.width / 2, Settings.height / 2)
+                return (window.width / 2, window.height / 2)
             case 6:
                 # middle right
-                return (Settings.width, Settings.height / 2)
+                return (window.width, window.height / 2)
             case 1:
                 # bottom left
                 return (0, 0)
             case 2:
                 # bottom center
-                return (Settings.width / 2, 0)
+                return (window.width / 2, 0)
             case 3:
                 # bottom right
-                return (Settings.width, 0)
+                return (window.width, 0)
 
     @property
     def marginx(self):

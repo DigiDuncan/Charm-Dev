@@ -5,7 +5,6 @@ import arcade
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView
 from charm.lib.keymap import get_keymap
-from charm.lib.settings import Settings
 
 import charm.data.subtitle
 from charm.objects.lyric import LyricAnimator
@@ -60,7 +59,7 @@ class SubtitleView(DigiView):
         self.small_logos_backward.draw()
 
         arcade.draw_lrtb_rectangle_filled(
-            0, Settings.width, Settings.height, 0,
+            0, self.window.width, self.window.height, 0,
             (0, 0, 0, 127)
         )
 

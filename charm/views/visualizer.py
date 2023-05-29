@@ -17,7 +17,6 @@ from charm.lib.logsection import LogSection
 from charm.lib.gamemodes.four_key import FourKeyHighway
 from charm.lib.gamemodes.fnf import FNFEngine, FNFNote, FNFSong
 from charm.lib.paths import songspath
-from charm.lib.settings import Settings
 
 logger = logging.getLogger("charm")
 
@@ -80,7 +79,7 @@ class VisualizerView(DigiView):
                 self.enemy_chart = nindex.Index(enemy_chart.notes, "time")
             with LogSection(logger, "generating highway"):
                 self.engine = FNFEngine(self.songdata.charts[0])
-                self.highway = FourKeyHighway(self.songdata.charts[0], self.engine, (((Settings.width // 3) * 2), 0), auto = True)
+                self.highway = FourKeyHighway(self.songdata.charts[0], self.engine, (((self.window.width // 3) * 2), 0), auto = True)
                 self.highway.bg_color = (0, 0, 0, 0)
 
         # Create background stars
@@ -89,24 +88,24 @@ class VisualizerView(DigiView):
             self.stars = arcade.SpriteList()
             self.scroll_speed = 20  # px/s
             stars_per_screen = 100
-            star_height = Settings.height + int(self._song.source.duration * self.scroll_speed)
-            star_amount = int(stars_per_screen * (star_height / Settings.height))
+            star_height = self.window.height + int(self._song.source.duration * self.scroll_speed)
+            star_amount = int(stars_per_screen * (star_height / self.window.height))
             logger.info(f"Generating {star_amount} stars...")
             for i in range(star_amount):
                 sprite = arcade.SpriteCircle(5, arcade.color.WHITE, True)
-                sprite.center_x = randint(0, Settings.width)
-                sprite.center_y = randint(-(star_height - Settings.height), Settings.height)
+                sprite.center_x = randint(0, self.window.width)
+                sprite.center_y = randint(-(star_height - self.window.height), self.window.height)
                 self.stars.append(sprite)
 
         with LogSection(logger, "creating text"):
-            self.text = arcade.Text("Fourth Wall by Jacaris", Settings.width / 4, Settings.height * (0.9),
+            self.text = arcade.Text("Fourth Wall by Jacaris", self.window.width / 4, self.window.height * (0.9),
             font_name = "Determination Sans", font_size = 32, align="center", anchor_x="center", anchor_y="center",
-            width = Settings.width, color = (255, 255, 255, 128))
+            width = self.window.width, color = (255, 255, 255, 128))
 
         with LogSection(logger, "making gradient"):
             # Gradient
             self.gradient = arcade.shape_list.create_rectangle_filled_with_colors(
-                [(-250, Settings.height), (Settings.width + 250, Settings.height), (Settings.width + 250, -250), (-250, -250)],
+                [(-250, self.window.height), (self.window.width + 250, self.window.height), (self.window.width + 250, -250), (-250, -250)],
                 [arcade.color.BLACK, arcade.color.BLACK, arcade.color.DARK_PASTEL_PURPLE, arcade.color.DARK_PASTEL_PURPLE]
             )
 
@@ -122,14 +121,14 @@ class VisualizerView(DigiView):
             self.sprite.bottom = 0
             self.sprite.left = 0
             self.boyfriend.bottom = 0
-            self.boyfriend.right = Settings.width - 50
+            self.boyfriend.right = self.window.width - 50
             self.sprite.set_animation("idle")
             self.boyfriend.set_animation("idle")
 
         # Settings
         with LogSection(logger, "finalizing setup"):
             self.multiplier = 1 / 250
-            self.y = Settings.height // 2
+            self.y = self.window.height // 2
             self.line_width = 1
             self.x_scale = 2
             self.resolution = 4
@@ -137,7 +136,7 @@ class VisualizerView(DigiView):
             self.show_text = True
 
             # RAM
-            self.pixels: list[tuple[int, int]] = [(0, 0) * Settings.width]
+            self.pixels: list[tuple[int, int]] = [(0, 0) * self.window.width]
             self.last_beat = -self.beat_time
             self.last_enemy_note: FNFNote = None
             self.last_player_note: FNFNote = None
@@ -157,8 +156,8 @@ class VisualizerView(DigiView):
 
         # Waveform
         self.wave.rewind()
-        self.wave.setpos(min(int(self.song.time * self.sample_rate), self.sample_count - Settings.width))
-        signal_wave = self.wave.readframes(int(Settings.width))
+        self.wave.setpos(min(int(self.song.time * self.sample_rate), self.sample_count - self.window.width))
+        signal_wave = self.wave.readframes(int(self.window.width))
         samples = np.frombuffer(signal_wave, dtype=np.int16)[::self.resolution * 2]
         self.pixels = [(n * self.resolution, float(s) * self.multiplier + self.y) for n, s in enumerate(samples)]
 
@@ -228,14 +227,14 @@ class VisualizerView(DigiView):
                 player_time = player_note.time
                 player_opacity = ease_linear(32, 0, player_time, player_time + self.beat_time, self.song.time)
                 player_color = player_color[:3] + (int(player_opacity),)
-                arcade.draw_xywh_rectangle_filled(Settings.width / 2, 0, Settings.width / 2, Settings.height, player_color)
+                arcade.draw_xywh_rectangle_filled(self.window.width / 2, 0, self.window.width / 2, self.window.height, player_color)
             enemy_note = self.enemy_chart.lt(self.song.time)
             if enemy_note:
                 enemy_color = colormap[enemy_note.lane]
                 enemy_time = enemy_note.time
                 enemy_opacity = ease_linear(32, 0, enemy_time, enemy_time + self.beat_time, self.song.time)
                 enemy_color = enemy_color[:3] + (int(enemy_opacity),)
-                arcade.draw_xywh_rectangle_filled(0, 0, Settings.width / 2, Settings.height, enemy_color)
+                arcade.draw_xywh_rectangle_filled(0, 0, self.window.width / 2, self.window.height, enemy_color)
 
         # Text
         if self.show_text:
