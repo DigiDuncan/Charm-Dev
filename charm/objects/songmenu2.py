@@ -50,6 +50,8 @@ class SongMenu:
         self.items.sort(key = lambda m: m.title)
         self.labels: dict[Metadata, SongLabelWrapper] = {}
 
+        self.window = arcade.get_window()
+
         self.spritelist = SpriteList()
         for i in range(21):
             with pkg_resources.path(charm.data.images, "menu_card.png") as p:
@@ -77,7 +79,7 @@ class SongMenu:
                 s.center_y = center_sprite.center_y - (s.height * diff) - (self.buffer * diff) + self.y_shift
                 s.right = self.current_y_to_x(s.center_y)
 
-        self.points = [(self.current_y_to_x(i), i) for i in range(-720, 720 * 2)]
+        self.points = [(self.current_y_to_x(i), i) for i in range(-self.window.height, self.window.height * 2)]
 
     def current_y_to_x(self, y: float) -> float:
         w, h = arcade.get_window().size
@@ -97,10 +99,10 @@ class SongMenu:
                 diff = n - self.center_sprite_index
                 s.center_y = self.spritelist[self.center_sprite_index].center_y - (s.height * diff) - (self.buffer * diff) + self.y_shift
                 s.right = self.current_y_to_x(s.center_y)
-        self.points = [(self.current_y_to_x(i), i) for i in range(-720, 720 * 2, 4)]
+        self.points = [(self.current_y_to_x(i), i) for i in range(-self.window.height, self.window.height * 2, 4)]
 
     def draw(self):
         self.spritelist.draw()
-        arcade.draw_line(0, 720 / 2, 1280, 720 / 2, arcade.color.BLUE, 5)
+        arcade.draw_line(0, self.window.height / 2, self.window.width, self.window.height / 2, arcade.color.BLUE, 5)
         arcade.draw_line_strip(self.points, arcade.color.RED, 5)
         batch.draw()

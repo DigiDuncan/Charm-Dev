@@ -11,7 +11,6 @@ from charm.lib.gamemodes.four_key import FourKeyHighway, load_note_texture
 from charm.lib.keymap import get_keymap
 from charm.lib.logsection import LogSection
 from charm.lib.oggsound import OGGSound
-from charm.lib.settings import Settings
 from charm.lib.trackcollection import TrackCollection
 from charm.lib.utils import map_range
 from charm.views.resultsview import ResultsView
@@ -238,7 +237,7 @@ class FNFSongView(DigiView):
     def get_spotlight_position(self, song_time: float):
         focus_pos = {
             1: 0,
-            0: Settings.width // 2
+            0: self.window.width // 2
         }
         cameraevents = [e for e in self.songdata.charts[0].events if isinstance(e, CameraFocusEvent) and e.time < self.tracks.time + 0.25]
         if cameraevents:
@@ -255,20 +254,20 @@ class FNFSongView(DigiView):
         hp_max = self.size[0] // 2 + self.hp_bar_length // 2
         hp_normalized = map_range(self.engine.hp, self.engine.min_hp, self.engine.max_hp, 0, 1)
         hp = anim.lerp(hp_min, hp_max, hp_normalized)
-        arcade.draw_lrtb_rectangle_filled(
+        arcade.draw_lrbt_rectangle_filled(
             hp_min, hp_max,
-            self.size[1] - 100, self.size[1] - 110,
+            self.size[1] - 110, self.size[1] - 100,
             arcade.color.BLACK
         )
         arcade.draw_circle_filled(hp, self.size[1] - 105, 20, arcade.color.BLUE)
 
     def spotlight_draw(self):
-        arcade.draw_lrtb_rectangle_filled(
-            self.spotlight_position - Settings.width / 2, self.spotlight_position, Settings.height, 0,
+        arcade.draw_lrbt_rectangle_filled(
+            self.spotlight_position - self.window.width / 2, self.spotlight_position, 0, self.window.height,
             arcade.color.BLACK[:3] + (127,)
         )
-        arcade.draw_lrtb_rectangle_filled(
-            self.spotlight_position + Settings.width / 2, self.spotlight_position + Settings.width, Settings.height, 0,
+        arcade.draw_lrbt_rectangle_filled(
+            self.spotlight_position + self.window.width / 2, self.spotlight_position + self.window.width, 0, self.window.height,
             arcade.color.BLACK[:3] + (127,)
         )
 

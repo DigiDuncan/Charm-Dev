@@ -13,7 +13,6 @@ from charm.lib.gamemodes.osu import OsuHitCircle, OsuSlider, OsuSpinner, RawOsuC
 from charm.lib.generic.engine import Engine
 from charm.lib.generic.highway import Highway
 from charm.lib.generic.song import Chart, Metadata, Note, Song
-from charm.lib.settings import Settings
 from charm.lib.spritebucket import SpriteBucketCollection
 from charm.lib.utils import img_from_resource
 
@@ -106,7 +105,8 @@ class TaikoNoteSprite(Sprite):
 class TaikoHighway(Highway):
     def __init__(self, chart: Chart, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5, auto = False):
         if size is None:
-            size = int(Settings.width / (1280 / 400)), Settings.height
+            self.window = arcade.get_window()
+            size = int(self.window.width / (1280 / 400)), self.window.height
 
         super().__init__(chart, pos, size, gap)
 
@@ -183,8 +183,8 @@ class TaikoHighway(Highway):
     def draw(self):
         _cam = arcade.get_window().current_camera
         self.static_camera.use()
-        arcade.draw_lrtb_rectangle_filled(self.x, self.x + self.w,
-                                          self.y + self.h, self.y,
+        arcade.draw_lrbt_rectangle_filled(self.x, self.x + self.w,
+                                          self.y, self.y + self.h,
                                           self.color)
         self.strikeline.draw()
 

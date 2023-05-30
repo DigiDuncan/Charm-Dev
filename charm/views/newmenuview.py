@@ -4,7 +4,6 @@ import arcade
 
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView
-# from charm.lib.settings import Settings
 from charm.objects.songmenu2 import SongMenu
 
 logger = logging.getLogger("charm")
@@ -88,6 +87,6 @@ class NewMenuView(DigiView):
         self.menu.draw()
 
         arcade.draw_text(f"{self.menu.min_factor=}\n{self.menu.max_factor=}\n{self.menu.offset=}\n{self.menu.in_sin=}\n{self.menu.out_sin=}\n{self.menu.shift=}\n{self.menu.move_forward=}",
-                         1280, 720, arcade.color.BLACK, width = 1280, align = "right", anchor_x = "right", anchor_y = "top", multiline = True, font_size = 16)
+                         self.window.width, self.window.height, arcade.color.BLACK, width = self.window.width, align = "right", anchor_x = "right", anchor_y = "top", multiline = True, font_size = 16)
 
         super().on_draw()

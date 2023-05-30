@@ -20,7 +20,6 @@ from charm.lib.generic.highway import Highway
 from charm.lib.generic.results import Results
 from charm.lib.generic.song import Note, Chart, Seconds, Song
 from charm.lib.keymap import get_keymap
-from charm.lib.settings import Settings
 from charm.lib.spritebucket import SpriteBucketCollection
 from charm.lib.utils import img_from_resource, clamp
 from charm.objects.line_renderer import NoteTrail
@@ -159,7 +158,8 @@ class FourKeyLongNoteSprite(FourKeyNoteSprite):
 class FourKeyHighway(Highway):
     def __init__(self, chart: FourKeyChart, engine: FourKeyEngine, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5, auto=False):
         if size is None:
-            size = int(Settings.width / (1280 / 400)), Settings.height
+            self.window = arcade.get_window()
+            size = int(self.window.width / (1280 / 400)), self.window.height
 
         super().__init__(chart, pos, size, gap)
         self.engine = engine
@@ -232,12 +232,12 @@ class FourKeyHighway(Highway):
     def draw(self):
         _cam = arcade.get_window().current_camera
         self.static_camera.use()
-        arcade.draw_lrtb_rectangle_filled(self.x, self.x + self.w,
-                                          self.y + self.h, self.y,
+        arcade.draw_lrbt_rectangle_filled(self.x, self.x + self.w,
+                                          self.y, self.y + self.h,
                                           self.bg_color)
         if self.show_hit_window:
-            arcade.draw_lrtb_rectangle_filled(self.x, self.x + self.w,
-                                              self.hit_window_top, self.hit_window_bottom,
+            arcade.draw_lrbt_rectangle_filled(self.x, self.x + self.w,
+                                              self.hit_window_bottom, self.hit_window_top,
                                               (255, 0, 0, 128))
         self.strikeline.draw()
         self.highway_camera.use()

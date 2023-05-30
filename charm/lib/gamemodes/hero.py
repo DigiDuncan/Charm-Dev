@@ -20,7 +20,6 @@ from charm.lib.generic.engine import DigitalKeyEvent, Engine, Judgement
 from charm.lib.generic.highway import Highway
 from charm.lib.generic.song import Chart, Event, Metadata, Note, Seconds, Song
 from charm.lib.keymap import get_keymap
-from charm.lib.settings import Settings
 from charm.lib.spritebucket import SpriteBucketCollection
 from charm.lib.utils import img_from_resource
 
@@ -659,7 +658,8 @@ class HeroLongNoteSprite(HeroNoteSprite):
 class HeroHighway(Highway):
     def __init__(self, chart: HeroChart, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5, auto = False, show_flags = False):
         if size is None:
-            size = int(Settings.width / (1280 / 400)), Settings.height
+            self.window = arcade.get_window()
+            size = int(self.window.width / (1280 / 400)), self.window.height
 
         super().__init__(chart, pos, size, gap, downscroll = True)
 
@@ -763,8 +763,8 @@ class HeroHighway(Highway):
     def draw(self):
         _cam = arcade.get_window().current_camera
         self.static_camera.use()
-        arcade.draw_lrtb_rectangle_filled(self.x, self.x + self.w,
-                                          self.y + self.h, self.y,
+        arcade.draw_lrbt_rectangle_filled(self.x, self.x + self.w,
+                                          self.y, self.y + self.h,
                                           self.color)
         current_beat_idx = self.chart.song.indexes_by_time["beat"].lteq_index(self.song_time)
         last_beat_idx = self.chart.song.indexes_by_time["beat"].lteq_index(self.song_time + self.viewport)

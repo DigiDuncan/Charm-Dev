@@ -10,7 +10,6 @@ import PIL.Image
 from charm.lib.anim import ease_circout
 from charm.lib.charm import CharmColors
 from charm.lib.generic.song import Metadata
-from charm.lib.settings import Settings
 from charm.lib.utils import clamp
 
 from pathlib import Path
@@ -28,6 +27,8 @@ class SongMenuItem(Sprite):
 
         # Make a real hash, probably on Song.
         self.key = sha1((str(self.title) + str(self.artist) + str(self.album)).encode()).hexdigest()
+
+        window = arcade.get_window()
 
         art_path = None
         art_paths = [Path(song.path / "album.jpg"),
@@ -54,19 +55,19 @@ class SongMenuItem(Sprite):
 
         self.album_art = arcade.Texture(album_art_img)
 
-        self._w = w if w else Settings.width // 2
-        self._h = h if h else Settings.height // 8
+        self._w = w if w else window.width // 2
+        self._h = h if h else window.height // 8
 
         self._tex = arcade.Texture.create_empty(f"{self.key}-menuitem", (self._w, self._h))
         super().__init__(self._tex, *args, **kwargs)
         arcade.get_window().ctx.default_atlas.add(self._tex)
 
-        self.position = (0, -Settings.height)
+        self.position = (0, -window.height)
 
         with arcade.get_window().ctx.default_atlas.render_into(self._tex) as fbo:
             fbo.clear()
             arcade.draw_circle_filled(self.width - self.height / 2, self.height / 2, self.height / 2, CharmColors.FADED_PURPLE)
-            arcade.draw_lrtb_rectangle_filled(0, self.width - self.height / 2, self.height, 0, CharmColors.FADED_PURPLE)
+            arcade.draw_lrbt_rectangle_filled(0, self.width - self.height / 2, 0, self.height, CharmColors.FADED_PURPLE)
             if (self.artist or self.album):
                 if self.artist:
                     # add the comma
@@ -115,6 +116,8 @@ class SongMenu:
         for item in self.items:
             self.old_pos[item] = (item.left, item.center_y)
 
+        self.window = arcade.get_window()
+
     @property
     def selected_id(self) -> int:
         return self._selected_id
@@ -143,7 +146,7 @@ class SongMenu:
         self.local_time = local_time
         current = self.items[self.selected_id]
         current.left = ease_circout(self.old_pos[current][0], 0, self.move_start, self.move_end, self.local_time)
-        current.center_y = ease_circout(self.old_pos[current][1], Settings.height // 2, self.move_start, self.move_end, self.local_time)
+        current.center_y = ease_circout(self.old_pos[current][1], self.window.height // 2, self.move_start, self.move_end, self.local_time)
         up_id = self.selected_id
         down_id = self.selected_id
         x_delta = current.width / (self.radius + 1) / 1.5

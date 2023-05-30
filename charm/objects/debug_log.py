@@ -1,10 +1,8 @@
 import logging
 
 import arcade
-import pyglet
 import arrow
-
-from charm.lib.settings import Settings
+import pyglet
 
 
 class DebugMessage:
@@ -58,7 +56,7 @@ class DebugLog:
     def __init__(self) -> None:
         self.messages: list[DebugMessage] = []
         self.doc = pyglet.text.document.FormattedDocument()
-        self.layout = pyglet.text.layout.TextLayout(self.doc, width=Settings.width, multiline=True)
+        self.layout = pyglet.text.layout.TextLayout(self.doc, width=1280, multiline=True)
 
     def render(self) -> str:
         renderstr = "\n\n".join([m.render() for m in self.messages[-10:]])

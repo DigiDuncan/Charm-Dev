@@ -5,8 +5,6 @@ from arcade import Sprite
 
 import charm.data.images.errors
 from charm.lib.utils import img_from_resource
-from charm.lib.settings import Settings
-
 
 class CharmException(Exception):
     def __init__(self, title: str, show_message: str, icon: str = "error", *args: object):
@@ -15,14 +13,14 @@ class CharmException(Exception):
         self._icon = icon
         super().__init__(show_message, *args)
         try:
-            arcade.get_window()
+            window = arcade.get_window()
         except RuntimeError:
             # If we aren't in an arcade Window (e.g., unit testing) we don't need the sprite stuff.
             return
         self.icon = img_from_resource(charm.data.images.errors, f"{icon}.png")
         self.icon.resize((32, 32), PIL.Image.LANCZOS)
         self.sprite = self.get_sprite()
-        self.sprite.position = (Settings.width / 2, Settings.height / 2)
+        self.sprite.position = (window.width / 2, window.height / 2)
 
     def get_sprite(self) -> Sprite:
         window = arcade.get_window()
@@ -34,8 +32,8 @@ class CharmException(Exception):
 
         with default_atlas.render_into(_tex) as fbo:
             fbo.clear()
-            arcade.draw_lrtb_rectangle_filled(0, 500, 200, 0, arcade.color.BLANCHED_ALMOND)
-            arcade.draw_lrtb_rectangle_filled(0, 500, 200, 150, arcade.color.BRANDEIS_BLUE)
+            arcade.draw_lrbt_rectangle_filled(0, 500, 0, 200, arcade.color.BLANCHED_ALMOND)
+            arcade.draw_lrbt_rectangle_filled(0, 500, 150, 200, arcade.color.BRANDEIS_BLUE)
             arcade.draw_text(self.title, 50, 165, font_size=24, bold=True)
             arcade.draw_text(self.show_message, 5, 146, font_size=16, anchor_y="top", multiline=True, width=492, color=arcade.color.BLACK)
             arcade.draw_texture_rectangle(25, 175, 32, 32, _icon_tex)
