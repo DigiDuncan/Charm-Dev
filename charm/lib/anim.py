@@ -23,6 +23,12 @@ def bounce(n: float, m: float, bpm: float, x: float) -> float:
     return max(abs(math.sin(x * math.pi * (bpm / 60))) * m, n)
 
 
+# All ease_ functions are three steps:
+# find_percent(start, end, x)
+# manipulate x to redefine the curve
+# lerp(min, max, x)
+
+
 def ease_linear(minimum: float, maximum: float, start: float, end: float, x: float) -> float:
     """* `minimum: float`: the value returned by f(`x`) = `start`, often a position
        * `maximum: float`: the value returned by f(`x`) = `end`, often a position
