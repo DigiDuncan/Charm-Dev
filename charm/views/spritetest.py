@@ -77,8 +77,8 @@ class SpriteTestView(DigiView):
         move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
 
     def on_draw(self):
+        self.window.camera.use()
         self.clear()
-        self.camera.use()
 
         # Charm BG
         self.small_logos_forward.draw()

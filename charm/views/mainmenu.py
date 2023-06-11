@@ -109,8 +109,8 @@ class MainMenuView(DigiView):
 
     @shows_errors
     def on_draw(self):
+        self.window.camera.use()
         self.clear()
-        self.camera.use()
 
         # Charm BG
         self.small_logos_forward.draw()

@@ -138,8 +138,8 @@ class ParallaxView(DigiView):
         return super().on_key_press(symbol, modifiers)
 
     def on_draw(self):
+        self.window.camera.use()
         self.clear()
-        self.camera.use()
 
         self.parallax.draw()
 

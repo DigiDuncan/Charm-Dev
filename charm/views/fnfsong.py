@@ -273,8 +273,8 @@ class FNFSongView(DigiView):
 
     @shows_errors
     def on_draw(self):
+        self.window.camera.use()
         self.clear() if self.distractions else self.clear(arcade.color.SLATE_GRAY)
-        self.camera.use()
 
         # Charm BG
         if self.distractions:

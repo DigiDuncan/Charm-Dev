@@ -47,9 +47,7 @@ class DigiView(View):
         self.local_time = 0.0
         self.fade_in = fade_in
         self.bg_color = bg_color
-        self.camera = arcade.Camera(viewport = (0, 0, self.window.width, self.window.height), window = self.window)
         self.debug_options = {
-            "camera_scale": 1,
             "box": False}
         self._errors: list[list[CharmException, float]] = []  # [error, seconds to show]
 
@@ -71,24 +69,18 @@ class DigiView(View):
 
     def on_resize(self, width: int, height: int):
         self.size = (width, height)
+        arcade.set_viewport(0, width, 0, height)
+        self.window.camera.projection = (0, width, 0, height)
+        self.window.camera.set_viewport((0, 0, width, height))
 
     def on_key_press(self, symbol: int, modifiers: int):
         keymap = get_keymap()
         if symbol == keymap.debug:
             self.window.debug = not self.window.debug
-            if self.window.debug:
-                self.camera.scale = (self.debug_options["camera_scale"], self.debug_options["camera_scale"])
-            else:
-                self.camera.scale = (1, 1)
         elif symbol == keymap.fullscreen:
             self.window.set_fullscreen(not self.window.fullscreen)
-            width, height = self.window.get_size()
-            self.window.set_viewport(0, width, 0, height)
         if self.window.debug and modifiers & arcade.key.MOD_SHIFT:
             match symbol:
-                case arcade.key.Z:  # camera zoom
-                    self.debug_options["camera_scale"] = 2 if self.debug_options["camera_scale"] == 1 else 1
-                    self.camera.scale = (self.debug_options["camera_scale"], self.debug_options["camera_scale"])
                 case arcade.key.B:  # camera outline
                     self.debug_options["box"] = not self.debug_options["box"]
                 case arcade.key.A:  # show atlas

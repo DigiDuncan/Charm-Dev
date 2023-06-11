@@ -165,8 +165,8 @@ class TitleView(DigiView):
                 self.window.show_view(self.main_menu_view)
 
     def on_draw(self):
+        self.window.camera.use()
         self.clear()
-        self.camera.use()
 
         # Charm BG
         self.small_logos_forward.draw()

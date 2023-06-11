@@ -198,6 +198,7 @@ class VisualizerView(DigiView):
         return super().on_key_press(symbol, modifiers)
 
     def on_draw(self):
+        self.window.camera.use()
         self.clear()
         if not self.shown:
             return
@@ -216,8 +217,6 @@ class VisualizerView(DigiView):
         self.star_camera.move_to((0, 0 - (self.song.time * self.scroll_speed)))
         self.star_camera.use()
         self.stars.draw()
-
-        self.camera.use()
 
         # Note flashes
         if self.chart_available:

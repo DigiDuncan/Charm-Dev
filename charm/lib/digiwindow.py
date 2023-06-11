@@ -56,7 +56,8 @@ class DigiWindow(arcade.Window):
 
         arcade.draw_text(" ", 0, 0)  # force font init (fixes lag on first text draw)
 
-        self.debug_camera = arcade.Camera(viewport = (0, 0, size[0], size[1]))
+        self.camera = arcade.SimpleCamera(viewport = (0, 0, size[0], size[1]))
+        self.debug_camera = arcade.SimpleCamera(viewport = (0, 0, size[0], size[1]))
         self.fps_label = pyglet.text.Label("???.? FPS",
                           font_name='bananaslip plus',
                           font_size=12,
