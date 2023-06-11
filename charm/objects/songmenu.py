@@ -89,7 +89,7 @@ class SongMenuItem(Sprite):
                     font_size=self.height / 3, font_name="bananaslip plus", anchor_x="right", anchor_y="center"
                 )
 
-        logger.info(f"Loaded MenuItem {self.title}")
+        # logger.info(f"Loaded MenuItem {self.title}")
 
 
 class SongMenu:

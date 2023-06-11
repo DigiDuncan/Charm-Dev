@@ -207,7 +207,7 @@ class VisualizerView(DigiView):
         star_zoom = ease_quartout(1, 0.95, self.last_beat, self.last_beat + self.beat_time, self.song.time)
         cam_zoom = ease_quartout(1.05, 1, self.last_beat, self.last_beat + self.beat_time, self.song.time)
         self.star_camera.scale = star_zoom, star_zoom
-        self.camera.scale = 1 / cam_zoom, 1 / cam_zoom
+        self.window.camera.scale = 1 / cam_zoom, 1 / cam_zoom
         # self.highway.highway_camera.scale = 1 / cam_zoom, 1 / cam_zoom
 
         # Gradient
@@ -217,6 +217,8 @@ class VisualizerView(DigiView):
         self.star_camera.move_to((0, 0 - (self.song.time * self.scroll_speed)))
         self.star_camera.use()
         self.stars.draw()
+
+        self.window.camera.use()
 
         # Note flashes
         if self.chart_available:

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import functools
 import logging
 import traceback
@@ -37,7 +39,7 @@ def shows_errors(fn):
 
 
 class DigiView(View):
-    def __init__(self, window: DigiWindow = None, *, back: View = None,
+    def __init__(self, window: DigiWindow = None, *, back: "DigiView" = None,
                  fade_in: float = 0, bg_color = (0, 0, 0)):
         super().__init__(window)
         self.window: DigiWindow = self.window  # This is stupid.
