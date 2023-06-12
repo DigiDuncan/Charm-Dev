@@ -31,6 +31,18 @@ class TitleView(DigiView):
             self.window.theme_song = arcade.play_sound(song, self.volume, looping=True)
         self.window.theme_song.seek(self.local_time + 3)
 
+    def calculate_positions(self):
+        self.logo.scale = 1 / 3
+        self.logo.center_x = self.size[0] // 2
+        self.logo.bottom = self.size[1] // 2
+
+        # Generate "gum wrapper" background
+        self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
+
+        self.press_label.position = (self.window.width // 2, self.window.height // 4, 0)
+        self.welcome_label.position = (self.window.width // 2, 6, 0)
+        self.splash_label.position = (self.window.width // 2, self.window.height // 2, 0)
+
     def setup(self):
         self.hit_start = None
         self.local_time = 0
@@ -42,9 +54,6 @@ class TitleView(DigiView):
         logo_img = img_from_resource(charm.data.images, "logo.png")
         logo_texture = arcade.Texture(logo_img)
         self.logo = arcade.Sprite(logo_texture)
-        self.logo.scale = 1 / 3
-        self.logo.center_x = self.size[0] // 2
-        self.logo.bottom = self.size[1] // 2
 
         self.main_sprites.append(self.logo)
 
@@ -53,9 +62,6 @@ class TitleView(DigiView):
         self.splash_index = 0
         self.egg_roll = random.randint(1, 1000)
         self.generate_splash()
-
-        # Generate "gum wrapper" background
-        self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
 
         # Song details
         self.song_label = arcade.pyglet.text.Label("Run Around The Character Code!\nCamellia feat. nanahira\n3LEEP!",
@@ -83,6 +89,8 @@ class TitleView(DigiView):
                           start_x=self.window.width // 2, start_y=6,
                           anchor_x='center', anchor_y='bottom',
                           color=arcade.color.BLACK)
+
+        self.calculate_positions()
 
     def generate_splash(self):
         if self.egg_roll == 666:
@@ -129,6 +137,10 @@ class TitleView(DigiView):
         if button == arcade.MOUSE_BUTTON_LEFT:
             self.hit_start = self.local_time
             arcade.play_sound(self.window.sounds["valid"])
+
+    def on_resize(self, width: int, height: int):
+        self.calculate_positions()
+        super().on_resize(width, height)
 
     def on_update(self, delta_time):
         self.local_time += delta_time

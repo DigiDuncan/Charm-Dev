@@ -206,8 +206,8 @@ class VisualizerView(DigiView):
         # Camera zoom
         star_zoom = ease_quartout(1, 0.95, self.last_beat, self.last_beat + self.beat_time, self.song.time)
         cam_zoom = ease_quartout(1.05, 1, self.last_beat, self.last_beat + self.beat_time, self.song.time)
-        self.star_camera.scale = star_zoom, star_zoom
-        self.window.camera.scale = 1 / cam_zoom, 1 / cam_zoom
+        self.star_camera.scale = (star_zoom, star_zoom)
+        self.window.camera.scale = (1 / cam_zoom, 1 / cam_zoom)
         # self.highway.highway_camera.scale = 1 / cam_zoom, 1 / cam_zoom
 
         # Gradient
