@@ -30,6 +30,10 @@ class BannerView(DigiView):
         # Generate "gum wrapper" background
         self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
 
+    def calculate_positions(self):
+        self.logo.center_x = self.size[0] // 2
+        self.logo.center_y = self.size[1] // 2
+
     def on_key_press(self, symbol: int, modifiers: int):
         match symbol:
             case arcade.key.BACKSPACE:

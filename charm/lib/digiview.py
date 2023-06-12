@@ -61,7 +61,7 @@ class DigiView(View):
         self._errors.append([error, 3])
         arcade.play_sound(self.window.sounds[f"error-{error._icon}"])
 
-    def calculate_positions():
+    def calculate_positions(self):
         pass
 
     def setup(self):

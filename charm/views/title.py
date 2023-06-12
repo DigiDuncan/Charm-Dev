@@ -7,7 +7,7 @@ import arcade
 import charm.data.audio
 import charm.data.images
 from charm.lib.anim import bounce, ease_linear, ease_quadinout
-from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
+from charm.lib.charm import CharmColors, move_gum_wrapper
 from charm.lib.digiview import DigiView
 from charm.lib.keymap import get_keymap
 from charm.lib.utils import img_from_resource
