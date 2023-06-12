@@ -56,6 +56,7 @@ def generate_gum_wrapper(size: tuple[int], buffer: int = 20, alpha = 128) -> tup
                 small_logos_forward.append(s)
     small_logos_forward.alpha = alpha
     small_logos_backward.alpha = alpha
+    small_logos_backward.move(-logo_width / 2, 0)
     return (logo_width, small_logos_forward, small_logos_backward)
 
 

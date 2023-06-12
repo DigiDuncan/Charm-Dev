@@ -32,12 +32,8 @@ class TitleView(DigiView):
         self.window.theme_song.seek(self.local_time + 3)
 
     def calculate_positions(self):
-        self.logo.scale = 1 / 3
         self.logo.center_x = self.size[0] // 2
         self.logo.bottom = self.size[1] // 2
-
-        # Generate "gum wrapper" background
-        self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
 
         self.press_label.position = (self.window.width // 2, self.window.height // 4, 0)
         self.welcome_label.position = (self.window.width // 2, 6, 0)
@@ -90,7 +86,7 @@ class TitleView(DigiView):
                           anchor_x='center', anchor_y='bottom',
                           color=arcade.color.BLACK)
 
-        self.calculate_positions()
+        super().setup()
 
     def generate_splash(self):
         if self.egg_roll == 666:
@@ -137,10 +133,6 @@ class TitleView(DigiView):
         if button == arcade.MOUSE_BUTTON_LEFT:
             self.hit_start = self.local_time
             arcade.play_sound(self.window.sounds["valid"])
-
-    def on_resize(self, width: int, height: int):
-        self.calculate_positions()
-        super().on_resize(width, height)
 
     def on_update(self, delta_time):
         self.local_time += delta_time

@@ -8,6 +8,7 @@ import arcade
 from arcade import View
 
 from charm.lib.anim import ease_linear
+from charm.lib.charm import generate_gum_wrapper
 from charm.lib.digiwindow import DigiWindow
 from charm.lib.errors import CharmException, GenericError
 from charm.lib.keymap import get_keymap
@@ -60,10 +61,14 @@ class DigiView(View):
         self._errors.append([error, 3])
         arcade.play_sound(self.window.sounds[f"error-{error._icon}"])
 
+    def calculate_positions():
+        pass
+
     def setup(self):
         self.local_time = 0
 
         arcade.set_background_color(self.bg_color)
+        self.calculate_positions()
 
     def on_show(self):
         self.local_time = 0
@@ -74,6 +79,11 @@ class DigiView(View):
         arcade.set_viewport(0, width, 0, height)
         self.window.camera.projection = (0, width, 0, height)
         self.window.camera.set_viewport((0, 0, width, height))
+
+        # Generate "gum wrapper" background
+        self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
+
+        self.calculate_positions()
 
     def on_key_press(self, symbol: int, modifiers: int):
         keymap = get_keymap()
