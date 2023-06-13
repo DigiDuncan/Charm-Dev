@@ -49,8 +49,6 @@ class FNFSongView(DigiView):
 
     @shows_errors
     def setup(self):
-        super().setup()
-
         with LogSection(logger, "loading song data"):
             path = self.path
             self.songdata = FNFSong.parse(path)
@@ -127,6 +125,20 @@ class FNFSongView(DigiView):
             self.window.update_rp(f"Playing {self.songdata.metadata.title}")
 
             self.success = True
+
+        super().setup()
+
+    def calculate_positions(self):
+        self.highway_1.pos = (self.window.width / 3 * 2, 0)
+        self.highway_1.h = self.window.height
+        self.highway_2.h = self.window.height
+        self.song_time_text.start_x = (self.window.width // 2)
+        self.score_text.start_x = (self.window.width // 2)
+        self.grade_text.start_x = (self.window.width // 2)
+        self.pause_text.start_x = (self.window.width // 2)
+        self.dead_text.start_x = (self.window.width // 2)
+        self.judgement_sprite.center_x = self.window.width / 2
+        self.judgement_sprite.center_y = self.window.height / 4
 
     def on_show(self):
         if self.success is False:
