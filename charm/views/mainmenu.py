@@ -95,6 +95,10 @@ class MainMenuView(DigiView):
             else:
                 self.menu.selected.jiggle_start = self.local_time
 
+    def on_resize(self, width: int, height: int):
+        self.menu.recreate()
+        return super().on_resize(width, height)
+
     @shows_errors
     def on_update(self, delta_time):
         super().on_update(delta_time)

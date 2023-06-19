@@ -55,6 +55,11 @@ class MainMenu:
         for item in self.items:
             self.old_pos[item] = (item.center_x, item.scale, item.alpha)
 
+    def recreate(self):
+        old_id = self._selected_id
+        self = self.__class__(self.items)
+        self._selected_id = old_id
+
     @property
     def selected_id(self) -> int:
         return self._selected_id

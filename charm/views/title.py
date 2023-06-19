@@ -31,6 +31,8 @@ class TitleView(DigiView):
             self.window.theme_song = arcade.play_sound(song, self.volume, looping=True)
         self.window.theme_song.seek(self.local_time + 3)
 
+        self.dumb_fix_for_logo_pos = False
+
     def calculate_positions(self):
         self.logo.center_x = self.size[0] // 2
         self.logo.bottom = self.size[1] // 2
@@ -171,6 +173,11 @@ class TitleView(DigiView):
     def on_draw(self):
         self.window.camera.use()
         self.clear()
+
+        if not self.dumb_fix_for_logo_pos:
+            # My guess is this is needed because the window size is wrong on the first tick?
+            self.calculate_positions()
+            self.dumb_fix_for_logo_pos = True
 
         # Charm BG
         self.small_logos_forward.draw()

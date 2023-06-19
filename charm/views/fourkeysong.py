@@ -31,8 +31,6 @@ class FourKeySongView(DigiView):
         self.countdown_over = False
 
     def setup(self):
-        super().setup()
-
         with LogSection(logger, "loading audio"):
             audio_paths = [a for a in self.song_path.glob("*.mp3")] + [a for a in self.song_path.glob("*.wav")] + [a for a in self.song_path.glob("*.ogg")]
             trackfiles = []
@@ -55,9 +53,6 @@ class FourKeySongView(DigiView):
 
         with LogSection(logger, "loading highway"):
             self.highway = FourKeyHighway(self.chart, self.engine, (0, 0))
-            self.highway.x += self.window.width // 2 - self.highway.w // 2  # center the highway
-            self.highway.hit_window_top = self.highway.note_y(-self.engine.judgements[-2].seconds)
-            self.highway.hit_window_bottom = self.highway.note_y(self.engine.judgements[-2].seconds)
 
         self.text = arcade.Text("[LOADING]", -5, self.window.height - 5, color = arcade.color.BLACK, font_size = 24, align = "right", anchor_y="top", font_name = "bananaslip plus", width = self.window.width, multiline = True)
         self.countdown_text = arcade.Text("0", self.window.width / 2, self.window.height / 2, arcade.color.BLACK, 72, align="center", anchor_x="center", anchor_y="center", font_name = "bananaslip plus", width = 100)
@@ -77,6 +72,7 @@ class FourKeySongView(DigiView):
 
         # Generate "gum wrapper" background
         self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
+        super().setup()
         self.success = True
 
     def on_show_view(self):
@@ -146,6 +142,17 @@ class FourKeySongView(DigiView):
         results_view = ResultsView(self.engine.generate_results(), back = self.back)
         results_view.setup()
         self.window.show_view(results_view)
+
+    def calculate_positions(self):
+        self.highway.pos = (0, 0)
+        self.highway.x += self.window.width // 2 - self.highway.w // 2  # center the highway
+        self.highway.hit_window_top = self.highway.note_y(-self.engine.judgements[-2].seconds)
+        self.highway.hit_window_bottom = self.highway.note_y(self.engine.judgements[-2].seconds)
+        self.text.position = (-5, self.window.height - 5)
+        self.countdown_text.position = (self.window.width / 2, self.window.height / 2)
+        self.judgement_sprite.center_x = self.window.width / 2
+        self.judgement_sprite.center_y = self.window.height / 4
+        return super().calculate_positions()
 
     def on_update(self, delta_time):
         super().on_update(delta_time)
