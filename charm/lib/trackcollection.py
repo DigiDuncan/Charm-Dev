@@ -3,25 +3,37 @@ import logging
 import arcade
 import pyglet.media as media
 
+from charm.lib.settings import get_volume
+
 logger = logging.getLogger("charm")
 
 class TrackCollection:
-    def __init__(self, sounds: arcade.Sound):
-        self.tracks: list[media.Player] = [s.play(volume = 0.5) for s in sounds]
+    def __init__(self, sounds: arcade.Sound, mixer = "music"):
+        self.mixer = mixer
+        self.tracks: list[media.Player] = [s.play(volume = get_volume(self.mixer)) for s in sounds]
         self.pause()
         self.seek(0)
 
     @property
-    def time(self):
+    def time(self) -> float:
         return self.tracks[0].time
 
     @property
-    def duration(self):
+    def duration(self) -> float:
         return max([t.source.duration if t.source else 0 for t in self.tracks])
 
     @property
-    def playing(self):
+    def playing(self) -> bool:
         return self.tracks[0].playing
+
+    @property
+    def volume(self) -> float:
+        return self.tracks[0].volume
+
+    @volume.setter
+    def volume(self, v: float):
+        for t in self.tracks:
+            t.volume = v
 
     def seek(self, time):
         playing = self.playing
@@ -48,7 +60,7 @@ class TrackCollection:
         self.tracks = []
 
     @property
-    def loaded(self):
+    def loaded(self) -> bool:
         return bool(self.tracks)
 
     def sync(self):
