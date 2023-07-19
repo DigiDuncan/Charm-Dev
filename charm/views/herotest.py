@@ -9,6 +9,7 @@ from charm.lib.gamemodes.hero import HeroEngine, HeroHighway, HeroSong, SectionE
 from charm.lib.keymap import get_keymap
 from charm.lib.oggsound import OGGSound
 from charm.lib.paths import songspath
+from charm.lib.settings import settings
 
 logger = logging.getLogger("charm")
 
@@ -55,7 +56,7 @@ class HeroTestView(DigiView):
                 self.song.delete()
                 self.back.setup()
                 self.window.show_view(self.back)
-                arcade.play_sound(self.window.sounds["back"])
+                arcade.play_sound(self.window.sounds["back"], volume = settings.get_volume("sound"))
             case keymap.pause:
                 self.song.pause() if self.song.playing else self.song.play()
         if self.window.debug:

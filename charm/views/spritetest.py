@@ -5,6 +5,7 @@ from charm.lib.adobexml import sprite_from_adobe
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView
 from charm.lib.keymap import get_keymap
+from charm.lib.settings import settings
 
 
 class SpriteTestView(DigiView):
@@ -38,7 +39,7 @@ class SpriteTestView(DigiView):
             case keymap.back:
                 self.back.setup()
                 self.window.show_view(self.back)
-                arcade.play_sound(self.window.sounds["back"])
+                arcade.play_sound(self.window.sounds["back"], volume = settings.get_volume("sound"))
             case keymap.start:
                 a = next(self.anims)
                 self.sprite.set_animation(a)

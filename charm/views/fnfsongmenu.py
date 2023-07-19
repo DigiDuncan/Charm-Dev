@@ -6,6 +6,7 @@ import arcade
 
 import charm.data.audio
 import charm.data.images
+from charm.lib.settings import settings
 from charm.lib.anim import ease_quartout
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView, shows_errors
@@ -80,17 +81,17 @@ class FNFSongMenuView(DigiView):
         match symbol:
             case arcade.key.UP:
                 self.menu.selected_id -= 1
-                arcade.play_sound(self.window.sounds["select"])
+                arcade.play_sound(self.window.sounds["select"], volume = settings.get_volume("sound"))
             case arcade.key.DOWN:
                 self.menu.selected_id += 1
-                arcade.play_sound(self.window.sounds["select"])
+                arcade.play_sound(self.window.sounds["select"], volume = settings.get_volume("sound"))
             case keymap.start:
-                arcade.play_sound(self.window.sounds["valid"])
+                arcade.play_sound(self.window.sounds["valid"], volume = settings.get_volume("sound"))
                 songview = FNFSongView(self.menu.selected.song.path, back=self)
                 songview.setup()
                 self.window.show_view(songview)
             case keymap.back:
-                arcade.play_sound(self.window.sounds["back"])
+                arcade.play_sound(self.window.sounds["back"], volume = settings.get_volume("sound"))
                 self.back.setup()
                 self.window.show_view(self.back)
         if old_id != self.menu.selected_id:

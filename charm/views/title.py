@@ -10,6 +10,7 @@ from charm.lib.anim import bounce, ease_linear, ease_quadinout
 from charm.lib.charm import CharmColors, move_gum_wrapper
 from charm.lib.digiview import DigiView
 from charm.lib.keymap import get_keymap
+from charm.lib.settings import settings
 from charm.lib.utils import img_from_resource
 from charm.views.mainmenu import MainMenuView
 
@@ -115,7 +116,7 @@ class TitleView(DigiView):
         match symbol:
             case keymap.start:
                 self.hit_start = self.local_time
-                arcade.play_sound(self.window.sounds["valid"])
+                arcade.play_sound(self.window.sounds["valid"], volume = settings.get_volume("sound"))
         if self.window.debug:
             match symbol:
                 case arcade.key.S:

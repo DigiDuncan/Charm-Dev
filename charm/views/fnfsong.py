@@ -11,6 +11,7 @@ from charm.lib.gamemodes.four_key import FourKeyHighway, load_note_texture
 from charm.lib.keymap import get_keymap
 from charm.lib.logsection import LogSection
 from charm.lib.oggsound import OGGSound
+from charm.lib.settings import settings
 from charm.lib.trackcollection import TrackCollection
 from charm.lib.utils import map_range
 from charm.views.resultsview import ResultsView
@@ -168,7 +169,7 @@ class FNFSongView(DigiView):
                 self.back.setup()
                 self.tracks.close()
                 self.window.show_view(self.back)
-                arcade.play_sound(self.window.sounds["back"])
+                arcade.play_sound(self.window.sounds["back"], volume = settings.get_volume("sound"))
             case keymap.pause:
                 self.paused = not self.paused
                 self.tracks.pause() if self.paused else self.tracks.play()

@@ -10,6 +10,7 @@ from charm.lib.generic.results import Results, Heatmap
 import charm.data.audio
 import charm.data.images.skins
 from charm.lib.keymap import get_keymap
+from charm.lib.settings import settings
 
 logger = logging.getLogger("charm")
 
@@ -70,7 +71,7 @@ class ResultsView(DigiView):
                 self.song.volume = 0
                 self.back.setup()
                 self.window.show_view(self.back)
-                arcade.play_sound(self.window.sounds["back"])
+                arcade.play_sound(self.window.sounds["back"], volume = settings.get_volume("sound"))
 
         return super().on_key_press(symbol, modifiers)
 

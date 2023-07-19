@@ -13,6 +13,7 @@ from charm.lib.gamemodes.sm import SMEngine, SMSong
 from charm.lib.keymap import get_keymap
 from charm.lib.logsection import LogSection
 from charm.lib.oggsound import OGGSound
+from charm.lib.settings import settings
 from charm.lib.trackcollection import TrackCollection
 from charm.views.resultsview import ResultsView
 
@@ -111,7 +112,7 @@ class FourKeySongView(DigiView):
                 self.tracks.close()
                 self.back.setup()
                 self.window.show_view(self.back)
-                arcade.play_sound(self.window.sounds["back"])
+                arcade.play_sound(self.window.sounds["back"], volume = settings.get_volume("sound"))
             case keymap.pause:
                 if self.countdown <= 0:
                     self.tracks.pause() if self.tracks.playing else self.tracks.play()

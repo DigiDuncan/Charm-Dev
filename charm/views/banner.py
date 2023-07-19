@@ -14,7 +14,6 @@ class BannerView(DigiView):
     def __init__(self, *args, **kwargs):
         super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, *args, **kwargs)
         self.song = None
-        self.volume = 1
 
     def setup(self):
         super().setup()

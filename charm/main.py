@@ -9,16 +9,16 @@ from digiformatter import logger as digilogger
 import charm
 import charm.data.fonts
 import charm.data.images
-from charm.lib.settings import Settings
+from charm.lib.settings import settings
 from charm.lib.utils import pyglet_img_from_resource
 from charm.lib.digiwindow import DigiWindow
 from charm.objects.debug_log import PygletHandler
 
 from .views.title import TitleView
 
-SCREEN_WIDTH = Settings.width
-SCREEN_HEIGHT = Settings.height
-FPS_CAP = Settings.fps
+SCREEN_WIDTH = settings.width
+SCREEN_HEIGHT = settings.height
+FPS_CAP = settings.fps
 SCREEN_TITLE = "Charm"
 
 # Fix font lag

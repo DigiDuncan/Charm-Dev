@@ -13,6 +13,7 @@ from charm.lib.gamemodes.sm import SMSong
 from charm.lib.generic.song import Song
 from charm.lib.keymap import get_keymap
 from charm.lib.paths import songspath
+from charm.lib.settings import settings
 from charm.objects.songmenu import SongMenu
 from charm.views.fourkeysong import FourKeySongView
 
@@ -86,17 +87,17 @@ class FourKeySongMenuView(DigiView):
         match symbol:
             case arcade.key.UP:
                 self.menu.selected_id -= 1
-                arcade.play_sound(self.window.sounds["select"])
+                arcade.play_sound(self.window.sounds["select"], volume = settings.get_volume("sound"))
             case arcade.key.DOWN:
                 self.menu.selected_id += 1
-                arcade.play_sound(self.window.sounds["select"])
+                arcade.play_sound(self.window.sounds["select"], volume = settings.get_volume("sound"))
             case keymap.start:
-                arcade.play_sound(self.window.sounds["valid"])
+                arcade.play_sound(self.window.sounds["valid"], volume = settings.get_volume("sound"))
                 songview = FourKeySongView(self.menu.selected.song.path, back=self)
                 songview.setup()
                 self.window.show_view(songview)
             case keymap.back:
-                arcade.play_sound(self.window.sounds["back"])
+                arcade.play_sound(self.window.sounds["back"], volume = settings.get_volume("sound"))
                 self.back.setup()
                 self.window.show_view(self.back)
         if old_id != self.menu.selected_id:

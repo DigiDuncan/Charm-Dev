@@ -5,6 +5,7 @@ from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView, shows_errors
 from charm.lib.errors import TestError
 from charm.lib.keymap import get_keymap
+from charm.lib.settings import settings
 from charm.objects.menu import MainMenu, MainMenuItem
 from charm.views.banner import BannerView
 from charm.views.fnfsongmenu import FNFSongMenuView
@@ -64,7 +65,7 @@ class MainMenuView(DigiView):
             case keymap.back:
                 self.back.setup()
                 self.window.show_view(self.back)
-                arcade.play_sound(self.window.sounds["back"])
+                arcade.play_sound(self.window.sounds["back"], volume = settings.get_volume("sound"))
             case keymap.start:
                 if self.menu.selected.goto is not None:
                     self.menu.loading = True

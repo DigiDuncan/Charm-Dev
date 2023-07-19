@@ -17,6 +17,7 @@ from charm.lib.logsection import LogSection
 from charm.lib.gamemodes.four_key import FourKeyHighway
 from charm.lib.gamemodes.fnf import FNFEngine, FNFNote, FNFSong
 from charm.lib.paths import songspath
+from charm.lib.settings import settings
 
 logger = logging.getLogger("charm")
 
@@ -146,7 +147,7 @@ class VisualizerView(DigiView):
 
     def on_show(self):
         self.window.theme_song.volume = 0
-        self.song = arcade.play_sound(self._song, 1, looping=False)
+        self.song = arcade.play_sound(self._song, 1, looping=False, volume = settings.get_volume("music"))
         super().on_show()
 
     def on_update(self, delta_time: float):
@@ -187,7 +188,7 @@ class VisualizerView(DigiView):
                 self.back.setup()
                 self.window.show_view(self.back)
                 self.song.delete()
-                arcade.play_sound(self.window.sounds["back"])
+                arcade.play_sound(self.window.sounds["back"], volume = settings.get_volume("sound"))
             case keymap.pause:
                 self.song.pause() if self.song.playing else self.song.play()
             case arcade.key.NUM_0:
