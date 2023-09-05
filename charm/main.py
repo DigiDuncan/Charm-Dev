@@ -16,8 +16,8 @@ from charm.objects.debug_log import PygletHandler
 
 from .views.title import TitleView
 
-SCREEN_WIDTH = settings.width
-SCREEN_HEIGHT = settings.height
+SCREEN_WIDTH = settings.resolution.width
+SCREEN_HEIGHT = settings.resolution.height
 FPS_CAP = settings.fps
 SCREEN_TITLE = "Charm"
 
@@ -53,7 +53,6 @@ def setup_logging():
     arcadelogger.propagate = False
     arcadelogger.addHandler(dfhandlersource)
     arcadelogger.addHandler(phandlersource)
-
 
 class CharmGame(DigiWindow):
     def __init__(self):

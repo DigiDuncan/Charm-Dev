@@ -1,5 +1,6 @@
 import importlib.resources as pkg_resources
 import math
+import logging
 from pathlib import Path
 
 import arcade
@@ -16,6 +17,8 @@ from charm.lib.paths import songspath
 from charm.lib.settings import settings
 from charm.objects.songmenu import SongMenu
 from charm.views.fourkeysong import FourKeySongView
+
+logger = logging.getLogger("charm")
 
 
 class FourKeySongMenuView(DigiView):
@@ -48,8 +51,8 @@ class FourKeySongMenuView(DigiView):
                     songdata = SMSong.get_metadata(d)
                     self.songs.append(songdata)
                     continue
-            except Exception:
-                continue
+            except Exception as e:
+                logger.warn(e)
 
         self.menu = SongMenu(self.songs)
         self.menu.sort("title")
