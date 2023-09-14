@@ -89,6 +89,8 @@ class TitleView(DigiView):
                           anchor_x='center', anchor_y='bottom',
                           color=arcade.color.BLACK)
 
+        self.dumb_fix_for_logo_pos = False
+
         super().setup()
 
     def generate_splash(self):
