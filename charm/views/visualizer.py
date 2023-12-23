@@ -134,7 +134,7 @@ class VisualizerView(DigiView):
             self.x_scale = 2
             self.resolution = 4
             self.beat_time = 0.5
-            self.show_text = True
+            self.show_text = False
 
             # RAM
             self.pixels: list[tuple[int, int]] = [(0, 0) * self.window.width]
@@ -147,7 +147,7 @@ class VisualizerView(DigiView):
 
     def on_show(self):
         self.window.theme_song.volume = 0
-        self.song = arcade.play_sound(self._song, 1, looping=False, volume = settings.get_volume("music"))
+        self.song = arcade.play_sound(self._song, 1, looping=False)
         super().on_show()
 
     def on_update(self, delta_time: float):
