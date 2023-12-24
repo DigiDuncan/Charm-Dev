@@ -228,6 +228,9 @@ class FourKeyHighway(Highway):
             bucket.move(diff_x, diff_y)
         self.sprite_buckets.overbucket.move(diff_x, diff_y)
         self.strikeline.move(diff_x, diff_y)
+        self.hit_window_mid = self.note_y(0) - (self.note_size / 2)
+        self.hit_window_top = self.note_y(-self.engine.hit_window) - (self.note_size / 2)
+        self.hit_window_bottom = self.note_y(self.engine.hit_window) - (self.note_size / 2)
 
     def draw(self):
         _cam = arcade.get_window().current_camera

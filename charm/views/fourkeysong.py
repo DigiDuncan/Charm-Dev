@@ -4,7 +4,7 @@ from pathlib import Path
 
 import arcade
 
-from charm.lib.anim import ease_circout
+from charm.lib.anim import ease_circout, ease_linear, lerp
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView, shows_errors
 from charm.lib.errors import NoChartsError
@@ -12,6 +12,7 @@ from charm.lib.gamemodes.four_key import FourKeyHighway, FourKeyEngine, load_not
 from charm.lib.gamemodes.sm import SMEngine, SMSong
 from charm.lib.keymap import get_keymap
 from charm.lib.logsection import LogSection
+from charm.lib.modchart import HighwayMoveEvent, Modchart, ModchartEvent
 from charm.lib.oggsound import OGGSound
 from charm.lib.settings import settings
 from charm.lib.trackcollection import TrackCollection
@@ -30,6 +31,8 @@ class FourKeySongView(DigiView):
         self.volume = 0.25
         self.countdown: float = 3
         self.countdown_over = False
+
+        self.active_highway_moves = []
 
     def setup(self):
         with LogSection(logger, "loading audio"):
@@ -70,6 +73,13 @@ class FourKeySongView(DigiView):
             self.judgement_sprite.alpha = 0
 
         self.window.update_rp("Playing 4K")
+
+        self.modchart = Modchart(
+            [HighwayMoveEvent(3, False, 1, -50, 0),
+             HighwayMoveEvent(4, False, 0.5, 100, 0),
+             HighwayMoveEvent(5, False, 0.5, -50, 0),
+             HighwayMoveEvent(6, False, 3, 0, -250)]
+        )
 
         # Generate "gum wrapper" background
         self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
@@ -155,6 +165,17 @@ class FourKeySongView(DigiView):
         self.judgement_sprite.center_y = self.window.height / 4
         return super().calculate_positions()
 
+    def process_modchart(self):
+        current_modevents = self.modchart.tick(self.tracks.time)
+        for e in current_modevents:
+            if isinstance(e, HighwayMoveEvent):
+                self.active_highway_moves.append(
+                    {"start_x": self.highway.x, "start_y": self.highway.y,
+                     "end_x": self.highway.x + e.dx, "end_y": self.highway.y + e.dy,
+                     "start_time": e.time, "end_time": e.time + e.t}
+                )
+            e.fired = True
+
     def on_update(self, delta_time):
         super().on_update(delta_time)
 
@@ -163,6 +184,7 @@ class FourKeySongView(DigiView):
 
         self.highway.update(0 - self.countdown if not self.countdown_over else self.tracks.time)
         self.engine.update(self.tracks.time)
+        self.process_modchart()
 
         # TODO: Lag? Maybe not calculate this every tick?
         # The only way to solve this I think is to create something like an
@@ -194,6 +216,15 @@ class FourKeySongView(DigiView):
 
         if self.tracks.time >= self.tracks.duration:
             self.show_results()
+
+        # HARDCODED MODCHART BS
+        if self.active_highway_moves:
+            for move in self.active_highway_moves:
+                self.highway.x = ease_linear(move["start_x"], move["end_x"], move["start_time"], move["end_time"], self.tracks.time)
+                self.highway.y = ease_linear(move["start_y"], move["end_y"], move["start_time"], move["end_time"], self.tracks.time)
+
+                if move["end_time"] < self.tracks.time:
+                    self.active_highway_moves.remove(move)
 
         move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
 
