@@ -1,7 +1,10 @@
-from dataclasses import dataclass
-import typing
-from charm.lib.anim import ease_linear
+from __future__ import annotations
 
+from dataclasses import asdict, dataclass
+import typing
+
+
+from charm.lib.anim import ease_linear
 from charm.lib.generic.song import Seconds, Event
 
 if typing.TYPE_CHECKING:
@@ -12,10 +15,25 @@ if typing.TYPE_CHECKING:
 class ModchartEvent(Event):
     """A single event in a modchart."""
     fired: bool
+    type: typing.ClassVar[str] = "NONE"
+
+    def to_JSON(self) -> dict:
+        """For use with parsing a .ndjson modchart."""
+        d = asdict(self)
+        d["type"] = self.__class__._event_name
+        d.pop("fired")
+        return d
+
+    @classmethod
+    def from_JSON(cls, d: dict) -> ModchartEvent:
+        d.pop("type")
+        d["fired"] = False
+        return cls(**d)
 
 @dataclass
 class HighwayMoveEvent(ModchartEvent):
     """Move the highway (dx, dy) in t seconds."""
+    type: typing.ClassVar[str] = "highway_move"
     t: float
     dx: float = 0.0
     dy: float = 0.0
@@ -30,6 +48,20 @@ class Modchart:
             return []  # Time has gone backwards!
 
         return [e for e in self.events if self.current_time <= e.time <= new_time and not e.fired]
+
+    def to_NDJSON(self) -> list[dict]:
+        return [e.to_JSON() for e in self.events]
+
+    @classmethod
+    def from_NDJSON(cls, n: list[dict]) -> Modchart:
+        events = []
+        for d in n:
+            for scls in ModchartEvent.__subclasses__():
+                if scls.type == d["type"]:
+                    e = scls.from_JSON(d)
+                    events.append(e)
+                    break
+        return Modchart(events)
 
 class ModchartProcessor:
     def __init__(self, modchart: Modchart, view: "FourKeySongView"):

@@ -3,6 +3,7 @@ from math import ceil
 from pathlib import Path
 
 import arcade
+import ndjson
 
 from charm.lib.anim import ease_circout
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
@@ -12,7 +13,7 @@ from charm.lib.gamemodes.four_key import FourKeyHighway, FourKeyEngine, load_not
 from charm.lib.gamemodes.sm import SMEngine, SMSong
 from charm.lib.keymap import get_keymap
 from charm.lib.logsection import LogSection
-from charm.lib.modchart import HighwayMoveEvent, Modchart, ModchartProcessor
+from charm.lib.modchart import Modchart, ModchartProcessor
 from charm.lib.oggsound import OGGSound
 from charm.lib.settings import settings
 from charm.lib.trackcollection import TrackCollection
@@ -72,12 +73,9 @@ class FourKeySongView(DigiView):
 
         self.window.update_rp("Playing 4K")
 
-        self.modchart = Modchart(
-            [HighwayMoveEvent(3, False, 1, -50, 0),
-             HighwayMoveEvent(4, False, 0.5, 100, 0),
-             HighwayMoveEvent(5, False, 0.5, -50, 0),
-             HighwayMoveEvent(6, False, 3, 0, -250)]
-        )
+        with open(self.song_path / "modchart.ndjson") as p:
+            md = ndjson.load(p)
+        self.modchart = Modchart.from_NDJSON(md)
 
         self.modchart_processor = ModchartProcessor(self.modchart, self)
 
