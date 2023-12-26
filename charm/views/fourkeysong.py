@@ -73,11 +73,14 @@ class FourKeySongView(DigiView):
 
         self.window.update_rp("Playing 4K")
 
-        with open(self.song_path / "modchart.ndjson") as p:
-            md = ndjson.load(p)
-        self.modchart = Modchart.from_NDJSON(md)
+        if (self.song_path / "modchart.ndjson").exists:
+            with open(self.song_path / "modchart.ndjson") as p:
+                md = ndjson.load(p)
+            modchart = Modchart.from_NDJSON(md)
 
-        self.modchart_processor = ModchartProcessor(self.modchart, self)
+            self.modchart_processor = ModchartProcessor(modchart, self)
+        else:
+            self.modchart_processor = None
 
         # Generate "gum wrapper" background
         self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
@@ -171,7 +174,8 @@ class FourKeySongView(DigiView):
 
         self.highway.update(0 - self.countdown if not self.countdown_over else self.tracks.time)
         self.engine.update(self.tracks.time)
-        self.modchart_processor.process_modchart()
+        if self.modchart_processor:
+            self.modchart_processor.process_modchart()
 
         # TODO: Lag? Maybe not calculate this every tick?
         # The only way to solve this I think is to create something like an
