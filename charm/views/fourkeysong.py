@@ -4,7 +4,7 @@ from pathlib import Path
 
 import arcade
 
-from charm.lib.anim import ease_circout, ease_linear
+from charm.lib.anim import ease_circout
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView, shows_errors
 from charm.lib.errors import NoChartsError
@@ -179,6 +179,7 @@ class FourKeySongView(DigiView):
         # The only way to solve this I think is to create something like an
         # on_note_valid and on_note_expired event, which you can do with
         # Arcade.schedule() if we need to look into that.
+        # 2023-12-25: This doesn't seem to lag that bad. Maybe profile it but eh.
         self.engine.calculate_score()
 
         # Judgement
