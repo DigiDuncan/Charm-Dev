@@ -44,6 +44,7 @@ class Subtitle(SSAEvent):
 
     @property
     def position(self):
+        window = arcade.get_window()
         match self.ssa_style.alignment:
             # `alignment` is a number 1-9 in "numpad positioning"
             case 7:
