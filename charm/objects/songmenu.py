@@ -33,9 +33,10 @@ class SongMenuItem(Sprite):
         art_path = None
         art_paths = [Path(song.path / "album.jpg"),
                      Path(song.path / "album.png"),
-                     Path(song.path / "album.gif"),
-                     Path(song.path / f"{song.title}-jacket.jpg"),
-                     Path(song.path / f"{song.title}-jacket.png"),]
+                     Path(song.path / "album.gif")]
+        art_paths.extend(song.path.glob("*jacket.png"))
+        art_paths.extend(song.path.glob("*jacket.gif"))
+        art_paths.extend(song.path.glob("*jacket.jpg"))
         for p in art_paths:
             if p.is_file():
                 art_path = p
