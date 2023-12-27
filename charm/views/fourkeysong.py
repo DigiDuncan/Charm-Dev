@@ -73,12 +73,13 @@ class FourKeySongView(DigiView):
 
         self.window.update_rp("Playing 4K")
 
-        if (self.song_path / "modchart.ndjson").exists:
+        if (self.song_path / "modchart.ndjson").exists():
             with open(self.song_path / "modchart.ndjson") as p:
                 md = ndjson.load(p)
             modchart = Modchart.from_NDJSON(md)
 
-            self.modchart_processor = ModchartProcessor(modchart, self)
+            self.modchart_processor = None
+            # self.modchart_processor = ModchartProcessor(modchart, self)
         else:
             self.modchart_processor = None
 
