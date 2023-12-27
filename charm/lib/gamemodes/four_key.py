@@ -7,8 +7,10 @@ from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
 from statistics import mean
+from typing import cast
 
 import arcade
+import pyglet
 import PIL
 import PIL.ImageFilter
 
@@ -71,7 +73,7 @@ class NoteColor:
 
 
 @cache
-def load_note_texture(note_type, note_lane, height):
+def load_note_texture(note_type, note_lane, height, value = 0):
     image_name = f"{note_type}-{note_lane + 1}"
     try:
         image = img_from_resource(fourkeyskin, image_name + ".png")
@@ -178,6 +180,18 @@ class FourKeyHighway(Highway):
             sprite.left = self.lane_x(note.lane)
             note.sprite = sprite
             self.sprite_buckets.append(sprite, note.time, note.length)
+
+        self.text_batch = pyglet.graphics.Batch()
+        self.text_objects: list[arcade.Text] = []
+        # DO NOT LET THIS SHIP PLEASE.
+        for sprite in self.sprite_buckets.sprites:
+            sprite = cast(FourKeyLongNoteSprite, sprite)
+            value_string = "" if sprite.note.value == 0 else str(sprite.note.value)
+            self.text_objects.append(arcade.Text(value_string, sprite.center_x, sprite.center_y,
+                                                 font_size = 24, align = "center", font_name = "bananaslip plus",
+                                                 color = (0, 0, 0, 255), batch = self.text_batch,
+                                                 anchor_x = "center", anchor_y = "center"))
+
         logger.debug(f"Sustains: {len([s for s in self.sprite_buckets.sprites if isinstance(s, FourKeyLongNoteSprite)])}")
 
         self.strikeline = arcade.SpriteList()
@@ -228,6 +242,9 @@ class FourKeyHighway(Highway):
             bucket.move(diff_x, diff_y)
         self.sprite_buckets.overbucket.move(diff_x, diff_y)
         self.strikeline.move(diff_x, diff_y)
+        for t in self.text_objects:
+            t.x += diff_x
+            t.y += diff_y
         self.hit_window_mid = self.note_y(0) - (self.note_size / 2)
         self.hit_window_top = self.note_y(-self.engine.hit_window) - (self.note_size / 2)
         self.hit_window_bottom = self.note_y(self.engine.hit_window) - (self.note_size / 2)
@@ -259,6 +276,7 @@ class FourKeyHighway(Highway):
                     note.draw_trail()
         window.ctx.scissor = None
         self.sprite_buckets.draw(self.song_time)
+        self.text_batch.draw()
         _cam.use()
 
 

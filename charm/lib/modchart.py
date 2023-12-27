@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 import typing
 
-
 from charm.lib.anim import ease_linear
 from charm.lib.generic.song import Seconds, Event
 

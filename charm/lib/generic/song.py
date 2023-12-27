@@ -62,6 +62,7 @@ class Note:
     lane: int
     length: Seconds = 0
     type: str = "normal"
+    value: int = 0
 
     hit: bool = False
     missed: bool = False

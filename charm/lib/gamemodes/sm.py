@@ -6,7 +6,7 @@ from simfile.sm import SMChart
 from simfile.ssc import SSCChart
 from simfile.notes import NoteData
 from simfile.notes.group import group_notes, NoteWithTail
-from simfile.timing import TimingData, BeatValue
+from simfile.timing import TimingData, BeatValue, Beat
 from simfile.timing.engine import TimingEngine
 
 from charm.lib.gamemodes.four_key import FourKeyChart, FourKeyEngine, FourKeyNote, FourKeySong, NoteType
@@ -51,12 +51,14 @@ class SMSong(FourKeySong):
             for notes in grouped_notes:
                 note = notes[0]
                 time = timing_engine.time_at(note.beat)
+                beat = timing_engine.beat_at(note.beat) % 1 + Beat.tick()
+                value = beat.denominator
                 note_type = sm_to_fnf_name_map.get(note.note_type.name, None)
                 if isinstance(note, NoteWithTail):
                     end_time = timing_engine.time_at(note.tail_beat)
-                    chart.notes.append(FourKeyNote(chart, time, note.column, end_time - time, NoteType.NORMAL))
+                    chart.notes.append(FourKeyNote(chart, time, note.column, end_time - time, NoteType.NORMAL, value = value))
                 else:
-                    chart.notes.append(FourKeyNote(chart, time, note.column, 0, note_type))
+                    chart.notes.append(FourKeyNote(chart, time, note.column, 0, note_type, value = value))
 
             for bpm in timing.bpms.data:
                 bpm: BeatValue = bpm
