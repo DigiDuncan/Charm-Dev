@@ -91,6 +91,8 @@ class DigiView(View):
             self.window.debug = not self.window.debug
         elif symbol == keymap.fullscreen:
             self.window.set_fullscreen(not self.window.fullscreen)
+        elif symbol == keymap.mute:
+            self.window.theme_song.volume = 0
         if self.window.debug and modifiers & arcade.key.MOD_SHIFT:
             match symbol:
                 case arcade.key.B:  # camera outline
