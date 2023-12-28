@@ -13,6 +13,8 @@ import arcade
 import pyglet
 import PIL
 import PIL.ImageFilter
+import PIL.ImageOps
+import PIL.ImageEnhance
 
 import charm.data.images.skins.fourkey as fourkeyskin
 import charm.data.images.skins.base as baseskin
@@ -71,6 +73,34 @@ class NoteColor:
             case _:
                 return arcade.color.BLACK
 
+def get_note_color_by_beat(beat: int) -> tuple[int, int, int]:
+    match beat:
+        case 1:
+            return (0xFF, 0x00, 0x00)
+        case 2:
+            return (0x00, 0x00, 0xFF)
+        case 3:
+            return (0x00, 0xFF, 0x00)
+        case 4:
+            return (0xFF, 0xFF, 0x00)
+        case 5:
+            return (0xAA, 0xAA, 0xAA)
+        case 6:
+            return (0xFF, 0x00, 0xFF)
+        case 8:
+            return (0xFF, 0x77, 0x00)
+        case 12:
+            return (0x00, 0xFF, 0xFF)
+        case 16:
+            return (0x00, 0x77, 0x00)
+        case 24:
+            return (0xCC, 0xCC, 0xCC)
+        case 32:
+            return (0xAA, 0xAA, 0xFF)
+        case 48:
+            return (0x55, 0x77, 0x55)
+        case _:
+            return (0x00, 0x22, 0x22)
 
 @cache
 def load_note_texture(note_type, note_lane, height, value = 0):
@@ -83,6 +113,13 @@ def load_note_texture(note_type, note_lane, height, value = 0):
     except Exception:
         logger.error(f"Unable to load texture: {image_name}")
         return load_missing_texture(height, height)
+    if value and note_type == NoteType.NORMAL:
+        color = get_note_color_by_beat(value)
+        r, g, b, a = image.split()
+        image = PIL.ImageEnhance.Color(image).enhance(0).convert("L")
+        image = PIL.ImageOps.colorize(image, (0, 0, 0), (255, 255, 255), color)
+        image = image.convert("RGBA")
+        image.putalpha(a)
     return arcade.Texture(image)
 
 
@@ -116,7 +153,7 @@ class FourKeyNoteSprite(arcade.Sprite):
         self.note: FourKeyNote = note
         self.note.sprite = self
         self.highway: FourKeyHighway = highway
-        tex = load_note_texture(note.type, note.lane, height)
+        tex = load_note_texture(note.type, note.lane, height, note.value)
         super().__init__(tex, *args, **kwargs)
         if self.note.type == "sustain":
             self.alpha = 0
@@ -142,7 +179,7 @@ class FourKeyLongNoteSprite(FourKeyNoteSprite):
         self.id += 1
         self.dead = False
 
-        color = NoteColor.from_note(self.note)
+        color = NoteColor.from_note(self.note) if self.note.value == 0 else get_note_color_by_beat(self.note.value)
         self.trail = NoteTrail(self.id, self.position, self.note.time, self.note.length, self.highway.px_per_s,
                                color, width=self.highway.note_size, upscroll=True, fill_color=color[:3] + (60,), resolution=100)
         self.dead_trail = NoteTrail(self.id, self.position, self.note.time, self.note.length, self.highway.px_per_s,
@@ -191,6 +228,7 @@ class FourKeyHighway(Highway):
                                                  font_size = 24, align = "center", font_name = "bananaslip plus",
                                                  color = (0, 0, 0, 255), batch = self.text_batch,
                                                  anchor_x = "center", anchor_y = "center"))
+        self.draw_text = False
 
         logger.debug(f"Sustains: {len([s for s in self.sprite_buckets.sprites if isinstance(s, FourKeyLongNoteSprite)])}")
 
@@ -276,7 +314,8 @@ class FourKeyHighway(Highway):
                     note.draw_trail()
         window.ctx.scissor = None
         self.sprite_buckets.draw(self.song_time)
-        self.text_batch.draw()
+        if self.draw_text:
+            self.text_batch.draw()
         _cam.use()
 
 
