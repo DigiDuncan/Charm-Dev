@@ -17,6 +17,7 @@ import PIL.ImageOps
 import PIL.ImageEnhance
 
 import charm.data.images.skins.fourkey as fourkeyskin
+import charm.data.images.skins.fnf as fnfskin
 import charm.data.images.skins.base as baseskin
 from charm.lib.charm import load_missing_texture
 from charm.lib.generic.engine import DigitalKeyEvent, Engine, Judgement
@@ -103,23 +104,36 @@ def get_note_color_by_beat(beat: int) -> tuple[int, int, int]:
             return (0x00, 0x22, 0x22)
 
 @cache
-def load_note_texture(note_type, note_lane, height, value = 0):
-    image_name = f"{note_type}-{note_lane + 1}"
-    try:
-        image = img_from_resource(fourkeyskin, image_name + ".png")
-        if image.height != height:
-            width = int((height / image.height) * image.width)
-            image = image.resize((width, height), PIL.Image.LANCZOS)
-    except Exception:
-        logger.error(f"Unable to load texture: {image_name}")
-        return load_missing_texture(height, height)
+def load_note_texture(note_type, note_lane, height, value = 0, fnf = False):
     if value and note_type == NoteType.NORMAL:
+        image_name = f"gray-{note_lane + 1}"
+        try:
+            image = img_from_resource(fourkeyskin, image_name + ".png")
+            if image.height != height:
+                width = int((height / image.height) * image.width)
+                image = image.resize((width, height), PIL.Image.LANCZOS)
+        except Exception:
+            logger.error(f"Unable to load texture: {image_name}")
+            return load_missing_texture(height, height)
         color = get_note_color_by_beat(value)
         r, g, b, a = image.split()
-        image = PIL.ImageEnhance.Color(image).enhance(0).convert("L")
+        image = image.convert("L")
         image = PIL.ImageOps.colorize(image, (0, 0, 0), (255, 255, 255), color)
         image = image.convert("RGBA")
         image.putalpha(a)
+    else:
+        image_name = f"{note_type}-{note_lane + 1}"
+        try:
+            if fnf:
+                image = img_from_resource(fnfskin, image_name + ".png")
+            else:
+                image = img_from_resource(fourkeyskin, image_name + ".png")
+            if image.height != height:
+                width = int((height / image.height) * image.width)
+                image = image.resize((width, height), PIL.Image.LANCZOS)
+        except Exception:
+            logger.error(f"Unable to load texture: {image_name}")
+            return load_missing_texture(height, height)
     return arcade.Texture(image)
 
 
