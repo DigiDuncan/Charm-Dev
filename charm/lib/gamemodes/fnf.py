@@ -11,7 +11,7 @@ from typing import Optional, TypedDict
 
 import arcade
 
-from charm.lib.errors import NoChartsError, UnknownLanesError
+from charm.lib.errors import NoChartsError, UnknownLanesError, ChartPostReadParseError
 from charm.lib.gamemodes.four_key import FourKeyChart, FourKeyEngine, FourKeyJudgement, \
     FourKeyLongNoteSprite, FourKeyNote, FourKeyNoteSprite
 from charm.lib.generic.song import BPMChangeEvent, Event, Metadata, Milliseconds, Seconds, Song
@@ -211,7 +211,12 @@ class FNFSong(Song):
             seconds_per_beat = 60 / bpm
             seconds_per_measure = seconds_per_beat * 4
             seconds_per_sixteenth = seconds_per_measure / 16
-            section_length = section["lengthInSteps"] * seconds_per_sixteenth
+            if "lengthInSteps" in section:
+                section_length = section["lengthInSteps"] * seconds_per_sixteenth
+            elif "sectionBeats" in section:
+                section_length = section["sectionBeats"] * seconds_per_sixteenth * 4  # Psych Engine recommends this now! yay /s
+            else:
+                raise ChartPostReadParseError("Notes section missing length!")
 
             # Create a camera focus event like they should have in the first place
             if section["mustHitSection"]:
