@@ -317,7 +317,7 @@ class FNFSongView(DigiView):
         self.hp_draw()
 
         self.highway_2.draw()
-        if self.distractions:
+        if self.distractions and self.songdata.events:
             self.spotlight_draw()
         self.highway_1.draw()
 
