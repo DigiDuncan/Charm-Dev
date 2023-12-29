@@ -14,6 +14,7 @@ from charm.lib.oggsound import OGGSound
 from charm.lib.settings import settings
 from charm.lib.trackcollection import TrackCollection
 from charm.lib.utils import map_range
+from charm.objects.lyric_animator import LyricAnimator
 from charm.views.resultsview import ResultsView
 
 logger = logging.getLogger("charm")
@@ -110,6 +111,12 @@ class FNFSongView(DigiView):
             self.judgement_jump_pos = self.judgement_sprite.center_y + 25
             self.judgement_land_pos = self.judgement_sprite.center_y
             self.judgement_sprite.alpha = 0
+
+        with LogSection(logger, "creating lyric animations"):
+            if self.songdata.lyrics:
+                self.lyric_animator = LyricAnimator(self.window.width / 2, self.window.height / 2, self.songdata.lyrics)
+            else:
+                self.lyric_animator = None
 
         with LogSection(logger, "finalizing"):
             self.last_camera_event = CameraFocusEvent(0, 2)
@@ -225,6 +232,9 @@ class FNFSongView(DigiView):
         self.highway_1.update(self.tracks.time)
         self.highway_2.update(self.tracks.time)
 
+        if self.lyric_animator:
+            self.lyric_animator.update(self.tracks.time)
+
         # Judgement
         judgement_index = self.engine.judgements.index(self.engine.latest_judgement) if self.engine.latest_judgement else 0
         judgement_time = self.engine.latest_judgement_time
@@ -312,5 +322,8 @@ class FNFSongView(DigiView):
         self.highway_1.draw()
 
         self.judgement_sprite.draw()
+
+        if self.lyric_animator:
+            self.lyric_animator.draw()
 
         super().on_draw()

@@ -17,6 +17,7 @@ from charm.lib.gamemodes.four_key import FourKeyChart, FourKeyEngine, FourKeyJud
 from charm.lib.generic.song import BPMChangeEvent, Event, Metadata, Milliseconds, Seconds, Song
 from charm.lib.utils import clamp
 import charm.data.images.skins.fnf as fnfskin
+from charm.objects.lyric_animator import LyricEvent
 
 logger = logging.getLogger("charm")
 
@@ -278,6 +279,23 @@ class FNFSong(Song):
                         charts[note_player].notes.append(thatnote)
 
             section_start += section_length
+
+        # Pysch Engine events look like this
+        if "events" in songdata:
+            events = songdata["events"]
+            for e in events:
+                time = e[0] / 1000
+                subevents = e[1]
+                for s in subevents:
+                    t, d1, d2 = s
+                    if t == "lyrics":
+                        song.lyrics.append(LyricEvent(time, None, d1))
+
+            # Psych Engine lyrics
+            if song.lyrics:
+                song.lyrics[-1].length = math.inf
+                for n, lyric_event in enumerate(song.lyrics[:-1]):
+                    lyric_event.length = song.lyrics[n + 1].time - lyric_event.time
 
         for c in charts:
             c.events = events

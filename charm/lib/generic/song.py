@@ -6,6 +6,8 @@ from functools import cache, total_ordering
 from pathlib import Path
 from typing import Optional
 
+from charm.objects.lyric_animator import LyricEvent
+
 
 Seconds = float
 Milliseconds = float
@@ -146,6 +148,7 @@ class Song:
         self.metadata = Metadata(path.stem, "Unknown Artist", "Unknown Album")
         self.charts: list[Chart] = []
         self.events: list[Event] = []
+        self.lyrics: list[LyricEvent] = []
 
     @cache
     def get_chart(self, difficulty = None, instrument = None):
