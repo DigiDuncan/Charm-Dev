@@ -29,7 +29,7 @@ class TitleView(DigiView):
         # Play music
         with pkg_resources.path(charm.data.audio, "song.mp3") as p:
             song = arcade.Sound(p)
-            self.window.theme_song = arcade.play_sound(song, self.volume, looping=True)
+            self.window.theme_song = arcade.play_sound(song, self.volume, loop=True)
         self.window.theme_song.seek(self.local_time + 3)
 
         self.dumb_fix_for_logo_pos = False
