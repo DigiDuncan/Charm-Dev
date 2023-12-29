@@ -77,31 +77,31 @@ class NoteColor:
 def get_note_color_by_beat(beat: int) -> tuple[int, int, int]:
     match beat:
         case 1:
-            return (0xFF, 0x00, 0x00)
+            return (0xFF, 0x00, 0x00)  # #FF0000
         case 2:
-            return (0x00, 0x00, 0xFF)
+            return (0x00, 0x00, 0xFF)  # #0000FF
         case 3:
-            return (0x00, 0xFF, 0x00)
+            return (0x00, 0xFF, 0x00)  # #00FF00
         case 4:
-            return (0xFF, 0xFF, 0x00)
+            return (0xFF, 0xFF, 0x00)  # #FFFF00
         case 5:
-            return (0xAA, 0xAA, 0xAA)
+            return (0xAA, 0xAA, 0xAA)  # #AAAAAA
         case 6:
-            return (0xFF, 0x00, 0xFF)
+            return (0xFF, 0x00, 0xFF)  # #FF00FF
         case 8:
-            return (0xFF, 0x77, 0x00)
+            return (0xFF, 0x77, 0x00)  # #FF7700
         case 12:
-            return (0x00, 0xFF, 0xFF)
+            return (0x00, 0xFF, 0xFF)  # #00FFFF
         case 16:
-            return (0x00, 0x77, 0x00)
+            return (0x00, 0x77, 0x00)  # #007700
         case 24:
-            return (0xCC, 0xCC, 0xCC)
+            return (0xCC, 0xCC, 0xCC)  # #CCCCCC
         case 32:
-            return (0xAA, 0xAA, 0xFF)
+            return (0xAA, 0xAA, 0xFF)  # #AAAAFF
         case 48:
-            return (0x55, 0x77, 0x55)
+            return (0x55, 0x77, 0x55)  # #557755
         case _:
-            return (0x00, 0x22, 0x22)
+            return (0x00, 0x22, 0x22)  # #002222
 
 @cache
 def load_note_texture(note_type, note_lane, height, value = 0, fnf = False):
