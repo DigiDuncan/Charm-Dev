@@ -414,7 +414,10 @@ class FNFEngine(FourKeyEngine):
         self.last_p1_note = note.lane
         if note.hit:
             self.hits += 1
+            self.streak += 1
             self.last_note_missed = False
         elif note.missed:
             self.misses += 1
+            self.max_streak = max(self.streak, self.max_streak)
+            self.streak = 0
             self.last_note_missed = True
