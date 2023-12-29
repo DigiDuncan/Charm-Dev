@@ -1,6 +1,5 @@
 from copy import copy
 from dataclasses import dataclass
-from functools import cache
 from typing import Optional
 
 import arcade
