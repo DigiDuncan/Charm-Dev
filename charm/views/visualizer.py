@@ -147,7 +147,7 @@ class VisualizerView(DigiView):
 
     def on_show(self):
         self.window.theme_song.volume = 0
-        self.song = arcade.play_sound(self._song, 1, looping=False)
+        self.song = arcade.play_sound(self._song, 1, loop=False)
         super().on_show()
 
     def on_update(self, delta_time: float):

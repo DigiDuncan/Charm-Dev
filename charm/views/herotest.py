@@ -45,7 +45,7 @@ class HeroTestView(DigiView):
 
     def on_show_view(self):
         self.window.theme_song.volume = 0
-        self.song = arcade.play_sound(self._song, self.volume, looping=False)
+        self.song = arcade.play_sound(self._song, self.volume, loop=False)
 
     def on_key_press(self, symbol: int, modifiers: int):
         keymap = get_keymap()
