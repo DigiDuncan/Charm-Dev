@@ -254,7 +254,7 @@ class FNFSongView(DigiView):
             self.window.show_view(self.back)
             arcade.play_sound(self.window.sounds["back"])
 
-        if self.tracks.time >= self.tracks.duration:
+        if self.tracks.tracks and self.tracks.time >= self.tracks.duration:
             self.show_results()
 
     def get_spotlight_position(self, song_time: float):
