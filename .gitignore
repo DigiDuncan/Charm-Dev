@@ -30,3 +30,11 @@ charm/data/images/skins/fnf/sus4.png
 .vscode/settings.json
 
 arcade/
+
+charm.build/
+
+charm.onefile-build/
+
+charm.dist/
+
+charm.exe
