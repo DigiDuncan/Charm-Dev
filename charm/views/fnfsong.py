@@ -46,6 +46,7 @@ class FNFSongView(DigiView):
         self.small_logos_forward: arcade.SpriteList = None
         self.small_logos_backward: arcade.SpriteList = None
         self.distractions = True
+        self.chroma_key = False
 
         self.success = False
 
@@ -130,6 +131,12 @@ class FNFSongView(DigiView):
             self.paused = False
             self.show_text = True
 
+            if self.chroma_key:
+                for i in self.highway_1.strikeline:
+                    i.alpha = 255
+                for i in self.highway_2.strikeline:
+                    i.alpha = 255
+
             self.window.update_rp(f"Playing {self.songdata.metadata.title}")
 
             self.success = True
@@ -163,7 +170,8 @@ class FNFSongView(DigiView):
                 key.state = press
         if symbol in self.engine.mapping:
             i = self.engine.mapping.index(symbol)
-            self.highway_1.strikeline[i].alpha = 255 if press else 64
+            if not self.chroma_key:
+                self.highway_1.strikeline[i].alpha = 255 if press else 64
             self.highway_1.strikeline[i].texture = load_note_texture("normal" if press else "strikeline", i, self.highway_1.note_size)
             if self.tracks.playing:
                 self.engine.process_keystate()
@@ -188,6 +196,8 @@ class FNFSongView(DigiView):
                 self.tracks.log_sync()
             case arcade.key.KEY_8:
                 self.distractions = not self.distractions
+            case arcade.key.B:
+                self.chroma_key = not self.chroma_key
         if self.window.debug:
             if modifiers & arcade.key.MOD_SHIFT:
                 match symbol:
@@ -195,6 +205,11 @@ class FNFSongView(DigiView):
                         self.highway_1.show_hit_window = not self.highway_1.show_hit_window
                     case arcade.key.R:
                         self.show_results()
+
+        for i in self.highway_1.strikeline:
+            i.alpha = 255 if self.chroma_key else 64
+        for i in self.highway_2.strikeline:
+            i.alpha = 255 if self.chroma_key else 64
 
         self.on_key_something(symbol, modifiers, True)
         return super().on_key_press(symbol, modifiers)
@@ -297,14 +312,19 @@ class FNFSongView(DigiView):
     @shows_errors
     def on_draw(self):
         self.window.camera.use()
-        self.clear() if self.distractions else self.clear(arcade.color.SLATE_GRAY)
+        if self.chroma_key:
+            self.clear(arcade.color.BLUE)
+        elif not self.distractions:
+            self.clear(arcade.color.SLATE_GRAY)
+        else:
+            self.clear()
 
         # Charm BG
-        if self.distractions:
+        if self.distractions and not self.chroma_key:
             self.small_logos_forward.draw()
             self.small_logos_backward.draw()
 
-        if self.show_text:
+        if self.show_text and not self.chroma_key:
             self.song_time_text.draw()
             self.score_text.draw()
             self.grade_text.draw()
@@ -314,16 +334,18 @@ class FNFSongView(DigiView):
         if self.paused:
             self.pause_text.draw()
 
-        self.hp_draw()
+        if not self.chroma_key:
+            self.hp_draw()
 
-        self.highway_2.draw()
-        if self.distractions and self.songdata.events:
-            self.spotlight_draw()
         self.highway_1.draw()
+        self.highway_2.draw()
+        if self.distractions and self.songdata.events and not self.chroma_key:
+            self.spotlight_draw()
 
-        self.judgement_sprite.draw()
+        if not self.chroma_key:
+            self.judgement_sprite.draw()
 
-        if self.lyric_animator:
+        if self.lyric_animator and not self.chroma_key:
             self.lyric_animator.draw()
 
         super().on_draw()
