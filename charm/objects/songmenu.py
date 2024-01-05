@@ -1,6 +1,7 @@
 from hashlib import sha1
 import io
 import logging
+import os
 import requests
 
 import arcade
@@ -42,12 +43,16 @@ class SongMenuItem(Sprite):
                 art_path = p
                 break
         if art_path is None:
+            # Make sure this directory, like, exists?
+            if not Path("./albums").exists():
+                os.mkdir("./albums")
             try:
                 album_art_img = PIL.Image.open(f"./albums/album_{self.key}.png")
             except FileNotFoundError:
                 album_art = io.BytesIO(requests.get("https://picsum.photos/200.jpg").content)
                 album_art_img = PIL.Image.open(album_art)
-                album_art_img.save(f"./albums/album_{self.key}.png")
+                with open(f"./albums/album_{self.key}.png", "wb+") as p:
+                    album_art_img.save(p)
         else:
             album_art_img = PIL.Image.open(art_path)
         album_art_img = album_art_img.convert("RGBA")
