@@ -24,6 +24,12 @@ class FNFSongMenuView(DigiView):
 
         self.album_art_buffer = self.window.width // 20
         self.static_time = 0.25
+        self.hit_start = None
+        self.album_art: arcade.Sprite = None
+        self.static: arcade.AnimatedTimeBasedSprite = None
+        self.menu: SongMenu = None
+
+        self.ready = False
 
     @shows_errors
     def setup(self):
@@ -59,6 +65,8 @@ class FNFSongMenuView(DigiView):
         self.static.right = self.size[0] - self.album_art_buffer
         self.static.original_bottom = self.album_art.bottom = self.size[1] // 2
 
+        self.ready = True
+
     @shows_errors
     def on_show(self):
         return super().on_show()
@@ -66,6 +74,9 @@ class FNFSongMenuView(DigiView):
     @shows_errors
     def on_update(self, delta_time):
         super().on_update(delta_time)
+
+        if not self.ready:
+            return
 
         move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
 
@@ -115,6 +126,9 @@ class FNFSongMenuView(DigiView):
     def on_draw(self):
         self.window.camera.use()
         self.clear()
+
+        if not self.ready:
+            return
 
         # Charm BG
         self.small_logos_forward.draw()
