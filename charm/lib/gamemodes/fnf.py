@@ -243,6 +243,9 @@ class FNFSong(Song):
                     extra = note[3:]
                     note = note[:3]
                 posms, lane, lengthms = note  # hope this never breaks lol
+                # EDIT: It does break, sometimes!
+                if lane < 0:
+                    continue  # I don't know what to do with these yet.
                 pos = posms / 1000
                 length = lengthms / 1000
 
