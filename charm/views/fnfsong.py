@@ -206,11 +206,6 @@ class FNFSongView(DigiView):
                     case arcade.key.R:
                         self.show_results()
 
-        for i in self.highway_1.strikeline:
-            i.alpha = 255 if self.chroma_key else 64
-        for i in self.highway_2.strikeline:
-            i.alpha = 255 if self.chroma_key else 64
-
         self.on_key_something(symbol, modifiers, True)
         return super().on_key_press(symbol, modifiers)
 
