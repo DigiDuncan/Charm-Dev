@@ -77,9 +77,7 @@ class FourKeySongView(DigiView):
             with open(self.song_path / "modchart.ndjson") as p:
                 md = ndjson.load(p)
             modchart = Modchart.from_NDJSON(md)
-
-            self.modchart_processor = None
-            # self.modchart_processor = ModchartProcessor(modchart, self)
+            self.modchart_processor = ModchartProcessor(modchart, self)
         else:
             self.modchart_processor = None
 
