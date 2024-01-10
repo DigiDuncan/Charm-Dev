@@ -1,19 +1,15 @@
 from hashlib import sha1
-import io
 import logging
-import os
-import requests
 
 import arcade
 from arcade import Sprite
-import PIL.Image
 
 from charm.lib.anim import ease_circout
 from charm.lib.charm import CharmColors
 from charm.lib.generic.song import Metadata
 from charm.lib.utils import clamp
 
-from pathlib import Path
+from charm.ui.utils import get_album_art
 
 logger = logging.getLogger("charm")
 
@@ -31,35 +27,7 @@ class SongMenuItem(Sprite):
 
         window = arcade.get_window()
 
-        art_path = None
-        art_paths = [Path(song.path / "album.jpg"),
-                     Path(song.path / "album.png"),
-                     Path(song.path / "album.gif")]
-        art_paths.extend(song.path.glob("*jacket.png"))
-        art_paths.extend(song.path.glob("*jacket.gif"))
-        art_paths.extend(song.path.glob("*jacket.jpg"))
-        for p in art_paths:
-            if p.is_file():
-                art_path = p
-                break
-        if art_path is None:
-            # Make sure this directory, like, exists?
-            if not Path("./albums").exists():
-                os.mkdir("./albums")
-            try:
-                album_art_img = PIL.Image.open(f"./albums/album_{self.key}.png")
-            except FileNotFoundError:
-                album_art = io.BytesIO(requests.get("https://picsum.photos/200.jpg").content)
-                album_art_img = PIL.Image.open(album_art)
-                with open(f"./albums/album_{self.key}.png", "wb+") as p:
-                    album_art_img.save(p)
-        else:
-            album_art_img = PIL.Image.open(art_path)
-        album_art_img = album_art_img.convert("RGBA")
-        if (album_art_img.width != 200 or album_art_img.height != 200):
-            album_art_img = album_art_img.resize((200, 200))
-
-        self.album_art = arcade.Texture(album_art_img)
+        self.album_art = get_album_art(self.song)
 
         self._w = w if w else window.width // 2
         self._h = h if h else window.height // 8
