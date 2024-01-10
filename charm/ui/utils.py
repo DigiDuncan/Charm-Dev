@@ -1,17 +1,16 @@
 from hashlib import sha1
-import io
-import os
 from pathlib import Path
+
 import PIL.Image
 from arcade import Texture
-import requests
+
+import charm.data.images
 from charm.lib.generic.song import Metadata
+from charm.lib.utils import img_from_resource
 
 
-def get_album_art(metadata: Metadata) -> Texture:
-    # Make a real hash, probably on Song.
-    key = sha1((str(metadata.title) + str(metadata.artist) + str(metadata.album)).encode()).hexdigest()
-
+def get_album_art(metadata: Metadata, size = 200) -> Texture:
+    # Iterate through frankly too many possible paths for the album art location.
     art_path = None
     art_paths = [Path(metadata.path / "album.jpg"),
                  Path(metadata.path / "album.png"),
@@ -23,22 +22,18 @@ def get_album_art(metadata: Metadata) -> Texture:
         if p.is_file():
             art_path = p
             break
+
     if art_path is None:
+        # We *still* didn't find one? Fine.
         # Make sure this directory, like, exists?
-        if not Path("./albums").exists():
-            os.mkdir("./albums")
-        try:
-            album_art_img = PIL.Image.open(f"./albums/album_{key}.png")
-        except FileNotFoundError:
-            album_art = io.BytesIO(requests.get("https://picsum.photos/200.jpg").content)
-            album_art_img = PIL.Image.open(album_art)
-            with open(f"./albums/album_{key}.png", "wb+") as p:
-                album_art_img.save(p)
+        album_art_img = img_from_resource(charm.data.images, "no_image_found.png")
     else:
         album_art_img = PIL.Image.open(art_path)
+
+    # Resize to requested size
     album_art_img = album_art_img.convert("RGBA")
-    if (album_art_img.width != 200 or album_art_img.height != 200):
-        album_art_img = album_art_img.resize((200, 200))
+    if (album_art_img.width != size or album_art_img.height != size):
+        album_art_img = album_art_img.resize((size, size))
 
     album_art = Texture(album_art_img)
     return album_art
