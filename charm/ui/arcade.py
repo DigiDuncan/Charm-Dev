@@ -14,12 +14,11 @@ from charm.ui.utils import get_album_art
 from charm.lib.gamemodes.fnf import FNFSong
 from charm.lib.paths import songspath
 
-class SongButton(UIFlatButton):
-    def __init__(self, metadata: Metadata, **kwargs):
-        self.metadata = metadata
-        super().__init__(text = metadata.title,
-                         size_hint = (1/12, 1.0),
-                         **kwargs)
+def UIFlatButton_from_metadata(metadata: Metadata) -> UIFlatButton:
+    return UIFlatButton(text = metadata.title,
+                        size_hint = (1/12, 1.0),
+                        width = 300,
+                        height = 10)
 
 def UIImage_from_metadata(metadata: Metadata) -> UIImage:
     t = get_album_art(metadata)
@@ -179,9 +178,9 @@ class ArcadeUITestView(DigiView):
             space_between=5,
             width=300
         )
-        for i in range(30):
+        for s in self.songs:
             # width and height have to be set, because the UIBoxLayout would shrink everything down to 0
-            button = UIFlatButton(text=f"Title {i}", size_hint=(None, None), width=300, height=30)
+            button = UIFlatButton_from_metadata(s)
             title_box.add(button)
         title_box.fit_content()  # resize the box to fit the content
 

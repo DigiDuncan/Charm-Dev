@@ -12,7 +12,6 @@ from charm.views.banner import BannerView
 from charm.views.fnfsongmenu import FNFSongMenuView
 from charm.views.fourkeysongmenu import FourKeySongMenuView
 from charm.views.herotest import HeroTestView
-from charm.views.newmenuview import NewMenuView
 from charm.views.parallaxtest import ParallaxView
 from charm.views.spritetest import SpriteTestView
 from charm.views.subtitletest import SubtitleView
