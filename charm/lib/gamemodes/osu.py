@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import total_ordering
 from pathlib import Path
 from typing import Literal, Optional
@@ -13,17 +13,17 @@ from charm.lib.utils import clamp
 NUM = r"[\d.-]+"
 INT = r"\d+"
 ZO = r"[01]"
-RE_KV_TYPE_1 = r"(*+):(*+)"
-RE_KV_TYPE_2 = r"(*+): (*+)"
-RE_KV_TYPE_3 = r"(*+) : (*+)"
-RE_TIMING_POINT = f"({INT}),({NUM}),({INT}),({INT}),({INT}),({INT}),({ZO}),({INT})"
-RE_HIT_SAMPLE = f"({INT}):({INT}):({INT}):({INT}):(.+)?"
-RE_HIT_CIRCLE = f"({INT}),({INT}),({INT}),({INT}),({INT})(,{RE_HIT_SAMPLE})?"
+RE_KV_TYPE_1 = r"(.+):(.+)"
+RE_KV_TYPE_2 = r"(.+): (.+)"
+RE_KV_TYPE_3 = r"(.+) : (.+)"
+RE_TIMING_POINT = fr"({INT}),({NUM}),({INT}),({INT}),({INT}),({INT}),({ZO}),({INT})"
+RE_HIT_SAMPLE = fr"({INT}):({INT}):({INT}):({INT}):(.+)?"
+RE_HIT_CIRCLE = fr"({INT}),({INT}),({INT}),({INT}),({INT})(,{RE_HIT_SAMPLE})?"
 RE_PIPE_SEP_INT = r"\d+(\|\d+)*"
 RE_PIPE_SEP_COLON_SEP_INT = r"(\d+:\d+)(\|\d+:\d+)*"
-RE_SLIDER = f"({INT}),({INT}),({INT}),({INT}),({INT}),(([BCLP])(\\|\\d+:\\d+)+),({INT}),({NUM}),({RE_PIPE_SEP_INT}),({RE_PIPE_SEP_COLON_SEP_INT})(,{RE_HIT_SAMPLE})?"
-RE_SPINNER = f"({INT}),({INT}),({INT}),({INT}),({INT}),({INT}),({RE_HIT_SAMPLE})"
-RE_HOLD = f"({INT}),({INT}),({INT}),({INT}),({INT}),({INT}):({RE_HIT_SAMPLE})"
+RE_SLIDER = fr"({INT}),({INT}),({INT}),({INT}),({INT}),(([BCLP])(\\|\\d+:\\d+)+),({INT}),({NUM}),({RE_PIPE_SEP_INT}),({RE_PIPE_SEP_COLON_SEP_INT})(,{RE_HIT_SAMPLE})?"
+RE_SPINNER = fr"({INT}),({INT}),({INT}),({INT}),({INT}),({INT}),({RE_HIT_SAMPLE})"
+RE_HOLD = fr"({INT}),({INT}),({INT}),({INT}),({INT}),({INT}):({RE_HIT_SAMPLE})"
 
 logger = logging.getLogger("charm")
 
@@ -266,11 +266,11 @@ class OsuSampleEvent(OsuEvent):
 
 @dataclass
 class RawOsuChart:
-    general: OsuGeneralData = OsuGeneralData()
-    metadata: OsuMetadata = OsuMetadata()
-    difficulty: OsuDifficulty = OsuDifficulty()
-    timing_points: list[OsuTimingPoint] = []
-    hit_objects: list[OsuHitObject] = []
+    general: OsuGeneralData = field(default_factory=OsuGeneralData)
+    metadata: OsuMetadata = field(default_factory=OsuMetadata)
+    difficulty: OsuDifficulty = field(default_factory=OsuDifficulty)
+    timing_points: list[OsuTimingPoint] = field(default_factory=list)
+    hit_objects: list[OsuHitObject] = field(default_factory=list)
 
     @classmethod
     def parse(cls, path: Path) -> "RawOsuChart":
@@ -284,8 +284,13 @@ class RawOsuChart:
         current_header = None
         for line in lines:
             line_num += 1
+            line = line.strip()
+            if line == "":
+                continue
             if line.startswith("["):
                 current_header = line.strip().removeprefix("[").removesuffix("]")
+            elif current_header is None:
+                continue
             elif current_header == "General":
                 if m := re.match(RE_KV_TYPE_2, line):
                     match m.group(1):
@@ -307,7 +312,7 @@ class RawOsuChart:
                         # Skipping SpecialStyle
                         # Skipping WidescreenStoryboard
                         case _:
-                            logger.debug(f"Unknown General metadata '{m.group(2)}'.")
+                            logger.debug(f"Unknown General metadata '{m.group(2)}' (Line {line_num}).")
             elif current_header == "Editor":
                 # We're ignoring editor-only data right now, since we don't have a chart editor.
                 pass
@@ -331,7 +336,7 @@ class RawOsuChart:
                         case "Tags":
                             chart.metadata.tags = m.group(2).split(" ")
                         case _:
-                            logger.debug(f"Unknown Metadata metadata '{m.group(2)}'.")
+                            logger.debug(f"Unknown Metadata metadata '{m.group(2)}' (Line {line_num}).")
             elif current_header == "Difficulty":
                 if m := re.match(RE_KV_TYPE_1, line):
                     match m.group(1):
@@ -348,7 +353,7 @@ class RawOsuChart:
                         case "SliderTickRate":
                             chart.difficulty.slider_tick_rate = m.group(2)
                         case _:
-                            logger.debug(f"Unknown Difficulty metadata '{m.group(2)}'.")
+                            logger.debug(f"Unknown Difficulty metadata '{m.group(2)} (Line {line_num})'.")
             elif current_header == "Events":
                 pass
             elif current_header == "TimingPoints":
@@ -389,7 +394,9 @@ class RawOsuChart:
                     hit_sound = int(m.group(5))
                     hit_sample_data = m.group(6)
                     if hit_sample_data:
-                        m2 = re.match(RE_HIT_SAMPLE, hit_sample_data)
+                        m2 = re.search(RE_HIT_SAMPLE, hit_sample_data)
+                        if m2 is None:
+                            raise ChartParseError(line_num, f"Unparseable hit sample data '{line}'.")
                         normal_set = int(m2.group(1))
                         addition_set = int(m2.group(2))
                         index = int(m2.group(3))
@@ -412,7 +419,7 @@ class RawOsuChart:
                     hit_sound = int(m.group(5))
                     end_time = int(m.group(6)) / 1000
                     hit_sample_data = m.group(7)
-                    m2 = re.match(RE_HIT_SAMPLE, hit_sample_data)
+                    m2 = re.search(RE_HIT_SAMPLE, hit_sample_data)
                     normal_set = int(m2.group(1))
                     addition_set = int(m2.group(2))
                     index = int(m2.group(3))
@@ -442,7 +449,7 @@ class RawOsuChart:
                     edge_sets = splits[9].split("|")
                     hit_sample_data = splits[10] if len(splits) == 9 else None
                     if hit_sample_data:
-                        m2 = re.match(RE_HIT_SAMPLE, hit_sample_data)
+                        m2 = re.search(RE_HIT_SAMPLE, hit_sample_data)
                         normal_set = int(m2.group(1))
                         addition_set = int(m2.group(2))
                         index = int(m2.group(3))
@@ -467,7 +474,7 @@ class RawOsuChart:
                     hit_sound = int(m.group(5))
                     end_time = int(m.group(6)) / 1000
                     hit_sample_data = m.group(7)
-                    m2 = re.match(RE_HIT_SAMPLE, hit_sample_data)
+                    m2 = re.search(RE_HIT_SAMPLE, hit_sample_data)
                     normal_set = int(m2.group(1))
                     addition_set = int(m2.group(2))
                     index = int(m2.group(3))

@@ -3,6 +3,7 @@ from enum import Enum
 from functools import cache
 from pathlib import Path
 import logging
+from typing import cast
 
 import PIL
 import arcade
@@ -65,6 +66,8 @@ class TaikoSong(Song):
                     chart.notes.append(TaikoNote(chart, hit_object.time, 0, hit_object.length, NoteType.DENDEN, large = hit_object.taiko_large))
             song.charts.append(chart)
 
+        return song
+
     @classmethod
     def get_metadata(self, folder: Path) -> Metadata:
         chart_files = folder.glob("*.osu")
@@ -99,7 +102,7 @@ class TaikoNoteSprite(Sprite):
     def __init__(self, note: TaikoNote, highway: "TaikoHighway", height = 128, *args, **kwargs) -> None:
         self.note: TaikoNote = note
         self.highway: TaikoHighway = highway
-        tex = load_note_texture(note.type, height)
+        tex = load_note_texture(note.type.value, height)
         super().__init__(tex, *args, **kwargs)
 
 class TaikoHighway(Highway):
@@ -121,9 +124,12 @@ class TaikoHighway(Highway):
         self.note_sprites: list[TaikoNoteSprite] = []
         self.sprite_buckets = SpriteBucketCollection()
         for note in self.notes:
+            note = cast(TaikoNote, note)
             sprite = TaikoNoteSprite(note, self, self.note_size)
             sprite.top = self.note_y(note.time)
             sprite.center = self.x + (self.w / 2)
+            if note.large:
+                sprite.scale = 1.333
             note.sprite = sprite
             self.sprite_buckets.append(sprite, note.time, note.length)
             self.note_sprites.append(sprite)
@@ -144,7 +150,7 @@ class TaikoHighway(Highway):
         self.sprite_buckets.update_animation(song_time)
         # TODO: Replace with better pixel_offset calculation
         delta_draw_time = self.song_time - self.last_update_time
-        self._pixel_offset += (self.px_per_s * delta_draw_time)
+        self._pixel_offset -= (self.px_per_s * delta_draw_time)
         self.last_update_time = self.song_time
 
         self.highway_camera.move((0.0, self.pixel_offset))
