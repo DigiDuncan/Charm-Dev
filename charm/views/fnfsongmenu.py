@@ -65,6 +65,10 @@ class FNFSongMenuView(DigiView):
         self.static.right = self.size[0] - self.album_art_buffer
         self.static.original_bottom = self.album_art.bottom = self.size[1] // 2
 
+        self.score_text = arcade.Text("N/A", self.album_art.center_x, self.album_art.bottom - 50, arcade.color.BLACK,
+                                      font_size = 48, font_name = "bananaslip plus", anchor_x = "center", anchor_y = "top",
+                                      align = "center")
+
         self.ready = True
 
     @shows_errors
@@ -142,5 +146,6 @@ class FNFSongMenuView(DigiView):
             self.static.draw()
         else:
             self.album_art.draw()
+        self.score_text.draw()
 
         super().on_draw()

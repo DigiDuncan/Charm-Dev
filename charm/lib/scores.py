@@ -17,7 +17,11 @@ class ScoreDB:
         self.path = path
         self.version = 0
 
-    def add_score(self, chart_hash: str, results: Results):
+    @property
+    def empty(self) -> ScoreDBJSON:
+        return {"version": self.version, "scores": {}}.copy()
+
+    def load(self) -> ScoreDBJSON:
         encrypted: str = None
         if self.path.exists():
             with open(self.path, "r+") as f:
@@ -25,9 +29,19 @@ class ScoreDB:
             decrypted = standard_b64decode(encrypted)
             scores: ScoreDBJSON = loads(decrypted)
         else:
-            scores: ScoreDBJSON = {"version": self.version, "scores": {}}
+            scores: ScoreDBJSON = self.empty
         if not encrypted:
-            scores: ScoreDBJSON = {"version": self.version, "scores": {}}
+            scores: ScoreDBJSON = self.empty
+        return scores
+
+    def get_score(self, chart_hash: str) -> ScoreJSON | None:
+        scores = self.load()
+        if chart_hash in scores["scores"]:
+            return scores["scores"][chart_hash]
+        return None
+
+    def add_score(self, chart_hash: str, results: Results):
+        scores = self.load()
         j = results.to_score_JSON()
         if chart_hash not in scores["scores"]:
             scores["scores"][chart_hash] = j
