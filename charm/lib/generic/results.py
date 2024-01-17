@@ -1,11 +1,19 @@
 from collections import defaultdict
 from dataclasses import dataclass
+from typing import TypedDict
 
 import arcade
 
 from charm.lib.anim import lerp
 from charm.lib.generic.engine import Judgement, Chart
 from charm.lib.generic.song import Seconds
+
+class ScoreJSON(TypedDict):
+    score: int
+    accuracy: int
+    grade: str
+    fc_type: str
+    max_streak: int
 
 @dataclass
 class Results:
@@ -21,6 +29,15 @@ class Results:
     fc_type: str
     streak: int
     max_streak: int
+
+    def to_score_JSON(self) -> ScoreJSON:
+        return {
+            "score": self.score,
+            "accuracy": self.accuracy,
+            "grade": self.grade,
+            "fc_type": self.fc_type,
+            "max_streak": self.max_streak
+        }
 
 class Heatmap(arcade.Sprite):
     def __init__(self, judgements: list[Judgement], all_judgements: list[tuple[Seconds, Seconds, Judgement]], height: int = 75):

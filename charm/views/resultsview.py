@@ -59,7 +59,7 @@ class ResultsView(DigiView):
         self.sprites.append(self.heatmap)
 
         # Save score
-        ScoreDB(paths.scorespath).add_score(self.results.chart.hash, self.results.score)
+        ScoreDB(paths.scorespath).add_score(self.results.chart.hash, self.results)
 
         # Generate "gum wrapper" background
         self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
