@@ -6,10 +6,12 @@ import arcade
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView
 from charm.lib.generic.results import Results, Heatmap
+from charm.lib import paths
 
 import charm.data.audio
 import charm.data.images.skins
 from charm.lib.keymap import get_keymap
+from charm.lib.scores import ScoreDB
 from charm.lib.settings import settings
 
 logger = logging.getLogger("charm")
@@ -55,6 +57,9 @@ class ResultsView(DigiView):
 
         self.sprites = arcade.SpriteList()
         self.sprites.append(self.heatmap)
+
+        # Save score
+        ScoreDB(paths.scorespath).add_score(self.results.chart.hash, self.results.score)
 
         # Generate "gum wrapper" background
         self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)

@@ -1,3 +1,5 @@
+from hashlib import sha1
+from io import StringIO
 import itertools
 from pathlib import Path
 
@@ -39,6 +41,9 @@ class SMSong(FourKeySong):
         for c in sm.charts:
             c: SMChart | SSCChart = c
             chart = FourKeyChart(song, c.difficulty, None)
+            temp_file = StringIO()
+            c.serialize(temp_file)
+            chart.hash = sha1(bytes(temp_file.read())).hexdigest()
             charts[c.difficulty] = chart
 
             # Use simfile to make our life so much easier.

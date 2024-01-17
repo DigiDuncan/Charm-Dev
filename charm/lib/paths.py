@@ -14,4 +14,4 @@ def getDataDir():
 datadir = getDataDir()
 confpath = datadir / "charm.conf"
 songspath = datadir / "songs"
-modsfolder = datadir / "mods"
+scorespath = datadir / "scores.db"
