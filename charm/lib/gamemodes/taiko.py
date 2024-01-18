@@ -131,7 +131,7 @@ class TaikoHighway(Highway):
 
         self.chart: TaikoChart = self.chart
 
-        self.viewport = 0.75  # TODO: Set dynamically.
+        self.viewport = 0.75 * (1280 / 720)  # TODO: Set dynamically.
 
         self.auto = auto
 
@@ -142,8 +142,8 @@ class TaikoHighway(Highway):
         for note in self.notes:
             note = cast(TaikoNote, note)
             sprite = TaikoNoteSprite(note, self, self.note_size) if note.length == 0 else TaikoLongNoteSprite(note, self, self.note_size)
-            sprite.top = self.note_y(note.time)
-            sprite.center_x = self.x + (self.w / 2)
+            sprite.center_x = -self.note_y(note.time)
+            sprite.center_y = self.y + (self.h / 2)
             if note.large:
                 sprite.scale = 1.333
             note.sprite = sprite
@@ -161,8 +161,21 @@ class TaikoHighway(Highway):
         self.last_update_time = 0
         self._pixel_offset = 0
 
-    def lane_x(self, lane_num):
-        return self.x + (self.w / 2) + 500
+    @property
+    def strikeline_y(self):
+        return self.w / 10
+
+    @property
+    def note_size(self) -> int:
+        return (self.h // self.chart.lanes)
+
+    @property
+    def px_per_s(self):
+        return self.w / self.viewport
+
+    def note_y(self, at: float):
+        rt = at - self.song_time
+        return (-self.px_per_s * rt) - self.strikeline_y + self.x
 
     def update(self, song_time: float):
         super().update(song_time)
@@ -172,18 +185,15 @@ class TaikoHighway(Highway):
         self._pixel_offset -= (self.px_per_s * delta_draw_time)
         self.last_update_time = self.song_time
 
-        self.highway_camera.move((0.0, self.pixel_offset))
+        self.highway_camera.move((-self.pixel_offset, 0.0))
         self.highway_camera.update()
 
         if self.auto:
-            i = self.chart.indexes_by_time["note"].lteq_index(self.song_time - 0.050) or 0
-            while True:
-                note_sprite = self.note_sprites[i]
-                if note_sprite.note.time > self.song_time + 0.065:
-                    break
-                if self.song_time > note_sprite.note.time:
-                    note_sprite.alpha = 0
-                i += 1
+            b = self.sprite_buckets.calc_bucket(self.song_time)
+            for bucket in [self.sprite_buckets.buckets[b]] + [self.sprite_buckets.overbucket]:
+                for note_sprite in bucket.sprite_list:
+                    if self.song_time > note_sprite.note.time:
+                        note_sprite.alpha = 0
 
     @property
     def pos(self) -> tuple[int, int]:
@@ -211,6 +221,7 @@ class TaikoHighway(Highway):
         arcade.draw_lrbt_rectangle_filled(self.x, self.x + self.w,
                                           self.y, self.y + self.h,
                                           self.color)
+        arcade.draw_circle_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size, self.color)
         self.strikeline.draw()
 
         self.highway_camera.use()

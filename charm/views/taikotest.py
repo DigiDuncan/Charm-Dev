@@ -23,7 +23,7 @@ logger = logging.getLogger("charm")
 class TaikoSongView(DigiView):
     def __init__(self, path: Path, *args, **kwargs):
         super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, *args, **kwargs)
-        self.name = "Test"
+        self.name = "Freedom Dive"
         self.song_path = paths.songspath / "osu" / self.name
         self.tracks: TrackCollection = None
         self.highway: TaikoHighway = None
@@ -47,7 +47,7 @@ class TaikoSongView(DigiView):
                 raise NoChartsError(self.taiko_song.metadata.title)
 
         with LogSection(logger, "loading highway"):
-            self.highway = TaikoHighway(self.chart, (0, 0), (100, self.window.height))
+            self.highway = TaikoHighway(self.chart, (0, self.window.height / 2), (self.window.width, 100), auto = True)
 
         self.text = arcade.Text("[LOADING]", -5, self.window.height - 5, color = arcade.color.BLACK, font_size = 24, align = "right", anchor_y="top", font_name = "bananaslip plus", width = self.window.width, multiline = True)
         self.countdown_text = arcade.Text("0", self.window.width / 2, self.window.height / 2, arcade.color.BLACK, 72, align="center", anchor_x="center", anchor_y="center", font_name = "bananaslip plus", width = 100)
@@ -116,7 +116,7 @@ class TaikoSongView(DigiView):
 
     def calculate_positions(self):
         self.highway.pos = (0, 0)
-        self.highway.x += self.window.width // 2 - self.highway.w // 2  # center the highway
+        self.highway.y += self.window.height // 2 - self.highway.h // 2  # center the highway
         self.text.position = (-5, self.window.height - 5)
         self.countdown_text.position = (self.window.width / 2, self.window.height / 2)
         return super().calculate_positions()
