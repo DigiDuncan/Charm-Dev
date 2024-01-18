@@ -16,14 +16,14 @@ ZO = r"[01]"
 RE_KV_TYPE_1 = r"(.+):(.+)"
 RE_KV_TYPE_2 = r"(.+): (.+)"
 RE_KV_TYPE_3 = r"(.+) : (.+)"
-RE_TIMING_POINT = fr"({INT}),({NUM}),({INT}),({INT}),({INT}),({INT}),({ZO}),({INT})"
+RE_TIMING_POINT = fr"({NUM}),({NUM}),({INT}),({INT}),({INT}),({INT}),({ZO}),({INT})$"
 RE_HIT_SAMPLE = fr"({INT}):({INT}):({INT}):({INT}):(.+)?"
-RE_HIT_CIRCLE = fr"({INT}),({INT}),({INT}),({INT}),({INT})(,{RE_HIT_SAMPLE})?"
+RE_HIT_CIRCLE = fr"({INT}),({INT}),({INT}),({INT}),({INT})(,{RE_HIT_SAMPLE})?$"
 RE_PIPE_SEP_INT = r"\d+(\|\d+)*"
 RE_PIPE_SEP_COLON_SEP_INT = r"(\d+:\d+)(\|\d+:\d+)*"
-RE_SLIDER = fr"({INT}),({INT}),({INT}),({INT}),({INT}),(([BCLP])(\\|\\d+:\\d+)+),({INT}),({NUM}),({RE_PIPE_SEP_INT}),({RE_PIPE_SEP_COLON_SEP_INT})(,{RE_HIT_SAMPLE})?"
-RE_SPINNER = fr"({INT}),({INT}),({INT}),({INT}),({INT}),({INT}),({RE_HIT_SAMPLE})"
-RE_HOLD = fr"({INT}),({INT}),({INT}),({INT}),({INT}),({INT}):({RE_HIT_SAMPLE})"
+RE_SLIDER = fr"({INT}),({INT}),({INT}),({INT}),({INT}),(([BCLP])(\|\d+:\d+)+),({INT}),({NUM}),({RE_PIPE_SEP_INT}),({RE_PIPE_SEP_COLON_SEP_INT})(,{RE_HIT_SAMPLE})?$"
+RE_SPINNER = fr"({INT}),({INT}),({INT}),({INT}),({INT}),({INT}),({RE_HIT_SAMPLE})$"
+RE_HOLD = fr"({INT}),({INT}),({INT}),({INT}),({INT}),({INT}):({RE_HIT_SAMPLE})$"
 
 logger = logging.getLogger("charm")
 
@@ -311,8 +311,10 @@ class RawOsuChart:
                         # Skipping LetterboxInBreaks
                         # Skipping SpecialStyle
                         # Skipping WidescreenStoryboard
+                        case "LetterboxInBreaks" | "SpecialStyle" | "WidescreenStoryboard":
+                            continue
                         case _:
-                            logger.debug(f"Unknown General metadata '{m.group(2)}' (Line {line_num}).")
+                            logger.debug(f"Unknown General metadata '{line}' (Line {line_num}).")
             elif current_header == "Editor":
                 # We're ignoring editor-only data right now, since we don't have a chart editor.
                 pass
@@ -359,7 +361,7 @@ class RawOsuChart:
             elif current_header == "TimingPoints":
                 if m := re.match(RE_TIMING_POINT, line):
                     uninherited = bool(m.group(7))
-                    time = int(m.group(1)) / 1000
+                    time = int(float(m.group(1))) / 1000
                     beat_length = float(m.group(2))
                     meter = int(m.group(3))
                     sample_set = int(m.group(4))
@@ -485,7 +487,7 @@ class RawOsuChart:
                         OsuSpinner(x, y, time, object_type, end_time, hit_sound, hit_sample)
                     )
                 else:
-                    raise ChartParseError(line_num, f"Unknown hold object '{line}'.")
+                    raise ChartParseError(line_num, f"Unknown hit object '{line}'.")
             else:
                 raise ChartParseError(line_num, f"Unknown header '{current_header}'.")
 

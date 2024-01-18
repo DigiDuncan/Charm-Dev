@@ -5,11 +5,10 @@ from pathlib import Path
 import arcade
 from charm.lib import paths
 
-from charm.lib.anim import ease_circout
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView, shows_errors
 from charm.lib.errors import NoChartsError
-from charm.lib.gamemodes.four_key import FourKeyHighway, FourKeyEngine
+from charm.lib.gamemodes.four_key import FourKeyEngine
 from charm.lib.gamemodes.taiko import TaikoHighway, TaikoSong
 from charm.lib.keymap import get_keymap
 from charm.lib.logsection import LogSection
@@ -24,7 +23,7 @@ logger = logging.getLogger("charm")
 class TaikoSongView(DigiView):
     def __init__(self, path: Path, *args, **kwargs):
         super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, *args, **kwargs)
-        self.name = "Freedom Dive"
+        self.name = "Test"
         self.song_path = paths.songspath / "osu" / self.name
         self.tracks: TrackCollection = None
         self.highway: TaikoHighway = None
