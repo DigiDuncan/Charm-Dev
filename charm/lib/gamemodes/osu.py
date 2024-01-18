@@ -25,6 +25,7 @@ RE_PIPE_SEP_COLON_SEP_INT = r"\d+:\d+(?:\|\d+:\d+)*"
 
 RE_SLIDER = fr"{RE_DEFAULT},([BCLP])\|({RE_PIPE_SEP_COLON_SEP_INT}),({INT}),({NUM}),({RE_HIT_SAMPLE})$"
 RE_SPINNER = fr"{RE_DEFAULT},({INT}),({RE_HIT_SAMPLE})$"
+RE_HOLD = fr"{RE_DEFAULT},({INT}):({RE_HIT_SAMPLE})$"
 
 logger = logging.getLogger("charm")
 
@@ -448,6 +449,16 @@ class RawOsuChart:
                         raise ChartParseError(line_num, f"Unparseable hit sample data '{line}'.")
                     hit_sample = hit_sample_from_match(m2)
                     chart.hit_objects.append(OsuSpinner(x, y, time, object_type, hit_sound, end_time, hit_sample))
+                elif m := re.match(RE_HOLD, line):
+                    x, y, time, object_type, hit_sound = get_standard_data_from_match(m)
+                    end_time = int(m.group(6)) / 1000
+                    # Hit sample
+                    hit_sample_data = m.group(7)
+                    m2 = re.search(RE_HIT_SAMPLE, hit_sample_data)
+                    if m2 is None:
+                        raise ChartParseError(line_num, f"Unparseable hit sample data '{line}'.")
+                    hit_sample = hit_sample_from_match(m2)
+                    chart.hit_objects.append(OsuHold(x, y, time, object_type, hit_sound, end_time, hit_sample))
                 else:
                     raise ChartParseError(line_num, f"Unknown hit object '{line}'.")
             else:
