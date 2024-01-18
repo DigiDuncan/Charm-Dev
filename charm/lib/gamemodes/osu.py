@@ -380,7 +380,7 @@ class RawOsuChart:
                 pass
             elif current_header == "TimingPoints":
                 if m := re.match(RE_TIMING_POINT, line):
-                    uninherited = bool(m.group(7))
+                    uninherited = bool(int(m.group(7)))
                     time = int(float(m.group(1))) / 1000
                     beat_length = float(m.group(2))
                     meter = int(m.group(3))
