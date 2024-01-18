@@ -18,6 +18,7 @@ from charm.lib.spritebucket import SpriteBucketCollection
 from charm.lib.utils import img_from_resource
 
 import charm.data.images.skins.taiko as taikoskin
+from charm.objects.line_renderer import NoteTrail
 
 logger = logging.getLogger("charm")
 
@@ -105,6 +106,21 @@ class TaikoNoteSprite(Sprite):
         tex = load_note_texture(note.type.value, height)
         super().__init__(tex, *args, **kwargs)
 
+class TaikoLongNoteSprite(TaikoNoteSprite):
+    def __init__(self, note: TaikoNote, highway: "TaikoHighway", height = 128, *args, **kwargs) -> None:
+        super().__init__(note, highway, *args, **kwargs)
+
+        color = arcade.color.YELLOW if note.type == NoteType.DRUMROLL else arcade.color.PURPLE
+        self.trail = NoteTrail(0, self.position, self.note.time, self.note.length, self.highway.px_per_s,
+        color, width = self.highway.note_size, upscroll = True, fill_color = color[:3] + (60,), curve = True, point_depth = self.highway.note_size)
+
+    def update_animation(self, delta_time: float):
+        self.trail.set_position(*self.position)
+        return super().update_animation(delta_time)
+
+    def draw_trail(self):
+        self.trail.draw()
+
 class TaikoHighway(Highway):
     def __init__(self, chart: Chart, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5, auto = False):
         if size is None:
@@ -125,7 +141,7 @@ class TaikoHighway(Highway):
         self.sprite_buckets = SpriteBucketCollection()
         for note in self.notes:
             note = cast(TaikoNote, note)
-            sprite = TaikoNoteSprite(note, self, self.note_size)
+            sprite = TaikoNoteSprite(note, self, self.note_size) if note.length == 0 else TaikoLongNoteSprite(note, self, self.note_size)
             sprite.top = self.note_y(note.time)
             sprite.center = self.x + (self.w / 2)
             if note.large:
@@ -195,5 +211,10 @@ class TaikoHighway(Highway):
         self.strikeline.draw()
 
         self.highway_camera.use()
+        b = self.sprite_buckets.calc_bucket(self.song_time)
+        for bucket in self.sprite_buckets.buckets[b:b+2] + [self.sprite_buckets.overbucket]:
+            for note in bucket.sprite_list:
+                if isinstance(note, TaikoLongNoteSprite) and note.note.time < self.song_time + self.viewport and note.note.end > self.song_time:
+                    note.draw_trail()
         self.sprite_buckets.draw(self.song_time)
         _cam.use()

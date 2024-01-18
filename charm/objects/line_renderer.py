@@ -133,6 +133,8 @@ class NoteTrail(MultiLineRenderer):
         self.sprite = None
         if self.curve:
             self.texture = arcade.Texture.create_empty(f"_line_renderer_{self.color}_{self.fill_color}_{self.width}_{self.point_depth}", (self.width, self.point_depth))
+            if self.upscroll:
+                self.texture = self.texture.flip_vertically()
             self.sprite = arcade.Sprite(self.texture)
             offset = -self.point_depth / 2 if self.upscroll else self.point_depth / 2
             self.sprite.position = (self.note_center[0], self._trail_end + offset)
