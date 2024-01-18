@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 from functools import cache
+import math
 from pathlib import Path
 import logging
 from typing import cast
@@ -15,7 +16,7 @@ from charm.lib.generic.engine import Engine
 from charm.lib.generic.highway import Highway
 from charm.lib.generic.song import Chart, Metadata, Note, Song
 from charm.lib.spritebucket import SpriteBucketCollection
-from charm.lib.utils import img_from_resource
+from charm.lib.utils import clamp, img_from_resource
 
 import charm.data.images.skins.taiko as taikoskin
 from charm.objects.line_renderer import TaikoNoteTrail
@@ -106,11 +107,16 @@ class TaikoNoteSprite(Sprite):
         tex = load_note_texture(note.type.value, height)
         super().__init__(tex, *args, **kwargs)
 
+    def update_animation(self, delta_time: float = 1 / 60) -> None:
+        if self.note.type == NoteType.DENDEN:
+            self.angle += 360 * delta_time / 3
+        return super().update_animation(delta_time)
+
 class TaikoLongNoteSprite(TaikoNoteSprite):
     def __init__(self, note: TaikoNote, highway: "TaikoHighway", height = 128, *args, **kwargs) -> None:
         super().__init__(note, highway, *args, **kwargs)
 
-        color = arcade.color.YELLOW if note.type == NoteType.DRUMROLL else arcade.color.PURPLE
+        color = arcade.color.YELLOW if note.type == NoteType.DRUMROLL else arcade.color.MAGENTA
         self.trail = TaikoNoteTrail(self.position, self.note.length, self.highway.note_size, self.highway.px_per_s,
         color, color[:3] + (60,))
 
@@ -189,9 +195,7 @@ class TaikoHighway(Highway):
         self.highway_camera.update()
 
         if self.auto:
-            b = max(self.sprite_buckets.calc_bucket(self.song_time), 0)
-            if b > len(self.sprite_buckets.buckets):
-                return
+            b = clamp(0, self.sprite_buckets.calc_bucket(self.song_time), len(self.sprite_buckets.buckets) - 1)
             for bucket in [self.sprite_buckets.buckets[b]] + [self.sprite_buckets.overbucket]:
                 for note_sprite in bucket.sprite_list:
                     if self.song_time > note_sprite.note.time:
