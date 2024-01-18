@@ -192,3 +192,75 @@ class NoteTrail(MultiLineRenderer):
             lr.draw()
         if self.curve_cap:
             self.curve_cap.draw()
+
+class TaikoNoteTrail:
+    def __init__(self, note_center: Point, length: Seconds, width: int, px_per_s: float, color: Color, fill_color: Color):
+        self.note_center = note_center
+        self.length = length
+        self.width = width
+        self.px_per_s = px_per_s
+        self.color = color
+        self.fill_color = fill_color
+
+        self.thickness = 3
+
+        self.line_renderers: list[LineRenderer] = []
+        self.rectangles = arcade.shape_list.ShapeElementList()
+
+        self._left = note_center[0]
+        self._right = self._left + int(px_per_s * length) - (self.width // 2)
+        self._px_length = self._right - self._left
+        self._top = note_center[1] + (width / 2)
+        self._bottom = note_center[1] - (width / 2)
+
+        line_renderer1 = LineRenderer([Point((self._left, self._bottom)), Point((self._right, self._bottom))], self.color, self.thickness)
+        self.line_renderers.append(line_renderer1)
+        line_renderer2 = LineRenderer([Point((self._left, self._top)), Point((self._right, self._top))], self.color, self.thickness)
+        self.line_renderers.append(line_renderer2)
+
+        self.sprite = None
+        self.texture = arcade.Texture.create_empty(f"_taikonotetrail_{self.color}_{self.fill_color}_{self.width}", (self.width // 2, self.width))
+        self.sprite = arcade.Sprite(self.texture)
+        offset = self.width / 4
+        self.sprite.position = (self._right + offset - 1, self.note_center[0])
+        self.curve_cap = arcade.SpriteList()
+        self.curve_cap.append(self.sprite)
+
+        self.generate_fill()
+
+    def generate_fill(self):
+        self.rectangles = arcade.shape_list.ShapeElementList()
+        mid_point_x = self._left + (self._px_length // 2)
+        rect = arcade.shape_list.create_rectangle_filled(mid_point_x, self.note_center[1], self._px_length, self.width - self.thickness, self.fill_color)
+        self.rectangles.append(rect)
+
+        # Deal with the curve
+        window = arcade.get_window()
+        ctx = window.ctx
+        ctx.blend_func = ctx.BLEND_ADDITIVE
+        with self.curve_cap.atlas.render_into(self.texture) as fbo:
+            fbo.clear()
+            if self.fill_color:
+                arcade.draw_arc_filled(0, self.width / 2, self.width, self.width - self.thickness, self.fill_color, -90, 90)
+            arcade.draw_arc_outline(0, self.width / 2, self.width, self.width - self.thickness, self.color, -90, 90, self.thickness * 2)
+        ctx.blend_func = ctx.BLEND_DEFAULT
+
+    def move(self, x: float, y: float):
+        for lr in self.line_renderers:
+            lr.move(x, y)
+        self.rectangles.move(x, y)
+        if self.curve_cap:
+            self.curve_cap.move(x, y)
+        self.note_center = (self.note_center[0] + x, self.note_center[1] + y)
+
+    def set_position(self, x: float, y: float):
+        ox, oy = self.note_center
+        mx = x - ox
+        my = y - oy
+        self.move(mx, my)
+
+    def draw(self):
+        self.rectangles.draw()
+        for lr in self.line_renderers:
+            lr.draw()
+        self.curve_cap.draw()

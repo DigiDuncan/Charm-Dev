@@ -18,7 +18,7 @@ from charm.lib.spritebucket import SpriteBucketCollection
 from charm.lib.utils import img_from_resource
 
 import charm.data.images.skins.taiko as taikoskin
-from charm.objects.line_renderer import NoteTrail
+from charm.objects.line_renderer import TaikoNoteTrail
 
 logger = logging.getLogger("charm")
 
@@ -111,8 +111,8 @@ class TaikoLongNoteSprite(TaikoNoteSprite):
         super().__init__(note, highway, *args, **kwargs)
 
         color = arcade.color.YELLOW if note.type == NoteType.DRUMROLL else arcade.color.PURPLE
-        self.trail = NoteTrail(0, self.position, self.note.time, self.note.length, self.highway.px_per_s,
-        color, width = self.highway.note_size, upscroll = True, fill_color = color[:3] + (60,), curve = True, point_depth = self.highway.note_size)
+        self.trail = TaikoNoteTrail(self.position, self.note.length, self.highway.note_size, self.highway.px_per_s,
+        color, color[:3] + (60,))
 
     def update_animation(self, delta_time: float):
         self.trail.set_position(*self.position)
@@ -189,7 +189,9 @@ class TaikoHighway(Highway):
         self.highway_camera.update()
 
         if self.auto:
-            b = self.sprite_buckets.calc_bucket(self.song_time)
+            b = max(self.sprite_buckets.calc_bucket(self.song_time), 0)
+            if b > len(self.sprite_buckets.buckets):
+                return
             for bucket in [self.sprite_buckets.buckets[b]] + [self.sprite_buckets.overbucket]:
                 for note_sprite in bucket.sprite_list:
                     if self.song_time > note_sprite.note.time:
