@@ -47,7 +47,7 @@ class TaikoSongView(DigiView):
                 raise NoChartsError(self.taiko_song.metadata.title)
 
         with LogSection(logger, "loading highway"):
-            self.highway = TaikoHighway(self.chart, (0, 0))
+            self.highway = TaikoHighway(self.chart, (0, 0), (100, self.window.height))
 
         self.text = arcade.Text("[LOADING]", -5, self.window.height - 5, color = arcade.color.BLACK, font_size = 24, align = "right", anchor_y="top", font_name = "bananaslip plus", width = self.window.width, multiline = True)
         self.countdown_text = arcade.Text("0", self.window.width / 2, self.window.height / 2, arcade.color.BLACK, 72, align="center", anchor_x="center", anchor_y="center", font_name = "bananaslip plus", width = 100)

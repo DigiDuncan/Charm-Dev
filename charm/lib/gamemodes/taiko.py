@@ -34,7 +34,7 @@ class TaikoNote(Note):
 
 class TaikoChart(Chart):
     def __init__(self, song: 'Song', difficulty: str, hash: str) -> None:
-        super().__init__(song, "taiko", difficulty, "taiko", 4, hash)
+        super().__init__(song, "taiko", difficulty, "taiko", 1, hash)
         self.song: TaikoSong = song
 
 class TaikoSong(Song):
@@ -143,7 +143,7 @@ class TaikoHighway(Highway):
             note = cast(TaikoNote, note)
             sprite = TaikoNoteSprite(note, self, self.note_size) if note.length == 0 else TaikoLongNoteSprite(note, self, self.note_size)
             sprite.top = self.note_y(note.time)
-            sprite.center = self.x + (self.w / 2)
+            sprite.center_x = self.x + (self.w / 2)
             if note.large:
                 sprite.scale = 1.333
             note.sprite = sprite
@@ -160,6 +160,9 @@ class TaikoHighway(Highway):
         # TODO: Replace with better pixel_offset calculation
         self.last_update_time = 0
         self._pixel_offset = 0
+
+    def lane_x(self, lane_num):
+        return self.x + (self.w / 2) + 500
 
     def update(self, song_time: float):
         super().update(song_time)
