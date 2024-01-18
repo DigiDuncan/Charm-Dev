@@ -151,7 +151,7 @@ class TaikoHighway(Highway):
             sprite.center_x = -self.note_y(note.time)
             sprite.center_y = self.y + (self.h / 2)
             if note.large:
-                sprite.scale = 1.333
+                sprite.scale = 1.5
             note.sprite = sprite
             self.sprite_buckets.append(sprite, note.time, note.length)
             self.note_sprites.append(sprite)
@@ -166,6 +166,12 @@ class TaikoHighway(Highway):
         # TODO: Replace with better pixel_offset calculation
         self.last_update_time = 0
         self._pixel_offset = 0
+
+        # USED FOR AUTO
+        self.last_note_type = None
+        self.last_note_big = False
+        self.last_side_right = False
+        self.frames_visible = 0
 
     @property
     def strikeline_y(self):
@@ -198,8 +204,12 @@ class TaikoHighway(Highway):
             b = clamp(0, self.sprite_buckets.calc_bucket(self.song_time), len(self.sprite_buckets.buckets) - 1)
             for bucket in [self.sprite_buckets.buckets[b]] + [self.sprite_buckets.overbucket]:
                 for note_sprite in bucket.sprite_list:
-                    if self.song_time > note_sprite.note.time:
+                    if self.song_time > note_sprite.note.time and note_sprite.alpha != 0:
                         note_sprite.alpha = 0
+                        self.last_note_type = note_sprite.note.type
+                        self.last_note_big = note_sprite.note.large
+                        self.last_side_right = not self.last_side_right
+                        self.frames_visible = 0
 
     @property
     def pos(self) -> tuple[int, int]:
@@ -228,6 +238,24 @@ class TaikoHighway(Highway):
                                           self.y, self.y + self.h,
                                           self.color)
         arcade.draw_circle_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size, self.color)
+
+        if self.auto and self.last_note_type and self.frames_visible <= 6:
+            if self.last_note_type == NoteType.DON:
+                if self.last_note_big:
+                    arcade.draw_circle_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size * 0.75, arcade.color.DEBIAN_RED)
+                elif self.last_side_right:
+                    arcade.draw_arc_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2 * 0.75, self.note_size * 2 * 0.75, arcade.color.DEBIAN_RED, -90, 90)
+                else:
+                    arcade.draw_arc_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2 * 0.75, self.note_size * 2 * 0.75, arcade.color.DEBIAN_RED, 90, 270)
+            elif self.last_note_type == NoteType.KAT:
+                if self.last_note_big:
+                    arcade.draw_circle_outline(self.strikeline_y, self.y + (self.h / 2), self.note_size, arcade.color.BRIGHT_CERULEAN, 10)
+                elif self.last_side_right:
+                    arcade.draw_arc_outline(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2, self.note_size * 2, arcade.color.BRIGHT_CERULEAN, -90, 90, 20)
+                else:
+                    arcade.draw_arc_outline(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2, self.note_size * 2, arcade.color.BRIGHT_CERULEAN, 90, 270, 20)
+            self.frames_visible += 1
+
         self.strikeline.draw()
 
         self.highway_camera.use()
