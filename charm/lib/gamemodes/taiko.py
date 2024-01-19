@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
 from functools import cache
-import math
 from pathlib import Path
 import logging
 from typing import cast

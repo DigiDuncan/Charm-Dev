@@ -100,6 +100,7 @@ class OsuHitObject:
         return self.hit_sound_finish
 
     def get_lane(self, lanes: int) -> int:
+        """Used to determine the lane in osu!mania."""
         lane_calc = math.floor(self.x * lanes / 512)
         return clamp(0, lane_calc, lanes - 1)
 
