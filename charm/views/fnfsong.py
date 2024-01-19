@@ -334,7 +334,8 @@ class FNFSongView(DigiView):
 
         self.highway_1.draw()
         self.highway_2.draw()
-        if self.distractions and self.songdata.events and not self.chroma_key:
+        cameraevents = [e for e in self.songdata.charts[0].events if isinstance(e, CameraFocusEvent)]
+        if self.distractions and cameraevents and not self.chroma_key:
             self.spotlight_draw()
 
         if not self.chroma_key:
