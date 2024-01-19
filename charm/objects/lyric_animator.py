@@ -1,5 +1,5 @@
 from copy import copy
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 import arcade
@@ -11,16 +11,21 @@ class LyricEvent:
     time: Seconds
     length: Seconds
     text: str
+    karaoke: str = ""
 
-    _label: Optional[arcade.Text] = None
+    _labels: list[arcade.Text] = field(default_factory=list)
 
     @property
     def end_time(self) -> Seconds:
         return self.time + self.length
 
-    def get_label(self, x: float, y: float) -> arcade.Text:
-        if self._label is None:
-            self._label = arcade.Text(self.text, x, y, font_name = "bananaslip plus", font_size = 24, color = (0, 0, 0, 255), align = "center", anchor_x = "center")
+    def get_labels(self, x: float, y: float) -> arcade.Text:
+        if not self._labels:
+            label_under = arcade.Text(self.text, x, y, font_name = "bananaslip plus", font_size = 24, color = (0, 0, 0, 255), align = "center", anchor_x = "center")
+            self._labels.append(label_under)
+            if self.karaoke:
+                label_over = arcade.Text(self.text, label_under.left, y, font_name = "bananaslip plus", font_size = 24, color = (255, 255, 0, 255), align = "left", anchor_x = "left")
+                self._labels.append(label_over)
         return self._label
 
 class LyricAnimator:
