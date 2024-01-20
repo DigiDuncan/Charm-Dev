@@ -1,9 +1,13 @@
 import importlib.resources as pkg_resources
 import logging
 
-import arcade
-import arcade.hitbox
 import pyglet
+# Fix font
+pyglet.options["win32_disable_shaping"] = True
+import arcade
+arcade.pyglet.options["win32_disable_shaping"] = True
+import arcade.hitbox
+
 from digiformatter import logger as digilogger
 
 import charm
@@ -21,9 +25,6 @@ SCREEN_HEIGHT = settings.resolution.height
 FPS_CAP = settings.fps
 SCREEN_TITLE = "Charm"
 
-# Fix font lag
-pyglet.options["advanced_font_features"] = True
-arcade.pyglet.options["advanced_font_features"] = True
 
 with pkg_resources.path(charm.data.fonts, "bananaslipplus.otf") as p:
     arcade.text.load_font(str(p))

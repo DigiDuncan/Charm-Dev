@@ -28,6 +28,7 @@ settings_dict = {
     "resolution": {
         "width": 1280,
         "height": 720
+
     },
     "fps": 240
 }

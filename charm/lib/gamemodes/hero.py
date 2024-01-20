@@ -911,7 +911,6 @@ class HeroEngine(Engine):
         buttons = get_keymap().get_set("hero")  # noqa: F841
 
         # CURRENTLY MISSING:
-        # Tap scoring
         # Sutains
         # Sustain drops
         # Overstrums
