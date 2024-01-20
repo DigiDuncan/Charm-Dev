@@ -10,6 +10,7 @@ from charm.lib.keymap import get_keymap
 from charm.lib.oggsound import OGGSound
 from charm.lib.paths import songspath
 from charm.lib.settings import settings
+from charm.objects.lyric_animator import LyricAnimator
 
 logger = logging.getLogger("charm")
 
@@ -24,8 +25,10 @@ class HeroTestView(DigiView):
     def setup(self):
         super().setup()
 
-        self._song = OGGSound(songspath / "ch" / "flagpole" / "song.ogg")
-        self.hero_song = HeroSong.parse(songspath / "ch" / "flagpole")
+        name = "abc"
+
+        self._song = OGGSound(songspath / "ch" / name / "song.ogg")
+        self.hero_song = HeroSong.parse(songspath / "ch" / name)
         self.chart = self.hero_song.get_chart("Expert", "Single")
         self.engine = HeroEngine(self.chart)
         self.highway = HeroHighway(self.chart, (0, 0), auto = False)
@@ -39,6 +42,10 @@ class HeroTestView(DigiView):
         self.time_text = arcade.Text("0:00", self.window.width - 5, 35, arcade.color.BLACK, 16, anchor_x = "right", font_name = "bananaslip plus", width=self.window.width, batch = self.text_batch)
         self.score_text = arcade.Text("0", self.window.width - 5, 65, arcade.color.BLACK, 24, anchor_x = "right", font_name = "bananaslip plus", width=self.window.width, batch = self.text_batch)
         self.multiplier_text = arcade.Text("x1", self.window.width - 5, 95, arcade.color.BLACK, 16, anchor_x = "right", font_name = "bananaslip plus", width=self.window.width, batch = self.text_batch)
+
+        self.lyric_animator = None
+        if self.hero_song.lyrics:
+            self.lyric_animator = LyricAnimator(self.window.width // 2, self.window.height - 100, self.hero_song.lyrics)
 
         # Generate "gum wrapper" background
         self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
@@ -102,6 +109,9 @@ class HeroTestView(DigiView):
         if self.multiplier_text._label.text != f"x{self.engine.multiplier} [{self.engine.combo}]":
             self.multiplier_text._label.text = f"x{self.engine.multiplier} [{self.engine.combo}]"
 
+        if self.lyric_animator:
+            self.lyric_animator.update(self.song.time)
+
         move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
 
     def on_draw(self):
@@ -114,5 +124,8 @@ class HeroTestView(DigiView):
 
         self.highway.draw()
         self.text_batch.draw()
+
+        if self.lyric_animator:
+            self.lyric_animator.draw()
 
         super().on_draw()

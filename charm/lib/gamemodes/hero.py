@@ -22,6 +22,7 @@ from charm.lib.generic.song import Chart, Event, Metadata, Note, Seconds, Song
 from charm.lib.keymap import get_keymap
 from charm.lib.spritebucket import SpriteBucketCollection
 from charm.lib.utils import img_from_resource
+from charm.objects.lyric_animator import LyricEvent
 
 from charm.objects.line_renderer import NoteTrail
 import charm.data.images.skins.hero as heroskin
@@ -92,7 +93,7 @@ class SectionEvent(TickEvent):
 
 
 @dataclass
-class LyricEvent(TickEvent):
+class RawLyricEvent(TickEvent):
     text: str
 
 
@@ -509,7 +510,7 @@ class HeroSong(Song):
                     tick, text = m.groups()
                     tick = int(tick)
                     seconds = tick_to_seconds(tick, sync_track, resolution, offset)
-                    events.append(LyricEvent(seconds, tick, text))
+                    events.append(RawLyricEvent(seconds, tick, text))
                 # Misc. events
                 elif m := re.match(RE_E, line):
                     tick, text = m.groups()
@@ -565,6 +566,7 @@ class HeroSong(Song):
             song.charts.append(chart)
         song.calculate_beats()
         song.events.sort()
+        song.process_lyrics()
         song.index()  # oh god help
         song.resolution = resolution
         song.metadata = metadata
@@ -587,6 +589,38 @@ class HeroSong(Song):
                 current_time += spb
                 cb += 1
         self.events.extend(beats)
+
+    def process_lyrics(self):
+        end_time = None
+        current_full_string = ""
+        unprocessed_lyrics: list[LyricEvent] = []
+        processsed_lyrics: list[LyricEvent] = []
+        self.events = cast(list[TickEvent], self.events)
+        for e in self.events:
+            if isinstance(e, TextEvent):
+                if e.text == "phrase_start" or "phrase_end":
+                    if e.text == "phrase_start":
+                        end_time = None
+                    if unprocessed_lyrics:
+                        for ee in unprocessed_lyrics:
+                            ee.end_time = e.time if end_time is None else end_time
+                            ee.text = current_full_string
+                        processsed_lyrics.extend(unprocessed_lyrics)
+                        unprocessed_lyrics = []
+                        current_full_string = ""
+            if isinstance(e, RawLyricEvent):
+                text = e.text.strip()
+                for c in ["+", "#", "^", "*", "%", "$", "/"]:
+                    text = text.replace(c, "")
+                if text.endswith("-"):
+                    text = text.removesuffix("-")
+                else:
+                    text = text + " "
+                text = text.replace("=", "-")
+                text = text.replace("§", "_")
+                current_full_string += text
+                unprocessed_lyrics.append(LyricEvent(e.time, 0, "", karaoke = current_full_string))
+        self.lyrics = processsed_lyrics
 
     def index(self):
         """Save indexes of important look-up events."""
