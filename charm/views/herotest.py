@@ -46,6 +46,7 @@ class HeroTestView(DigiView):
         self.lyric_animator = None
         if self.hero_song.lyrics:
             self.lyric_animator = LyricAnimator(self.window.width // 2, self.window.height - 100, self.hero_song.lyrics)
+            self.lyric_animator.prerender()
 
         # Generate "gum wrapper" background
         self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
