@@ -618,6 +618,7 @@ class HeroSong(Song):
                     text = text + " "
                 text = text.replace("=", "-")
                 text = text.replace("§", "_")
+                text = re.sub("<.+>", "", text)  # TODO: Get formatting working for real.
                 current_full_string += text
                 unprocessed_lyrics.append(LyricEvent(e.time, 0, "", karaoke = current_full_string))
         self.lyrics = processsed_lyrics

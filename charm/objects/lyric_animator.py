@@ -24,7 +24,7 @@ class LyricEvent:
 
     def get_labels(self, x: float, y: float) -> arcade.Text:
         if not self._labels:
-            label_shadow = arcade.Text(self.text, x + 2, y - 2, font_name = "bananaslip plus", font_size = 24, color = (0, 0, 0, 127), align = "center", anchor_x = "center") 
+            label_shadow = arcade.Text(self.text, x + 2, y - 2, font_name = "bananaslip plus", font_size = 24, color = (0, 0, 0, 127), align = "center", anchor_x = "center")
             label_under = arcade.Text(self.text, x, y, font_name = "bananaslip plus", font_size = 24, color = (0, 0, 0, 255), align = "center", anchor_x = "center")
             self._labels.append(label_shadow)
             self._labels.append(label_under)
