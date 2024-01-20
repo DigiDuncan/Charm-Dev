@@ -614,6 +614,8 @@ class HeroSong(Song):
                     text = text.replace(c, "")
                 if text.endswith("-"):
                     text = text.removesuffix("-")
+                elif text.endswith("="):
+                    text = text.removesuffix("=") + "-"
                 else:
                     text = text + " "
                 text = text.replace("=", "-")
