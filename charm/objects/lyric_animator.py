@@ -26,7 +26,11 @@ class LyricEvent:
             if self.karaoke:
                 label_over = arcade.Text(self.text, label_under.left, y, font_name = "bananaslip plus", font_size = 24, color = (255, 255, 0, 255), align = "left", anchor_x = "left")
                 self._labels.append(label_over)
-        return self._label
+        return self._labels
+
+    def draw(self):
+        for l in self._labels:
+            l.draw()
 
 class LyricAnimator:
     def __init__(self, x: float, y: float, events: list[LyricEvent] = None) -> None:
@@ -51,5 +55,5 @@ class LyricAnimator:
 
     def draw(self):
         if self.current_subtitles:
-            label = self.current_subtitles[0].get_label(self.x, self.y)
-            label.draw()
+            self.current_subtitles[0].get_labels(self.x, self.y)
+            self.current_subtitles[0].draw()
