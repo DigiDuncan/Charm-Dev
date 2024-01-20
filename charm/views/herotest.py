@@ -25,7 +25,7 @@ class HeroTestView(DigiView):
     def setup(self):
         super().setup()
 
-        name = "abc"
+        name = "mcmental"
 
         self._song = OGGSound(songspath / "ch" / name / "song.ogg")
         self.hero_song = HeroSong.parse(songspath / "ch" / name)
