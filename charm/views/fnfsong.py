@@ -116,6 +116,7 @@ class FNFSongView(DigiView):
         with LogSection(logger, "creating lyric animations"):
             if self.songdata.lyrics:
                 self.lyric_animator = LyricAnimator(self.window.width / 2, self.window.height / 2, self.songdata.lyrics)
+                self.lyric_animator.prerender()
             else:
                 self.lyric_animator = None
 
