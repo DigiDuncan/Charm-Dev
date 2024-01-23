@@ -106,7 +106,7 @@ class TitleView(DigiView):
         else:
             self.splash_text = random.choice(self.splashes)
             self.splash_index = self.splashes.index(self.splash_text)
-            self.splash_label = arcade.pyglet.text.Label("",
+            self.splash_label = arcade.pyglet.text.Label(self.splash_text,
                             font_name='bananaslip plus',
                             font_size=24,
                             x=self.window.width // 2, y=self.window.height // 2,
