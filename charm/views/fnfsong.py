@@ -47,6 +47,7 @@ class FNFSongView(DigiView):
         self.small_logos_backward: arcade.SpriteList = None
         self.distractions = True
         self.chroma_key = False
+        self.camera_events = []
 
         self.success = False
 
@@ -126,6 +127,7 @@ class FNFSongView(DigiView):
             self.last_spotlight_change = 0
             self.go_to_spotlight_position = 0
             self.spotlight_position = 0
+            self.camera_events = [e for e in self.songdata.charts[0].events if isinstance(e, CameraFocusEvent)]
 
             self.hp_bar_length = 250
 
@@ -273,7 +275,7 @@ class FNFSongView(DigiView):
             1: 0,
             0: self.window.width // 2
         }
-        cameraevents = [e for e in self.songdata.charts[0].events if isinstance(e, CameraFocusEvent) and e.time < self.tracks.time + 0.25]
+        cameraevents = [e for e in self.camera_events if e.time < self.tracks.time + 0.25]
         if cameraevents:
             current_camera_event = cameraevents[-1]
             if self.last_camera_event != current_camera_event:
@@ -335,8 +337,8 @@ class FNFSongView(DigiView):
 
         self.highway_1.draw()
         self.highway_2.draw()
-        cameraevents = [e for e in self.songdata.charts[0].events if isinstance(e, CameraFocusEvent)]
-        if self.distractions and cameraevents and not self.chroma_key:
+
+        if self.distractions and self.camera_events and not self.chroma_key:
             self.spotlight_draw()
 
         if not self.chroma_key:
