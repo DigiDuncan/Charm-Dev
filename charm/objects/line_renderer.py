@@ -6,6 +6,7 @@ from arcade.types import Color
 TuplePoint = tuple[int | float, int | float]
 Seconds = float
 
+
 class Point:
     def __init__(self, point: TuplePoint):
         self._point = point
@@ -32,6 +33,7 @@ class Point:
     def __str__(self) -> str:
         return f"Point({self.x}, {self.y})"
 
+
 class LineRenderer:
     def __init__(self, points: list[Point], color: Color, width: float):
         self.points: list[Point] = points
@@ -51,6 +53,7 @@ class LineRenderer:
 
     def draw(self):
         arcade.draw_line_strip(self.point_tuples, self.color, self.width)
+
 
 class MultiLineRenderer:
     def __init__(self, line_renderers: dict[Hashable, LineRenderer] = {}):
@@ -77,6 +80,7 @@ class MultiLineRenderer:
     def draw(self):
         for lr in self.line_renderers.values():
             lr.draw()
+
 
 class NoteTrail(MultiLineRenderer):
     def __init__(self, note_id: Hashable, note_center: Point, time_start: Seconds, length: Seconds,
@@ -192,6 +196,7 @@ class NoteTrail(MultiLineRenderer):
             lr.draw()
         if self.curve_cap:
             self.curve_cap.draw()
+
 
 class TaikoNoteTrail:
     def __init__(self, note_center: Point, length: Seconds, width: int, px_per_s: float, color: Color, fill_color: Color):

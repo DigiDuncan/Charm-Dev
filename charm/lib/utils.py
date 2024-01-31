@@ -4,6 +4,7 @@ import collections
 import importlib.resources as pkg_resources
 
 import pyglet
+from pyglet.image import ImageData
 import PIL.Image
 
 
@@ -28,7 +29,7 @@ def img_from_resource(package: pkg_resources.Package, resource: pkg_resources.Re
 @cache
 def pyglet_img_from_resource(package: pkg_resources.Package, resource: pkg_resources.Resource) -> pyglet.image.AbstractImage:
     with pkg_resources.open_binary(package, resource) as f:
-        image = pyglet.image.load("icon.png", file=f)
+        image: ImageData = pyglet.image.load("unknown.png", file=f)
     return image
 
 def map_range(x: float, n1: float, m1: float, n2: float = -1, m2: float = 1) -> float:
