@@ -43,7 +43,7 @@ class SMSong(FourKeySong):
             chart = FourKeyChart(song, c.difficulty, None)
             temp_file = StringIO()
             c.serialize(temp_file)
-            chart.hash = sha1(bytes(temp_file.read())).hexdigest()
+            chart.hash = sha1(bytes(temp_file.read(), encoding = "utf-8")).hexdigest()
             charts[c.difficulty] = chart
 
             # Use simfile to make our life so much easier.

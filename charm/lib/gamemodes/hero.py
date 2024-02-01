@@ -21,7 +21,7 @@ from charm.lib.generic.highway import Highway
 from charm.lib.generic.song import Chart, Event, Metadata, Note, Seconds, Song
 from charm.lib.keymap import get_keymap
 from charm.lib.spritebucket import SpriteBucketCollection
-from charm.lib.utils import img_from_resource
+from charm.lib.utils import img_from_resource, nuke_smart_quotes
 from charm.objects.lyric_animator import LyricEvent
 
 from charm.objects.line_renderer import NoteTrail
@@ -623,6 +623,9 @@ class HeroSong(Song):
                 text = re.sub("<.+>", "", text)  # TODO: Get formatting working for real.
                 current_full_string += text
                 unprocessed_lyrics.append(LyricEvent(e.time, 0, "", karaoke = current_full_string))
+        for p in processsed_lyrics:
+            p.text = nuke_smart_quotes(p.text)
+            p.karaoke = nuke_smart_quotes(p.karaoke)
         self.lyrics = processsed_lyrics
 
     def index(self):
