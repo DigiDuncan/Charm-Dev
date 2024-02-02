@@ -156,8 +156,6 @@ class FormattedLabel(DocumentLabel):
 class EmojiLabel(FormattedLabel):
     def __init__(self, text: str, *args, emojiset: str = "twemoji", **kwargs):
         super().__init__(text, *args, **kwargs)
-        old_text = text
-
         if emojiset in emojisets:
             emoji_picker = emojisets[emojiset]
         else:

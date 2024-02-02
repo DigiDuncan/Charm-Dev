@@ -18,7 +18,7 @@ class EmojiView(DigiView):
     def setup(self):
         super().setup()
 
-        self.label = EmojiLabel("pencil :pencil2:", anchor_x = 'center',
+        self.label = EmojiLabel("rainbow :rainbow:", anchor_x = 'center',
                                 x = self.window.width / 2, y = self.window.height / 2,
                                 color = arcade.color.BLACK, font_size = 48)
 
