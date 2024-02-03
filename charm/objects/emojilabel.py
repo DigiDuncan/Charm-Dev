@@ -36,28 +36,35 @@ class EmojiPicker:
         self.emoji_height: int = self.region_data["emoji_height"]
         self.emojis: list[str] = self.region_data["emojis"]
 
-    @cache
-    def get_emoji_coords(self, emoji: str) -> tuple[int, int] | None:
+        self.emoji_coords = {}
+
         grid_width = self.sheet.width // self.emoji_width
+        for i, e in enumerate(self.emojis):
+            row = i // grid_width
+            col = i % grid_width
+            coords = col * self.emoji_width, self.sheet.height - (row * self.emoji_height) - self.emoji_height
+            self.emoji_coords[e] = coords
+            if not e.endswith("\ufe0f"):
+                self.emoji_coords[e + "\ufe0f"] = coords
+        logger.debug(f"Loaded emoji set {self.set_name}")
 
-        try:
-            index = self.emojis.index(emoji)
-        except ValueError:
-            try:
-                index = self.emojis.index(emoji.removesuffix("\ufe0f"))
-            except ValueError:
-                logger.debug(f"{emoji} is not in the data?!")
-                return (0, 0)
-        row = index // grid_width
-        col = index % grid_width
-        return col * self.emoji_width, self.sheet.height - (row * self.emoji_height) - self.emoji_height
+    def get_emoji_coords(self, emoji: str) -> tuple[int, int]:
+        emoji = emoji.removesuffix("\ufe0f").removesuffix("\ufe0e")
+        return self.emoji_coords.get(emoji, (0, 0))
 
-    def get_emoji_element(self, emoji: str, size: int) -> ImageElement:
+    @cache
+    def get_emoji_texture(self, emoji: str, size: int):
         x, y = self.get_emoji_coords(emoji)
         img_region = self.sheet.get_region(x, y, self.emoji_width, self.emoji_height)
         img = img_region.get_texture()
-        img.width = pt_to_px(size)
-        img.height = pt_to_px(size)
+        px = pt_to_px(size)
+        img.width = px
+        img.height = px
+        logger.debug(f"Got emoji {emoji}@{px}px in set {self.set_name}")
+        return img
+
+    def get_emoji_element(self, emoji: str, size: int) -> ImageElement:
+        img = self.get_emoji_texture(emoji, size)
         element = ImageElement(image=img)
         return element
 

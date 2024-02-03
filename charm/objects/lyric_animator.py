@@ -2,10 +2,13 @@ from copy import copy
 
 import arcade
 import pyglet
+from pyglet import gl
 
 from charm.objects.emojilabel import EmojiLabel
 
 Seconds = float
+
+gl.glEnable(gl.GL_DEPTH_TEST)
 
 
 class LyricEvent:
@@ -26,19 +29,21 @@ class LyricEvent:
     def end_time(self, v: Seconds):
         self.length = v - self.time
 
-    def get_labels(self, x: float, y: float, font_size: int) -> arcade.Text:
+    def get_labels(self, x: float, y: float, font_size: int) -> list[EmojiLabel]:
         if not self._labels:
             default_emoji_set = "twemoji-bw" if self.karaoke else "twemoji"
-            label_under = EmojiLabel(self.text, x = x, y = y, font_name = "bananaslip plus", font_size = font_size, color = (0, 0, 0, 255), align = "center", anchor_x = "center", batch = self._batch, emojiset = default_emoji_set)
-            label_shadow = EmojiLabel(self.text, x = x + 2, y = y - 2, font_name = "bananaslip plus", font_size = font_size, color = (0, 0, 0, 127), align = "center", anchor_x = "center", batch = self._batch, emojiset = default_emoji_set)
+            label_shadow = EmojiLabel(self.text, x = x + 2, y = y - 2, z = 3, font_name = "bananaslip plus", font_size = font_size, color = (0, 0, 0, 127), align = "center", anchor_x = "center", batch = self._batch, emojiset = "twemoji-shadow")
+            label_under = EmojiLabel(self.text, x = x, y = y, z = 2, font_name = "bananaslip plus", font_size = font_size, color = (0, 0, 0, 255), align = "center", anchor_x = "center", batch = self._batch, emojiset = default_emoji_set)
             self._labels.append(label_shadow)
             self._labels.append(label_under)
             if self.karaoke:
-                label_over = EmojiLabel(self.karaoke, x = label_under.x - (label_under.content_width // 2), y = y, font_name = "bananaslip plus", font_size = font_size, color = (255, 255, 0, 255), align = "left", anchor_x = "left", batch = self._batch)
+                label_over = EmojiLabel(self.karaoke, x = label_under.x - (label_under.content_width // 2), y = y, z = 1, font_name = "bananaslip plus", font_size = font_size, color = (255, 255, 0, 255), align = "left", anchor_x = "left", batch = self._batch)
                 self._labels.append(label_over)
         return self._labels
 
     def draw(self):
+        if not self._labels:
+            self.get_labels()
         self._batch.draw()
 
 
