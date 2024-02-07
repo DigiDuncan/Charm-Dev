@@ -5,25 +5,15 @@ import re
 from functools import cache
 
 import emoji_data_python
-from pyglet.image import AbstractImage, load
+from pyglet.image import AbstractImage
 from pyglet.text.formats.structured import ImageElement
 from pyglet.text.document import AbstractDocument, FormattedDocument
 from pyglet.text import DocumentLabel
 
 import charm.data.images.emoji
+from charm.lib.utils import pt_to_px, pyglet_img_from_resource
 
 logger = logging.getLogger("charm")
-
-
-def pt_to_px(pt: int) -> int:
-    return round(pt * (4 / 3))
-
-
-@cache
-def pyglet_img_from_resource(package: pkg_resources.Package, resource: pkg_resources.Resource) -> AbstractImage:
-    with pkg_resources.open_binary(package, resource) as f:
-        image = load("unknown.png", file=f)
-    return image
 
 
 class EmojiPicker:

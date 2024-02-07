@@ -7,6 +7,9 @@ import pyglet
 from pyglet.image import ImageData
 import PIL.Image
 
+RGB = tuple[int, int, int]
+RGBA = tuple[int, int, int, int]
+
 
 def int_or_str(i: Any) -> int | str:
     try:
@@ -65,8 +68,6 @@ def findone(iterator):
     return val
 
 
-RGB = tuple[int, int, int]
-RGBA = tuple[int, int, int, int]
 def color_with_alpha(color: RGB | RGBA, alpha: int):
     if len(color) == 3:
         return color + (alpha,)
@@ -76,3 +77,7 @@ def color_with_alpha(color: RGB | RGBA, alpha: int):
 
 def nuke_smart_quotes(s: str) -> str:
     return s.replace("‘", "'").replace("’", "'").replace("＇", "'").replace("“", '"').replace("”", '"').replace("＂", '"')
+
+
+def pt_to_px(pt: int) -> int:
+    return round(pt * (4 / 3))
