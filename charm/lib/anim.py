@@ -1,6 +1,15 @@
+from dataclasses import dataclass
 import math
 
-from .utils import clamp
+from charm.lib.utils import clamp
+
+
+@dataclass
+class LerpData:
+    minimum: float
+    maximum: float
+    start_time: float
+    end_time: float
 
 
 def find_percent(start: float, end: float, x: float) -> float:
