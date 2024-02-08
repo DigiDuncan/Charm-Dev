@@ -19,7 +19,7 @@ class ModchartEvent(Event):
     def to_JSON(self) -> dict:
         """For use with parsing a .ndjson modchart."""
         d = asdict(self)
-        d["type"] = self.__class__._event_name
+        d["type"] = self.__class__.type
         d.pop("fired")
         return d
 
@@ -29,6 +29,7 @@ class ModchartEvent(Event):
         d["fired"] = False
         return cls(**d)
 
+
 @dataclass
 class HighwayMoveEvent(ModchartEvent):
     """Move the highway (dx, dy) in t seconds."""
@@ -36,6 +37,7 @@ class HighwayMoveEvent(ModchartEvent):
     t: float
     dx: float = 0.0
     dy: float = 0.0
+
 
 class Modchart:
     def __init__(self, events: list[Event] = None):
@@ -62,12 +64,15 @@ class Modchart:
                     break
         return Modchart(events)
 
+
 class ModchartProcessor:
     def __init__(self, modchart: Modchart, view: "FourKeySongView"):
         self.modchart = modchart
         self.view = view
 
         self._active_highway_moves = []
+        self._active_current_time_changes = []
+        self._active_total_time_changes = []
 
     def process_modchart(self):
         # Get events
@@ -84,10 +89,9 @@ class ModchartProcessor:
             e.fired = True
 
         # Excecute highway moves
-        if self._active_highway_moves:
-            for move in self._active_highway_moves:
-                self.view.highway.x = ease_linear(move["start_x"], move["end_x"], move["start_time"], move["end_time"], self.view.tracks.time)
-                self.view.highway.y = ease_linear(move["start_y"], move["end_y"], move["start_time"], move["end_time"], self.view.tracks.time)
+        for move in self._active_highway_moves:
+            self.view.highway.x = ease_linear(move["start_x"], move["end_x"], move["start_time"], move["end_time"], self.view.tracks.time)
+            self.view.highway.y = ease_linear(move["start_y"], move["end_y"], move["start_time"], move["end_time"], self.view.tracks.time)
 
-                if move["end_time"] < self.view.tracks.time:
-                    self._active_highway_moves.remove(move)
+            if move["end_time"] < self.view.tracks.time:
+                self._active_highway_moves.remove(move)

@@ -81,3 +81,7 @@ def nuke_smart_quotes(s: str) -> str:
 
 def pt_to_px(pt: int) -> int:
     return round(pt * (4 / 3))
+
+
+def px_to_pt(px: int) -> int:
+    return round(px // (4 / 3))

@@ -15,6 +15,7 @@ from charm.lib.settings import settings
 from charm.lib.trackcollection import TrackCollection
 from charm.lib.utils import map_range
 from charm.objects.lyric_animator import LyricAnimator
+from charm.objects.timer import Timer
 from charm.views.resultsview import ResultsView
 
 logger = logging.getLogger("charm")
@@ -48,6 +49,7 @@ class FNFSongView(DigiView):
         self.distractions = True
         self.chroma_key = False
         self.camera_events = []
+        self.timer = None
 
         self.success = False
 
@@ -140,6 +142,10 @@ class FNFSongView(DigiView):
                 for i in self.highway_2.strikeline:
                     i.alpha = 255
 
+            self.timer = Timer(250, self.tracks.duration)
+            self.timer.center_x = self.window.width // 2
+            self.timer.center_y = 25
+
             self.window.update_rp(f"Playing {self.songdata.metadata.title}")
 
             self.success = True
@@ -191,6 +197,7 @@ class FNFSongView(DigiView):
             case keymap.pause:
                 self.paused = not self.paused
                 self.tracks.pause() if self.paused else self.tracks.play()
+                self.timer.paused = self.paused
             case arcade.key.EQUAL:
                 self.tracks.seek(self.tracks.time + 5)
             case arcade.key.MINUS:
@@ -270,6 +277,9 @@ class FNFSongView(DigiView):
         if self.tracks.tracks and self.tracks.time >= self.tracks.duration:
             self.show_results()
 
+        self.timer.current_time = self.tracks.time
+        self.timer.update(delta_time)
+
     def get_spotlight_position(self, song_time: float):
         focus_pos = {
             1: 0,
@@ -323,7 +333,7 @@ class FNFSongView(DigiView):
             self.small_logos_backward.draw()
 
         if self.show_text and not self.chroma_key:
-            self.song_time_text.draw()
+            # self.song_time_text.draw()
             self.score_text.draw()
             self.grade_text.draw()
             if self.engine.has_died:
@@ -346,5 +356,7 @@ class FNFSongView(DigiView):
 
         if self.lyric_animator and not self.chroma_key:
             self.lyric_animator.draw()
+
+        self.timer.draw()
 
         super().on_draw()
