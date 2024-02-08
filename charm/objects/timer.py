@@ -5,6 +5,7 @@ from arcade.draw_commands import draw_rectangle_filled, draw_rectangle_outline, 
 from arcade.text import Text
 
 from charm.lib.anim import ease_linear
+from charm.lib.charm import CharmColors
 from charm.lib.utils import px_to_pt
 
 
@@ -18,7 +19,7 @@ class LerpData:
 
 class Timer:
     def __init__(self, width: int, total_time: float, start_time: float = 0, paused = False,
-                 bar_bg_color: Color = WHITE, bar_fill_color: Color = BLUE, bar_border_color: Color = BLACK,
+                 bar_bg_color: Color = WHITE, bar_fill_color: Color = CharmColors.FADED_PURPLE, bar_border_color: Color = BLACK,
                  height: int = 33, text_color: Color = BLACK, text_font: str = "bananaslip plus",
                  x: int = 0, y: int = 0):
         self.width = width
@@ -94,7 +95,7 @@ class Timer:
     @center_y.setter
     def center_y(self, v: int):
         self.y = v - (self.height // 2)
-        self._label.y = v
+        self._label.y = v + 5
 
     def lerp_current_time(self, offset: float, duration: float,
                           start_time: float = None):

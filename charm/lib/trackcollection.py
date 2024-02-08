@@ -7,6 +7,7 @@ from charm.lib.settings import settings
 
 logger = logging.getLogger("charm")
 
+
 class TrackCollection:
     def __init__(self, sounds: arcade.Sound, mixer = "music"):
         self.mixer = mixer
