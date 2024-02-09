@@ -29,6 +29,7 @@ RE_HOLD = fr"{RE_DEFAULT},({INT}):({RE_HIT_SAMPLE})$"
 
 logger = logging.getLogger("charm")
 
+
 @dataclass
 class OsuTimingPoint(BPMChangeEvent):
     """A BPMChangeEvent with additional osu! specific information."""
@@ -48,6 +49,7 @@ class OsuTimingPoint(BPMChangeEvent):
     def omit_barline(self) -> bool:
         return bool(self.effects & 0b1000)
 
+
 @dataclass
 class OsuHitSample:
     """A representation of the current hit sample settings."""
@@ -56,6 +58,7 @@ class OsuHitSample:
     index: int = 0
     volume: float = 0
     filename: Optional[str] = None
+
 
 @total_ordering
 @dataclass
@@ -110,15 +113,18 @@ class OsuHitObject:
     def __eq__(self, other: "OsuHitObject") -> bool:
         return (self.time, self.x, other.y) == (other.time, other.x, other.y)
 
+
 @dataclass
 class OsuHitCircle(OsuHitObject):
     """A standard osu! note."""
     hit_sample: OsuHitSample
 
+
 @dataclass
 class OsuPoint:
     x: float
     y: float
+
 
 @dataclass
 class OsuSlider(OsuHitObject):
@@ -137,6 +143,7 @@ class OsuSlider(OsuHitObject):
     def length(self) -> Seconds:
         return self.end_time - self.time
 
+
 @dataclass
 class OsuSpinner(OsuHitObject):
     """A spinner note in osu!"""
@@ -147,6 +154,7 @@ class OsuSpinner(OsuHitObject):
     def length(self) -> Seconds:
         return self.end_time - self.time
 
+
 @dataclass
 class OsuHold(OsuHitObject):
     """A hold note specific to osu!mania."""
@@ -156,6 +164,7 @@ class OsuHold(OsuHitObject):
     @property
     def length(self) -> Seconds:
         return self.end_time - self.time
+
 
 @dataclass
 class OsuGeneralData:
@@ -174,6 +183,7 @@ class OsuGeneralData:
     def mode_name(self) -> str:
         return self.MODE_NAMES[self.mode]
 
+
 @dataclass
 class OsuMetadata:
     """Metadata that an osu! chart supports."""
@@ -185,6 +195,7 @@ class OsuMetadata:
     difficulty: str = None
     source: str = None
     tags: list[str] = None
+
 
 @dataclass
 class OsuDifficulty:
@@ -228,6 +239,7 @@ class OsuDifficulty:
     def ar(self, v: float):
         self.approach_rate = v
 
+
 @dataclass
 class OsuEvent:
     """A generic osu! event."""
@@ -240,6 +252,7 @@ class OsuEvent:
     def event_name(self) -> str:
         return self.EVENT_NAMES[self.event_type]
 
+
 @dataclass
 class OsuBackgroundEvent(OsuEvent):
     """An osu! event that changes the chart background."""
@@ -247,10 +260,12 @@ class OsuBackgroundEvent(OsuEvent):
     x_offset: float
     y_offset: float
 
+
 @dataclass
 class OsuVideoEvent(OsuEvent):
     """An osu! event that plays a video."""
     filename: str
+
 
 @dataclass
 class OsuBreakEvent(OsuEvent):
@@ -261,11 +276,13 @@ class OsuBreakEvent(OsuEvent):
     def length(self) -> Seconds:
         return self.end_time - self.time
 
+
 @dataclass
 class OsuSampleEvent(OsuEvent):
     """An osu! event that plays a sample."""
     filename: str
     volume: float = 1
+
 
 def get_standard_data_from_match(m: re.Match[str]) -> tuple[int, int, int, int, int]:
     x = int(m.group(1))
@@ -276,6 +293,7 @@ def get_standard_data_from_match(m: re.Match[str]) -> tuple[int, int, int, int, 
 
     return x, y, time, object_type, hit_sound
 
+
 def hit_sample_from_match(m: re.Match[str]) -> OsuHitSample:
     normal_set = int(m.group(1))
     addition_set = int(m.group(2))
@@ -285,6 +303,7 @@ def hit_sample_from_match(m: re.Match[str]) -> OsuHitSample:
 
     hit_sample = OsuHitSample(normal_set, addition_set, index, volume, filename)
     return hit_sample
+
 
 @dataclass
 class RawOsuChart:

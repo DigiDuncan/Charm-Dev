@@ -22,20 +22,24 @@ from charm.objects.line_renderer import TaikoNoteTrail
 
 logger = logging.getLogger("charm")
 
+
 class NoteType(Enum):
     DON = "don"
     KAT = "kat"
     DRUMROLL = "drumroll"
     DENDEN = "denden"
 
+
 @dataclass
 class TaikoNote(Note):
     large: bool = False
+
 
 class TaikoChart(Chart):
     def __init__(self, song: 'Song', difficulty: str, hash: str) -> None:
         super().__init__(song, "taiko", difficulty, "taiko", 1, hash)
         self.song: TaikoSong = song
+
 
 class TaikoSong(Song):
     def __init__(self, path: Path):
@@ -83,8 +87,10 @@ class TaikoSong(Song):
             gamemode = "taiko"
         )
 
+
 class TaikoEngine(Engine):
     pass
+
 
 @cache
 def load_note_texture(note_type: str, height: int):
@@ -99,6 +105,7 @@ def load_note_texture(note_type: str, height: int):
         return load_missing_texture(height, height)
     return arcade.Texture(image)
 
+
 class TaikoNoteSprite(Sprite):
     def __init__(self, note: TaikoNote, highway: "TaikoHighway", height = 128, *args, **kwargs) -> None:
         self.note: TaikoNote = note
@@ -111,13 +118,14 @@ class TaikoNoteSprite(Sprite):
             self.angle += 360 * delta_time / 3
         return super().update_animation(delta_time)
 
+
 class TaikoLongNoteSprite(TaikoNoteSprite):
     def __init__(self, note: TaikoNote, highway: "TaikoHighway", height = 128, *args, **kwargs) -> None:
         super().__init__(note, highway, *args, **kwargs)
 
         color = arcade.color.YELLOW if note.type == NoteType.DRUMROLL else arcade.color.MAGENTA
         self.trail = TaikoNoteTrail(self.position, self.note.length, self.highway.note_size, self.highway.px_per_s,
-        color, color[:3] + (60,))
+                                    color, color[:3] + (60,))
 
     def update_animation(self, delta_time: float):
         self.trail.set_position(*self.position)
@@ -125,6 +133,7 @@ class TaikoLongNoteSprite(TaikoNoteSprite):
 
     def draw_trail(self):
         self.trail.draw()
+
 
 class TaikoHighway(Highway):
     def __init__(self, chart: Chart, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5, auto = False):
@@ -259,7 +268,7 @@ class TaikoHighway(Highway):
 
         self.highway_camera.use()
         b = self.sprite_buckets.calc_bucket(self.song_time)
-        for bucket in self.sprite_buckets.buckets[b:b+2] + [self.sprite_buckets.overbucket]:
+        for bucket in self.sprite_buckets.buckets[b:b + 2] + [self.sprite_buckets.overbucket]:
             for note in bucket.sprite_list:
                 if isinstance(note, TaikoLongNoteSprite) and note.note.time < self.song_time + self.viewport and note.note.end > self.song_time:
                     note.draw_trail()

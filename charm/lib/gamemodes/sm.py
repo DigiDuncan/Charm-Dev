@@ -88,8 +88,9 @@ class SMSong(FourKeySong):
         genre = sm.genre
         charter = sm.credit
         return Metadata(title, artist, album,
-            length = length, genre = genre, charter = charter, path = folder,
-            gamemode = "4k")
+                        length = length, genre = genre, charter = charter, path = folder,
+                        gamemode = "4k")
+
 
 class SMEngine(FourKeyEngine):
     def score_sustains(self):

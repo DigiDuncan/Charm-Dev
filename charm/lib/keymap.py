@@ -36,6 +36,7 @@ class Action:
     def __str__(self) -> str:
         return f"{self.name}{'*' if self.exclusive else ''}: {[get_arcade_key_name(i) for i in self.inputs]}{'*' if self.allow_multiple else ''} [{'X' if self.state else '_'}]"
 
+
 class ActionSet:
     def __init__(self, d: dict[str, Action]):
         self._dict: dict[str, Action] = d

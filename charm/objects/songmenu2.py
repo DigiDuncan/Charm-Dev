@@ -12,6 +12,7 @@ from charm.lib.utils import clamp
 
 batch = Batch()
 
+
 class SongLabelWrapper:
     # This is intentionally really hard-coded. If we wanna change anything in this,
     # let's just change it here for now.

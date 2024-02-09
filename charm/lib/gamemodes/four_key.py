@@ -74,6 +74,7 @@ class NoteColor:
             case _:
                 return arcade.color.BLACK
 
+
 def get_note_color_by_beat(beat: int) -> tuple[int, int, int]:
     match beat:
         case 1:
@@ -102,6 +103,7 @@ def get_note_color_by_beat(beat: int) -> tuple[int, int, int]:
             return (0x55, 0x77, 0x55)  # #557755
         case _:
             return (0x00, 0x22, 0x22)  # #002222
+
 
 @cache
 def load_note_texture(note_type, note_lane, height, value = 0, fnf = False):
@@ -385,7 +387,7 @@ class FourKeyEngine(Engine):
         if self.last_p1_note in (0, 1, 2, 3) and key_states[self.last_p1_note] is False:
             self.last_p1_note = None
         # ignore spam during front/back porch
-        if (self.chart_time < self.chart.notes[0].time - self.hit_window
+        if (self.chart_time < self.chart.notes[0].time - self.hit_window \
            or self.chart_time > self.chart.notes[-1].time + self.hit_window):
             return
         for n in range(len(key_states)):

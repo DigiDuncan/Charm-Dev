@@ -25,21 +25,21 @@ class SpriteBucketCollection:
             self.buckets.append(arcade.SpriteList())
         self.buckets[b].append(sprite)
 
-    def update(self, time: Seconds, delta_time: float = 1/60):
+    def update(self, time: Seconds, delta_time: float = 1 / 60):
         b = self.calc_bucket(time)
-        for bucket in self.buckets[max(b-2, 0):b+2]:
+        for bucket in self.buckets[max(b - 2, 0):b + 2]:
             bucket.update(delta_time)
         self.overbucket.update(delta_time)
 
-    def update_animation(self, time: Seconds, delta_time: float = 1/60):
+    def update_animation(self, time: Seconds, delta_time: float = 1 / 60):
         b = self.calc_bucket(time)
-        for bucket in self.buckets[max(b-2, 0):b+2]:
+        for bucket in self.buckets[max(b - 2, 0):b + 2]:
             bucket.update_animation(delta_time)
         self.overbucket.update_animation(delta_time)
 
     def draw(self, time: Seconds):
         b = self.calc_bucket(time)
-        for bucket in self.buckets[max(b-2, 0):b+2]:
+        for bucket in self.buckets[max(b - 2, 0):b + 2]:
             bucket.draw()
         self.overbucket.draw()
 

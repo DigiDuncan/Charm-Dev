@@ -1,5 +1,6 @@
 from addict import Dict
 
+
 class Settings(Dict):
     def __missing__(self, name):
         raise KeyError(name)

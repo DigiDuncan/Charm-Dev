@@ -16,6 +16,7 @@ from charm.lib.settings import settings
 
 logger = logging.getLogger("charm")
 
+
 class ResultsView(DigiView):
     def __init__(self, results: Results, *args, **kwargs):
         super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, *args, **kwargs)
@@ -35,17 +36,18 @@ class ResultsView(DigiView):
         self.grade_sprite.left = 25
 
         self.score_text = arcade.Text(f"{self.results.score}",
-            self.window.width - 5, self.window.height,
-            arcade.color.BLACK, 72, self.window.width,
-            "right", "bananaslip plus",
-            anchor_x = "right", anchor_y = "top", multiline = True)
+                                      self.window.width - 5, self.window.height,
+                                      arcade.color.BLACK, 72, self.window.width,
+                                      "right", "bananaslip plus",
+                                      anchor_x = "right", anchor_y = "top", multiline = True)
         self.data_text = arcade.Text(f"{self.results.fc_type}\nAccuracy: {self.results.accuracy * 100:.2f}%\nMax Streak: {self.results.max_streak}",
-            self.window.width - 5, self.score_text.bottom,
-            arcade.color.BLACK, 24, self.window.width,
-            "right", "bananaslip plus",
-            anchor_x = "right", anchor_y = "top", multiline = True)
+                                     self.window.width - 5, self.score_text.bottom,
+                                     arcade.color.BLACK, 24, self.window.width,
+                                     "right", "bananaslip plus",
+                                     anchor_x = "right", anchor_y = "top", multiline = True)
         self.judgements_text = arcade.Text("", self.grade_sprite.right + 10, self.grade_sprite.bottom, arcade.color.BLACK, 24,
-        self.window.width, anchor_x = "left", anchor_y = "bottom", font_name = "bananaslip plus", multiline = True)
+                                           self.window.width, anchor_x = "left", anchor_y = "bottom",
+                                           font_name = "bananaslip plus", multiline = True)
 
         for j in self.results.judgements:
             self.judgements_text.value += f"{j.name}: {len([i for i in self.results.all_judgements if i[2] == j])}\n"

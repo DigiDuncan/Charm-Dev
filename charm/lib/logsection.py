@@ -1,6 +1,7 @@
 from logging import Logger
 from time import time
 
+
 class LogSection:
     def __init__(self, logger: Logger, name: str):
         self.logger = logger

@@ -100,8 +100,9 @@ class VisualizerView(DigiView):
 
         with LogSection(logger, "creating text"):
             self.text = arcade.Text("Fourth Wall by Jacaris", self.window.width / 4, self.window.height * (0.9),
-            font_name = "Determination Sans", font_size = 32, align="center", anchor_x="center", anchor_y="center",
-            width = self.window.width, color = (255, 255, 255, 128))
+                                    font_name = "Determination Sans", font_size = 32, align="center",
+                                    anchor_x="center", anchor_y="center",
+                                    width = self.window.width, color = (255, 255, 255, 128))
 
         with LogSection(logger, "making gradient"):
             # Gradient

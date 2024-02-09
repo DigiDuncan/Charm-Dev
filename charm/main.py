@@ -33,6 +33,7 @@ with pkg_resources.path(charm.data.fonts, "bananaslipplus.otf") as p:
 logger: logging.Logger = None
 arcadelogger: logging.Logger = None
 
+
 def setup_logging():
     global logger, arcadelogger
     logging.basicConfig(level=logging.INFO)
@@ -54,6 +55,7 @@ def setup_logging():
     arcadelogger.propagate = False
     arcadelogger.addHandler(dfhandlersource)
     arcadelogger.addHandler(phandlersource)
+
 
 class CharmGame(DigiWindow):
     def __init__(self):

@@ -14,24 +14,28 @@ from charm.ui.utils import get_album_art
 from charm.lib.gamemodes.fnf import FNFSong
 from charm.lib.paths import songspath
 
+
 def UIFlatButton_from_metadata(metadata: Metadata) -> UIFlatButton:
     return UIFlatButton(text = metadata.title,
-                        size_hint = (1/12, 1.0),
+                        size_hint = (1 / 12, 1.0),
                         width = 300,
                         height = 10)
+
 
 def UIImage_from_metadata(metadata: Metadata) -> UIImage:
     t = get_album_art(metadata)
     return UIImage(t)
 
+
 def UILabel_from_metadata(metadata: Metadata) -> UILabel:
     t = f"Artist: {metadata.artist}\nAlbum: {metadata.album}\nCharter: {metadata.charter}"
     return UILabel(
-        width = 1280/4,
+        width = 1280 / 4,
         text = t,
         multiline = True,
         text_color = (0, 0, 0, 255)
     )
+
 
 class SongMenuLayout(UIAnchorLayout):
     def __init__(self, metadatas: list[Metadata], **kwargs):

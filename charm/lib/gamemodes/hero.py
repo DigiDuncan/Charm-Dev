@@ -380,6 +380,7 @@ class HeroChart(Chart):
         self.indexes_by_time["note"] = Index(self.notes, "time")
         self.indexes_by_time["chord"] = Index(self.chords, "time")
 
+
 class HeroSong(Song):
     def __init__(self, path: Path):
         super().__init__(path)
@@ -403,8 +404,8 @@ class HeroSong(Song):
         year = song.getint("year")
         charter = song["charter"]
         return Metadata(title, artist, album,
-            length = length, genre = genre, year = year, charter = charter, path = folder,
-            gamemode = "hero")
+                        length = length, genre = genre, year = year, charter = charter, path = folder,
+                        gamemode = "hero")
 
     @classmethod
     def parse(cls, path: Path) -> "HeroSong":
@@ -639,6 +640,7 @@ class HeroSong(Song):
         self.indexes_by_time["section"] = Index(self.events_by_type(SectionEvent), "time")
         self.indexes_by_time["beat"] = Index(self.events_by_type(BeatEvent), "time")
 
+
 @cache
 def load_note_texture(note_type, note_lane, height):
     image_name = f"{note_type}-{note_lane + 1}"
@@ -655,6 +657,7 @@ def load_note_texture(note_type, note_lane, height):
         logger.error(f"Unable to load texture: {image_name} | {e}")
         return load_missing_texture(height, height)
     return arcade.Texture(image)
+
 
 class HeroNoteSprite(arcade.Sprite):
     def __init__(self, note: HeroNote, highway: "HeroHighway", height = 128, *args, **kwargs):
@@ -673,6 +676,7 @@ class HeroNoteSprite(arcade.Sprite):
         elif self.note.hit:
             self.alpha = 0
 
+
 class HeroLongNoteSprite(HeroNoteSprite):
     def __init__(self, note: HeroNote, highway: "HeroHighway", height=128, *args, **kwargs):
         super().__init__(note, highway, height, *args, **kwargs)
@@ -683,9 +687,9 @@ class HeroLongNoteSprite(HeroNoteSprite):
         color = NoteColor.from_note(self.note)
         width = self.highway.note_size * 3 if note.lane == 7 else self.highway.note_size  # open notes LARG
         self.trail = NoteTrail(self.id, self.position, self.note.time, self.note.length, self.highway.px_per_s,
-        color, width = width, upscroll = False, fill_color = color[:3] + (60,), curve = True, point_depth = self.highway.note_size)
+                               color, width = width, upscroll = False, fill_color = color[:3] + (60,), curve = True, point_depth = self.highway.note_size)
         self.dead_trail = NoteTrail(self.id, self.position, self.note.time, self.note.length, self.highway.px_per_s,
-        arcade.color.DARK_SLATE_GRAY, width = width, upscroll = False, fill_color = arcade.color.DARK_GRAY[:3] + (60,), curve = True, point_depth = self.highway.note_size)
+                                    arcade.color.DARK_SLATE_GRAY, width = width, upscroll = False, fill_color = arcade.color.DARK_GRAY[:3] + (60,), curve = True, point_depth = self.highway.note_size)
 
     def update_animation(self, delta_time: float):
         self.trail.set_position(*self.position)
@@ -694,6 +698,7 @@ class HeroLongNoteSprite(HeroNoteSprite):
 
     def draw_trail(self):
         self.dead_trail.draw() if self.note.missed else self.trail.draw()
+
 
 class HeroHighway(Highway):
     def __init__(self, chart: HeroChart, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5, auto = False, show_flags = False):
@@ -815,7 +820,7 @@ class HeroHighway(Highway):
 
         self.highway_camera.use()
         b = self.sprite_buckets.calc_bucket(self.song_time)
-        for bucket in self.sprite_buckets.buckets[b:b+2] + [self.sprite_buckets.overbucket]:
+        for bucket in self.sprite_buckets.buckets[b:b + 2] + [self.sprite_buckets.overbucket]:
             for note in bucket.sprite_list:
                 if isinstance(note, HeroLongNoteSprite) and note.note.time < self.song_time + self.viewport and note.note.end > self.song_time:
                     note.draw_trail()
@@ -843,6 +848,7 @@ class HeroHighway(Highway):
                 if sprite.note.lane in [5, 6]:
                     sprite.alpha = 0
 
+
 @dataclass
 class StrumEvent(Event):
     direction: str
@@ -850,6 +856,7 @@ class StrumEvent(Event):
 
     def __str__(self) -> str:
         return f"<StrumEvent {self.direction} @ {round(self.time, 3)}: {[n for n, v in enumerate(self.shape) if v is True]}>"
+
 
 class HeroEngine(Engine):
     def __init__(self, chart: Chart, offset: Seconds = 0):
@@ -884,7 +891,7 @@ class HeroEngine(Engine):
         last_state = self.key_state
         key_states = get_keymap().get_set("hero").state
         # ignore spam during front/back porch
-        if (self.chart_time < self.chart.notes[0].time - self.hit_window
+        if (self.chart_time < self.chart.notes[0].time - self.hit_window \
            or self.chart_time > self.chart.notes[-1].time + self.hit_window):
             return
         for n in range(len(key_states)):

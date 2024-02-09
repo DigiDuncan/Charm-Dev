@@ -43,7 +43,7 @@ class MainMenu:
 
         self.loading = False
         self.loading_label = arcade.Text("LOADING...", 0, 0, arcade.color.BLACK, anchor_x='center', anchor_y="bottom",
-                                 font_name="bananaslip plus", font_size=24)
+                                         font_name="bananaslip plus", font_size=24)
 
         self._selected_id = 0
 

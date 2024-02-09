@@ -6,6 +6,7 @@ from arcade import Sprite
 import charm.data.images.errors
 from charm.lib.utils import img_from_resource
 
+
 class CharmException(Exception):
     def __init__(self, title: str, show_message: str, icon: str = "error", *args: object):
         self.title = title
