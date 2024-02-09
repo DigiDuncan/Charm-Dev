@@ -1,5 +1,3 @@
-from dataclasses import dataclass
-
 from arcade.color import Color, WHITE, BLACK
 from arcade.draw_commands import draw_rectangle_filled, draw_rectangle_outline, draw_lrbt_rectangle_filled
 from arcade.text import Text

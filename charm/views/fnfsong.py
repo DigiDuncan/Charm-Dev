@@ -82,24 +82,24 @@ class FNFSongView(DigiView):
 
         with LogSection(logger, "loading text"):
             self.song_time_text = arcade.Text("??:??", (self.size[0] // 2), 10, font_size=24,
-                                            anchor_x="center", color=arcade.color.BLACK,
-                                            font_name="bananaslip plus")
+                                              anchor_x="center", color=arcade.color.BLACK,
+                                              font_name="bananaslip plus")
 
             self.score_text = arcade.Text("0", (self.size[0] // 2), self.size[1] - 10, font_size=24,
-                                        anchor_x="center", anchor_y="top", color=arcade.color.BLACK,
-                                        font_name="bananaslip plus")
+                                          anchor_x="center", anchor_y="top", color=arcade.color.BLACK,
+                                          font_name="bananaslip plus")
 
             self.grade_text = arcade.Text("Clear", (self.size[0] // 2), self.size[1] - 135, font_size=16,
-                                        anchor_x="center", anchor_y="center", color=arcade.color.BLACK,
-                                        font_name="bananaslip plus")
+                                          anchor_x="center", anchor_y="center", color=arcade.color.BLACK,
+                                          font_name="bananaslip plus")
 
             self.pause_text = arcade.Text("PAUSED", (self.size[0] // 2), (self.size[1] // 2), font_size=92,
-                                        anchor_x="center", anchor_y="center", color=arcade.color.BLACK,
-                                        font_name="bananaslip plus")
+                                          anchor_x="center", anchor_y="center", color=arcade.color.BLACK,
+                                          font_name="bananaslip plus")
 
             self.dead_text = arcade.Text("DEAD.", (self.size[0] // 2), (self.size[1] // 3) * 2, font_size=64,
-                                        anchor_x="center", anchor_y="center", color=arcade.color.BLACK,
-                                        font_name="bananaslip plus")
+                                         anchor_x="center", anchor_y="center", color=arcade.color.BLACK,
+                                         font_name="bananaslip plus")
 
         with LogSection(logger, "loading gum wrapper"):
             # Generate "gum wrapper" background
@@ -278,6 +278,8 @@ class FNFSongView(DigiView):
             self.show_results()
 
         self.timer.current_time = self.tracks.time
+        if self.tracks.time <= 0:
+            self.timer._clock = 0  # timer sync
         self.timer.update(delta_time)
 
     def get_spotlight_position(self, song_time: float):
