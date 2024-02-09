@@ -5,6 +5,7 @@ from typing import TypedDict
 
 from charm.lib.generic.results import Results, ScoreJSON
 
+
 class ScoreDBJSON(TypedDict):
     version: int
     scores: dict[str, ScoreJSON]
