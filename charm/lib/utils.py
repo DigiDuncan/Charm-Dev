@@ -1,4 +1,5 @@
 from functools import cache
+from pathlib import Path
 from typing import Any
 import collections
 import importlib.resources as pkg_resources
@@ -36,6 +37,14 @@ def img_from_resource(package: pkg_resources.Package, resource: pkg_resources.Re
 def pyglet_img_from_resource(package: pkg_resources.Package, resource: pkg_resources.Resource) -> pyglet.image.AbstractImage:
     with pkg_resources.open_binary(package, resource) as f:
         image: ImageData = pyglet.image.load("unknown.png", file=f)
+    return image
+
+
+@cache
+def img_from_path(path: Path) -> PIL.Image.Image:
+    with open(path) as f:
+        image = PIL.Image.open(f)
+        image.load()
     return image
 
 
