@@ -1,6 +1,6 @@
 from copy import copy
 from pathlib import Path
-from typing import Any, Optional, TypeVar
+from typing import Any, Optional, TypeVar, cast
 
 from arcade import Sprite, Texture
 
@@ -31,16 +31,46 @@ class SkinItem:
 class SkinInt(SkinItem):
     def __init__(self, key: str, default: int, value: Optional[int]):
         super().__init__(key, default, value)
+        self.default = cast(default, int)
+        self._value = cast(value, Optional[int])
+
+    @property
+    def value(self) -> int:
+        return self._value if self._value is not None else self.default
+
+    @value.setter
+    def value(self, v: int):
+        self._value = v
 
 
 class SkinFloat(SkinItem):
     def __init__(self, key: str, default: float, value: Optional[float]):
         super().__init__(key, default, value)
+        self.default = cast(default, float)
+        self._value = cast(value, Optional[float])
+
+    @property
+    def value(self) -> float:
+        return self._value if self._value is not None else self.default
+
+    @value.setter
+    def value(self, v: float):
+        self._value = v
 
 
 class SkinAbsolutePoint(SkinItem):
     def __init__(self, key: str, default: AbsolutePoint, value: Optional[AbsolutePoint]):
         super().__init__(key, default, value)
+        self.default = cast(default, AbsolutePoint)
+        self._value = cast(value, Optional[AbsolutePoint])
+
+    @property
+    def value(self) -> AbsolutePoint:
+        return self._value if self._value is not None else self.default
+
+    @value.setter
+    def value(self, v: AbsolutePoint):
+        self._value = v
 
     @property
     def x(self) -> int:
@@ -62,6 +92,16 @@ class SkinAbsolutePoint(SkinItem):
 class SkinRelativePoint(SkinItem):
     def __init__(self, key: str, default: RelativePoint, value: Optional[RelativePoint]):
         super().__init__(key, default, value)
+        self.default = cast(default, RelativePoint)
+        self._value = cast(value, Optional[RelativePoint])
+
+    @property
+    def value(self) -> RelativePoint:
+        return self._value if self._value is not None else self.default
+
+    @value.setter
+    def value(self, v: RelativePoint):
+        self._value = v
 
     @property
     def x(self) -> float:
@@ -86,6 +126,16 @@ class SkinRelativePoint(SkinItem):
 class SkinColor(SkinItem):
     def __init__(self, key: str, default: Color, value: Optional[Color]):
         super().__init__(key, default, value)
+        self.default = cast(default, Color)
+        self._value = cast(value, Optional[Color])
+
+    @property
+    def value(self) -> Color:
+        return self._value if self._value is not None else self.default
+
+    @value.setter
+    def value(self, v: Color):
+        self._value = v
 
     @property
     def r(self) -> int:
@@ -123,6 +173,16 @@ class SkinColor(SkinItem):
 class SkinSprite(SkinItem):
     def __init__(self, key: str, default: str, value: Optional[str]):
         super().__init__(key, default, value)
+        self.default = cast(default, str)
+        self._value = cast(value, Optional[str])
+
+    @property
+    def value(self) -> str:
+        return self._value if self._value is not None else self.default
+
+    @value.setter
+    def value(self, v: str):
+        self._value = v
 
     def get_path_from_root(self, root: Path) -> Path:
         path_components = self.value.split(".")
