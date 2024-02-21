@@ -41,18 +41,14 @@ class FourKeySongMenuView(DigiView):
         rootdir = Path(songspath / "4k")
         dir_list = [d for d in rootdir.glob('**/*') if d.is_dir()]
         for d in dir_list:
-            k = d.stem
-            try:
-                if (d / f"{k}.ssc").exists():
+            charts = list(d.glob("*.ssc")) + list(d.glob("*.sm"))
+            if charts:
+                try:
                     songdata = SMSong.get_metadata(d)
                     self.songs.append(songdata)
                     continue
-                if (d / f"{k}.sm").exists():
-                    songdata = SMSong.get_metadata(d)
-                    self.songs.append(songdata)
-                    continue
-            except Exception as e:
-                logger.warn(e)
+                except Exception as e:
+                    logger.warn(e)
 
         self.menu = SongMenu(self.songs)
         self.menu.sort("title")
