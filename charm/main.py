@@ -1,22 +1,20 @@
 import importlib.resources as pkg_resources
-import logging
 
 import pyglet
+
 # Fix font
 pyglet.options["win32_disable_shaping"] = True
 import arcade
 arcade.pyglet.options["win32_disable_shaping"] = True
 import arcade.hitbox
 
-from digiformatter import logger as digilogger
-
 import charm
 import charm.data.fonts
 import charm.data.images
+from charm.lib.logging import setup_logging
 from charm.lib.settings import settings
 from charm.lib.utils import pyglet_img_from_resource
 from charm.lib.digiwindow import DigiWindow
-from charm.objects.debug_log import PygletHandler
 
 from .views.title import TitleView
 
@@ -29,33 +27,7 @@ SCREEN_TITLE = "Charm"
 with pkg_resources.path(charm.data.fonts, "bananaslipplus.otf") as p:
     arcade.text.load_font(str(p))
 
-# Set up logging
-logger: logging.Logger = None
-arcadelogger: logging.Logger = None
-
-
-def setup_logging():
-    global logger, arcadelogger
-    logging.basicConfig(level=logging.INFO)
-    dfhandler = digilogger.DigiFormatterHandler()
-    dfhandlersource = digilogger.DigiFormatterHandler(showsource=True)
-    phandler = PygletHandler()
-    phandlersource = PygletHandler(showsource=True)
-
-    logger = logging.getLogger("charm")
-    logger.setLevel(logging.DEBUG)
-    logger.handlers = []
-    logger.propagate = False
-    logger.addHandler(dfhandler)
-    logger.addHandler(phandler)
-
-    arcadelogger = logging.getLogger("arcade")
-    arcadelogger.setLevel(logging.WARN)
-    arcadelogger.handlers = []
-    arcadelogger.propagate = False
-    arcadelogger.addHandler(dfhandlersource)
-    arcadelogger.addHandler(phandlersource)
-
+setup_logging()
 
 class CharmGame(DigiWindow):
     def __init__(self):
