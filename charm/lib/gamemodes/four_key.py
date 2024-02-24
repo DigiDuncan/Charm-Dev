@@ -40,7 +40,7 @@ class NoteType:
     CAUTION = "caution"
     STRIKELINE = "strikeline"
 
-
+# SKIN
 class NoteColor:
     GREEN = arcade.color.LIME_GREEN
     RED = arcade.color.RED
@@ -74,7 +74,7 @@ class NoteColor:
             case _:
                 return arcade.color.BLACK
 
-
+# SKIN
 def get_note_color_by_beat(beat: int) -> tuple[int, int, int]:
     match beat:
         case 1:
@@ -104,7 +104,7 @@ def get_note_color_by_beat(beat: int) -> tuple[int, int, int]:
         case _:
             return (0x00, 0x22, 0x22)  # #002222
 
-
+# SKIN
 @cache
 def load_note_texture(note_type, note_lane, height, value = 0, fnf = False):
     if value and note_type == NoteType.NORMAL:
@@ -223,7 +223,7 @@ class FourKeyHighway(Highway):
 
         self.auto = auto
 
-        self.bg_color = (0, 0, 0, 128)
+        self.bg_color = (0, 0, 0, 128)  # SKIN
         self.show_hit_window = False
 
         self.sprite_buckets = SpriteBucketCollection()
@@ -334,7 +334,7 @@ class FourKeyHighway(Highway):
             self.text_batch.draw()
         _cam.use()
 
-
+# SKIN
 class FourKeyJudgement(Judgement):
     def get_texture(self) -> arcade.Texture:
         with pkg_resources.path(baseskin, f"judgement-{self.key}.png") as image_path:
@@ -348,14 +348,14 @@ class FourKeyEngine(Engine):
         fk = get_keymap().get_set("fourkey")
         mapping = [fk.key1, fk.key2, fk.key3, fk.key4]
         judgements = [
-            #               ("name",           "key"             ms, score,  acc, hp=0)
-            FourKeyJudgement("Super Charming", "supercharming", 10, 1000, 1, 0.04),
-            FourKeyJudgement("Charming", "charming", 25, 1000, 0.9, 0.04),
-            FourKeyJudgement("Excellent", "excellent", 35, 800, 0.8, 0.03),
-            FourKeyJudgement("Great", "great", 45, 600, 0.7, 0.02),
-            FourKeyJudgement("Good", "good", 60, 400, 0.6, 0.01),
-            FourKeyJudgement("OK", "ok", 75, 200, 0.5, 0),
-            FourKeyJudgement("Miss", "miss", math.inf, 0, 0, -0.1)
+            #               ("name",           "key"             ms, score, acc, hp=0)
+            FourKeyJudgement("Super Charming", "supercharming",  10, 1000, 1,   0.04),
+            FourKeyJudgement("Charming",       "charming",       25, 1000, 0.9, 0.04),
+            FourKeyJudgement("Excellent",      "excellent",      35, 800,  0.8, 0.03),
+            FourKeyJudgement("Great",          "great",          45, 600,  0.7, 0.02),
+            FourKeyJudgement("Good",           "good",           60, 400,  0.6, 0.01),
+            FourKeyJudgement("OK",             "ok",             75, 200,  0.5),
+            FourKeyJudgement("Miss",           "miss", math.inf,  0, 0,   -0.1)
         ]
         super().__init__(chart, mapping, hit_window, judgements, offset)
 

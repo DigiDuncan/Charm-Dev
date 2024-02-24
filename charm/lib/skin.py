@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 from copy import copy
 from pathlib import Path
 from typing import Any, Optional, TypeVar, cast
 
 from arcade import Sprite, Texture
+from addict import Addict
 
 from charm.lib.utils import img_from_path
 
@@ -25,6 +28,21 @@ class SkinItem:
 
     @value.setter
     def value(self, v: T):
+        self._value = v
+
+
+class SkinBool(SkinItem):
+    def __init__(self, key: str, default: bool, value: Optional[bool]):
+        super().__init__(key, default, value)
+        self.default = cast(default, bool)
+        self._value = cast(value, Optional[bool])
+
+    @property
+    def value(self) -> bool:
+        return self._value if self._value is not None else self.default
+
+    @value.setter
+    def value(self, v: bool):
         self._value = v
 
 
@@ -200,9 +218,9 @@ class SkinSprite(SkinItem):
         return Sprite(self.get_path_from_root(root))
 
 class Skin:
-    def __init__(self, root: Path, skin_items: list[SkinItem]):
+    def __init__(self, root: Path):
         self.root = root
-        self.skin_items = skin_items
+        self.data = Addict()
 
     def get_asset(self, item_key: str) -> Any:
         skin_item = next((s for s in self.skin_items if s.key == item_key))
@@ -210,3 +228,10 @@ class Skin:
             return skin_item.get_sprite(self.root)
         else:
             return skin_item.value
+
+    def __getattribute__(self, name: str) -> Any:
+        return self.get_asset(name)
+
+    @classmethod
+    def from_toml(cls, t: dict) -> Skin:
+        pass
