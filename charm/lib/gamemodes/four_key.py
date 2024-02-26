@@ -355,7 +355,7 @@ class FourKeyEngine(Engine):
             FourKeyJudgement("Great",          "great",          45, 600,  0.7, 0.02),
             FourKeyJudgement("Good",           "good",           60, 400,  0.6, 0.01),
             FourKeyJudgement("OK",             "ok",             75, 200,  0.5),
-            FourKeyJudgement("Miss",           "miss", math.inf,  0, 0,   -0.1)
+            FourKeyJudgement("Miss",           "miss",     math.inf,   0,    0, -0.1)
         ]
         super().__init__(chart, mapping, hit_window, judgements, offset)
 
