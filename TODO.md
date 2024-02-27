@@ -5,8 +5,9 @@
 - Score saving
 - Local leaderboard
 - Display metadata
-- Adjustable scroll speed
+- Adjustable note scroll speed
 - Offset wizard
+- In-game settings
 - Song preview on menu
 - Song speed? [might be saved until we implement song mods]
 - Results screen health graph
