@@ -1,0 +1,16 @@
+## Minimum Viable Product [Beta]
+- Show results screen on fail
+- Selectable difficulty
+- Scroll flips
+- Score saving
+- Local leaderboard
+- Display metadata
+- Adjustable scroll speed
+- Offset wizard
+- Song preview on menu
+- Song speed? [might be saved until we implement song mods]
+- Results screen health graph
+- Menu cards should be smaller
+- Basic profile creation
+- Keybinding
+- Note lighting
