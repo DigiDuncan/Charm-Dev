@@ -156,11 +156,11 @@ class FNFSongView(DigiView):
         self.highway_1.pos = (self.window.width / 3 * 2, 0)
         self.highway_1.h = self.window.height
         self.highway_2.h = self.window.height
-        self.song_time_text.start_x = (self.window.width // 2)
-        self.score_text.start_x = (self.window.width // 2)
-        self.grade_text.start_x = (self.window.width // 2)
-        self.pause_text.start_x = (self.window.width // 2)
-        self.dead_text.start_x = (self.window.width // 2)
+        self.song_time_text.x = (self.window.width // 2)
+        self.score_text.x = (self.window.width // 2)
+        self.grade_text.x = (self.window.width // 2)
+        self.pause_text.x = (self.window.width // 2)
+        self.dead_text.x = (self.window.width // 2)
         self.judgement_sprite.center_x = self.window.width / 2
         self.judgement_sprite.center_y = self.window.height / 4
 

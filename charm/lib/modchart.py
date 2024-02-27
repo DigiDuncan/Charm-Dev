@@ -82,7 +82,7 @@ class ModchartProcessor:
         for e in current_modevents:
             if isinstance(e, HighwayMoveEvent):
                 self._active_highway_moves.append(
-                    {"start_x": self.view.highway.x, "start_y": self.view.highway.y,
+                    {"x": self.view.highway.x, "y": self.view.highway.y,
                      "end_x": self.view.highway.x + e.dx, "end_y": self.view.highway.y + e.dy,
                      "start_time": e.time, "end_time": e.time + e.t}
                 )
@@ -90,8 +90,8 @@ class ModchartProcessor:
 
         # Excecute highway moves
         for move in self._active_highway_moves:
-            self.view.highway.x = ease_linear(move["start_x"], move["end_x"], move["start_time"], move["end_time"], self.view.tracks.time)
-            self.view.highway.y = ease_linear(move["start_y"], move["end_y"], move["start_time"], move["end_time"], self.view.tracks.time)
+            self.view.highway.x = ease_linear(move["x"], move["end_x"], move["start_time"], move["end_time"], self.view.tracks.time)
+            self.view.highway.y = ease_linear(move["y"], move["end_y"], move["start_time"], move["end_time"], self.view.tracks.time)
 
             if move["end_time"] < self.view.tracks.time:
                 self._active_highway_moves.remove(move)

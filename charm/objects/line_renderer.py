@@ -104,23 +104,23 @@ class NoteTrail(MultiLineRenderer):
 
         self._trail_length = int(length * px_per_s) - self.point_depth
 
-        start_y = note_center[1]
+        y = note_center[1]
         self.left_x = note_center[0] - (width / 2)
         self.right_x = note_center[0] + (width / 2)
 
         if upscroll:
-            self._trail_end = start_y - self._trail_length
+            self._trail_end = y - self._trail_length
             self._point_tip = self._trail_end - self.point_depth
             self.end_y = int(-(length * px_per_s))
             resolution = -resolution
         else:
-            self._trail_end = start_y + self._trail_length
+            self._trail_end = y + self._trail_length
             self._point_tip = self._trail_end + self.point_depth
             self.end_y = int(length * px_per_s)
 
         # top of line
-        points1.append((self.left_x + self.thickness, start_y))
-        points2.append((self.right_x - self.thickness, start_y))
+        points1.append((self.left_x + self.thickness, y))
+        points2.append((self.right_x - self.thickness, y))
         # bottom of line
         points1.append((self.left_x + self.thickness, self._trail_end))
         points2.append((self.right_x - self.thickness, self._trail_end))

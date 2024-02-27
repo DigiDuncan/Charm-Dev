@@ -85,7 +85,7 @@ class TitleView(DigiView):
         self.welcome_label = arcade.Text(f"welcome, {getpass.getuser()}!",
                                          font_name='bananaslip plus',
                                          font_size=14,
-                                         start_x=self.window.width // 2, start_y=6,
+                                         x=self.window.width // 2, y=6,
                                          anchor_x='center', anchor_y='bottom',
                                          color=arcade.color.BLACK)
 
@@ -100,8 +100,8 @@ class TitleView(DigiView):
             self.splash_label = arcade.Text("CLOWN KILLS YOU",
                                             font_name='Impact',
                                             font_size=48,
-                                            start_x=self.window.width // 2 + 100,
-                                            start_y=self.window.height // 2,
+                                            x=self.window.width // 2 + 100,
+                                            y=self.window.height // 2,
                                             anchor_x='center', anchor_y='top',
                                             color=arcade.color.RED)
         else:
