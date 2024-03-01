@@ -3,7 +3,7 @@
 # Charm
 A Python-based rhythm engine/game/chart player. Feels like an arcade cabinet, is the hope. Too many features, really!
 
-[Here's a document where I'm hoping to explain all the plans.](https://docs.google.com/document/d/1JfsRuEYCpUTLfjpQqJkV-hqcwWflekKcPTvy2IGboyc/edit?usp=sharing)
+[Here's a document where I'm hoping to explain all the plans.](https://docs.google.com/document/d/1J_CX55jLp6zjkXepvnuBqftsYZB0eqRa3kBGbA7tuiI/edit?usp=sharing)
 
 ## Planned Features
 * Play a variety of rhythm game charts from multiple popular custom chart formats
