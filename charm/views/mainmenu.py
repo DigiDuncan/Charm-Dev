@@ -7,7 +7,6 @@ from charm.lib.errors import TestError
 from charm.lib.keymap import get_keymap
 from charm.lib.settings import settings
 from charm.objects.menu import MainMenu, MainMenuItem
-from charm.views.banner import BannerView
 from charm.views.emojitest import EmojiView
 from charm.views.fnfsongmenu import FNFSongMenuView
 from charm.views.fourkeysongmenu import FourKeySongMenuView
@@ -34,7 +33,6 @@ class MainMenuView(DigiView):
                 MainMenuItem("FNF Songs", "songs", FNFSongMenuView(back=self)),
                 MainMenuItem("4K Songs", "songs", FourKeySongMenuView(back=self)),
                 MainMenuItem("Options", "options", None),
-                MainMenuItem("Banner", "test", BannerView(back=self)),
                 MainMenuItem("Emoji Test", "test", EmojiView(window=self.window, back=self)),
                 MainMenuItem("Sprite Test", "test", SpriteTestView(back=self)),
                 MainMenuItem("Parallax Test", "test", ParallaxView(back=self)),
