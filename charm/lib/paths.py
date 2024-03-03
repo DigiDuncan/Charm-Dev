@@ -23,7 +23,6 @@ chpath = songspath / "ch"
 
 datadir.mkdir(parents=True, exist_ok=True)
 songspath.mkdir(parents=True, exist_ok=True)
-scorespath.mkdir(parents=True, exist_ok=True)
 fnfpath.mkdir(parents=True, exist_ok=True)
 fourkeypath.mkdir(parents=True, exist_ok=True)
 osupath.mkdir(parents=True, exist_ok=True)
