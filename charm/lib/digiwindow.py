@@ -6,6 +6,8 @@ from typing import Optional
 import arcade
 import pyglet
 import pypresence
+import imgui
+from arcade_imgui import ArcadeRenderer
 
 from charm.objects.debug_log import DebugLog
 
@@ -90,6 +92,9 @@ class DigiWindow(arcade.Window):
         cheats = []
         self.cheats = {c: False for c in cheats}
 
+        imgui.create_context()
+        self.renderer = ArcadeRenderer(self)
+
     def setup(self):
         self.initial_view.setup()
         self.show_view(self.initial_view)
@@ -132,5 +137,12 @@ class DigiWindow(arcade.Window):
                 if self.show_log:
                     self.log.draw()
             self.alpha_label.draw()
+
+        if self.debug:
+            imgui.new_frame()
+            imgui.show_demo_window(False)
+            imgui.render()
+            self.renderer.render(imgui.get_draw_data())
+
         if _cam is not None:
             _cam.use()
