@@ -55,14 +55,19 @@ class FourKeySongMenuView(DigiView):
         self.menu.selected_id = 0
         self.selection_changed = 0
 
-        self.album_art = arcade.Sprite(self.menu.selected.album_art)
-        self.album_art.right = self.size[0] - self.album_art_buffer
-        self.album_art.original_bottom = self.album_art.bottom = self.size[1] // 2
+        if self.menu.items:
+            self.album_art = arcade.Sprite(self.menu.selected.album_art)
+            self.album_art.right = self.size[0] - self.album_art_buffer
+            self.album_art.original_bottom = self.album_art.bottom = self.size[1] // 2
 
-        with pkg_resources.path(charm.data.images, "static.gif") as p:
-            self.static = arcade.load_animated_gif(p)
-        self.static.right = self.size[0] - self.album_art_buffer
-        self.static.original_bottom = self.album_art.bottom = self.size[1] // 2
+            with pkg_resources.path(charm.data.images, "static.gif") as p:
+                self.static = arcade.load_animated_gif(p)
+            self.static.right = self.size[0] - self.album_art_buffer
+            self.static.original_bottom = self.album_art.bottom = self.size[1] // 2
+
+        self.nothing_text = arcade.Text("No songs found!", self.window.width // 2, self.window.height // 2,
+                                        arcade.color.BLACK, 64, align = "center", anchor_x = "center", anchor_y = "center",
+                                        font_name = "bananaslip plus")
 
     @shows_errors
     def on_show(self):
@@ -74,10 +79,11 @@ class FourKeySongMenuView(DigiView):
 
         move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
 
-        self.album_art.bottom = self.album_art.original_bottom + (math.sin(self.local_time * 2) * 25)
-        self.static.bottom = self.album_art.original_bottom + (math.sin(self.local_time * 2) * 25)
-        self.menu.update(self.local_time)
-        self.static.update_animation(delta_time)
+        if self.menu.items:
+            self.album_art.bottom = self.album_art.original_bottom + (math.sin(self.local_time * 2) * 25)
+            self.static.bottom = self.album_art.original_bottom + (math.sin(self.local_time * 2) * 25)
+            self.menu.update(self.local_time)
+            self.static.update_animation(delta_time)
 
     @shows_errors
     def on_key_press(self, symbol: int, modifiers: int):
@@ -125,13 +131,16 @@ class FourKeySongMenuView(DigiView):
         self.small_logos_forward.draw()
         self.small_logos_backward.draw()
 
-        bottom = ease_quartout(self.size[1], 0, 0.5, 1.5, self.local_time)
-        arcade.draw_lrbt_rectangle_filled(self.album_art.left - self.album_art_buffer, self.size[0], bottom, self.size[1], arcade.color.WHITE[:3] + (127,))
+        if self.menu.items:
+            bottom = ease_quartout(self.size[1], 0, 0.5, 1.5, self.local_time)
+            arcade.draw_lrbt_rectangle_filled(self.album_art.left - self.album_art_buffer, self.size[0], bottom, self.size[1], arcade.color.WHITE[:3] + (127,))
 
-        self.menu.draw()
-        if self.local_time < self.selection_changed + self.static_time:
-            self.static.draw()
+            self.menu.draw()
+            if self.local_time < self.selection_changed + self.static_time:
+                self.static.draw()
+            else:
+                self.album_art.draw()
         else:
-            self.album_art.draw()
+            self.nothing_text.draw()
 
         super().on_draw()

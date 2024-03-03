@@ -112,9 +112,10 @@ class SongMenu:
         return self.move_start + self.move_speed
 
     def sort(self, key: str, rev: bool = False):
-        selected = self.items[self.selected_id]
-        self.items.sort(key=lambda item: item.song.get(key, ""), reverse=rev)
-        self.selected_id = self.items.index(selected)
+        if self.items:
+            selected = self.items[self.selected_id]
+            self.items.sort(key=lambda item: item.song.get(key, ""), reverse=rev)
+            self.selected_id = self.items.index(selected)
 
     def update(self, local_time: float):
         self.local_time = local_time
