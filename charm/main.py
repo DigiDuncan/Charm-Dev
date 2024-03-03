@@ -2,6 +2,9 @@ import importlib.resources as pkg_resources
 
 import pyglet
 
+import arcade_accelerate
+arcade_accelerate.bootstrap()
+
 # Fix font
 pyglet.options["win32_disable_shaping"] = True
 import arcade
