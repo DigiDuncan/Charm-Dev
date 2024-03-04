@@ -40,3 +40,5 @@ charm.dist/
 charm.exe
 
 charm/test.py
+
+charm.dist.zip

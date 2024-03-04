@@ -30,3 +30,8 @@ A Python-based rhythm engine/game/chart player. Feels like an arcade cabinet, is
 
 \* The popular Roblox rhythm game *Robeats* also loads `.osz` charts.
 
+## Building with Nuitka
+
+`python -m nuitka --include-data-dir=C:\Users\DigiDuncan\Documents\GitHub\Charm\charm\data=charm\data --include-package-data=emoji_data_python --include-package-data=pyogg --windows-force-stderr-spec=error_output.txt --remove-output --standalone --output-filename=Charm charm.py`
+
+Also add the `dll`s from PyOgg into the `dist` folder.
