@@ -1,4 +1,5 @@
 import arcade
+import imgui
 
 from charm.lib.anim import ease_quartout
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
@@ -78,11 +79,15 @@ class MainMenuView(DigiView):
         return super().on_key_press(symbol, modifiers)
 
     def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int):
+        if imgui.is_window_hovered(imgui.HOVERED_ANY_WINDOW):
+            return
         self.menu.selected_id += int(scroll_y)
         arcade.play_sound(self.window.sounds["select"])
 
     @shows_errors
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int):
+        if imgui.is_window_hovered(imgui.HOVERED_ANY_WINDOW):
+            return
         if button == arcade.MOUSE_BUTTON_LEFT:
             for item in self.menu.items:
                 if item.collides_with_point((x, y)):

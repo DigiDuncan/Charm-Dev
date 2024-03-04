@@ -3,6 +3,7 @@ import importlib.resources as pkg_resources
 import random
 
 import arcade
+import imgui
 
 import charm.data.audio
 import charm.data.images
@@ -137,6 +138,8 @@ class TitleView(DigiView):
         return super().on_key_press(symbol, modifiers)
 
     def on_mouse_press(self, x: int, y: int, button: int, modifiers: int):
+        if imgui.is_window_hovered(imgui.HOVERED_ANY_WINDOW):
+            return
         if button == arcade.MOUSE_BUTTON_LEFT:
             self.hit_start = self.local_time
             arcade.play_sound(self.window.sounds["valid"])

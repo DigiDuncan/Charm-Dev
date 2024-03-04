@@ -42,3 +42,5 @@ charm.exe
 charm/test.py
 
 charm.dist.zip
+
+imgui.ini

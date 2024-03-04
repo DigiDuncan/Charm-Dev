@@ -1,8 +1,18 @@
-import imgui
-from arcade_imgui import ArcadeRenderer
+import typing
 
-def draw(renderer: ArcadeRenderer):
+import imgui
+
+if typing.TYPE_CHECKING:
+    from charm.lib.digiwindow import DigiWindow
+
+def draw(window: "DigiWindow"):
+    impl = window.impl
+    impl.process_inputs()
+
     imgui.new_frame()
-    imgui.show_demo_window(False)
+
+    imgui.begin("Charm Debug Menu", False)
+
+    imgui.end()
     imgui.render()
-    renderer.render(imgui.get_draw_data())
+    impl.render(imgui.get_draw_data())

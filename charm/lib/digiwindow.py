@@ -7,9 +7,9 @@ import arcade
 import pyglet
 import pypresence
 import imgui
-from arcade_imgui import ArcadeRenderer
-from charm.lib import debug_menu
+from imgui.integrations.pyglet import create_renderer
 
+from charm.lib import debug_menu
 from charm.objects.debug_log import DebugLog
 
 logger = logging.getLogger("charm")
@@ -62,6 +62,7 @@ class DigiWindow(arcade.Window):
 
         arcade.draw_text(" ", 0, 0)  # force font init (fixes lag on first text draw)
 
+        # Cameras and text labels
         self.camera = arcade.SimpleCamera(viewport = (0, 0, size[0], size[1]))
         self.debug_camera = arcade.SimpleCamera(viewport = (0, 0, size[0], size[1]))
         self.fps_label = pyglet.text.Label("???.? FPS",
@@ -90,11 +91,12 @@ class DigiWindow(arcade.Window):
                                              anchor_x='right', anchor_y='bottom',
                                              color=(0, 0, 0, 32))
 
-        cheats = []
-        self.cheats = {c: False for c in cheats}
-
+        # Debug menu
         imgui.create_context()
-        self.renderer = ArcadeRenderer(self)
+        imgui.get_io().display_size = 100, 100
+        imgui.get_io().fonts.get_tex_data_as_rgba32()
+        self.impl = create_renderer(self)
+        self.mouse_focused_on_debug = False
 
     def setup(self):
         self.initial_view.setup()
@@ -140,7 +142,7 @@ class DigiWindow(arcade.Window):
             self.alpha_label.draw()
 
         if self.debug:
-            debug_menu.draw(self.renderer)
+            debug_menu.draw(self)
 
         if _cam is not None:
             _cam.use()
