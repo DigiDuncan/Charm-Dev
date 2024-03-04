@@ -28,10 +28,6 @@ class DigiWindow(arcade.Window):
         self.fps_cap = fps_cap
         self.initial_view = initial_view
 
-        self.debug_log = DebugLog()
-        self.log = self.debug_log.layout
-        self.log.position = (5, 5, 0)
-
         self.delta_time = 0.0
         self.time = 0.0
         self.fps_checks = 0
@@ -149,8 +145,6 @@ class DigiWindow(arcade.Window):
                 self.fps_label.draw()
             if self.debug:
                 self.more_info_label.draw()
-                if self.debug_settings["show_log"]:
-                    self.log.draw()
             self.alpha_label.draw()
 
         # Debug menu

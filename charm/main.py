@@ -30,7 +30,6 @@ SCREEN_TITLE = "Charm"
 with pkg_resources.path(charm.data.fonts, "bananaslipplus.otf") as p:
     arcade.text.load_font(str(p))
 
-setup_logging()
 
 class CharmGame(DigiWindow):
     def __init__(self):

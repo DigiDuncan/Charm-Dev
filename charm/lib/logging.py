@@ -1,5 +1,6 @@
 import logging
 from digiformatter import logger as digilogger
+from charm.lib.debug_menu import ImGuiHandler
 
 from charm.objects.debug_log import PygletHandler
 
@@ -33,11 +34,11 @@ def add_logging_level(level_name, level_num, method_name=None):
         method_name = level_name.lower()
 
     if hasattr(logging, level_name):
-       raise AttributeError('{} already defined in logging module'.format(level_name))
+        raise AttributeError('{} already defined in logging module'.format(level_name))
     if hasattr(logging, method_name):
-       raise AttributeError('{} already defined in logging module'.format(method_name))
+        raise AttributeError('{} already defined in logging module'.format(method_name))
     if hasattr(logging.getLoggerClass(), method_name):
-       raise AttributeError('{} already defined in logger class'.format(method_name))
+        raise AttributeError('{} already defined in logger class'.format(method_name))
 
     # This method was inspired by the answers to Stack Overflow post
     # http://stackoverflow.com/q/2183233/2988730, especially
@@ -45,6 +46,7 @@ def add_logging_level(level_name, level_num, method_name=None):
     def logForLevel(self, message, *args, **kwargs):
         if self.isEnabledFor(level_num):
             self._log(level_num, message, args, **kwargs)
+
     def logToRoot(message, *args, **kwargs):
         logging.log(level_num, message, *args, **kwargs)
 
@@ -57,19 +59,22 @@ def setup_logging():
     logging.basicConfig(level=logging.INFO)
     dfhandler = digilogger.DigiFormatterHandler()
     dfhandlersource = digilogger.DigiFormatterHandler(showsource=True)
-    phandler = PygletHandler()
-    phandlersource = PygletHandler(showsource=True)
+    ihandler = ImGuiHandler()
+    ihandlersource = ImGuiHandler(showsource=True)
+
+    add_logging_level("COMMENT", logging.DEBUG - 2)
+    add_logging_level("COMMAND", logging.DEBUG - 1)
 
     logger = logging.getLogger("charm")
     logger.setLevel(logging.DEBUG)
     logger.handlers = []
     logger.propagate = False
     logger.addHandler(dfhandler)
-    logger.addHandler(phandler)
+    logger.addHandler(ihandler)
 
     arcadelogger = logging.getLogger("arcade")
     arcadelogger.setLevel(logging.WARN)
     arcadelogger.handlers = []
     arcadelogger.propagate = False
     arcadelogger.addHandler(dfhandlersource)
-    arcadelogger.addHandler(phandlersource)
+    arcadelogger.addHandler(ihandlersource)

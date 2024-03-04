@@ -4,6 +4,7 @@ import arcade
 import arrow
 import pyglet
 
+"""This module is now deprecated in favor of the DebugMenu using pyimgui."""
 
 class DebugMessage:
     def __init__(self, message: str, level: int = logging.INFO) -> None:
