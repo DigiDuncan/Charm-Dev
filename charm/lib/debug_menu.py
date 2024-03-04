@@ -15,7 +15,14 @@ def draw(window: "DigiWindow"):
 
     imgui.begin("Charm Debug Menu", False)
 
+    imgui.text("Settings")
+    # A Number
     _, window.debug_settings["a_number"] = imgui.slider_int("A Number", window.debug_settings["a_number"], 0, 100)
+
+    imgui.spacing()
+
+    imgui.text("Info")
+    # FPS Graph
     imgui.plot_lines(
         label="FPS",
         values=array("f", window.fps_list),
