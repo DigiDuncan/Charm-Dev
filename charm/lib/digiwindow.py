@@ -1,3 +1,4 @@
+from collections import deque
 import logging
 import statistics
 import typing
@@ -96,6 +97,7 @@ class DigiWindow(arcade.Window):
         imgui.get_io().display_size = 100, 100
         imgui.get_io().fonts.get_tex_data_as_rgba32()
         self.impl = create_renderer(self)
+        self.fps_list = deque()
         self.debug_settings = {
             "a_number": 10
         }
@@ -128,6 +130,8 @@ class DigiWindow(arcade.Window):
         self.fps_checks += 1
         _cam = self.current_camera
         self.debug_camera.use()
+
+        # FPS Counter
         if self.fps_checks % (self.fps_cap / 8) == 0:
             average = statistics.mean(self.fps_averages)
             self.fps_label.color = arcade.color.BLACK if average >= 120 else arcade.color.RED
@@ -135,6 +139,13 @@ class DigiWindow(arcade.Window):
             self.fps_averages.clear()
         else:
             self.fps_averages.append(1 / self.delta_time)
+
+        # FPS Graph
+        self.fps_list.append(1 / self.delta_time)
+        if len(self.fps_list) > 240:
+            self.fps_list.popleft()
+
+        # Labels
         with self.ctx.pyglet_rendering():
             if self.show_fps or self.debug:
                 self.fps_shadow_label.draw()
@@ -145,6 +156,7 @@ class DigiWindow(arcade.Window):
                     self.log.draw()
             self.alpha_label.draw()
 
+        # Debug menu
         if self.debug:
             debug_menu.draw(self)
 
