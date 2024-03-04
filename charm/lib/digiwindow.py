@@ -8,6 +8,7 @@ import pyglet
 import pypresence
 import imgui
 from arcade_imgui import ArcadeRenderer
+from charm.lib import debug_menu
 
 from charm.objects.debug_log import DebugLog
 
@@ -139,10 +140,7 @@ class DigiWindow(arcade.Window):
             self.alpha_label.draw()
 
         if self.debug:
-            imgui.new_frame()
-            imgui.show_demo_window(False)
-            imgui.render()
-            self.renderer.render(imgui.get_draw_data())
+            debug_menu.draw(self.renderer)
 
         if _cam is not None:
             _cam.use()
