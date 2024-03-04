@@ -50,8 +50,6 @@ class DigiView(View):
         self.local_time = 0.0
         self.fade_in = fade_in
         self.bg_color = bg_color
-        self.debug_options = {
-            "box": False}
         self._errors: list[list[CharmException, float]] = []  # [error, seconds to show]
 
     def on_error(self, error: CharmException):
@@ -95,12 +93,8 @@ class DigiView(View):
             self.window.theme_song.volume = 0
         if self.window.debug and modifiers & arcade.key.MOD_SHIFT:
             match symbol:
-                case arcade.key.B:  # camera outline
-                    self.debug_options["box"] = not self.debug_options["box"]
                 case arcade.key.A:  # show atlas
                     self.window.ctx.default_atlas.save("atlas.png")
-                case arcade.key.L:  # show log
-                    self.window.show_log = not self.window.show_log
         return super().on_key_press(symbol, modifiers)
 
     def on_update(self, delta_time: float):
@@ -115,9 +109,6 @@ class DigiView(View):
             alpha = ease_linear(255, 0, 0, self.fade_in, self.local_time)
             arcade.draw_lrbt_rectangle_filled(0, self.window.width, 0, self.window.height,
                                              (0, 0, 0, alpha))
-
-        if self.window.debug and self.debug_options["box"]:
-            arcade.draw_lrbt_rectangle_outline(0, self.window.width, 0, self.window.height, arcade.color.RED, 3)
 
         self.window.debug_draw()
 

@@ -36,8 +36,6 @@ class DigiWindow(arcade.Window):
         self.time = 0.0
         self.fps_checks = 0
         self.debug = False
-        self.show_fps = False
-        self.show_log = False
         self.sounds: dict[str, arcade.Sound] = {}
         self.theme_song: Optional[pyglet.media.Player] = None
 
@@ -99,7 +97,8 @@ class DigiWindow(arcade.Window):
         self.impl = create_renderer(self)
         self.fps_list = deque()
         self.debug_settings = {
-            "a_number": 10
+            "show_fps": False,
+            "show_log": False
         }
 
     def setup(self):
@@ -111,8 +110,6 @@ class DigiWindow(arcade.Window):
         self.delta_time = delta_time
         self.time += delta_time
         self.update_rp()
-
-        self.more_info_label.text = f"DEBUG\n{self.debug_settings['a_number']}"
 
     def update_rp(self, new_state: Optional[str] = None):
         if not self.rpc or not self.rpc_connected:
@@ -147,12 +144,12 @@ class DigiWindow(arcade.Window):
 
         # Labels
         with self.ctx.pyglet_rendering():
-            if self.show_fps or self.debug:
+            if self.debug_settings["show_fps"] or self.debug:
                 self.fps_shadow_label.draw()
                 self.fps_label.draw()
             if self.debug:
                 self.more_info_label.draw()
-                if self.show_log:
+                if self.debug_settings["show_log"]:
                     self.log.draw()
             self.alpha_label.draw()
 

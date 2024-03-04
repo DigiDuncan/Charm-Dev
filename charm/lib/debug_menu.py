@@ -16,8 +16,9 @@ def draw(window: "DigiWindow"):
     imgui.begin("Charm Debug Menu", False)
 
     imgui.text("Settings")
-    # A Number
-    _, window.debug_settings["a_number"] = imgui.slider_int("A Number", window.debug_settings["a_number"], 0, 100)
+    # Settings
+    _, window.debug_settings["show_fps"] = imgui.checkbox("Show FPS", window.debug_settings["show_fps"])
+    _, window.debug_settings["show_log"] = imgui.checkbox("Show Log", window.debug_settings["show_log"])
 
     imgui.spacing()
 
@@ -30,6 +31,7 @@ def draw(window: "DigiWindow"):
         scale_min = 120,
         scale_max = 240,
     )
+    imgui.text(f"Local Time: {window.current_view.local_time:.3f}")
 
     imgui.end()
     imgui.render()
