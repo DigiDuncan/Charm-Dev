@@ -96,7 +96,9 @@ class DigiWindow(arcade.Window):
         imgui.get_io().display_size = 100, 100
         imgui.get_io().fonts.get_tex_data_as_rgba32()
         self.impl = create_renderer(self)
-        self.mouse_focused_on_debug = False
+        self.debug_settings = {
+            "a_number": 10
+        }
 
     def setup(self):
         self.initial_view.setup()
@@ -107,6 +109,8 @@ class DigiWindow(arcade.Window):
         self.delta_time = delta_time
         self.time += delta_time
         self.update_rp()
+
+        self.more_info_label.text = f"DEBUG\n{self.debug_settings['a_number']}"
 
     def update_rp(self, new_state: Optional[str] = None):
         if not self.rpc or not self.rpc_connected:
