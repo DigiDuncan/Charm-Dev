@@ -58,7 +58,7 @@ class DigiWindow(arcade.Window):
 
         # Cameras and text labels
         self.camera = arcade.SimpleCamera(viewport = (0, 0, size[0], size[1]))
-        self.debug_camera = arcade.SimpleCamera(viewport = (0, 0, size[0], size[1]))
+        self.overlay_camera = arcade.SimpleCamera(viewport = (0, 0, size[0], size[1]))
         self.fps_label = pyglet.text.Label("???.? FPS",
                                            font_name='bananaslip plus',
                                            font_size=12,
@@ -92,8 +92,7 @@ class DigiWindow(arcade.Window):
         self.impl = create_renderer(self)
         self.fps_list = deque()
         self.debug_settings = {
-            "show_fps": False,
-            "show_log": False
+            "show_fps": False
         }
 
     def setup(self):
@@ -118,10 +117,10 @@ class DigiWindow(arcade.Window):
             self.last_rp_time = self.time
             self._rp_stale = False
 
-    def debug_draw(self):
+    def overlay_draw(self):
         self.fps_checks += 1
         _cam = self.current_camera
-        self.debug_camera.use()
+        self.overlay_camera.use()
 
         # FPS Counter
         if self.fps_checks % (self.fps_cap / 8) == 0:

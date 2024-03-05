@@ -145,11 +145,6 @@ class Console:
         self._items.append(item)
 
     def draw(self):
-        imgui.set_next_window_size(520, 600, imgui.FIRST_USE_EVER)
-        if not imgui.begin("Console", True):
-            imgui.end()
-            return
-
         # Standard console text (not strictly necessary)
         imgui.text_wrapped("Debug Console")
         imgui.text_wrapped("Enter 'HELP' for help")
@@ -242,6 +237,12 @@ class Console:
         if reclaim_focus:
             imgui.set_keyboard_focus_here(-1)
 
+    def draw_floating(self):
+        imgui.set_next_window_size(520, 600, imgui.FIRST_USE_EVER)
+        if not imgui.begin("Console", True):
+            imgui.end()
+            return
+        self.draw()
         imgui.end()
 
     def execute_command(self, command_line: str):
@@ -303,29 +304,32 @@ def draw(window: "DigiWindow"):
 
     imgui.begin("Charm Debug Menu", False)
 
-    imgui.text("Settings")
-    # Settings
-    _, window.debug_settings["show_fps"] = imgui.checkbox("Show FPS", window.debug_settings["show_fps"])
-    _, window.debug_settings["show_log"] = imgui.checkbox("Show Log", window.debug_settings["show_log"])
-
-    imgui.spacing()
-    imgui.separator()
-
-    imgui.text("Info")
-    # FPS Graph
-    imgui.plot_lines(
-        label="FPS",
-        values=array("f", window.fps_list),
-        values_count = len(window.fps_list),
-        scale_min = 120,
-        scale_max = 240,
-    )
-    imgui.text(f"Local Time: {window.current_view.local_time:.3f}")
-
-    imgui.spacing()
-
-    if window.debug_settings["show_log"]:
-        cons.draw()
+    with imgui.begin_tab_bar("Options") as tab_bar:
+        if tab_bar.opened:
+            with imgui.begin_tab_item("Settings") as settings:
+                if settings.selected:
+                    imgui.text("Settings")
+                    # Settings
+                    _, window.debug_settings["show_fps"] = imgui.checkbox("Show FPS", window.debug_settings["show_fps"])
+                    imgui.spacing()
+                    imgui.separator()
+            with imgui.begin_tab_item("Info") as info:
+                if info.selected:
+                    imgui.text("Info")
+                    imgui.text(f"Local Time: {window.current_view.local_time:.3f}")
+                    # FPS Graph
+                    imgui.plot_lines(
+                        label="FPS",
+                        values=array("f", window.fps_list),
+                        values_count = len(window.fps_list),
+                        scale_min = 120,
+                        scale_max = 240,
+                    )
+                    imgui.spacing()
+                    imgui.separator()
+            with imgui.begin_tab_item("Log") as log:
+                if log.selected:
+                    cons.draw()
 
     imgui.end()
     imgui.render()

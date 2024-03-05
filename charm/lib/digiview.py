@@ -110,7 +110,7 @@ class DigiView(View):
             arcade.draw_lrbt_rectangle_filled(0, self.window.width, 0, self.window.height,
                                              (0, 0, 0, alpha))
 
-        self.window.debug_draw()
+        self.window.overlay_draw()
 
         for (error, _) in self._errors:
             error.sprite.draw()
