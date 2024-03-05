@@ -319,6 +319,7 @@ def draw(window: "DigiWindow"):
             with imgui.begin_tab_item("Info") as info:
                 if info.selected:
                     imgui.text("Info")
+                    imgui.text(f"Current Resolution: {window.size}")
                     imgui.text(f"Local Time: {window.current_view.local_time:.3f}")
                     # FPS Graph
                     imgui.plot_lines(
