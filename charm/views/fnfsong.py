@@ -2,6 +2,7 @@ import logging
 from pathlib import Path
 
 import arcade
+import imgui
 
 from charm.lib import anim
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
@@ -187,6 +188,8 @@ class FNFSongView(DigiView):
 
     @shows_errors
     def on_key_press(self, symbol: int, modifiers: int):
+        if imgui.is_window_hovered(imgui.HOVERED_ANY_WINDOW):
+            return
         keymap = get_keymap()
         match symbol:
             case keymap.back:

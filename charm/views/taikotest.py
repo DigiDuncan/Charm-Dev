@@ -32,6 +32,7 @@ class TaikoSongView(DigiView):
         self.countdown: float = 3
         self.countdown_over = False
 
+    @shows_errors
     def setup(self):
         with LogSection(logger, "loading audio"):
             audio_paths = [a for a in self.song_path.glob("*.mp3")] + [a for a in self.song_path.glob("*.wav")] + [a for a in self.song_path.glob("*.ogg")]
@@ -121,6 +122,7 @@ class TaikoSongView(DigiView):
         self.countdown_text.position = (self.window.width / 2, self.window.height / 2)
         return super().calculate_positions()
 
+    @shows_errors
     def on_update(self, delta_time):
         super().on_update(delta_time)
 
@@ -148,6 +150,7 @@ class TaikoSongView(DigiView):
 
         move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
 
+    @shows_errors
     def on_draw(self):
         self.window.camera.use()
         self.clear()

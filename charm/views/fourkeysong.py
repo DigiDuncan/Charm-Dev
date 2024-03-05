@@ -4,6 +4,7 @@ from pathlib import Path
 
 import arcade
 import ndjson
+import imgui
 
 from charm.lib.anim import ease_circout
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
@@ -33,6 +34,7 @@ class FourKeySongView(DigiView):
         self.countdown: float = 3
         self.countdown_over = False
 
+    @shows_errors
     def setup(self):
         with LogSection(logger, "loading audio"):
             audio_paths = [a for a in self.song_path.glob("*.mp3")] + [a for a in self.song_path.glob("*.wav")] + [a for a in self.song_path.glob("*.ogg")]
@@ -116,6 +118,8 @@ class FourKeySongView(DigiView):
 
     @shows_errors
     def on_key_press(self, symbol: int, modifiers: int):
+        if imgui.is_window_hovered(imgui.HOVERED_ANY_WINDOW):
+            return
         keymap = get_keymap()
         match symbol:
             case keymap.back:

@@ -117,6 +117,8 @@ class TitleView(DigiView):
                                                          color=CharmColors.PURPLE)
 
     def on_key_press(self, symbol: int, modifiers: int):
+        if imgui.is_window_hovered(imgui.HOVERED_ANY_WINDOW):
+            return
         keymap = get_keymap()
         match symbol:
             case keymap.start:

@@ -8,11 +8,12 @@ import arcade
 from charm.lib.keymap import get_keymap
 import nindex
 import numpy as np
+import imgui
 
 import charm.data.audio
 from charm.lib.adobexml import sprite_from_adobe
 from charm.lib.anim import ease_linear, ease_quartout
-from charm.lib.digiview import DigiView
+from charm.lib.digiview import DigiView, shows_errors
 from charm.lib.logsection import LogSection
 from charm.lib.gamemodes.four_key import FourKeyHighway
 from charm.lib.gamemodes.fnf import FNFEngine, FNFNote, FNFSong
@@ -54,6 +55,7 @@ class VisualizerView(DigiView):
     def __init__(self, *args, **kwargs):
         super().__init__(fade_in=1, bg_color=arcade.color.BLACK, *args, **kwargs)
 
+    @shows_errors
     def setup(self):
         super().setup()
 
@@ -151,6 +153,7 @@ class VisualizerView(DigiView):
         self.song = arcade.play_sound(self._song, 1, loop=False)
         super().on_show()
 
+    @shows_errors
     def on_update(self, delta_time: float):
         super().on_update(delta_time)
         if not self.shown:
@@ -182,7 +185,10 @@ class VisualizerView(DigiView):
         self.boyfriend.update_animation(delta_time)
         self.highway.update(self.song.time)
 
+    @shows_errors
     def on_key_press(self, symbol: int, modifiers: int):
+        if imgui.is_window_hovered(imgui.HOVERED_ANY_WINDOW):
+            return
         keymap = get_keymap()
         match symbol:
             case keymap.back:
@@ -199,6 +205,7 @@ class VisualizerView(DigiView):
 
         return super().on_key_press(symbol, modifiers)
 
+    @shows_errors
     def on_draw(self):
         self.window.camera.use()
         self.clear()

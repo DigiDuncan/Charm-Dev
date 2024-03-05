@@ -2,8 +2,6 @@ import logging
 from digiformatter import logger as digilogger
 from charm.lib.debug_menu import ImGuiHandler
 
-from charm.objects.debug_log import PygletHandler
-
 # https://stackoverflow.com/questions/2183233/how-to-add-a-custom-loglevel-to-pythons-logging-facility/35804945#35804945
 def add_logging_level(level_name, level_num, method_name=None):
     """
@@ -18,7 +16,7 @@ def add_logging_level(level_name, level_num, method_name=None):
 
     To avoid accidental clobberings of existing attributes, this method will
     raise an `AttributeError` if the level name is already an attribute of the
-    `logging` module or if the method name is already present 
+    `logging` module or if the method name is already present
 
     Example
     -------

@@ -11,7 +11,6 @@ import imgui
 from imgui.integrations.pyglet import create_renderer
 
 from charm.lib import debug_menu
-from charm.objects.debug_log import DebugLog
 
 logger = logging.getLogger("charm")
 

@@ -2,9 +2,10 @@ import logging
 
 import arcade
 from pyglet.graphics import Batch
+import imgui
 
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
-from charm.lib.digiview import DigiView
+from charm.lib.digiview import DigiView, shows_errors
 from charm.lib.gamemodes.hero import HeroEngine, HeroHighway, HeroSong, SectionEvent
 from charm.lib.keymap import get_keymap
 from charm.lib.oggsound import OGGSound
@@ -22,6 +23,7 @@ class HeroTestView(DigiView):
         self.highway = None
         self.volume = 0.25
 
+    @shows_errors
     def setup(self):
         super().setup()
 
@@ -56,7 +58,10 @@ class HeroTestView(DigiView):
         self.window.theme_song.volume = 0
         self.song = arcade.play_sound(self._song, self.volume, loop=False)
 
+    @shows_errors
     def on_key_press(self, symbol: int, modifiers: int):
+        if imgui.is_window_hovered(imgui.HOVERED_ANY_WINDOW):
+            return
         keymap = get_keymap()
         keymap.set_state(symbol, True)
         self.engine.process_keystate()
@@ -81,11 +86,13 @@ class HeroTestView(DigiView):
 
         return super().on_key_press(symbol, modifiers)
 
+    @shows_errors
     def on_key_release(self, symbol: int, modifiers: int):
         keymap = get_keymap()
         keymap.set_state(symbol, False)
         self.engine.process_keystate()
 
+    @shows_errors
     def on_update(self, delta_time):
         super().on_update(delta_time)
 
@@ -116,6 +123,7 @@ class HeroTestView(DigiView):
 
         move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
 
+    @shows_errors
     def on_draw(self):
         self.window.camera.use()
         self.clear()

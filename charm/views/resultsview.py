@@ -2,6 +2,7 @@ import importlib.resources as pkg_resources
 import logging
 
 import arcade
+import imgui
 
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView
@@ -72,6 +73,8 @@ class ResultsView(DigiView):
         self.song = arcade.play_sound(self._song, self.volume, loop=False)
 
     def on_key_press(self, symbol: int, modifiers: int):
+        if imgui.is_window_hovered(imgui.HOVERED_ANY_WINDOW):
+            return
         keymap = get_keymap()
         match symbol:
             case keymap.back | keymap.start:
