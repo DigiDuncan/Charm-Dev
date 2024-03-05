@@ -92,6 +92,8 @@ class TitleView(DigiView):
 
         self.dumb_fix_for_logo_pos = False
 
+        self.on_resize(*self.window.size)
+
         super().setup()
 
     def generate_splash(self):
