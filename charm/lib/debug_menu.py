@@ -34,7 +34,6 @@ class Filter:
                 # in the query they are treated like normal characters
                 s = "".join(""f"\\{char}" if char in Filter.regex_special_chars else char for char in s[1:])
                 s = r"^((?!.*" + s + ".*).)*$"
-            print(s)
             self.set_filter(s, filter_str)
 
     def set_filter(self, regex_str: str, raw_str: str):
@@ -108,8 +107,7 @@ class DebugMessage:
             imgui.push_style_color(imgui.COLOR_TEXT, *arcade.color.PURPLE.normalized)
             imgui.text_unformatted(self.time + " | ")
             imgui.pop_style_color()
-
-        imgui.same_line()
+            imgui.same_line()
 
         imgui.push_style_color(imgui.COLOR_TEXT, *self.color)
         imgui.text_unformatted(self.prefix + " ")
@@ -234,7 +232,6 @@ class Console:
         changed, self._input_string = imgui.input_text("Input", self._input_string, flags=input_text_flags)
         if changed:
             s: str = self._input_string
-            print(s)
             s = s.strip()
             if len(s):
                 self.execute_command(s)
@@ -271,7 +268,7 @@ class Console:
                     file.write(f"Completed appending to log @ {arrow.now().isoformat()}\n\n")
                 self.add_log(f"Finished saving to console_log.txt @ {arrow.now().isoformat()}")
             case _:
-                self.add_log(f"? Unrecognized command: |{command_line}")
+                self.add_log(DebugMessage(f"? Unrecognized command:\n\t{command_line}", logging.COMMENT))
 
         self.scroll_to_bottom = True
 
