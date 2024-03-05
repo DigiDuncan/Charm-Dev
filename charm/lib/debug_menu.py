@@ -11,8 +11,8 @@ if typing.TYPE_CHECKING:
     from charm.lib.digiwindow import DigiWindow
 
 class Filter:
-    input_text_str = "Filter (\"+\" incl, \"-\" excl) then \"text\" or use regex"
-    input_text_size = 180
+    input_text_str = "Filter"
+    input_text_size = 400
     regex_special_chars = {"^", "$", ".", "|", "?", "!", "\\", "*", "+", "-", "=", "[", "]", "(", ")", ":", "#", "<", ">"}
 
     def __init__(self):
@@ -21,7 +21,7 @@ class Filter:
 
     def draw(self):
         imgui.push_item_width(Filter.input_text_size)
-        changed, filter_str = imgui.input_text(Filter.input_text_str, self._filter_str)
+        changed, filter_str = imgui.input_text_with_hint(Filter.input_text_str, "+incl, -excl, or regex", self._filter_str)
         if changed:
             s: str = filter_str
             if s.startswith("+"):
@@ -150,12 +150,12 @@ class Console:
         imgui.text_wrapped("Enter 'HELP' for help")
 
         # Buttons on top of the console area
-        if imgui.small_button("Add Debug Text"):
+        if imgui.small_button("Test Log"):
             self.add_log(f"{len(self._items)} some text")
             self.add_log("some more text")
             self.add_log("display a very important message here!")
         imgui.same_line()
-        if imgui.small_button("Add Debug Error"):
+        if imgui.small_button("Test Error"):
             self.add_log(DebugMessage("Something went wrong!", logging.ERROR))
         imgui.same_line()
         if imgui.small_button("Clear"):
@@ -202,7 +202,8 @@ class Console:
             # the colour of the message type, or the time-stamp
 
             for item in self._items:
-                item.render()
+                if self.text_filter.pass_filter(item.prefix + item.message):
+                    item.render()
 
             if copy_to_clipboard:
                 # Finishing logging all the printing
@@ -224,7 +225,9 @@ class Console:
         # TODO: There is a missing flag? maybe make pr?
         # Also some of these flags are used to do stuff to the text (in particular the CALLBACK ones)
         input_text_flags = imgui.INPUT_TEXT_ENTER_RETURNS_TRUE | imgui.INPUT_TEXT_CALLBACK_COMPLETION | imgui.INPUT_TEXT_CALLBACK_HISTORY
+        imgui.push_item_width(Filter.input_text_size)
         changed, self._input_string = imgui.input_text("Input", self._input_string, flags=input_text_flags)
+        imgui.pop_item_width()
         if changed:
             s: str = self._input_string
             s = s.strip()
