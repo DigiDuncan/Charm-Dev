@@ -1,5 +1,6 @@
 from collections import deque
 import logging
+import random
 import statistics
 import typing
 from typing import Optional
@@ -18,6 +19,10 @@ rpc_client_id = "1056710104348639305"  # Charm app on Discord.
 
 if typing.TYPE_CHECKING:
     from charm.lib.digiview import DigiView
+
+
+class Eggs:
+    TRICKY = 666
 
 
 class DigiWindow(arcade.Window):
@@ -94,6 +99,9 @@ class DigiWindow(arcade.Window):
         self.debug_settings = {
             "show_fps": False
         }
+
+        # Egg roll
+        self.egg_roll = random.randint(1, 1000)
 
     def setup(self):
         self.initial_view.setup()

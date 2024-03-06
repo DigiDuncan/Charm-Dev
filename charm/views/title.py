@@ -10,6 +10,7 @@ import charm.data.images
 from charm.lib.anim import bounce, ease_linear, ease_quadinout
 from charm.lib.charm import CharmColors, move_gum_wrapper
 from charm.lib.digiview import DigiView
+from charm.lib.digiwindow import Eggs
 from charm.lib.keymap import get_keymap
 from charm.lib.settings import settings
 from charm.lib.utils import img_from_resource
@@ -60,7 +61,6 @@ class TitleView(DigiView):
         self.splashes = pkg_resources.read_text(charm.data, "splashes.txt").splitlines()
         self.splash_text = ""
         self.splash_index = 0
-        self.egg_roll = random.randint(1, 1000)
         self.generate_splash()
 
         # Song details
@@ -97,7 +97,7 @@ class TitleView(DigiView):
         super().setup()
 
     def generate_splash(self):
-        if self.egg_roll == 666:
+        if self.window.egg_roll == Eggs.TRICKY:
             # it's tricky
             self.splash_text = ""
             self.splash_label = arcade.Text("CLOWN KILLS YOU",
@@ -132,9 +132,6 @@ class TitleView(DigiView):
                     self.splash_index += 1
                     self.splash_index %= len(self.splashes)
                     self.splash_text = self.splashes[self.splash_index]
-                case arcade.key.T:
-                    self.egg_roll = 666 if self.egg_roll != 666 else 0
-                    self.generate_splash()
                 case arcade.key.KEY_0:
                     self.window.theme_song.seek(3)
                     self.setup()
@@ -160,7 +157,7 @@ class TitleView(DigiView):
         self.logo.scale = bounce(n, m, bpm, self.window.time)
 
         # Splash text typewriter effect
-        if self.egg_roll == 666:
+        if self.window.egg_roll == Eggs.TRICKY:
             self.splash_label.rotation = (random.random() * 10) - 5
         else:
             self.splash_label.rotation = 0
