@@ -103,3 +103,7 @@ def pt_to_px(pt: int) -> int:
 
 def px_to_pt(px: int) -> int:
     return round(px // (4 / 3))
+
+
+def snap(n: float, increments: int) -> float:
+    return round(increments * n) / increments

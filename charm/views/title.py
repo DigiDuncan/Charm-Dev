@@ -7,7 +7,7 @@ import imgui
 
 import charm.data.audio
 import charm.data.images
-from charm.lib.anim import bounce, ease_circout, ease_linear, ease_quadinout
+from charm.lib.anim import ease_expoout, ease_linear, ease_quadinout
 from charm.lib.bpmanim import BPMAnimator
 from charm.lib.charm import CharmColors, move_gum_wrapper
 from charm.lib.digiview import DigiView
@@ -37,7 +37,7 @@ class TitleView(DigiView):
         self.window.theme_song.seek(self.local_time + 3)
 
         self.bpm_events = [BPMChangeEvent(0, 120), BPMChangeEvent(3, 220)]
-        self.beat_animator = BPMAnimator(self.bpm_events, ease_quadinout)
+        self.beat_animator = BPMAnimator(self.bpm_events, ease_expoout)
 
         self.dumb_fix_for_logo_pos = False
 

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import math
 from typing import Callable
 
-from charm.lib.utils import clamp
+from charm.lib.utils import clamp, snap
 
 EasingFunction = Callable[[float, float, float, float, float], float]
 
@@ -49,6 +49,7 @@ def ease_linear(minimum: float, maximum: float, start: float, end: float, x: flo
     x = find_percent(start, end, x)
     return lerp(minimum, maximum, x)
 
+map_range = ease_linear
 
 def ease_quadinout(minimum: float, maximum: float, start: float, end: float, x: float) -> float:
     """https://easings.net/#easeInOutQuad"""
@@ -71,4 +72,17 @@ def ease_circout(minimum: float, maximum: float, start: float, end: float, x: fl
     """https://easings.net/#easeOutCirc"""
     x = find_percent(start, end, x)
     zo = math.sqrt(1 - math.pow(x - 1, 2))
+    return lerp(minimum, maximum, zo)
+
+
+def ease_expoout(minimum: float, maximum: float, start: float, end: float, x: float) -> float:
+    x = find_percent(start, end, x)
+    zo = 1 - math.pow(2, -10 * x)
+    return lerp(minimum, maximum, zo)
+
+
+def ease_snap(minimum: float, maximum: float, start: float, end: float, x: float) -> float:
+    x = find_percent(start, end, x)
+    zo = snap(x, 1)
+    print(zo)
     return lerp(minimum, maximum, zo)
