@@ -3,7 +3,7 @@ import logging
 import random
 import statistics
 import typing
-from typing import Optional
+from typing import Optional, TypedDict
 
 import arcade
 import pyglet
@@ -27,6 +27,8 @@ if typing.TYPE_CHECKING:
 class Eggs:
     TRICKY = 666
 
+class DebugSettings(TypedDict):
+    show_fps: bool
 
 class DigiWindow(arcade.Window):
     def __init__(self, size: tuple[int, int], title: str, fps_cap: int, initial_view: "DigiView"):
@@ -102,7 +104,7 @@ class DigiWindow(arcade.Window):
         imgui.get_io().fonts.get_tex_data_as_rgba32()
         self.impl = create_renderer(self)
         self.fps_list = deque()
-        self.debug_settings = {
+        self.debug_settings: DebugSettings = {
             "show_fps": False
         }
 
