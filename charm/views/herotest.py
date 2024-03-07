@@ -5,7 +5,7 @@ from pyglet.graphics import Batch
 import imgui
 
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
-from charm.lib.digiview import DigiView, shows_errors
+from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.gamemodes.hero import HeroEngine, HeroHighway, HeroSong, SectionEvent
 from charm.lib.keymap import get_keymap
 from charm.lib.oggsound import OGGSound
@@ -59,6 +59,7 @@ class HeroTestView(DigiView):
         self.song = arcade.play_sound(self._song, self.volume, loop=False)
 
     @shows_errors
+    @ignore_imgui
     def on_key_press(self, symbol: int, modifiers: int):
         if imgui.is_window_hovered(imgui.HOVERED_ANY_WINDOW):
             return

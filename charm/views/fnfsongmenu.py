@@ -3,14 +3,13 @@ import math
 from pathlib import Path
 
 import arcade
-import imgui
 
 import charm.data.audio
 import charm.data.images
 from charm.lib.settings import settings
 from charm.lib.anim import ease_quartout
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
-from charm.lib.digiview import DigiView, shows_errors
+from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.generic.song import Song
 from charm.lib.gamemodes.fnf import FNFSong
 from charm.lib.keymap import get_keymap
@@ -96,9 +95,8 @@ class FNFSongMenuView(DigiView):
             self.static.update_animation(delta_time)
 
     @shows_errors
+    @ignore_imgui
     def on_key_press(self, symbol: int, modifiers: int):
-        if imgui.is_window_hovered(imgui.HOVERED_ANY_WINDOW):
-            return
         keymap = get_keymap()
         old_id = self.menu.selected_id
         match symbol:
@@ -123,16 +121,15 @@ class FNFSongMenuView(DigiView):
 
         return super().on_key_press(symbol, modifiers)
 
+    @shows_errors
+    @ignore_imgui
     def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int):
-        if imgui.is_window_hovered(imgui.HOVERED_ANY_WINDOW):
-            return
         self.menu.selected_id += int(scroll_y)
         arcade.play_sound(self.window.sounds["select"])
 
     @shows_errors
+    @ignore_imgui
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int):
-        if imgui.is_window_hovered(imgui.HOVERED_ANY_WINDOW):
-            return
         arcade.play_sound(self.window.sounds["valid"])
         songview = FNFSongView(self.menu.selected.song.path, back=self)
         songview.setup()

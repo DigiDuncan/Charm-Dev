@@ -2,10 +2,9 @@ import importlib.resources as pkg_resources
 import logging
 
 import arcade
-import imgui
 
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
-from charm.lib.digiview import DigiView
+from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.generic.results import Results, Heatmap
 from charm.lib import paths
 
@@ -25,6 +24,7 @@ class ResultsView(DigiView):
         self.volume = 1
         self.results = results
 
+    @shows_errors
     def setup(self):
         super().setup()
 
@@ -68,13 +68,14 @@ class ResultsView(DigiView):
         self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
         self.success = True
 
+    @shows_errors
     def on_show_view(self):
         self.window.theme_song.volume = 0
         self.song = arcade.play_sound(self._song, self.volume, loop=False)
 
+    @shows_errors
+    @ignore_imgui
     def on_key_press(self, symbol: int, modifiers: int):
-        if imgui.is_window_hovered(imgui.HOVERED_ANY_WINDOW):
-            return
         keymap = get_keymap()
         match symbol:
             case keymap.back | keymap.start:
@@ -85,11 +86,13 @@ class ResultsView(DigiView):
 
         return super().on_key_press(symbol, modifiers)
 
+    @shows_errors
     def on_update(self, delta_time):
         super().on_update(delta_time)
 
         move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
 
+    @shows_errors
     def on_draw(self):
         self.window.camera.use()
         self.clear()

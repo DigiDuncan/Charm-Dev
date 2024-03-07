@@ -8,12 +8,11 @@ import arcade
 from charm.lib.keymap import get_keymap
 import nindex
 import numpy as np
-import imgui
 
 import charm.data.audio
 from charm.lib.adobexml import sprite_from_adobe
 from charm.lib.anim import ease_linear, ease_quartout
-from charm.lib.digiview import DigiView, shows_errors
+from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.logsection import LogSection
 from charm.lib.gamemodes.four_key import FourKeyHighway
 from charm.lib.gamemodes.fnf import FNFEngine, FNFNote, FNFSong
@@ -148,6 +147,7 @@ class VisualizerView(DigiView):
 
             self.window.update_rp("Vs. Scott Cawthon (demo)")
 
+    @shows_errors
     def on_show(self):
         self.window.theme_song.volume = 0
         self.song = arcade.play_sound(self._song, 1, loop=False)
@@ -186,9 +186,8 @@ class VisualizerView(DigiView):
         self.highway.update(self.song.time)
 
     @shows_errors
+    @ignore_imgui
     def on_key_press(self, symbol: int, modifiers: int):
-        if imgui.is_window_hovered(imgui.HOVERED_ANY_WINDOW):
-            return
         keymap = get_keymap()
         match symbol:
             case keymap.back:

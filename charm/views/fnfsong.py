@@ -2,11 +2,10 @@ import logging
 from pathlib import Path
 
 import arcade
-import imgui
 
 from charm.lib import anim
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
-from charm.lib.digiview import DigiView, shows_errors
+from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.gamemodes.fnf import CameraFocusEvent, FNFEngine, FNFSong
 from charm.lib.gamemodes.four_key import FourKeyHighway, load_note_texture
 from charm.lib.keymap import get_keymap
@@ -187,9 +186,8 @@ class FNFSongView(DigiView):
                 self.engine.process_keystate()
 
     @shows_errors
+    @ignore_imgui
     def on_key_press(self, symbol: int, modifiers: int):
-        if imgui.is_window_hovered(imgui.HOVERED_ANY_WINDOW):
-            return
         keymap = get_keymap()
         match symbol:
             case keymap.back:

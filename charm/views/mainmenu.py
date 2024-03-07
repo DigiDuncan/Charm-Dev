@@ -1,9 +1,8 @@
 import arcade
-import imgui
 
 from charm.lib.anim import ease_quartout
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
-from charm.lib.digiview import DigiView, shows_errors
+from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.errors import TestError
 from charm.lib.keymap import get_keymap
 from charm.lib.settings import settings
@@ -54,6 +53,7 @@ class MainMenuView(DigiView):
         arcade.play_sound(self.window.sounds["valid"])
 
     @shows_errors
+    @ignore_imgui
     def on_key_press(self, symbol: int, modifiers: int):
         keymap = get_keymap()
         match symbol:
@@ -78,16 +78,15 @@ class MainMenuView(DigiView):
 
         return super().on_key_press(symbol, modifiers)
 
+    @shows_errors
+    @ignore_imgui
     def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int):
-        if imgui.is_window_hovered(imgui.HOVERED_ANY_WINDOW):
-            return
         self.menu.selected_id += int(scroll_y)
         arcade.play_sound(self.window.sounds["select"])
 
     @shows_errors
+    @ignore_imgui
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int):
-        if imgui.is_window_hovered(imgui.HOVERED_ANY_WINDOW):
-            return
         if button == arcade.MOUSE_BUTTON_LEFT:
             for item in self.menu.items:
                 if item.collides_with_point((x, y)):
@@ -99,6 +98,7 @@ class MainMenuView(DigiView):
             else:
                 self.menu.selected.jiggle_start = self.local_time
 
+    @shows_errors
     def on_resize(self, width: int, height: int):
         self.menu.recreate()
         return super().on_resize(width, height)

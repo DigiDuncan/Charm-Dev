@@ -6,7 +6,7 @@ import arcade
 from charm.lib import paths
 
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
-from charm.lib.digiview import DigiView, shows_errors
+from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.errors import NoChartsError
 from charm.lib.gamemodes.four_key import FourKeyEngine
 from charm.lib.gamemodes.taiko import TaikoHighway, TaikoSong
@@ -60,6 +60,7 @@ class TaikoSongView(DigiView):
         super().setup()
         self.success = True
 
+    @shows_errors
     def on_show_view(self):
         self.window.theme_song.volume = 0
         if self.success is False:
@@ -76,6 +77,7 @@ class TaikoSongView(DigiView):
         return (f"Time: {int(self.tracks.time // 60)}:{int(self.tracks.time % 60):02}")
 
     @shows_errors
+    @ignore_imgui
     def on_key_press(self, symbol: int, modifiers: int):
         keymap = get_keymap()
         match symbol:

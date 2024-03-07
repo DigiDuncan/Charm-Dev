@@ -5,6 +5,7 @@ import logging
 import traceback
 
 import arcade
+import imgui
 from arcade import View
 
 from charm.lib.anim import ease_linear
@@ -36,6 +37,15 @@ def shows_errors(fn):
             else:
                 logger.info(f"{e.title}: {e.show_message}")  # /shrug
             print(traceback.format_exc())
+    return wrapper
+
+def ignore_imgui(fn):
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        if imgui.is_window_hovered(imgui.HOVERED_ANY_WINDOW):
+            return
+        result = fn(*args, **kwargs)
+        return result
     return wrapper
 
 

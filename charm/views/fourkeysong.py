@@ -4,11 +4,10 @@ from pathlib import Path
 
 import arcade
 import ndjson
-import imgui
 
 from charm.lib.anim import ease_circout
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
-from charm.lib.digiview import DigiView, shows_errors
+from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.errors import NoChartsError
 from charm.lib.gamemodes.four_key import FourKeyHighway, FourKeyEngine, load_note_texture
 from charm.lib.gamemodes.sm import SMEngine, SMSong
@@ -117,9 +116,8 @@ class FourKeySongView(DigiView):
                 f"Streak: {self.engine.streak}")
 
     @shows_errors
+    @ignore_imgui
     def on_key_press(self, symbol: int, modifiers: int):
-        if imgui.is_window_hovered(imgui.HOVERED_ANY_WINDOW):
-            return
         keymap = get_keymap()
         match symbol:
             case keymap.back:

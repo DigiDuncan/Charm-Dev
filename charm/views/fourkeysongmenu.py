@@ -9,7 +9,7 @@ import charm.data.audio
 import charm.data.images
 from charm.lib.anim import ease_quartout
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
-from charm.lib.digiview import DigiView, shows_errors
+from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.gamemodes.sm import SMSong
 from charm.lib.generic.song import Song
 from charm.lib.keymap import get_keymap
@@ -86,6 +86,7 @@ class FourKeySongMenuView(DigiView):
             self.static.update_animation(delta_time)
 
     @shows_errors
+    @ignore_imgui
     def on_key_press(self, symbol: int, modifiers: int):
         keymap = get_keymap()
         old_id = self.menu.selected_id
@@ -111,11 +112,14 @@ class FourKeySongMenuView(DigiView):
 
         return super().on_key_press(symbol, modifiers)
 
+    @shows_errors
+    @ignore_imgui
     def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int):
         self.menu.selected_id += int(scroll_y)
         arcade.play_sound(self.window.sounds["select"])
 
     @shows_errors
+    @ignore_imgui
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int):
         arcade.play_sound(self.window.sounds["valid"])
         songview = FourKeySongView(self.menu.selected.song.path, back=self)

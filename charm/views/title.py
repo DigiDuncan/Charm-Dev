@@ -9,7 +9,7 @@ import charm.data.audio
 import charm.data.images
 from charm.lib.anim import ease_linear, ease_quadinout
 from charm.lib.charm import CharmColors, move_gum_wrapper
-from charm.lib.digiview import DigiView
+from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.digiwindow import Eggs
 from charm.lib.keymap import get_keymap
 from charm.lib.settings import settings
@@ -44,6 +44,7 @@ class TitleView(DigiView):
         self.welcome_label.position = (self.window.center_x, 6, 0)
         self.splash_label.position = (*self.window.center, 0)
 
+    @shows_errors
     def setup(self):
         self.hit_start = None
         self.local_time = 0
@@ -118,9 +119,9 @@ class TitleView(DigiView):
                                                          anchor_x='left', anchor_y='top',
                                                          color=CharmColors.PURPLE)
 
+    @shows_errors
+    @ignore_imgui
     def on_key_press(self, symbol: int, modifiers: int):
-        if imgui.is_window_hovered(imgui.HOVERED_ANY_WINDOW):
-            return
         keymap = get_keymap()
         match symbol:
             case keymap.start:
@@ -138,6 +139,8 @@ class TitleView(DigiView):
 
         return super().on_key_press(symbol, modifiers)
 
+    @shows_errors
+    @ignore_imgui
     def on_mouse_press(self, x: int, y: int, button: int, modifiers: int):
         if imgui.is_window_hovered(imgui.HOVERED_ANY_WINDOW):
             return
@@ -145,6 +148,7 @@ class TitleView(DigiView):
             self.hit_start = self.local_time
             arcade.play_sound(self.window.sounds["valid"])
 
+    @shows_errors
     def on_update(self, delta_time):
         self.local_time += delta_time
         self.window.beat_animator.update(self.window.theme_song.time)
@@ -177,6 +181,7 @@ class TitleView(DigiView):
                 self.main_menu_view.setup()
                 self.window.show_view(self.main_menu_view)
 
+    @shows_errors
     def on_draw(self):
         self.window.camera.use()
         self.clear()
