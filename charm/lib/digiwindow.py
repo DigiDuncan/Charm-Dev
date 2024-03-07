@@ -113,6 +113,13 @@ class DigiWindow(arcade.Window):
         self.time += delta_time
         self.update_rp()
 
+    def on_resize(self, width: int, height: int):
+        super().on_resize(width, height)
+        self.fps_label.position = (0, self.height, 0)
+        self.fps_shadow_label.position = (1, self.height - 1, 0)
+        self.more_info_label.position = (0, self.height - self.fps_label.content_height - 5, 0)
+        self.alpha_label.position = (self.width - 5, 5, 0)
+
     def update_rp(self, new_state: Optional[str] = None):
         if not self.rpc or not self.rpc_connected:
             return
