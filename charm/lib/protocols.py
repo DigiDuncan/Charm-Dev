@@ -1,22 +1,21 @@
-from abc import ABC, abstractmethod
+from typing import Protocol
 
-
-class Drawable(ABC):
+class Drawable(Protocol):
 
     @property
-    @abstractmethod
+    def position(self) -> tuple[float, float]:
+        ...
+
+    @property
     def center_x(self) -> float:
         ...
 
     @property
-    @abstractmethod
     def center_y(self) -> float:
         ...
 
-    @abstractmethod
     def update(self, delta_time: float) -> None:
         ...
 
-    @abstractmethod
     def draw(self) -> None:
         ...
