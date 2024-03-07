@@ -1,8 +1,10 @@
 from dataclasses import dataclass
 import math
+from typing import Callable
 
 from charm.lib.utils import clamp
 
+EasingFunction = Callable[[float, float, float, float, float], float]
 
 @dataclass
 class LerpData:

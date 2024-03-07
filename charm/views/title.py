@@ -7,10 +7,12 @@ import imgui
 
 import charm.data.audio
 import charm.data.images
-from charm.lib.anim import bounce, ease_linear, ease_quadinout
+from charm.lib.anim import bounce, ease_circout, ease_linear, ease_quadinout
+from charm.lib.bpmanim import BPMAnimator
 from charm.lib.charm import CharmColors, move_gum_wrapper
 from charm.lib.digiview import DigiView
 from charm.lib.digiwindow import Eggs
+from charm.lib.generic.song import BPMChangeEvent
 from charm.lib.keymap import get_keymap
 from charm.lib.settings import settings
 from charm.lib.utils import img_from_resource
@@ -33,6 +35,9 @@ class TitleView(DigiView):
             song = arcade.Sound(p)
             self.window.theme_song = arcade.play_sound(song, self.volume, loop=True)
         self.window.theme_song.seek(self.local_time + 3)
+
+        self.bpm_events = [BPMChangeEvent(0, 120), BPMChangeEvent(3, 220)]
+        self.beat_animator = BPMAnimator(self.bpm_events, ease_quadinout)
 
         self.dumb_fix_for_logo_pos = False
 
@@ -147,14 +152,12 @@ class TitleView(DigiView):
 
     def on_update(self, delta_time):
         self.local_time += delta_time
+        self.beat_animator.t = self.window.theme_song.time
 
         move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
 
         # Logo bounce
-        m = 0.325
-        bpm = 220
-        n = 0.3
-        self.logo.scale = bounce(n, m, bpm, self.window.time)
+        self.logo.scale = 0.3 + (self.beat_animator.factor * 0.025)
 
         # Splash text typewriter effect
         if self.window.egg_roll == Eggs.TRICKY:

@@ -1,6 +1,7 @@
+from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 import collections
 import importlib.resources as pkg_resources
 
@@ -10,6 +11,14 @@ import PIL.Image
 
 RGB = tuple[int, int, int]
 RGBA = tuple[int, int, int, int]
+
+@dataclass
+class ValueRange:
+    lo: int
+    hi: int
+
+
+NormalizedFloat = Annotated[float, ValueRange(0.0, 1.0)]
 
 
 def int_or_str(i: Any) -> int | str:
