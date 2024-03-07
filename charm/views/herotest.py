@@ -35,7 +35,7 @@ class HeroTestView(DigiView):
         self.chart = self.hero_song.get_chart("Expert", "Single")
         self.engine = HeroEngine(self.chart)
         self.highway = HeroHighway(self.chart, (0, 0), auto = False)
-        self.highway.x += self.window.width // 2 - self.highway.w // 2
+        self.highway.x += self.window.center_x - self.highway.w // 2
 
         self.text_batch = Batch()
 
@@ -48,7 +48,7 @@ class HeroTestView(DigiView):
 
         self.lyric_animator = None
         if self.hero_song.lyrics:
-            self.lyric_animator = LyricAnimator(self.window.width // 2, self.window.height - 100, self.hero_song.lyrics)
+            self.lyric_animator = LyricAnimator(self.window.center_x, self.window.height - 100, self.hero_song.lyrics)
             self.lyric_animator.prerender()
 
         # Generate "gum wrapper" background

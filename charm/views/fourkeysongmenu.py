@@ -65,7 +65,7 @@ class FourKeySongMenuView(DigiView):
             self.static.right = self.size[0] - self.album_art_buffer
             self.static.original_bottom = self.album_art.bottom = self.size[1] // 2
 
-        self.nothing_text = arcade.Text("No songs found!", self.window.width // 2, self.window.height // 2,
+        self.nothing_text = arcade.Text("No songs found!", *self.window.center,
                                         arcade.color.BLACK, 64, align = "center", anchor_x = "center", anchor_y = "center",
                                         font_name = "bananaslip plus")
 

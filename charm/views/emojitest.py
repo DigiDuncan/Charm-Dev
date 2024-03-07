@@ -19,7 +19,7 @@ class EmojiView(DigiView):
         super().setup()
 
         self.label = EmojiLabel("rainbow :rainbow:", anchor_x = 'center',
-                                x = self.window.width / 2, y = self.window.height / 2,
+                                x = self.window.center_x, y = self.window.center_y,
                                 color = arcade.color.BLACK, font_size = 48)
 
         # Generate "gum wrapper" background

@@ -104,6 +104,6 @@ class SongMenu:
 
     def draw(self):
         self.spritelist.draw()
-        arcade.draw_line(0, self.window.height / 2, self.window.width, self.window.height / 2, arcade.color.BLUE, 5)
+        arcade.draw_line(0, self.window.center_y, self.window.width, self.window.center_y, arcade.color.BLUE, 5)
         arcade.draw_line_strip(self.points, arcade.color.RED, 5)
         batch.draw()

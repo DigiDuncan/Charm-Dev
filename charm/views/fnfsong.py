@@ -157,12 +157,12 @@ class FNFSongView(DigiView):
         self.highway_1.pos = (self.window.width / 3 * 2, 0)
         self.highway_1.h = self.window.height
         self.highway_2.h = self.window.height
-        self.song_time_text.x = (self.window.width // 2)
-        self.score_text.x = (self.window.width // 2)
-        self.grade_text.x = (self.window.width // 2)
-        self.pause_text.x = (self.window.width // 2)
-        self.dead_text.x = (self.window.width // 2)
-        self.judgement_sprite.center_x = self.window.width / 2
+        self.song_time_text.x = (self.window.center_x)
+        self.score_text.x = (self.window.center_x)
+        self.grade_text.x = (self.window.center_x)
+        self.pause_text.x = (self.window.center_x)
+        self.dead_text.x = (self.window.center_x)
+        self.judgement_sprite.center_x = self.window.center_x
         self.judgement_sprite.center_y = self.window.height / 4
 
     def on_show(self):
@@ -288,7 +288,7 @@ class FNFSongView(DigiView):
     def get_spotlight_position(self, song_time: float):
         focus_pos = {
             1: 0,
-            0: self.window.width // 2
+            0: self.window.center_x
         }
         cameraevents = [e for e in self.camera_events if e.time < self.tracks.time + 0.25]
         if cameraevents:
@@ -314,11 +314,11 @@ class FNFSongView(DigiView):
 
     def spotlight_draw(self):
         arcade.draw_lrbt_rectangle_filled(
-            self.spotlight_position - self.window.width / 2, self.spotlight_position, 0, self.window.height,
+            self.spotlight_position - self.window.center_x, self.spotlight_position, 0, self.window.height,
             arcade.color.BLACK[:3] + (127,)
         )
         arcade.draw_lrbt_rectangle_filled(
-            self.spotlight_position + self.window.width / 2, self.spotlight_position + self.window.width, 0, self.window.height,
+            self.spotlight_position + self.window.center_x, self.spotlight_position + self.window.width, 0, self.window.height,
             arcade.color.BLACK[:3] + (127,)
         )
 

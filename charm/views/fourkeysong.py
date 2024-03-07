@@ -60,14 +60,14 @@ class FourKeySongView(DigiView):
             self.highway = FourKeyHighway(self.chart, self.engine, (0, 0))
 
         self.text = arcade.Text("[LOADING]", -5, self.window.height - 5, color = arcade.color.BLACK, font_size = 24, align = "right", anchor_y="top", font_name = "bananaslip plus", width = self.window.width, multiline = True)
-        self.countdown_text = arcade.Text("0", self.window.width / 2, self.window.height / 2, arcade.color.BLACK, 72, align="center", anchor_x="center", anchor_y="center", font_name = "bananaslip plus", width = 100)
+        self.countdown_text = arcade.Text("0", *self.window.center, arcade.color.BLACK, 72, align="center", anchor_x="center", anchor_y="center", font_name = "bananaslip plus", width = 100)
 
         with LogSection(logger, "loading judgements"):
             judgement_textures: list[arcade.Texture] = [j.get_texture() for j in self.engine.judgements]
             self.judgement_sprite = arcade.Sprite(judgement_textures[0])
             self.judgement_sprite.textures = judgement_textures
             self.judgement_sprite.scale = (self.highway.w * 0.8) / self.judgement_sprite.width
-            self.judgement_sprite.center_x = self.window.width / 2
+            self.judgement_sprite.center_x = self.window.center_x
             self.judgement_sprite.center_y = self.window.height / 4
             self.judgement_jump_pos = self.judgement_sprite.center_y + 25
             self.judgement_land_pos = self.judgement_sprite.center_y
@@ -160,12 +160,12 @@ class FourKeySongView(DigiView):
 
     def calculate_positions(self):
         self.highway.pos = (0, 0)
-        self.highway.x += self.window.width // 2 - self.highway.w // 2  # center the highway
+        self.highway.x += self.window.center_x - self.highway.w // 2  # center the highway
         self.highway.hit_window_top = self.highway.note_y(-self.engine.judgements[-2].seconds)
         self.highway.hit_window_bottom = self.highway.note_y(self.engine.judgements[-2].seconds)
         self.text.position = (-5, self.window.height - 5)
-        self.countdown_text.position = (self.window.width / 2, self.window.height / 2)
-        self.judgement_sprite.center_x = self.window.width / 2
+        self.countdown_text.position = self.window.center
+        self.judgement_sprite.center_x = self.window.center_x
         self.judgement_sprite.center_y = self.window.height / 4
         return super().calculate_positions()
 

@@ -45,9 +45,9 @@ class TitleView(DigiView):
         self.logo.center_x = self.size[0] // 2
         self.logo.bottom = self.size[1] // 2
 
-        self.press_label.position = (self.window.width // 2, self.window.height // 4, 0)
-        self.welcome_label.position = (self.window.width // 2, 6, 0)
-        self.splash_label.position = (self.window.width // 2, self.window.height // 2, 0)
+        self.press_label.position = (self.window.center_x, self.window.center_y / 2, 0)
+        self.welcome_label.position = (self.window.center_x, 6, 0)
+        self.splash_label.position = (*self.window.center, 0)
 
     def setup(self):
         self.hit_start = None
@@ -108,8 +108,8 @@ class TitleView(DigiView):
             self.splash_label = arcade.Text("CLOWN KILLS YOU",
                                             font_name='Impact',
                                             font_size=48,
-                                            x=self.window.width // 2 + 100,
-                                            y=self.window.height // 2,
+                                            x=self.window.center_x + 100,
+                                            y=self.window.center_y,
                                             anchor_x='center', anchor_y='top',
                                             color=arcade.color.RED)
         else:
@@ -118,8 +118,8 @@ class TitleView(DigiView):
             self.splash_label = arcade.pyglet.text.Label(self.splash_text,
                                                          font_name='bananaslip plus',
                                                          font_size=24,
-                                                         x=self.window.width // 2,
-                                                         y=self.window.height // 2,
+                                                         x=self.window.center_x,
+                                                         y=self.window.center_y,
                                                          anchor_x='left', anchor_y='top',
                                                          color=CharmColors.PURPLE)
 

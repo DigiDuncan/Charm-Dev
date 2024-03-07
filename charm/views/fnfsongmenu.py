@@ -70,7 +70,7 @@ class FNFSongMenuView(DigiView):
                                       font_size = 48, font_name = "bananaslip plus", anchor_x = "center", anchor_y = "top",
                                       align = "center")
 
-        self.nothing_text = arcade.Text("No songs found!", self.window.width // 2, self.window.height // 2,
+        self.nothing_text = arcade.Text("No songs found!", *self.window.center,
                                         arcade.color.BLACK, 64, align = "center", anchor_x = "center", anchor_y = "center",
                                         font_name = "bananaslip plus")
 
