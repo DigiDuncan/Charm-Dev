@@ -9,14 +9,19 @@ class BPMAnimator:
     def __init__(self, events: list[BPMChangeEvent], func: Optional[EasingFunction] = None, t = 0.0) -> None:
         self.func = func if func else ease_linear
         self.t = t
+        self._t_offset = 0
 
         self.events_by_time = Index(events, "time")
 
-    def update(self, delta_time: float):
-        self.t += delta_time
+    def update(self, *, time: float = None):
+        old_bpm = self.current_bpm
+        self.t = time
+        if self.current_bpm != old_bpm:
+            self._t_offset = self.t
 
     def reset(self, events: list[BPMChangeEvent]):
         self.t = 0
+        self._t_offset = 0
         self.events_by_time = Index(events, "time")
 
     @property
@@ -26,7 +31,7 @@ class BPMAnimator:
     @property
     def magnitude(self) -> NormalizedFloat:
         """https://www.desmos.com/calculator/jwnfdhtsny"""
-        return abs(((self.t % (60 / self.current_bpm)) * (self.current_bpm / 60)) - 0.5) * 2
+        return abs(((self.current_bpm * (self.t - self._t_offset)) / 60 % 1) - 0.5) * 2
 
     @property
     def factor(self) -> NormalizedFloat:

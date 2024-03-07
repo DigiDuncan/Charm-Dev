@@ -49,7 +49,9 @@ def ease_linear(minimum: float, maximum: float, start: float, end: float, x: flo
     x = find_percent(start, end, x)
     return lerp(minimum, maximum, x)
 
+
 map_range = ease_linear
+
 
 def ease_quadinout(minimum: float, maximum: float, start: float, end: float, x: float) -> float:
     """https://easings.net/#easeInOutQuad"""
