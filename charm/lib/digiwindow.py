@@ -12,6 +12,9 @@ import imgui
 from imgui.integrations.pyglet import create_renderer
 
 from charm.lib import debug_menu
+from charm.lib.anim import ease_expoout
+from charm.lib.bpmanim import BPMAnimator
+from charm.lib.generic.song import BPMChangeEvent
 
 logger = logging.getLogger("charm")
 
@@ -38,6 +41,9 @@ class DigiWindow(arcade.Window):
         self.debug = False
         self.sounds: dict[str, arcade.Sound] = {}
         self.theme_song: Optional[pyglet.media.Player] = None
+
+        self.bpm_events = [BPMChangeEvent(0, 120), BPMChangeEvent(3, 220)]
+        self.beat_animator = BPMAnimator(self.bpm_events, ease_expoout)
 
         # Discord RP
         try:

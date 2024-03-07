@@ -321,12 +321,9 @@ def draw(window: "DigiWindow"):
                     imgui.text("Info")
                     imgui.text(f"Current Resolution: {window.size}")
                     imgui.text(f"Egg Roll: {window.egg_roll}")
-                    imgui.same_line()
-                    # THIS CAUSES THE WEIRDEST ERROR
-                    # egg_changed, egg = imgui.slider_int("", window.egg_roll, 1, 1000)
-                    # if egg_changed:
-                    #     window.egg_roll = egg
+                    imgui.text(f"Current BPM: {window.beat_animator.current_bpm}")
                     imgui.text(f"Local Time: {window.current_view.local_time:.3f}")
+                    imgui.text(f"Song Time: {window.theme_song.time:.3f}")
                     # FPS Graph
                     imgui.plot_lines(
                         label="FPS",
