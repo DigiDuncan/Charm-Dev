@@ -135,3 +135,8 @@ class KeyUnrecognizedError(CharmException):
 class ActionNotInSetError(CharmException):
     def __init__(self, action: str, *args: object):
         super().__init__("Action not in set!", f"Action {action} not in set!", "error", *args)
+
+
+class ScoreDBVersionMismatchError(CharmException):
+    def __init__(self, version: str, correct_version: str, *args: object):
+        super().__init__("Score DB version mismatch!", f"Version {version} mismatched with correct version {correct_version}!", "error", *args)
