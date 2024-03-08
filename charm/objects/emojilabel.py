@@ -137,7 +137,7 @@ class FormattedLabel(DocumentLabel):
 
         """
         doc = FormattedDocument(text)
-        super().__init__(doc, x, y, z, width, height, anchor_x, anchor_y, multiline, dpi, batch, group, rotation)
+        super().__init__(doc, x, y, z, width, height, anchor_x, anchor_y, rotation, multiline, dpi, batch, group)
 
         self.document.set_style(0, len(self.document.text), {
             'font_name': font_name,
@@ -165,5 +165,6 @@ class EmojiLabel(FormattedLabel):
         doc: AbstractDocument = self.document
         for pos, i in inserts:
             doc.insert_element(pos, i)
+            logger.debug(f"Inserted element {i} at {pos}")
 
         self.document = doc

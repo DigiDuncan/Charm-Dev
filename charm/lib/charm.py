@@ -11,7 +11,7 @@ from charm.lib.utils import img_from_resource
 
 
 class CharmColors:
-    GREEN = (0x95, 0xdf, 0xaa, 0xff)         # #95dfaa
+    GREEN = (0x95, 0xdf, 0xaa, 0xff)         # #95dfaa  CHARM_GREEN = Color(158, 223, 170, 255)
     PINK = (0xe6, 0x8e, 0xbe, 0xff)          # #e68ebe
     PURPLE = (0x9c, 0x84, 0xd9, 0xff)        # #9c84d9
     FADED_GREEN = (0xb3, 0xfd, 0xc8, 0xff)   # #b3fdc8
