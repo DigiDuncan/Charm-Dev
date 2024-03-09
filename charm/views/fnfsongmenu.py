@@ -14,6 +14,7 @@ from charm.lib.generic.song import Song
 from charm.lib.gamemodes.fnf import FNFSong
 from charm.lib.keymap import get_keymap
 from charm.lib.paths import songspath
+from charm.objects.gif import GIF
 from charm.objects.songmenu import SongMenu
 from charm.views.fnfsong import FNFSongView
 
@@ -60,8 +61,8 @@ class FNFSongMenuView(DigiView):
             self.album_art = arcade.Sprite(self.menu.selected.album_art)
             self.album_art.right = self.size[0] - self.album_art_buffer
             self.album_art.original_bottom = self.album_art.bottom = self.size[1] // 2
-            with pkg_resources.path(charm.data.images, "static.gif") as p:
-                self.static = arcade.load_animated_gif(p)
+            with pkg_resources.path(charm.data.images, "static.png") as p:
+                self.static = GIF(p, 2, 5, 10, 30)
             self.static.right = self.size[0] - self.album_art_buffer
             self.static.original_bottom = self.album_art.bottom = self.size[1] // 2
 
