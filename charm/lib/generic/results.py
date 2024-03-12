@@ -64,6 +64,8 @@ class Heatmap(arcade.Sprite):
                     continue
                 ms = round(t * 1000)
                 hits[ms] += 1
+            if not hits:
+                hits = {0: 1}
 
             max_hits = max(hits.values())
             avg_ms = sum([k * v for k, v in hits.items()]) / sum(hits.values())
