@@ -23,7 +23,6 @@ class GIF(TextureAnimationSprite):
             column = sprite_no % cols
             start_x = sprite_width * column
             start_y = sprite_height * row
-            print(sprite_no, row, column, start_x, start_y)
             image = source_image.crop(
                 (start_x, start_y, start_x + sprite_width, start_y + sprite_height)
             )
