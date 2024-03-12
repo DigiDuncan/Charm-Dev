@@ -172,13 +172,12 @@ class DigiWindow(arcade.Window):
             self.fps_list.popleft()
 
         # Labels
-        with self.ctx.pyglet_rendering():
-            if self.debug_settings["show_fps"] or self.debug:
-                self.fps_shadow_label.draw()
-                self.fps_label.draw()
-            if self.debug:
-                self.more_info_label.draw()
-            self.alpha_label.draw()
+        if self.debug_settings["show_fps"] or self.debug:
+            self.fps_shadow_label.draw()
+            self.fps_label.draw()
+        if self.debug:
+            self.more_info_label.draw()
+        self.alpha_label.draw()
 
         # Debug menu
         if self.debug:

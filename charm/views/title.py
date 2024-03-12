@@ -206,14 +206,13 @@ class TitleView(DigiView):
 
         # Logo and text
         self.main_sprites.draw()
-        with self.window.ctx.pyglet_rendering():
-            self.splash_label.draw()
-            self.song_label.draw()
-            if self.hit_start is None:
-                if int(self.local_time) % 2:
-                    self.press_label.draw()
-            else:
-                if int(self.local_time * 8) % 2:
-                    self.press_label.draw()
+        self.splash_label.draw()
+        self.song_label.draw()
+        if self.hit_start is None:
+            if int(self.local_time) % 2:
+                self.press_label.draw()
+        else:
+            if int(self.local_time * 8) % 2:
+                self.press_label.draw()
 
         super().on_draw()
