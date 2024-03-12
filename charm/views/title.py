@@ -13,7 +13,7 @@ from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.digiwindow import Eggs
 from charm.lib.keymap import get_keymap
 from charm.lib.settings import settings
-from charm.lib.utils import img_from_resource
+from charm.lib.utils import img_from_resource, typewriter
 from charm.views.mainmenu import MainMenuView
 
 FADE_DELAY = 1
@@ -163,7 +163,7 @@ class TitleView(DigiView):
             self.splash_label.rotation = (random.random() * 10) - 5
         else:
             self.splash_label.rotation = 0
-            self.splash_label.text = self.splash_text[:max(0, int((self.local_time - 3) * 20))]
+            self.splash_label.text = typewriter(self.splash_text, 20, self.local_time, 3)
 
         # Song name in and out
         if 3 <= self.local_time <= 5:  # constraining the time when we update the position should decrease lag,

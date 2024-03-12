@@ -107,3 +107,9 @@ def px_to_pt(px: int) -> int:
 
 def snap(n: float, increments: int) -> float:
     return round(increments * n) / increments
+
+
+def typewriter(s: str, cps: float, t: float, begin: float = 0) -> str:
+    t = t - begin
+    chars = int(max(0, (t * cps)))
+    return s[:chars]
