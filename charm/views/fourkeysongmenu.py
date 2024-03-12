@@ -61,7 +61,7 @@ class FourKeySongMenuView(DigiView):
             self.album_art.right = self.size[0] - self.album_art_buffer
             self.album_art.original_bottom = self.album_art.bottom = self.size[1] // 2
 
-            with pkg_resources.path(charm.data.images, "static.gif") as p:
+            with pkg_resources.path(charm.data.images, "static.png") as p:
                 self.static = GIF(p, 2, 5, 10, 30)
             self.static.right = self.size[0] - self.album_art_buffer
             self.static.original_bottom = self.album_art.bottom = self.size[1] // 2
