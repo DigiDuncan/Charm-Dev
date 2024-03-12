@@ -17,18 +17,26 @@ class TrackCollection:
 
     @property
     def time(self) -> float:
+        if not self.tracks:
+            return 0.0
         return self.tracks[0].time
 
     @property
     def duration(self) -> float:
+        if not self.tracks:
+            return 0.0
         return max([t.source.duration if t.source else 0 for t in self.tracks])
 
     @property
     def playing(self) -> bool:
+        if not self.tracks:
+            return False
         return self.tracks[0].playing
 
     @property
     def volume(self) -> float:
+        if not self.tracks:
+            return 1.0
         return self.tracks[0].volume
 
     @volume.setter
