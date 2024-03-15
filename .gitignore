@@ -44,3 +44,7 @@ charm/test.py
 charm.dist.zip
 
 imgui.ini
+
+# Pycharm
+
+.idea/
