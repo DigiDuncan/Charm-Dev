@@ -23,6 +23,12 @@ class Judgement:
     def __lt__(self, other):
         return self.ms < other.ms
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} {self.name}: {self.ms}ms>"
+
+    def __str__(self) -> str:
+        return self.__repr__()
+
 
 @dataclass
 class EngineEvent:
@@ -30,6 +36,12 @@ class EngineEvent:
 
     def __lt__(self, other):
         self.time < other.time
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} t:{self.time}>"
+
+    def __str__(self) -> str:
+        return self.__repr__()
 
 
 @dataclass
@@ -39,6 +51,12 @@ class DigitalKeyEvent(EngineEvent):
 
     def __lt__(self, other):
         (self.time, self.key) < (other.time, other.key)
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} key:{self.key}{'⬆️' if self.new_state == 'up' else '⬇️'}>"
+
+    def __str__(self) -> str:
+        return self.__repr__()
 
 
 class Engine:

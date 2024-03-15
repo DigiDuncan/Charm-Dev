@@ -139,7 +139,7 @@ def load_note_texture(note_type, note_lane, height, value = 0, fnf = False):
     return arcade.Texture(image)
 
 
-@dataclass
+@dataclass(repr = False)
 class FourKeyNote(Note):
     parent: FourKeyNote = None
     sprite: "FourKeyNoteSprite" | "FourKeyLongNoteSprite" = None

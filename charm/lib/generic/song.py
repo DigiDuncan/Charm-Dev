@@ -41,6 +41,12 @@ class Metadata:
         else:
             return val
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} {self.hash} ({self.title}:{self.artist}:{self.album})>"
+
+    def __str__(self) -> str:
+        return self.__repr__()
+
 
 @dataclass
 @total_ordering
@@ -96,6 +102,13 @@ class Note:
                 return False
             return self.time < other.time
 
+    def __repr__(self) -> str:
+        end = f"-{self.end:.3f}"
+        return f"<{self.__class__.__name__} L{self.lane}|T'{self.type}'@{self.time:.3f}{end if self.length else ''}>"
+
+    def __str__(self) -> str:
+        return self.__repr__()
+
 
 @dataclass
 @total_ordering
@@ -107,6 +120,12 @@ class Event:
 
     def __lt__(self, other) -> bool:
         return self.time < other.time
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}@{self.time:.3f}>"
+
+    def __str__(self) -> str:
+        return self.__repr__()
 
 
 @dataclass
@@ -124,6 +143,12 @@ class BPMChangeEvent(Event):
     @beat_length.setter
     def beat_length(self, v: Seconds):
         self.new_bpm = (1 / v) * 60
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}@{self.time:.3f} bpm:{self.new_bpm}>"
+
+    def __str__(self) -> str:
+        return self.__repr__()
 
 
 class Chart:

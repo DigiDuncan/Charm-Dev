@@ -86,8 +86,14 @@ class NoteColor:
 class CameraFocusEvent(Event):
     focused_player: int
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}@{self.time:.3f} p:{self.focused_player}>"
 
-@dataclass
+    def __str__(self) -> str:
+        return self.__repr__()
+
+
+@dataclass(repr = False)
 class FNFNote(FourKeyNote):
     parent: FNFNote = None
     sprite: FourKeyNoteSprite | FourKeyLongNoteSprite = None
@@ -380,6 +386,7 @@ class FNFEngine(FourKeyEngine):
                 note.parent.sprite.dead = False
             elif note.missed:
                 self.hp -= 0.05
+                logger.debug(f"HP lost (note missed, {note}), new HP {self.hp}")
                 self.last_note_missed = True
                 note.parent.sprite.dead = True
             return
@@ -394,6 +401,7 @@ class FNFEngine(FourKeyEngine):
         if note.type == "bomb":
             if note.hit:
                 self.hp -= self.bomb_hp
+                logger.debug(f"HP lost (bomb hit, {note}), new HP {self.hp}")
             return
 
         # Score the note
@@ -406,6 +414,8 @@ class FNFEngine(FourKeyEngine):
             self.hp += self.heal_hp
         else:
             self.hp += j.hp_change
+            if j.hp_change < 0:
+                logger.debug(f"HP lost (judgement {j} hit, {note}), new HP {self.hp}")
 
         # Judge the player
         rt = note.hit_time - note.time
