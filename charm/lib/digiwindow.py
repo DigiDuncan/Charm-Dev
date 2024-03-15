@@ -158,7 +158,7 @@ class DigiWindow(arcade.Window):
         self.overlay_camera.use()
 
         # FPS Counter
-        if self.fps_checks % (self.fps_cap / 8) == 0:
+        if self.fps_checks % 30 == 0:
             average = statistics.mean(self.fps_averages)
             self.fps_label.color = arcade.color.BLACK if average >= 120 else arcade.color.RED
             self.fps_label.text = self.fps_shadow_label.text = f"{average:.1f} FPS"

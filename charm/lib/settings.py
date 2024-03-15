@@ -31,7 +31,7 @@ settings_dict = {
         "height": 720
 
     },
-    "fps": 240
+    "fps": 10000
 }
 
 settings = Settings(settings_dict)
