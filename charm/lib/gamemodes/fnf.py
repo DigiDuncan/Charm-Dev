@@ -191,7 +191,7 @@ class FNFSong(Song):
             chart.spectator = songdata.get("player3", "gf")
             chart.stage = songdata.get("stage", "stage")
 
-        sections = songdata["song"]
+        sections = songdata["song"]  # Unused
 
         last_bpm = bpm
         last_focus: Optional[int] = None

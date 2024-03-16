@@ -349,7 +349,7 @@ class FourKeyEngine(Engine):
         mapping = [fk.key1, fk.key2, fk.key3, fk.key4]
         judgements = [
             #               ("name",           "key"             ms, score, acc, hp=0)
-            FourKeyJudgement("Super Charming", "supercharming",  10, 1000, 1,   0.04),
+            FourKeyJudgement("Super Charming", "supercharming",  10, 1000, 1.0, 0.04),
             FourKeyJudgement("Charming",       "charming",       25, 1000, 0.9, 0.04),
             FourKeyJudgement("Excellent",      "excellent",      35, 800,  0.8, 0.03),
             FourKeyJudgement("Great",          "great",          45, 600,  0.7, 0.02),
@@ -391,10 +391,11 @@ class FourKeyEngine(Engine):
            or self.chart_time > self.chart.notes[-1].time + self.hit_window):
             return
         for n in range(len(key_states)):
-            if key_states[n] is True and last_state[n] is False:
+            curr, last = key_states[n], last_state[n]
+            if curr is True and last is False:
                 e = DigitalKeyEvent(self.chart_time, n, "down")
                 self.current_events.append(e)
-            elif key_states[n] is False and last_state[n] is True:
+            elif curr is False and last is True:
                 e = DigitalKeyEvent(self.chart_time, n, "up")
                 self.current_events.append(e)
         self.key_state = key_states
@@ -462,7 +463,7 @@ class FourKeyEngine(Engine):
         self.weighted_hit_notes += j.accuracy_weight
 
         # Judge the player
-        rt = note.hit_time - note.time if note.hit_time is not math.inf else math.inf
+        rt = note.hit_time - note.time
         self.latest_judgement = j
         self.latest_judgement_time = self.chart_time
         self.all_judgements.append((self.latest_judgement_time, rt, self.latest_judgement))

@@ -35,7 +35,7 @@ class EngineEvent:
     time: float
 
     def __lt__(self, other):
-        self.time < other.time
+        return self.time < other.time
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} t:{self.time}>"
@@ -50,7 +50,7 @@ class DigitalKeyEvent(EngineEvent):
     new_state: Literal["up", "down"]
 
     def __lt__(self, other):
-        (self.time, self.key) < (other.time, other.key)
+        return (self.time, self.key) < (other.time, other.key)
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} key:{self.key}{'⬆️' if self.new_state == 'up' else '⬇️'}>"

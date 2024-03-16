@@ -27,8 +27,10 @@ if typing.TYPE_CHECKING:
 class Eggs:
     TRICKY = 666
 
+
 class DebugSettings(TypedDict):
     show_fps: bool
+
 
 class DigiWindow(arcade.Window):
     def __init__(self, size: tuple[int, int], title: str, fps_cap: int, initial_view: "DigiView"):
