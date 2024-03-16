@@ -17,6 +17,7 @@ class ScoreJSON(TypedDict):
 
 @dataclass
 class Results:
+    """The stats about a users play on a chart."""
     chart: Chart
     hit_window: Seconds
     judgements: list[Judgement]
@@ -41,6 +42,7 @@ class Results:
 
 class Heatmap(arcade.Sprite):
     def __init__(self, judgements: list[Judgement], all_judgements: list[tuple[Seconds, Seconds, Judgement]], height: int = 75):
+        """A visual display of a users accuracy relative to perfect (0)."""
         self.judgements = judgements
         self.all_judgements = all_judgements
 

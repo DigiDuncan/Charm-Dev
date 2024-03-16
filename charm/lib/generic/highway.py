@@ -4,6 +4,7 @@ from charm.lib.generic.song import Chart
 
 class Highway:
     def __init__(self, chart: Chart, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5, downscroll = False):
+        """A time-based display of current and upcoming notes to be hit by the player."""
         self.chart = chart
         self.notes = self.chart.notes
 

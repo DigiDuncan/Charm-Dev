@@ -9,6 +9,7 @@ Key = int
 
 @dataclass
 class Judgement:
+    """A Judgement of a single note, basically how close a player got to being accurate with their hit."""
     name: str
     key: str
     ms: int  # maximum
@@ -32,6 +33,7 @@ class Judgement:
 
 @dataclass
 class EngineEvent:
+    """Any Event that happens at a time. Meant to be subclassed."""
     time: float
 
     def __lt__(self, other):
@@ -46,14 +48,19 @@ class EngineEvent:
 
 @dataclass
 class DigitalKeyEvent(EngineEvent):
+    """Any input event with a binary state."""
     key: int
     new_state: Literal["up", "down"]
+
+    @property
+    def down(self) -> bool:
+        return self.new_state == "down"
 
     def __lt__(self, other):
         return (self.time, self.key) < (other.time, other.key)
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} key:{self.key}{'⬆️' if self.new_state == 'up' else '⬇️'}>"
+        return f"<{self.__class__.__name__} key:{self.key}{'⬇️' if self.down else '⬆️'}>"
 
     def __str__(self) -> str:
         return self.__repr__()
@@ -61,6 +68,7 @@ class DigitalKeyEvent(EngineEvent):
 
 class Engine:
     def __init__(self, chart: Chart, mapping: list[Key], hit_window: Seconds, judgements: list[Judgement] = [], offset: Seconds = 0):
+        """The class that processes user inputs into score according to a Chart."""
         self.chart = chart
         self.mapping = mapping
         self.hit_window = hit_window
