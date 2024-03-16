@@ -410,9 +410,9 @@ class FNFEngine(FourKeyEngine):
         self.weighted_hit_notes += j.accuracy_weight
 
         # Give HP for hit note (heal notes give more)
-        if note.type == "heal":
+        if note.type == "heal" and note.hit:
             self.hp += self.heal_hp
-        else:
+        elif note.hit:
             self.hp += j.hp_change
             if j.hp_change < 0:
                 logger.debug(f"HP lost (judgement {j} hit, {note}), new HP {self.hp}")
