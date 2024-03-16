@@ -39,6 +39,9 @@ def bounce(n: float, m: float, bpm: float, x: float) -> float:
 # manipulate x to redefine the curve
 # lerp(min, max, x)
 
+# TODO: Just add all the ones from easings.net. It'll be helpful to have the around.
+# Might even be worth putting them in an "enum", EasingFunctions.
+
 
 def ease_linear(minimum: float, maximum: float, start: float, end: float, x: float) -> float:
     """* `minimum: float`: the value returned by f(`x`) = `start`, often a position
