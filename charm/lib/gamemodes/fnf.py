@@ -186,6 +186,8 @@ class FNFSong(Song):
         for chart in charts:
             chart.name = songdata["song"]
             chart.bpm = bpm
+            # These properties are only used for FNF visuals, which I don't support at the
+            # moment but might be useful metadata anyway.
             chart.player1 = songdata.get("player1", "bf")
             chart.player2 = songdata.get("player2", "dad")
             chart.spectator = songdata.get("player3", "gf")
@@ -226,6 +228,11 @@ class FNFSong(Song):
                 raise ChartPostReadParseError("Notes section missing length!")
 
             # Create a camera focus event like they should have in the first place
+            # mustHitSection indicates the "active player" is the real player (P1).
+            # All this really controls is the camera, (because despite the name you have
+            # to hit all the notes in all sections), but has the side effect of flipping
+            # what lane corrosponds to what player. I fix this by treating the chart's
+            # "player 0" to mean "the focused player".
             if section["mustHitSection"]:
                 focused, unfocused = 0, 1
             else:
@@ -237,6 +244,8 @@ class FNFSong(Song):
 
             # Lanemap: (player, lane, type)
             if fnf_overrides:
+                # This is done because some mods use "extra lanes" differents, so I have to provide
+                # a file that maps them to the right lane.
                 lanemap = [[lane[0], lane[1], getattr(NoteType, lane[2])] for lane in fnf_overrides["lanes"]]
             else:
                 lanemap: list[tuple[int, int, NoteType]] = [(0, 0, NoteType.NORMAL), (0, 1, NoteType.NORMAL), (0, 2, NoteType.NORMAL), (0, 3, NoteType.NORMAL),
@@ -266,12 +275,12 @@ class FNFSong(Song):
                 elif note_data[0] == 1:
                     note_player = unfocused
                 else:
-                    note_player = note_data[0]
+                    note_player = note_data[0]  # If the note_player isn't 0/1, this is going to break, realistically, but we want to know that.
                 chart_lane = note_data[1]
                 note_type = note_data[2]
 
                 thisnote = FNFNote(charts[note_player], pos, chart_lane, length, type = note_type)
-                thisnote.extra_data = extra
+                thisnote.extra_data = extra  # Append that data we don't know what to do with, in case one day we do
                 if thisnote.type in [NoteType.BOMB, NoteType.DEATH, NoteType.HEAL, NoteType.CAUTION]:
                     thisnote.length = 0  # why do these ever have length?
                 if thisnote.length < 0.001:
@@ -279,6 +288,9 @@ class FNFSong(Song):
                 charts[note_player].notes.append(thisnote)
 
                 # TODO: Fake sustains (change this?)
+                # We basically generate an invisible "sustain" note every 16th-beat. The original game does it
+                # but I wish we were doing something better than this, like just doing sustain calculation in-engine
+                # while a sustain is active.
                 if thisnote.length != 0:
                     sustainbeats = round(thisnote.length / seconds_per_sixteenth)
                     for i in range(sustainbeats):
@@ -343,11 +355,12 @@ class FNFEngine(FourKeyEngine):
             # Missed notes (current time is higher than max allowed time for note)
             if self.chart_time > note.time + self.hit_window:
                 note.missed = True
-                note.hit_time = math.inf  # how smart is this? :thinking:
+                note.hit_time = math.inf
                 self.score_note(note)
                 self.current_notes.remove(note)
             else:
                 if note.type == "sustain":
+                    # Sustain notes just require the right key is held down, and don't "use" an event.
                     if self.key_state[note.lane]:
                         note.hit = True
                         note.hit_time = note.time
@@ -363,7 +376,7 @@ class FNFEngine(FourKeyEngine):
                         try:
                             self.current_notes.remove(note)
                         except ValueError:
-                            logger.info("Sustain pickup failed!")
+                            logger.info("Sustain pickup failed!")  # I don't know why this happens still, but it does. Often.
                         self.current_events.remove(event)
                         break
 
