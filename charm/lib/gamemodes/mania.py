@@ -19,7 +19,7 @@ class ManiaSong(FourKeySong):
         added_bpm_events = False
 
         for p in chart_files:
-            raw_chart = RawOsuChart.parse(p)
+            raw_chart = RawOsuChart.parse(p)  # SO MUCH is hidden by this function
             chart = FourKeyChart(song, raw_chart.metadata.difficulty, None)
             if not added_bpm_events:
                 song.events.extend(raw_chart.timing_points)

@@ -334,7 +334,8 @@ class HeroChart(Chart):
             chord_distance = current_chord.tick - last_chord.tick
 
             hopo_cutoff = ticks_per_beat / (192 / 66)  # Why? Where does this number come from?
-                                                       # It's like 1/81 more than 1/3? Why?
+                                                       # It's like 1/81th more than 1/3? Why?
+                                                       # This value was scraped from Moonscraper so I trust it.
 
             if current_chord.frets == last_chord.frets:
                 # You can't have two HOPO chords of the same fretting.
@@ -386,7 +387,7 @@ class HeroSong(Song):
         super().__init__(path)
         self.indexes_by_tick: IndexDict = {}
         self.indexes_by_time: IndexDict = {}
-        self.resolution: int = 192
+        self.resolution: int = 192  # ticks/beat
         self.metadata = Metadata("Unknown Title")
 
     def get_metadata(self, folder: Path):
@@ -468,6 +469,8 @@ class HeroSong(Song):
                             metadata.genre = m.group(2)
                         # Skipping "MediaType"
                         # Skipping "Audio streams"
+                        case "Player2" | "MediaType":
+                            pass
                         case _:
                             logger.debug(f"Unrecognized .chart metadata {line!r}")
                 else:
@@ -557,8 +560,7 @@ class HeroSong(Song):
 
         # Finalize
         song = HeroSong(metadata.path)
-        for event in events:
-            song.events.append(event)
+        song.events.extend(events)
         song.events.sort()
         song.index()
         for chart in charts.values():
@@ -566,7 +568,7 @@ class HeroSong(Song):
             chart.finalize()
             song.charts.append(chart)
         song.calculate_beats()
-        song.events.sort()
+        song.events.sort()  # why is it like this
         song.process_lyrics()
         song.index()  # oh god help
         song.resolution = resolution
@@ -581,17 +583,18 @@ class HeroSong(Song):
         bpm_events.append(BPMChangeTickEvent(last_note.time, last_note.tick, bpm_events[-1].new_bpm))
         current_id = 0
         for current_bpm_event, next_bpm_event in zip(bpm_events[:-1], bpm_events[1:]):
-            cb = 0
+            current_beat = 0
             ts: TSEvent = [t for t in self.events_by_type(TSEvent) if t.time <= current_time][-1]
-            n, d = ts.numerator, ts.denominator
-            spb = (1 / (current_bpm_event.new_bpm / 60)) / d
+            ts_num, ts_denom = ts.numerator, ts.denominator
+            seconds_per_beat = (1 / (current_bpm_event.new_bpm / 60)) / ts_denom
             while current_time < next_bpm_event.time:
-                beats.append(BeatEvent(current_time, current_id, current_id, True if cb % n == 0 else False))
-                current_time += spb
-                cb += 1
+                beats.append(BeatEvent(current_time, current_id, current_id, True if current_beat % ts_num == 0 else False))
+                current_time += seconds_per_beat
+                current_beat += 1
         self.events.extend(beats)
 
     def process_lyrics(self):
+        """Takes a Song and generates a LyricAnimator-compatible list of LyricEvents."""
         end_time = None
         current_full_string = ""
         unprocessed_lyrics: list[LyricEvent] = []
@@ -630,7 +633,7 @@ class HeroSong(Song):
         self.lyrics = processsed_lyrics
 
     def index(self):
-        """Save indexes of important look-up events."""
+        """Save indexes of important look-up events. THIS IS SLOW."""
         self.indexes_by_tick["bpm"] = Index(self.events_by_type(BPMChangeTickEvent), "tick")
         self.indexes_by_tick["time_sig"] = Index(self.events_by_type(TSEvent), "tick")
         self.indexes_by_tick["section"] = Index(self.events_by_type(SectionEvent), "tick")
@@ -640,7 +643,7 @@ class HeroSong(Song):
         self.indexes_by_time["section"] = Index(self.events_by_type(SectionEvent), "time")
         self.indexes_by_time["beat"] = Index(self.events_by_type(BeatEvent), "time")
 
-
+# SKIN
 @cache
 def load_note_texture(note_type, note_lane, height):
     image_name = f"{note_type}-{note_lane + 1}"

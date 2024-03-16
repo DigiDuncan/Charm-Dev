@@ -108,6 +108,9 @@ def get_note_color_by_beat(beat: int) -> tuple[int, int, int]:
 @cache
 def load_note_texture(note_type, note_lane, height, value = 0, fnf = False):
     if value and note_type == NoteType.NORMAL:
+        # "Beat colors", which color a note based on where it lands in the beat.
+        # This is useful for desnely packed patterns, and some rhythm games rely
+        # on it for readability.
         image_name = f"gray-{note_lane + 1}"
         try:
             image = img_from_resource(fourkeyskin, image_name + ".png")
@@ -126,7 +129,7 @@ def load_note_texture(note_type, note_lane, height, value = 0, fnf = False):
     else:
         image_name = f"{note_type}-{note_lane + 1}"
         try:
-            if fnf:
+            if fnf:  # HACK: probably not a great way to do this!
                 image = img_from_resource(fnfskin, image_name + ".png")
             else:
                 image = img_from_resource(fourkeyskin, image_name + ".png")

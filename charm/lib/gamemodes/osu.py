@@ -399,6 +399,7 @@ class RawOsuChart:
                             logger.debug(f"Unknown Difficulty metadata '{m.group(2)} (Line {line_num})'.")
             elif current_header == "Events":
                 pass
+            # ## HERE BEGINS REGEX HELL ## #
             elif current_header == "TimingPoints":
                 if m := re.match(RE_TIMING_POINT, line):
                     uninherited = bool(int(m.group(7)))
@@ -491,5 +492,6 @@ class RawOsuChart:
         return chart
 
     def calculate_slider_length(self, slider: OsuSlider) -> Seconds:
+        """https://osu.ppy.sh/wiki/en/Client/File_formats/osu_%28file_format%29#sliders"""
         latest_timing_point = [t for t in self.timing_points if t.time <= slider.time][-1]
         return (slider.px_length / (self.difficulty.slider_multiplier * 100 * latest_timing_point.slider_velocity_multipler) * latest_timing_point.beat_length) * slider.slides

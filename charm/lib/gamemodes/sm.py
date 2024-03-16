@@ -38,6 +38,13 @@ class SMSong(FourKeySong):
 
         charts: dict[str, FourKeyChart] = {}
 
+        # THIS PARSER RELIES ON THE smfile LIBRARY (PROBABLY TOO MUCH)
+        # This means I *don't know how this works*
+        # The only reason SM long notes are scored right now is because smfile gives us a handy TimingEngine
+        # and this is great but breaks parity with every other system we have!
+        # Need to figure how to a) not use TimingEngine for SMEngine, and b) maybe not use this library at all
+        # for parsing? But it's so good...
+
         for c in sm.charts:
             c: SMChart | SSCChart = c
             chart = FourKeyChart(song, c.difficulty, None)
@@ -93,6 +100,7 @@ class SMSong(FourKeySong):
 
 
 class SMEngine(FourKeyEngine):
+    # See the comment in SMSong.parse for why this is hacky and bad.
     def score_sustains(self):
         timing_engine: TimingEngine = self.chart.song.timing_engine
         current_beat = timing_engine.beat_at(self.chart_time)

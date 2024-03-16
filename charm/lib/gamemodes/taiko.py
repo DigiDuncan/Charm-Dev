@@ -54,7 +54,7 @@ class TaikoSong(Song):
         added_bpm_events = False
 
         for p in chart_files:
-            raw_chart = RawOsuChart.parse(p)
+            raw_chart = RawOsuChart.parse(p)  # SO MUCH is hidden by this function
             chart = TaikoChart(song, raw_chart.metadata.difficulty, None)
             if not added_bpm_events:
                 song.events.extend(raw_chart.timing_points)
@@ -209,6 +209,7 @@ class TaikoHighway(Highway):
         self.highway_camera.update()
 
         if self.auto:
+            # This feels gross, but I don't know how else to do it.
             b = clamp(0, self.sprite_buckets.calc_bucket(self.song_time), len(self.sprite_buckets.buckets) - 1)
             for bucket in [self.sprite_buckets.buckets[b]] + [self.sprite_buckets.overbucket]:
                 for note_sprite in bucket.sprite_list:
@@ -248,6 +249,7 @@ class TaikoHighway(Highway):
         arcade.draw_circle_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size, self.color)
 
         if self.auto and self.last_note_type and self.frames_visible <= 6:
+            # The 6 there is really hardcoded and this function is probably very slow because it does a ton of arcade.draw* calls
             if self.last_note_type == NoteType.DON:
                 if self.last_note_big:
                     arcade.draw_circle_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size * 0.75, arcade.color.DEBIAN_RED)
