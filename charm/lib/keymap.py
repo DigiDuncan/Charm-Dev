@@ -60,7 +60,7 @@ class KeyMap:
         self.actions: list[Action] = [
             Action('start', [RETURN, ENTER], True, True, True),
             Action('back', [ESCAPE, BACKSPACE], True, True, True),
-            Action('debug', [GRAVE, KEY_7], False, True, True),
+            Action('debug', [GRAVE], False, True, True),
             Action('pause', [SPACE], True, False, True),
             Action('fullscreen', [F11], True, False, True),
             Action('mute', [M], True, False, True),

@@ -151,7 +151,6 @@ class TitleView(DigiView):
     @shows_errors
     def on_update(self, delta_time):
         self.local_time += delta_time
-        self.window.beat_animator.update(self.window.theme_song.time)
 
         move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
 

@@ -106,6 +106,7 @@ class DigiWindow(arcade.Window):
         imgui.get_io().fonts.get_tex_data_as_rgba32()
         self.impl = create_renderer(self)
         self.fps_list = deque()
+        self.beat_list = deque()
         self.debug_settings: DebugSettings = {
             "show_fps": False
         }
@@ -134,6 +135,7 @@ class DigiWindow(arcade.Window):
         self.delta_time = delta_time
         self.time += delta_time
         self.update_rp()
+        self.beat_animator.update(self.theme_song.time)
 
     def on_resize(self, width: int, height: int):
         super().on_resize(width, height)
@@ -173,6 +175,11 @@ class DigiWindow(arcade.Window):
         if len(self.fps_list) > 240:
             self.fps_list.popleft()
 
+        # Beat Graph
+        self.beat_list.append(self.beat_animator.factor)
+        if len(self.beat_list) > 240:
+            self.beat_list.popleft()
+
         # Labels
         if self.debug_settings["show_fps"] or self.debug:
             self.fps_shadow_label.draw()
@@ -187,3 +194,6 @@ class DigiWindow(arcade.Window):
 
         if _cam is not None:
             _cam.use()
+
+    def save_atlas(self):
+        self.ctx.default_atlas.save("atlas.png")

@@ -101,10 +101,6 @@ class DigiView(View):
             self.window.set_fullscreen(not self.window.fullscreen)
         elif symbol == keymap.mute:
             self.window.theme_song.volume = 0
-        if self.window.debug and modifiers & arcade.key.MOD_SHIFT:
-            match symbol:
-                case arcade.key.A:  # show atlas
-                    self.window.ctx.default_atlas.save("atlas.png")
         return super().on_key_press(symbol, modifiers)
 
     def on_update(self, delta_time: float):

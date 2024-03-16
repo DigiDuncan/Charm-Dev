@@ -299,6 +299,7 @@ class ImGuiHandler(logging.Handler):
         debug_log.add_log(debug_message)
 
 def draw(window: "DigiWindow"):
+    """Uses imgui to render a debug menu and console for developers."""
     impl = window.impl
     impl.process_inputs()
 
@@ -316,12 +317,26 @@ def draw(window: "DigiWindow"):
                     _, window.debug_settings["show_fps"] = imgui.checkbox("Show FPS", window.debug_settings["show_fps"])
                     imgui.spacing()
                     imgui.separator()
+                    imgui.text("Tools")
+                    # Tools
+                    if imgui.button("Save atlas..."):
+                        window.save_atlas()
+                    imgui.spacing()
+                    imgui.separator()
             with imgui.begin_tab_item("Info") as info:
                 if info.selected:
                     imgui.text("Info")
                     imgui.text(f"Current Resolution: {window.size}")
                     imgui.text(f"Egg Roll: {window.egg_roll}")
                     imgui.text(f"Current BPM: {window.beat_animator.current_bpm}")
+                    # Beat Graph
+                    imgui.plot_lines(
+                        label="Beat",
+                        values=array("f", window.beat_list),
+                        values_count = len(window.beat_list),
+                        scale_min = 0,
+                        scale_max = 1,
+                    )
                     imgui.text(f"Local Time: {window.current_view.local_time:.3f}")
                     imgui.text(f"Song Time: {window.theme_song.time:.3f}")
                     # FPS Graph
@@ -334,6 +349,7 @@ def draw(window: "DigiWindow"):
                     )
                     imgui.spacing()
                     imgui.separator()
+                    imgui.text(f"{window.ctx.limits.RENDERER}")
             with imgui.begin_tab_item("Log") as log:
                 if log.selected:
                     cons.draw()
