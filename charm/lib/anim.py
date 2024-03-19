@@ -1,10 +1,21 @@
 from dataclasses import dataclass
 import math
-from typing import Callable
+from typing import Protocol
 
 from charm.lib.utils import clamp, snap
 
-EasingFunction = Callable[[float, float, float, float, float], float]
+class EasingFunction(Protocol):
+    """Eases a value between two values over an amount of time, smoothly.
+
+    * `minimum: float`: the value returned by f(`x`) = `start`, often a position
+    * `maximum: float`: the value returned by f(`x`) = `end`, often a position
+    * `start: float`: the beginning of the transition, often a time
+    * `end: float`: the end of the transition, often a time
+    * `x: float`: the current x, often a time
+
+    Returns a factor as float."""
+    def __call__(minimum: float, maximum: float, start: float, end: float, x: float) -> float:
+        raise NotImplementedError
 
 @dataclass
 class LerpData:
@@ -86,5 +97,4 @@ def ease_expoout(minimum: float, maximum: float, start: float, end: float, x: fl
 def ease_snap(minimum: float, maximum: float, start: float, end: float, x: float) -> float:
     x = find_percent(start, end, x)
     zo = snap(x, 1)
-    print(zo)
     return lerp(minimum, maximum, zo)

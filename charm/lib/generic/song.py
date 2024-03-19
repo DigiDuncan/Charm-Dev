@@ -6,11 +6,9 @@ from functools import cache, total_ordering
 from pathlib import Path
 from typing import Optional
 
+from charm.lib.types import Seconds
 from charm.objects.lyric_animator import LyricEvent
 
-
-Seconds = float
-Milliseconds = float
 
 @dataclass
 class Metadata:

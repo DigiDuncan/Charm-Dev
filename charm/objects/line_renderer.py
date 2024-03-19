@@ -3,8 +3,8 @@ from typing import Hashable
 import arcade
 from arcade.types import Color
 
-TuplePoint = tuple[int | float, int | float]
-Seconds = float
+from charm.lib.types import TuplePoint
+from charm.objects.lyric_animator import Seconds
 
 
 class Point:

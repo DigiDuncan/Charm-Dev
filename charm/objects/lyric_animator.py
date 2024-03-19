@@ -4,9 +4,9 @@ import arcade
 import pyglet
 from pyglet import gl
 
+from charm.lib.types import Seconds
 from charm.objects.emojilabel import EmojiLabel
 
-Seconds = float
 
 gl.glEnable(gl.GL_DEPTH_TEST)
 
