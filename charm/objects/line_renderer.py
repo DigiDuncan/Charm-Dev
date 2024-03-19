@@ -3,35 +3,8 @@ from typing import Hashable
 import arcade
 from arcade.types import Color
 
-from charm.lib.types import TuplePoint
+from charm.lib.types import Point, TuplePoint
 from charm.objects.lyric_animator import Seconds
-
-
-class Point:
-    def __init__(self, point: TuplePoint):
-        self._point = point
-
-    @property
-    def x(self) -> float:
-        return self._point[0]
-
-    @x.setter
-    def x(self, val: float):
-        self._point = (val, self._point[1])
-
-    @property
-    def y(self) -> float:
-        return self._point[1]
-
-    @y.setter
-    def y(self, val: float):
-        self._point = (self._point[0], val)
-
-    def move(self, x: float, y: float):
-        self._point = (self._point[0] + x, self._point[1] + y)
-
-    def __str__(self) -> str:
-        return f"Point({self.x}, {self.y})"
 
 
 class LineRenderer:

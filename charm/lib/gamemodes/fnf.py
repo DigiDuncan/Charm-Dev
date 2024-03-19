@@ -14,7 +14,8 @@ import arcade
 from charm.lib.errors import NoChartsError, UnknownLanesError, ChartPostReadParseError
 from charm.lib.gamemodes.four_key import FourKeyChart, FourKeyEngine, FourKeyJudgement, \
     FourKeyLongNoteSprite, FourKeyNote, FourKeyNoteSprite
-from charm.lib.generic.song import BPMChangeEvent, Event, Metadata, Milliseconds, Seconds, Song
+from charm.lib.generic.song import BPMChangeEvent, Event, Metadata, Song
+from charm.lib.types import Seconds, Milliseconds
 from charm.lib.utils import clamp
 import charm.data.images.skins.fnf as fnfskin
 from charm.objects.lyric_animator import LyricEvent

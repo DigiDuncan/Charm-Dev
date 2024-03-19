@@ -2,7 +2,6 @@ from typing import Optional
 from nindex import Index
 from charm.lib.anim import EasingFunction, ease_linear
 from charm.lib.generic.song import BPMChangeEvent
-from charm.lib.utils import NormalizedFloat
 
 
 class BPMAnimator:
@@ -37,13 +36,13 @@ class BPMAnimator:
         return self.events_by_time.lteq(self.t).new_bpm
 
     @property
-    def magnitude(self) -> NormalizedFloat:
+    def magnitude(self) -> float:
         """The current magnitude. 1 on beats, 0 between beats, lerps between.
 
         https://www.desmos.com/calculator/jwnfdhtsny"""
         return abs(((self.current_bpm * (self.t - self._t_offset)) / 60 % 1) - 0.5) * 2
 
     @property
-    def factor(self) -> NormalizedFloat:
+    def factor(self) -> float:
         """Returns the magnitude, smoothed with the easing function assigned to this animator."""
         return self.func(0, 1, 0, 1, self.magnitude)
