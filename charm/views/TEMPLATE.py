@@ -2,7 +2,6 @@ import importlib.resources as pkg_resources
 import logging
 
 import arcade
-import imgui
 
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView, shows_errors, ignore_imgui
@@ -28,8 +27,6 @@ class TemplateView(DigiView):
     @shows_errors
     @ignore_imgui
     def on_key_press(self, symbol: int, modifiers: int):
-        if imgui.is_window_hovered(imgui.HOVERED_ANY_WINDOW):
-            return
         match symbol:
             case arcade.key.BACKSPACE:
                 self.back.setup()
