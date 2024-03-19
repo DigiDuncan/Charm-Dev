@@ -11,6 +11,7 @@ from charm.views.emojitest import EmojiView
 from charm.views.fnfsongmenu import FNFSongMenuView
 from charm.views.fourkeysongmenu import FourKeySongMenuView
 from charm.views.herotest import HeroTestView
+from charm.views.newmenuview import NewMenuView
 from charm.views.parallaxtest import ParallaxView
 from charm.views.spritetest import SpriteTestView
 from charm.views.taikotest import TaikoSongView
@@ -34,6 +35,7 @@ class MainMenuView(DigiView):
                 MainMenuItem("4K Songs", "songs", FourKeySongMenuView(back=self)),
                 MainMenuItem("Options", "options", None),
                 MainMenuItem("Emoji Test", "test", EmojiView(window=self.window, back=self)),
+                MainMenuItem("Menu Test", "test", NewMenuView(back=self)),
                 MainMenuItem("Sprite Test", "test", SpriteTestView(back=self)),
                 MainMenuItem("Parallax Test", "test", ParallaxView(back=self)),
                 MainMenuItem("Hero Test", "test", HeroTestView(back=self)),
