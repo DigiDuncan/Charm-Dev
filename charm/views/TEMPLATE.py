@@ -5,7 +5,7 @@ import arcade
 import imgui
 
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
-from charm.lib.digiview import DigiView, shows_errors
+from charm.lib.digiview import DigiView, shows_errors, ignore_imgui
 
 logger = logging.getLogger("charm")
 
@@ -26,6 +26,7 @@ class TemplateView(DigiView):
         self.window.theme_song.volume = 0
 
     @shows_errors
+    @ignore_imgui
     def on_key_press(self, symbol: int, modifiers: int):
         if imgui.is_window_hovered(imgui.HOVERED_ANY_WINDOW):
             return
