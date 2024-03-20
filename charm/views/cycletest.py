@@ -8,7 +8,7 @@ import arcade
 from arcade import Sprite, SpriteList, Texture
 
 from charm.lib.anim import EasingFunction, ease_linear, ease_quadinout
-from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
+from charm.lib.charm import CharmColors, generate_gum_wrapper, load_missing_texture, move_gum_wrapper
 from charm.lib.digiview import DigiView, shows_errors, ignore_imgui
 from charm.lib.types import Point, Seconds, TuplePoint
 import charm.data.images
@@ -103,6 +103,7 @@ class CycleView(DigiView):
     def __init__(self, *args, **kwargs):
         super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, *args, **kwargs)
         self.volume = 1
+        self.cycler = SpriteCycler(load_missing_texture(100, 100))
 
     @shows_errors
     def setup(self):
@@ -134,6 +135,10 @@ class CycleView(DigiView):
                 self.cycler.shift(False)
 
         return super().on_key_press(symbol, modifiers)
+
+    def calculate_positions(self):
+        self.cycler.layout()
+        super().calculate_positions()
 
     @shows_errors
     def on_update(self, delta_time):
