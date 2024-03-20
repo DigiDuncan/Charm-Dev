@@ -19,14 +19,12 @@ logger = logging.getLogger("charm")
 class SpriteCycler:
     def __init__(self, texture: Texture, easing_function: EasingFunction = ease_linear,
                  height = None, shift_time: Seconds = 0.25, position: TuplePoint = (0, 0),
-                 buffer = 0):
+                 buffer = 0, sprite_scale = 1):
         self.easing_function = easing_function
         self.height = arcade.get_window().height if height is None else height
         self.shift_time = shift_time
         self.position = Point(position)
         self.buffer = buffer
-
-        sprite_scale = 0.4
 
         self.texture_height = texture.height * sprite_scale
         sprites = [Sprite(texture, sprite_scale) for i in range(ceil(self.height / self.texture_height) + 10)]
@@ -57,7 +55,8 @@ class SpriteCycler:
             sprite.left = self.position.x
 
     def shift(self, up = False):
-        self._animating += -1 if not up else 1
+        self._animation_progress = 0
+        self._animating = -1 if not up else 1
 
     def update(self, delta_time: float):
         if self._animating:
@@ -84,7 +83,8 @@ class CycleView(DigiView):
         with pkg_resources.path(charm.data.images, "menu_card.png") as p:
             tex = arcade.load_texture(p)
 
-        self.cycler = SpriteCycler(tex, easing_function = ease_quadinout, shift_time = 0.25)
+        self.cycler = SpriteCycler(tex, easing_function = ease_quadinout,
+                                   shift_time = 0.25, sprite_scale = 0.4)
 
         # Generate "gum wrapper" background
         self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
