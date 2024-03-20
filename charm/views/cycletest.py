@@ -112,8 +112,9 @@ class CycleView(DigiView):
         with pkg_resources.path(charm.data.images, "menu_card.png") as p:
             tex = arcade.load_texture(p)
 
+        x = -(arcade.get_window().height * 1.5)
         self.cycler = SpriteCycler(tex, easing_function = ease_quadinout,
-                                   shift_time = 0.25, sprite_scale = 0.4, position = (-1000, 0))
+                                   shift_time = 0.25, sprite_scale = 0.4, position = (x, 0))
 
         # Generate "gum wrapper" background
         self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
@@ -137,6 +138,8 @@ class CycleView(DigiView):
         return super().on_key_press(symbol, modifiers)
 
     def calculate_positions(self):
+        x = -(arcade.get_window().height * 1.5)
+        self.cycler.position = Point((x, 0))
         self.cycler.layout()
         super().calculate_positions()
 
