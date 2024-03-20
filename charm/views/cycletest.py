@@ -1,6 +1,7 @@
 import importlib.resources as pkg_resources
 import logging
 from math import ceil
+import math
 from typing import Literal
 
 import arcade
@@ -11,9 +12,34 @@ from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView, shows_errors, ignore_imgui
 from charm.lib.types import Point, Seconds, TuplePoint
 import charm.data.images
+from charm.lib.utils import clamp
 
 
 logger = logging.getLogger("charm")
+
+
+class XShifter:
+    def __init__(self, min_factor: float, max_factor: float, offset: float,
+                 in_sin: float, out_sin: float, shift: float = 0.0,
+                 move_forward: float = 0.0, y_shift: float = 0.0) -> None:
+        self.min_factor = min_factor
+        self.max_factor = max_factor
+        self.offset = offset
+        self.in_sin = in_sin
+        self.out_sin = out_sin
+        self.shift = shift
+        self.move_forward = move_forward
+        self.y_shift = y_shift
+
+    def current_y_to_x(self, y: float, w = None) -> float:
+        y += self.y_shift
+        w = w if w is not None else arcade.get_window().width
+        y /= w
+        minimum = w / self.min_factor
+        maximum = w / self.max_factor
+        x = math.sin(y / self.in_sin + self.shift) * self.out_sin + self.offset
+        x *= w
+        return clamp(minimum, x, maximum) + (self.move_forward * w)
 
 
 class SpriteCycler:
@@ -37,6 +63,8 @@ class SpriteCycler:
         self._animation_progress: float = 0
         self._animating: Literal[-1, 0, 1] = 0
 
+        self.x_shifter = XShifter(3.5, 1.3, 0.25, 0.1666, 0.25, -0.125, 0.1)
+
         self.layout()
 
     @property
@@ -52,7 +80,7 @@ class SpriteCycler:
         top_y = self.height + ((self.texture_height + self.buffer) * 5) + self.animation_offset
         for n, sprite in enumerate(self.sprite_list):
             sprite.top = top_y - ((self.buffer + self.texture_height) * n)
-            sprite.left = self.position.x
+            sprite.left = self.position.x + self.x_shifter.current_y_to_x(sprite.center_y)
 
     def shift(self, up = False):
         self._animation_progress = 0
@@ -84,7 +112,7 @@ class CycleView(DigiView):
             tex = arcade.load_texture(p)
 
         self.cycler = SpriteCycler(tex, easing_function = ease_quadinout,
-                                   shift_time = 0.25, sprite_scale = 0.4)
+                                   shift_time = 0.25, sprite_scale = 0.4, position = (-1000, 0))
 
         # Generate "gum wrapper" background
         self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)

@@ -66,7 +66,6 @@ class SongMenu:
         self.out_sin = 0.25
         self.shift = -0.125
         self.move_forward = 0.1
-
         self.y_shift = 0
 
         self.center_sprite_index = len(self.spritelist) // 2
