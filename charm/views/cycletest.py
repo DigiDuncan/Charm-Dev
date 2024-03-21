@@ -65,6 +65,9 @@ class SpriteCycler:
 
         self.x_shifter = XShifter(3.5, 1.3, 0.25, 0.1666, 0.25, -0.125, 0.1)
 
+        self.MAX_SCROLL_SPEED = 10  # per s
+        self.last_scroll_event = 0
+
         self.layout()
 
     @property
@@ -85,6 +88,11 @@ class SpriteCycler:
     def shift(self, up = False):
         self._animation_progress = 0
         self._animating = -1 if not up else 1
+
+    def mouse_scroll(self, time: float, up = False):
+        if time > (self.last_scroll_event + (1 / self.MAX_SCROLL_SPEED)):
+            self.shift(up)
+            self.last_scroll_event = time
 
     def update(self, delta_time: float):
         if self._animating:
@@ -132,8 +140,10 @@ class CycleView(DigiView):
                 arcade.play_sound(self.window.sounds["back"])
             case arcade.key.UP:
                 self.cycler.shift(True)
+                arcade.play_sound(self.window.sounds["select"])
             case arcade.key.DOWN:
                 self.cycler.shift(False)
+                arcade.play_sound(self.window.sounds["select"])
 
         return super().on_key_press(symbol, modifiers)
 
@@ -142,6 +152,17 @@ class CycleView(DigiView):
         self.cycler.position = Point((x, 0))
         self.cycler.layout()
         super().calculate_positions()
+
+    @shows_errors
+    @ignore_imgui
+    def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int):
+        if scroll_y == 0:
+            return
+        elif scroll_y > 0:
+            self.cycler.mouse_scroll(self.local_time, True)
+        else:
+            self.cycler.mouse_scroll(self.local_time, False)
+        arcade.play_sound(self.window.sounds["select"])
 
     @shows_errors
     def on_update(self, delta_time):
