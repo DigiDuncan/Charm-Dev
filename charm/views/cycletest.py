@@ -2,12 +2,13 @@ import importlib.resources as pkg_resources
 import logging
 from math import ceil
 import math
-from typing import Literal
+from typing import Literal, List
 
 import arcade
-from arcade import Sprite, SpriteList, Texture
+from arcade import Sprite, SpriteList, Texture, Text
+from pyglet.graphics import Batch
 
-from charm.lib.anim import EasingFunction, ease_linear, ease_quadinout
+from charm.lib.anim import EasingFunction, ease_linear, ease_quadinout, lerp
 from charm.lib.charm import CharmColors, generate_gum_wrapper, load_missing_texture, move_gum_wrapper
 from charm.lib.digiview import DigiView, shows_errors, ignore_imgui
 from charm.lib.types import Point, Seconds, TuplePoint
@@ -16,6 +17,296 @@ from charm.lib.utils import clamp
 
 
 logger = logging.getLogger("charm")
+
+
+class IndexShifter:
+
+    def __init__(self, min_, max_, width, height, offset, shift, screen_size):
+        self.min = min_
+        self.max = max_
+        self.width = width
+        self.height = height
+        self.screen_width = screen_size[0]
+        self.screen_height = screen_size[1]
+        self.offset = offset
+        self.shift = shift
+
+    def from_adjusted_y(self, adjusted_y: float):
+        # Because the y value is already adjusted we don't need to use the screen height.
+        # However, it may make more sense to adjust it within this function call.
+
+        # Take a y value mapped to the range -0.5 to 0.5 and map it based on the width we want the peak's base to be.
+        angle = min(0.5, max(-0.5, (adjusted_y + self.shift) / self.height))
+
+        # Take the calculated angle and calculate how far (as a percentage) it should be from the left edge
+        x_position = self.width * (0.5 * math.cos(2.0 * math.pi * angle) + 0.5) + self.offset
+
+        # Take this percentage and ensure it is capped at our min and max and scaled base on the width.
+        return self.screen_width * min(self.max, max(self.min, x_position))
+
+
+class ListCycle:
+
+    def __init__(self, texture: Texture, content: List[str], ease: EasingFunction = ease_linear,
+                 height: int | None = None, width: int | None = None,
+                 sprite_scale: float = 1.0,
+                 shift_time: Seconds = 0.25,
+                 extra_x_peak_percent: float = 0.2, index_offset: int = 0,
+                 minimum_x_percent: float = 0.0, maximum_x_percent: float = 1.0,
+                 peak_x_percent: float = 0.2, peak_width_percent: float = 0.8,
+                 x_offset: float = 0.1, peak_y_offset: float = 0.0):
+        # window properties
+        self.win = arcade.get_window()
+        self.bounds_width = width or self.win.width
+        self.bounds_height = height or self.win.height
+
+        # Actual shifter object, could probably actually be merged with this class (unless you had other uses for it?)
+        self.shifter = IndexShifter(
+            minimum_x_percent, maximum_x_percent,
+            peak_x_percent, peak_width_percent,
+            x_offset, peak_y_offset,
+            self.win.size
+        )
+
+        # The extra amount the selected sprite should be adjusted
+        self.selected_offset = extra_x_peak_percent
+
+        # Unused offset that would move the target sprite up or down (haven't worked this one out)
+        self.index_offset = index_offset
+
+        # The strings used as the "content" of each sprite
+        # can be replaced by whatever you actually want shown
+        self.content: List[str] = content
+        self.content_index: int = 0
+        self.content_count: int = len(content)
+
+        # Calculate the actual number of sprites to "show" plus two extra to ensure the user never sees any popping
+        self.shown_count: int = ceil(self.bounds_height / (texture.height * sprite_scale)) + 2
+        self.shown_count += 1 if self.shown_count % 2 else 0  # Ensure that the count is always odd
+        self.half_count: int = self.shown_count // 2
+
+        # Sprite properties
+        self.sprite_scale: float = sprite_scale
+        self.texture = texture
+        self.buffer = 0.0
+
+        # Drawables. replace the label batch with whatever you actually want to show
+        self.sprite_list = SpriteList()
+        self.label_batch = Batch()
+
+        # Create a number of sprites and labels equal to the shown count not the content count
+        self.sprite_list.extend(Sprite(texture, scale=sprite_scale) for _ in range(self.shown_count))
+        self.labels = list(Text("", 0, 0, align="right", anchor_x="right", anchor_y="center", batch=self.label_batch)
+                           for _ in range(self.shown_count))
+
+        # for speed scrolling see 'ListCycle.speed_scroll'
+        self.last_speed_scroll: float = 0.0
+        self.max_speed_scroll: float = 2/60
+
+        # The offset used to calculate the current index, and how the curve should affect the sprites
+        self.total_offset: float = 0.0
+
+        # Where the cycle is scrolling towards
+        self.target_offset: float = 0.0
+
+        # The speed of the cycling in units per second.
+        # However, due to the lerp it is a little complicated
+        # I'd like to find an even better solution
+        self.speed = 1 / shift_time
+
+        self.do_layout: bool = True
+
+        self.trigger_layout()
+
+    def scroll(self, dist: float):
+        # Start scrolling to the next target location based on how far we are told to scroll
+        self.last_speed_scroll = -1
+        self.target_offset = clamp(0, self.content_count-1, round(self.total_offset + dist))
+
+    def speed_scroll(self, dist: float, time: float):
+        # If the time since the last speed scroll is small enough then we want to massively boost the scroll
+        # distance.
+        if self.last_speed_scroll <= 0 or time - self.last_speed_scroll > self.max_speed_scroll:
+            self.scroll(dist)
+        else:
+            scroll_rate = time - self.last_speed_scroll
+            self.scroll(dist / scroll_rate)
+
+        self.last_speed_scroll = time
+
+    def trigger_layout(self):
+        self.do_layout = True
+
+    def layout(self):
+        self.do_layout = False
+        # Find where each sprite should be based on the total offset and the center of the screen
+        center = self.bounds_height // 2
+
+        self.content_index = int(self.total_offset)
+        offset = self.total_offset % 1.0
+
+        # This all to try and get a smooth animation on the extra offset the selected sprite has
+        # It works great going down, not so much on the upward travel
+        push, inv_push = 1 - offset, offset
+
+        dist = self.target_offset - self.total_offset
+        direction = 0
+        if dist:
+            direction = dist / abs(dist)
+
+        for i in range(self.shown_count):
+            # center the indexes around 0
+            n = i - self.half_count
+            # find the actual indexes of the content we care about
+            c = self.content_index - n
+            sprite = self.sprite_list[i]
+            text = self.labels[i]
+
+            # Check to see that this particular sprite has related content
+            # If it doesn't we want to hide it.
+            sprite.visible = False
+            text.text = ""
+            if not (c < 0 or self.content_count <= c):
+                sprite.visible = True
+                text.text = f"{c}: {n}"
+
+            # Calc the y position. This is actually very similar to the original.
+            # The difference is where we calculate it from
+            # By doing it from the center it makes it far more reliable when resizing the screen
+            y = (n + offset) * (sprite.height + self.buffer)
+            x = self.shifter.from_adjusted_y(y / self.bounds_height)
+
+            # Extra offset for the selected sprite. Does not work properly
+            if n == 0:
+                x += self.selected_offset * self.bounds_width * push
+            elif n + direction == 0:
+                x += self.selected_offset * self.bounds_width * inv_push
+
+            # Set the position, this is where you would also position other content
+            sprite.center_y = text.y = center + y
+            sprite.right = x
+            text.x = x - 10
+
+    def update(self, delta_time: float):
+        if self.total_offset == self.target_offset:
+            return
+
+        if abs(self.total_offset - self.target_offset) < delta_time:
+            self.total_offset = self.target_offset
+            self.trigger_layout()
+        else:
+            # Slowly move towards the target offset. The lerp is replacing the easing curve.
+            # Which is disappointing I am thinking of a solution.
+            self.total_offset = lerp(self.total_offset, self.target_offset, delta_time * self.speed)
+
+        self.trigger_layout()
+
+    def update_width(self, new_width: int):
+        if new_width == self.bounds_width:
+            return
+
+        self.bounds_width = new_width
+        self.shifter.screen_width = new_width
+
+        self.trigger_layout()
+
+    def update_height(self, new_height: int):
+        if new_height == self.bounds_height:
+            return
+
+        self.bounds_height = new_height
+        self.shifter.screen_height = new_height
+
+        # We should also add / remove sprites and labels by redoing what we did in the init function
+        # kinda hard cause batches don't provide methods for removing children (WHY!?)
+
+        self.trigger_layout()
+
+    def draw(self):
+        if self.do_layout:
+            self.layout()
+        self.sprite_list.draw()
+        self.label_batch.draw()
+
+
+class CycleView(DigiView):
+    def __init__(self, *args, **kwargs):
+        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, *args, **kwargs)
+        self.volume = 1
+        self.cycler: ListCycle | None = None
+
+    @shows_errors
+    def setup(self):
+        super().setup()
+
+        with pkg_resources.path(charm.data.images, "menu_card.png") as p:
+            tex = arcade.load_texture(p)
+
+        self.cycler = ListCycle(texture=tex, content=["a"] * 15,
+                                ease=ease_quadinout,
+                                shift_time=0.25,
+                                sprite_scale=0.4,
+                                )
+
+        # Generate "gum wrapper" background
+        self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
+
+    def on_show_view(self):
+        self.window.theme_song.volume = 0
+
+    @shows_errors
+    @ignore_imgui
+    def on_key_press(self, symbol: int, modifiers: int):
+        match symbol:
+            case arcade.key.BACKSPACE:
+                self.back.setup()
+                self.window.show_view(self.back)
+                arcade.play_sound(self.window.sounds["back"])
+            case arcade.key.UP:
+                self.cycler.scroll(-1.0)
+                arcade.play_sound(self.window.sounds["select"])
+            case arcade.key.DOWN:
+                self.cycler.scroll(1.0)
+                arcade.play_sound(self.window.sounds["select"])
+
+        return super().on_key_press(symbol, modifiers)
+
+    def calculate_positions(self):
+        if self.cycler is not None:
+            self.cycler.update_width(self.window.width)
+            self.cycler.update_height(self.window.height)
+        super().calculate_positions()
+
+    @shows_errors
+    @ignore_imgui
+    def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int):
+        # the scroll_y is negative because we are going from top down.
+        self.cycler.speed_scroll(-scroll_y, self.local_time)
+        arcade.play_sound(self.window.sounds["select"])
+
+    @shows_errors
+    def on_update(self, delta_time):
+        super().on_update(delta_time)
+        if self.cycler is None:
+            return
+        self.cycler.update(delta_time)
+
+        move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
+
+    @shows_errors
+    def on_draw(self):
+        self.window.camera.use()
+        self.clear()
+
+        if self.cycler is None:
+            return
+
+        # Charm BG
+        self.small_logos_forward.draw()
+        self.small_logos_backward.draw()
+
+        self.cycler.draw()
+        super().on_draw()
 
 
 class XShifter:
@@ -107,7 +398,7 @@ class SpriteCycler:
         self.sprite_list.draw()
 
 
-class CycleView(DigiView):
+class CycleView_og(DigiView):
     def __init__(self, *args, **kwargs):
         super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, *args, **kwargs)
         self.volume = 1

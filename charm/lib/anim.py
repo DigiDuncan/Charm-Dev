@@ -14,7 +14,7 @@ class EasingFunction(Protocol):
     * `x: float`: the current x, often a time
 
     Returns a factor as float."""
-    def __call__(minimum: float, maximum: float, start: float, end: float, x: float) -> float:
+    def __call__(self, minimum: float, maximum: float, start: float, end: float, x: float) -> float:
         raise NotImplementedError
 
 @dataclass
