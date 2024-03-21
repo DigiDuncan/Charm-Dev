@@ -130,7 +130,8 @@ class ListCycle:
             self.scroll(dist)
         else:
             scroll_rate = time - self.last_speed_scroll
-            self.scroll(dist / scroll_rate)
+            if scroll_rate != 0.0:
+                self.scroll(dist / scroll_rate)
 
         self.last_speed_scroll = time
 
