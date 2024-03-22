@@ -60,6 +60,9 @@ class ListCycle:
         self.bounds_width = width or self.win.width
         self.bounds_height = height or self.win.height
 
+        # easing function for the scrolling animation
+        self.easing_func = ease
+
         # Actual shifter object, could probably actually be merged with this class (unless you had other uses for it?)
         self.shifter = IndexShifter(
             minimum_x_percent, maximum_x_percent,
@@ -100,19 +103,23 @@ class ListCycle:
                            for _ in range(self.shown_count))
 
         # for speed scrolling see 'ListCycle.speed_scroll'
-        self.last_speed_scroll: float = 0.0
-        self.max_speed_scroll: float = 2/60
+        self.speed_scrolling = False
+        self.speed_scroll_velocity: float = 0.0
+        self.speed_scroll_max_velocity: float = 100.0
+        self.speed_scroll_drag_coefficient: float = 0.95
+        self.speed_scroll_threshold: float = 0.1
+        self.speed_scroll_acceleration: float = 1 / shift_time
 
         # The offset used to calculate the current index, and how the curve should affect the sprites
         self.total_offset: float = 0.0
 
         # Where the cycle is scrolling towards
+        self.start_offset: float = 0.0
         self.target_offset: float = 0.0
+        self.progress: float = 0.0
+        self.duration: float = 0.0
 
-        # The speed of the cycling in units per second.
-        # However, due to the lerp it is a little complicated
-        # I'd like to find an even better solution
-        self.speed = 1 / shift_time
+        self.shift_time: float = shift_time
 
         self.do_layout: bool = True
 
@@ -120,20 +127,35 @@ class ListCycle:
 
     def scroll(self, dist: float):
         # Start scrolling to the next target location based on how far we are told to scroll
-        self.last_speed_scroll = -1
+        self.speed_scrolling = False
+        self.speed_scroll_velocity = 0.0
+
+        self.start_offset = self.total_offset
         self.target_offset = clamp(0, self.content_count-1, round(self.total_offset + dist))
 
-    def speed_scroll(self, dist: float, time: float):
+        self.progress = 0.0
+        self.duration = max(0.5, abs(self.target_offset - self.start_offset)) * self.shift_time
+
+    def speed_scroll(self, dist: float):
         # If the time since the last speed scroll is small enough then we want to massively boost the scroll
         # distance.
-        if self.last_speed_scroll <= 0 or time - self.last_speed_scroll > self.max_speed_scroll:
-            self.scroll(dist)
-        else:
-            scroll_rate = time - self.last_speed_scroll
-            if scroll_rate != 0.0:
-                self.scroll(dist / scroll_rate)
 
-        self.last_speed_scroll = time
+        self.speed_scroll_velocity = clamp(
+            -self.speed_scroll_max_velocity, self.speed_scroll_max_velocity,
+            self.speed_scroll_velocity + dist * self.speed_scroll_acceleration
+        )
+
+        # If the speed scroll was small enough then just scroll since it is neater and looks better
+        if abs(self.speed_scroll_velocity) <= 1.0 * self.speed_scroll_acceleration:
+            self.scroll(dist)
+            return
+
+        # If the scroll is in the other direction then lets stop right away
+        if (self.speed_scroll_velocity / abs(self.speed_scroll_velocity)) != (dist / abs(dist)):
+            self.scroll(dist)
+            return
+
+        self.speed_scrolling = True
 
     def trigger_layout(self):
         self.do_layout = True
@@ -144,20 +166,11 @@ class ListCycle:
         center = self.bounds_height // 2
 
         self.content_index = int(self.total_offset)
-        offset = self.total_offset % 1.0
-
-        # This all to try and get a smooth animation on the extra offset the selected sprite has
-        # It works great going down, not so much on the upward travel
-        push, inv_push = 1 - offset, offset
-
-        dist = self.target_offset - self.total_offset
-        direction = 0
-        if dist:
-            direction = dist / abs(dist)
+        remainder = self.total_offset % 1.0
 
         for i in range(self.shown_count):
             # center the indexes around 0
-            n = i - self.half_count
+            n = i - self.half_count + self.index_offset
             # find the actual indexes of the content we care about
             c = self.content_index - n
             sprite = self.sprite_list[i]
@@ -174,33 +187,65 @@ class ListCycle:
             # Calc the y position. This is actually very similar to the original.
             # The difference is where we calculate it from
             # By doing it from the center it makes it far more reliable when resizing the screen
-            y = (n + offset) * (sprite.height + self.buffer)
+            y = (n + remainder) * (sprite.height + self.buffer)
             x = self.shifter.from_adjusted_y(y / self.bounds_height)
 
             # Extra offset for the selected sprite. Does not work properly
             if n == 0:
-                x += self.selected_offset * self.bounds_width * push
-            elif n + direction == 0:
-                x += self.selected_offset * self.bounds_width * inv_push
+                x += self.selected_offset * self.bounds_width * (1 - remainder)
+            elif n + 1 == 0:
+                x += self.selected_offset * self.bounds_width * remainder
 
             # Set the position, this is where you would also position other content
-            sprite.center_y = text.y = center + y
+            sprite.center_y = text.y = center + y - self.index_offset * (sprite.height + self.buffer)
             sprite.right = x
             text.x = x - 10
 
     def update(self, delta_time: float):
-        if self.total_offset == self.target_offset:
-            return
+        if self.speed_scrolling:
+            # We multiply by the abs of the velocity, so we can square it while keeping the sign of the velocity :p
+            deacceleration = (
+                    self.speed_scroll_drag_coefficient * 15.0 * (self.speed_scroll_velocity / abs(self.speed_scroll_velocity))
+            )
 
-        if abs(self.total_offset - self.target_offset) < delta_time:
-            self.total_offset = self.target_offset
+            new_scroll_velocity = self.speed_scroll_velocity - deacceleration * delta_time
+            if new_scroll_velocity / abs(new_scroll_velocity) != self.speed_scroll_velocity / abs(self.speed_scroll_velocity):
+                new_scroll_velocity = 0.0
+            self.speed_scroll_velocity = new_scroll_velocity
+            new_offset = clamp(0.0, self.content_count-1, self.total_offset + self.speed_scroll_velocity * delta_time)
+
+            if new_offset == self.total_offset:
+                self.speed_scroll_velocity = 0.0
+
+            self.total_offset = new_offset
+            if abs(self.speed_scroll_velocity) < self.speed_scroll_threshold:
+                target = clamp(0.0, self.content_count-1, round(new_offset))
+                dist = target - new_offset
+                self.scroll(dist)
+
             self.trigger_layout()
         else:
-            # Slowly move towards the target offset. The lerp is replacing the easing curve.
-            # Which is disappointing I am thinking of a solution.
-            self.total_offset = lerp(self.total_offset, self.target_offset, delta_time * self.speed)
+            if self.duration == 0.0:
+                return
 
-        self.trigger_layout()
+            finished = False
+            new_progress = self.progress + delta_time
+            if new_progress >= self.duration:
+                new_progress = self.duration
+                finished = True
+
+            self.total_offset = self.easing_func(
+                self.start_offset, self.target_offset,
+                0.0, self.duration,
+                new_progress
+            )
+            self.trigger_layout()
+
+            self.progress = new_progress
+            if finished:
+                self.start_offset = self.target_offset
+                self.duration = 0.0
+                self.progress = 0.0
 
     def update_width(self, new_width: int):
         if new_width == self.bounds_width:
@@ -243,7 +288,7 @@ class CycleView(DigiView):
         with pkg_resources.path(charm.data.images, "menu_card.png") as p:
             tex = arcade.load_texture(p)
 
-        self.cycler = ListCycle(texture=tex, content=["a"] * 15,
+        self.cycler = ListCycle(texture=tex, content=["a"] * 1000,
                                 ease=ease_quadinout,
                                 shift_time=0.25,
                                 sprite_scale=0.4,
@@ -282,7 +327,7 @@ class CycleView(DigiView):
     @ignore_imgui
     def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int):
         # the scroll_y is negative because we are going from top down.
-        self.cycler.speed_scroll(-scroll_y, self.local_time)
+        self.cycler.speed_scroll(-scroll_y)
         arcade.play_sound(self.window.sounds["select"])
 
     @shows_errors
