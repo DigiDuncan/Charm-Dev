@@ -8,7 +8,7 @@ import arcade
 from arcade import Sprite, SpriteList, Texture, Text
 from pyglet.graphics import Batch
 
-from charm.lib.anim import EasingFunction, ease_linear, ease_quadinout, lerp
+from charm.lib.anim import EasingFunction, ease_linear, ease_quadinout
 from charm.lib.charm import CharmColors, generate_gum_wrapper, load_missing_texture, move_gum_wrapper
 from charm.lib.digiview import DigiView, shows_errors, ignore_imgui
 from charm.lib.types import Point, Seconds, TuplePoint
@@ -110,6 +110,14 @@ class ListCycle:
         self.speed_scroll_threshold: float = 0.1
         self.speed_scroll_acceleration: float = 1 / shift_time
 
+        # Time button pressed
+        self.wait_for_long_scroll = 1.0
+        self.key_speed = 1.0
+        self.up_pressed = False
+        self.down_pressed = False
+        self.time_up_pressed = 0.0
+        self.time_down_pressed = 0.0
+
         # The offset used to calculate the current index, and how the curve should affect the sprites
         self.total_offset: float = 0.0
 
@@ -124,6 +132,19 @@ class ListCycle:
         self.do_layout: bool = True
 
         self.trigger_layout()
+
+    def on_key(self, up: bool, pressed: bool):
+        match (up, pressed):
+            case (False, False):
+                self.down_pressed = False
+                self.time_down_pressed = 0.0
+            case (True, False):
+                self.up_pressed = False
+                self.time_up_pressed = 0.0
+            case (False, True):
+                self.down_pressed = True
+            case (True, True):
+                self.up_pressed = True
 
     def scroll(self, dist: float):
         # Start scrolling to the next target location based on how far we are told to scroll
@@ -202,6 +223,16 @@ class ListCycle:
             text.x = x - 10
 
     def update(self, delta_time: float):
+        if self.up_pressed:
+            self.time_up_pressed += delta_time
+        if self.down_pressed:
+            self.time_down_pressed += delta_time
+
+        if self.time_down_pressed > self.wait_for_long_scroll:
+            self.scroll(self.key_speed)
+        elif self.time_up_pressed > self.wait_for_long_scroll:
+            self.scroll(-self.key_speed)
+
         if self.speed_scrolling:
             # We multiply by the abs of the velocity, so we can square it while keeping the sign of the velocity :p
             deacceleration = (
@@ -310,10 +341,23 @@ class CycleView(DigiView):
                 arcade.play_sound(self.window.sounds["back"])
             case arcade.key.UP:
                 self.cycler.scroll(-1.0)
+                self.cycler.on_key(True, True)
                 arcade.play_sound(self.window.sounds["select"])
             case arcade.key.DOWN:
                 self.cycler.scroll(1.0)
+                self.cycler.on_key(False, True)
                 arcade.play_sound(self.window.sounds["select"])
+
+        return super().on_key_press(symbol, modifiers)
+
+    @shows_errors
+    @ignore_imgui
+    def on_key_release(self, symbol: int, modifiers: int):
+        match symbol:
+            case arcade.key.UP:
+                self.cycler.on_key(True, False)
+            case arcade.key.DOWN:
+                self.cycler.on_key(False, False)
 
         return super().on_key_press(symbol, modifiers)
 
