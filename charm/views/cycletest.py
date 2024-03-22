@@ -136,9 +136,13 @@ class ListCycle:
     def on_key(self, up: bool, pressed: bool):
         match (up, pressed):
             case (False, False):
+                if self.time_down_pressed > self.wait_for_long_scroll:
+                    self.scroll(0)
                 self.down_pressed = False
                 self.time_down_pressed = 0.0
             case (True, False):
+                if self.time_up_pressed > self.wait_for_long_scroll:
+                    self.scroll(0)
                 self.up_pressed = False
                 self.time_up_pressed = 0.0
             case (False, True):
@@ -229,9 +233,9 @@ class ListCycle:
             self.time_down_pressed += delta_time
 
         if self.time_down_pressed > self.wait_for_long_scroll:
-            self.scroll(self.key_speed)
+            self.speed_scroll(100)
         elif self.time_up_pressed > self.wait_for_long_scroll:
-            self.scroll(-self.key_speed)
+            self.speed_scroll(-100)
 
         if self.speed_scrolling:
             # We multiply by the abs of the velocity, so we can square it while keeping the sign of the velocity :p
