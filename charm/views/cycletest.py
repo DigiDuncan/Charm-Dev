@@ -1,18 +1,18 @@
 import importlib.resources as pkg_resources
 import logging
-from math import ceil
 import math
-from typing import Literal, List
+from math import ceil
+from typing import List
 
 import arcade
 from arcade import Sprite, SpriteList, Texture, Text
 from pyglet.graphics import Batch
 
-from charm.lib.anim import EasingFunction, ease_linear, ease_quadinout
-from charm.lib.charm import CharmColors, generate_gum_wrapper, load_missing_texture, move_gum_wrapper
-from charm.lib.digiview import DigiView, shows_errors, ignore_imgui
-from charm.lib.types import Point, Seconds, TuplePoint
 import charm.data.images
+from charm.lib.anim import EasingFunction, ease_linear, ease_quadinout
+from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
+from charm.lib.digiview import DigiView, shows_errors, ignore_imgui
+from charm.lib.types import Seconds
 from charm.lib.utils import clamp
 
 
@@ -240,7 +240,7 @@ class ListCycle:
         if self.speed_scrolling:
             # We multiply by the abs of the velocity, so we can square it while keeping the sign of the velocity :p
             deacceleration = (
-                    self.speed_scroll_drag_coefficient * 15.0 * (self.speed_scroll_velocity / abs(self.speed_scroll_velocity))
+                self.speed_scroll_drag_coefficient * 15.0 * (self.speed_scroll_velocity / abs(self.speed_scroll_velocity))
             )
 
             new_scroll_velocity = self.speed_scroll_velocity - deacceleration * delta_time
