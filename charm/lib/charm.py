@@ -3,6 +3,7 @@ import math
 
 import arcade
 from arcade import SpriteList
+from arcade.types import Color
 import PIL.Image
 import PIL.ImageDraw
 
@@ -11,12 +12,12 @@ from charm.lib.utils import img_from_resource
 
 
 class CharmColors:
-    GREEN = (0x95, 0xdf, 0xaa, 0xff)         # #95dfaa  CHARM_GREEN = Color(158, 223, 170, 255)
-    PINK = (0xe6, 0x8e, 0xbe, 0xff)          # #e68ebe
-    PURPLE = (0x9c, 0x84, 0xd9, 0xff)        # #9c84d9
-    FADED_GREEN = (0xb3, 0xfd, 0xc8, 0xff)   # #b3fdc8
-    FADED_PINK = (0xff, 0xac, 0xdc, 0xff)    # #ffacdc
-    FADED_PURPLE = (0xba, 0xa2, 0xf7, 0xff)  # #baa2f7
+    GREEN = Color(0x95, 0xdf, 0xaa, 0xff)         # #95dfaa  CHARM_GREEN = Color(158, 223, 170, 255)
+    PINK = Color(0xe6, 0x8e, 0xbe, 0xff)          # #e68ebe
+    PURPLE = Color(0x9c, 0x84, 0xd9, 0xff)        # #9c84d9
+    FADED_GREEN = Color(0xb3, 0xfd, 0xc8, 0xff)   # #b3fdc8
+    FADED_PINK = Color(0xff, 0xac, 0xdc, 0xff)    # #ffacdc
+    FADED_PURPLE = Color(0xba, 0xa2, 0xf7, 0xff)  # #baa2f7
 
 
 @cache
