@@ -86,7 +86,7 @@ class VisualizerView(DigiView):
 
         # Create background stars
         with LogSection(logger, "creating stars"):
-            self.star_camera = arcade.SimpleCamera()
+            self.star_camera = arcade.camera.SimpleCamera()
             self.stars = arcade.SpriteList()
             self.scroll_speed = 20  # px/s
             stars_per_screen = 100

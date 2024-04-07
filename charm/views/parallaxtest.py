@@ -1,7 +1,7 @@
 from pyglet.math import Vec2
 import arcade
 
-from arcade import Camera
+from arcade import camera
 
 from charm.lib.keymap import get_keymap
 from charm.lib.digiview import DigiView
@@ -11,8 +11,8 @@ class SpriteLayer:
     def __init__(self, sprite_list: arcade.SpriteList, z: float) -> None:
         self.sprite_list = sprite_list
         self._z = z
-        self._camera = Camera()
-        self._camera.scale = (self._z ** 2, self._z ** 2)
+        self._camera = camera.Camera2D()
+        self._camera.zoom = self._z**-2
 
     @property
     def z(self) -> float:
@@ -21,7 +21,7 @@ class SpriteLayer:
     @z.setter
     def z(self, value: float):
         self._z = value
-        self._camera.scale = (self._z ** 2, self._z ** 2)
+        self._camera.zoom = self._z**-2
 
 
 class SpriteLayerList:
@@ -37,7 +37,7 @@ class SpriteLayerList:
     def position(self, value: Vec2):
         self._position = value
         for sl in self.sprite_layers:
-            sl._camera.move(self._position)
+            sl._camera.position = self._position
 
     @property
     def x(self) -> float:
@@ -47,7 +47,7 @@ class SpriteLayerList:
     def x(self, value: float):
         self._position = Vec2(value, self._position.y)
         for sl in self.sprite_layers:
-            sl._camera.move(self._position)
+            sl._camera.position = self._position
 
     @property
     def y(self) -> float:
@@ -57,7 +57,7 @@ class SpriteLayerList:
     def y(self, value: float):
         self._position = Vec2(self._position.x, value)
         for sl in self.sprite_layers:
-            sl._camera.move(self._position)
+            sl._camera.position = self._position
 
     def sort(self):
         self.sprite_layers.sort(key=lambda x: x.z, reverse=True)

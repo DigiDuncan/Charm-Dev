@@ -84,7 +84,6 @@ class DigiView(View):
 
     def on_resize(self, width: int, height: int):
         self.size = (width, height)
-        arcade.set_viewport(0, width, 0, height)
         self.window.camera.projection = (0, width, 0, height)
         self.window.camera.set_viewport((0, 0, width, height))
 
