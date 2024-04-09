@@ -114,18 +114,6 @@ class DigiWindow(arcade.Window):
         # Egg roll
         self.egg_roll = random.randint(1, 1000)
 
-    @property
-    def center(self) -> tuple[float, float]:
-        return (self.width / 2, self.height / 2)
-
-    @property
-    def center_x(self) -> float:
-        return self.center[0]
-
-    @property
-    def center_y(self) -> float:
-        return self.center[1]
-
     def setup(self):
         self.initial_view.setup()
         self.show_view(self.initial_view)
