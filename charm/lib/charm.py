@@ -43,8 +43,8 @@ def generate_gum_wrapper(size: tuple[int], buffer: int = 20, alpha = 128) -> tup
     small_logos_backward = arcade.SpriteList()
     small_logo_img = img_from_resource(charm.data.images, "small-logo.png")
     small_logo_texture = arcade.Texture(small_logo_img)
-    sprites_horiz = math.ceil(size[0] / small_logo_texture.width)
-    sprites_vert = math.ceil(size[1] / small_logo_texture.height / 1.5)  # why 1.5 tho?
+    sprites_horiz = max(2, math.ceil(size[0] / small_logo_texture.width))
+    sprites_vert = max(2, math.ceil(size[1] / small_logo_texture.height / 1.5))  # why 1.5 tho?
     logo_width = small_logo_texture.width + buffer
     for i in range(sprites_vert):
         for j in range(sprites_horiz):

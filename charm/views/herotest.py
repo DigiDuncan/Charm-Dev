@@ -61,8 +61,6 @@ class HeroTestView(DigiView):
     @shows_errors
     @ignore_imgui
     def on_key_press(self, symbol: int, modifiers: int):
-        if imgui.is_window_hovered(imgui.HOVERED_ANY_WINDOW):
-            return
         keymap = get_keymap()
         keymap.set_state(symbol, True)
         self.engine.process_keystate()
@@ -137,6 +135,7 @@ class HeroTestView(DigiView):
         self.text_batch.draw()
 
         if self.lyric_animator:
-            self.lyric_animator.draw()
+            with self.window.default_camera.activate():
+                self.lyric_animator.draw()
 
         super().on_draw()
