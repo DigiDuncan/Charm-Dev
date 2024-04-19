@@ -205,8 +205,7 @@ class TaikoHighway(Highway):
         self._pixel_offset -= (self.px_per_s * delta_draw_time)
         self.last_update_time = self.song_time
 
-        self.highway_camera.move((-self.pixel_offset, 0.0))
-        self.highway_camera.update()
+        self.highway_camera.position = (-self.pixel_offset, self.window.center_y)
 
         if self.auto:
             # This feels gross, but I don't know how else to do it.

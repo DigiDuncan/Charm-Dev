@@ -222,7 +222,7 @@ class VisualizerView(DigiView):
         self.gradient.draw()
 
         # Scroll star camera and draw stars
-        self.star_camera.move_to((0, 0 - (self.song.time * self.scroll_speed)))
+        self.star_camera.position = (self.window.center_x, 0 - (self.song.time * self.scroll_speed))
         self.star_camera.use()
         self.stars.draw()
 
