@@ -48,5 +48,6 @@ imgui.ini
 # Pycharm
 
 .idea/
+.libs/
 
 charm/temp.py
