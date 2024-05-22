@@ -34,6 +34,7 @@ with pkg_resources.path(charm.data.fonts, "bananaslipplus.otf") as p:
 class CharmGame(DigiWindow):
     def __init__(self):
         super().__init__((SCREEN_WIDTH, SCREEN_HEIGHT), SCREEN_TITLE, FPS_CAP, None)
+        self.set_min_size(1, 1)
 
         icon = pyglet_img_from_resource(charm.data.images, "charm-icon32t.png")
         self.set_icon(icon)

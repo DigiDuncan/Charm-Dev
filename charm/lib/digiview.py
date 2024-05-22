@@ -84,8 +84,9 @@ class DigiView(View):
 
     def on_resize(self, width: int, height: int):
         self.size = (width, height)
-        self.window.camera.projection = (0, width, 0, height)
-        self.window.camera.set_viewport((0, 0, width, height))
+        self.window.camera.position = self.window.center
+        self.window.camera.projection = (-width/2, width/2, -height/2, height/2)
+        self.window.camera.viewport = (0, 0, width, height)
 
         # Generate "gum wrapper" background
         self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)

@@ -140,12 +140,20 @@ class NoteTrail(MultiLineRenderer):
             ctx = window.ctx
             ctx.blend_func = ctx.BLEND_ADDITIVE
             with self.curve_cap.atlas.render_into(self.texture) as fbo:
-                fbo.clear()
-                if self.fill_color:
-                    arcade.draw_arc_filled(self.width / 2, 0, self.width - self.thickness * 2,
-                                           self.point_depth - self.thickness, self.fill_color, 0, 180)
-                arcade.draw_arc_outline(self.width / 2, 0, self.width - self.thickness * 2,
-                                        self.point_depth - self.thickness, self.color, 0, 180, self.thickness * 2)
+                l, b, w, h = fbo.viewport
+                temp_cam = arcade.camera.Camera2D(
+                    viewport=(l, b, w, h),
+                    projection=(0, w, h, 0),
+                    position=(0.0, 0.0),
+                    render_target=fbo
+                )
+                with temp_cam.activate():
+                    fbo.clear()
+                    if self.fill_color:
+                        arcade.draw_arc_filled(self.width / 2, 0, self.width - self.thickness * 2,
+                                               self.point_depth - self.thickness, self.fill_color, 0, 180)
+                    arcade.draw_arc_outline(self.width / 2, 0, self.width - self.thickness * 2,
+                                            self.point_depth - self.thickness, self.color, 0, 180, self.thickness * 2)
             ctx.blend_func = ctx.BLEND_DEFAULT
 
     def move(self, x: float, y: float):

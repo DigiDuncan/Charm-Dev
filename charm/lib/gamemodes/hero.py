@@ -27,6 +27,8 @@ from charm.objects.lyric_animator import LyricEvent
 from charm.objects.line_renderer import NoteTrail
 import charm.data.images.skins.hero as heroskin
 
+from charm.lib.perp_cam import PerspectiveProjector
+
 logger = logging.getLogger("charm")
 
 note_id = -1
@@ -765,8 +767,7 @@ class HeroHighway(Highway):
         self._pixel_offset += (self.px_per_s * delta_draw_time)
         self.last_update_time = self.song_time
 
-        self.highway_camera.move((0.0, self.pixel_offset))
-        self.highway_camera.update()
+        self.highway_camera.position = (self.window.center_x, self.window.center_y + self.pixel_offset)
 
         if self.auto:
             # while self.note_sprites[self.note_index].note.time < self.song_time - 0.050:
@@ -809,26 +810,24 @@ class HeroHighway(Highway):
         return self._pixel_offset
 
     def draw(self):
-        _cam = arcade.get_window().current_camera
-        self.static_camera.use()
-        arcade.draw_lrbt_rectangle_filled(self.x, self.x + self.w,
-                                          self.y, self.y + self.h,
-                                          self.color)
-        current_beat_idx = self.chart.song.indexes_by_time["beat"].lteq_index(self.song_time)
-        last_beat_idx = self.chart.song.indexes_by_time["beat"].lteq_index(self.song_time + self.viewport)
-        for beat in self.chart.song.events_by_type(BeatEvent)[current_beat_idx:last_beat_idx + 1]:
-            px = self.note_y(beat.time) - (self.note_size / 2)
-            arcade.draw_line(self.x, px, self.x + self.w, px, arcade.color.DARK_GRAY, 3 if beat.major else 1)
-        self.strikeline.draw()
+        with self.static_camera.activate():
+            arcade.draw_lrbt_rectangle_filled(self.x, self.x + self.w,
+                                              self.y, self.y + self.h,
+                                              self.color)
+            current_beat_idx = self.chart.song.indexes_by_time["beat"].lteq_index(self.song_time)
+            last_beat_idx = self.chart.song.indexes_by_time["beat"].lteq_index(self.song_time + self.viewport)
+            for beat in self.chart.song.events_by_type(BeatEvent)[current_beat_idx:last_beat_idx + 1]:
+                px = self.note_y(beat.time) - (self.note_size / 2)
+                arcade.draw_line(self.x, px, self.x + self.w, px, arcade.color.DARK_GRAY, 3 if beat.major else 1)
+            self.strikeline.draw()
 
-        self.highway_camera.use()
-        b = self.sprite_buckets.calc_bucket(self.song_time)
-        for bucket in self.sprite_buckets.buckets[b:b + 2] + [self.sprite_buckets.overbucket]:
-            for note in bucket.sprite_list:
-                if isinstance(note, HeroLongNoteSprite) and note.note.time < self.song_time + self.viewport and note.note.end > self.song_time:
-                    note.draw_trail()
-        self.sprite_buckets.draw(self.song_time)
-        _cam.use()
+        with self.highway_camera.activate():
+            b = self.sprite_buckets.calc_bucket(self.song_time)
+            for bucket in self.sprite_buckets.buckets[b:b + 2] + [self.sprite_buckets.overbucket]:
+                for note in bucket.sprite_list:
+                    if isinstance(note, HeroLongNoteSprite) and note.note.time < self.song_time + self.viewport and note.note.end > self.song_time:
+                        note.draw_trail()
+            self.sprite_buckets.draw(self.song_time)
 
     def lane_x(self, lane_num):
         if lane_num == 7:  # tap note override

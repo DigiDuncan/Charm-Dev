@@ -277,8 +277,7 @@ class FourKeyHighway(Highway):
         self._pixel_offset += (self.px_per_s * delta_draw_time)
         self.last_update_time = self.song_time
 
-        self.highway_camera.move((0.0, -self.pixel_offset))
-        self.highway_camera.update()
+        self.highway_camera.position = (self.window.center_x, self.window.center_y - self.pixel_offset)
 
     @property
     def pixel_offset(self):
@@ -336,6 +335,7 @@ class FourKeyHighway(Highway):
         if self.draw_text:
             self.text_batch.draw()
         _cam.use()
+
 
 # SKIN
 class FourKeyJudgement(Judgement):

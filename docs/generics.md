@@ -49,8 +49,8 @@
 * gap: `int` - px gap between lanes
 * downscroll: `bool` - whether or not the notes come from the top of the screen and go down
 * viewport: `float` - how many seconds of song are in view at a time
-* static_camera: `arcade.SimpleCamera` - the camera designed to render static elements of the highway
-* highway_camera: `arcade.SimpleCamera` - the camera designed to render moving (scrolling) elements of the highway
+* static_camera: `arcade.cameera.Camera2D` - the camera designed to render static elements of the highway
+* highway_camera: `arcade.cameera.Camera2D` - the camera designed to render moving (scrolling) elements of the highway
 * song_time: `float` - the current time of the song (dictates current notes to render and their positions)
 * auto: `bool`† - whether or not this highway "plays itself" (ignores user input and hits all notes)
 

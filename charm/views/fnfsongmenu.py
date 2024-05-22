@@ -116,6 +116,8 @@ class FNFSongMenuView(DigiView):
                 arcade.play_sound(self.window.sounds["back"], volume = settings.get_volume("sound"))
                 self.back.setup()
                 self.window.show_view(self.back)
+            case arcade.key.E:
+                self.window.ctx.default_atlas.save("hmmmmm.png")
         if old_id != self.menu.selected_id:
             self.selection_changed = self.local_time
             self.album_art.texture = self.menu.selected.album_art
@@ -138,7 +140,7 @@ class FNFSongMenuView(DigiView):
 
     @shows_errors
     def on_draw(self):
-        self.window.camera.use()
+        self.window.default_camera.use()
         self.clear()
 
         if not self.ready:

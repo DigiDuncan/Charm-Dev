@@ -39,29 +39,37 @@ class SongMenuItem(Sprite):
         self.position = (0, -window.height)
 
         with arcade.get_window().ctx.default_atlas.render_into(self._tex) as fbo:
-            fbo.clear()
-            arcade.draw_circle_filled(self.width - self.height / 2, self.height / 2, self.height / 2, CharmColors.FADED_PURPLE)
-            arcade.draw_lrbt_rectangle_filled(0, self.width - self.height / 2, 0, self.height, CharmColors.FADED_PURPLE)
-            if (self.artist or self.album):
-                if self.artist:
-                    # add the comma
-                    artistalbum = self.artist + ", " + str(self.album)
+            l, b, w, h = fbo.viewport
+            temp_cam = arcade.camera.Camera2D(
+                viewport=(l, b, w, h),
+                projection=(0, w, h, 0),
+                position=(0.0, 0.0),
+                render_target=fbo
+            )
+            with temp_cam.activate():
+                fbo.clear()
+                arcade.draw_circle_filled(self.width - self.height / 2, self.height / 2, self.height / 2, CharmColors.FADED_PURPLE)
+                arcade.draw_lrbt_rectangle_filled(0, self.width - self.height / 2, 0, self.height, CharmColors.FADED_PURPLE)
+                if (self.artist or self.album):
+                    if self.artist:
+                        # add the comma
+                        artistalbum = self.artist + ", " + str(self.album)
+                    else:
+                        # only album name
+                        artistalbum = self.album
+                    arcade.draw_text(
+                        self.title, self.width - self.height / 2 - 5, self.height / 2, arcade.color.BLACK,
+                        font_size=self.height / 3 * (3 / 4), font_name="bananaslip plus", anchor_x="right"
+                    )
+                    arcade.draw_text(
+                        artistalbum, self.width - self.height / 2 - 5, self.height / 2, arcade.color.BLACK,
+                        font_size=self.height / 4 * (3 / 4), font_name="bananaslip plus", anchor_x="right", anchor_y="top"
+                    )
                 else:
-                    # only album name
-                    artistalbum = self.album
-                arcade.draw_text(
-                    self.title, self.width - self.height / 2 - 5, self.height / 2, arcade.color.BLACK,
-                    font_size=self.height / 3 * (3 / 4), font_name="bananaslip plus", anchor_x="right"
-                )
-                arcade.draw_text(
-                    artistalbum, self.width - self.height / 2 - 5, self.height / 2, arcade.color.BLACK,
-                    font_size=self.height / 4 * (3 / 4), font_name="bananaslip plus", anchor_x="right", anchor_y="top"
-                )
-            else:
-                arcade.draw_text(
-                    self.title, self.width - self.height / 2 - 5, self.height / 2, arcade.color.BLACK,
-                    font_size=self.height / 3, font_name="bananaslip plus", anchor_x="right", anchor_y="center"
-                )
+                    arcade.draw_text(
+                        self.title, self.width - self.height / 2 - 5, self.height / 2, arcade.color.BLACK,
+                        font_size=self.height / 3, font_name="bananaslip plus", anchor_x="right", anchor_y="center"
+                    )
 
         # logger.info(f"Loaded MenuItem {self.title}")
 

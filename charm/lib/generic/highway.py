@@ -15,8 +15,8 @@ class Highway:
         self.window = arcade.get_window()
         self.size = size if size is not None else (self.window.width // 3, self.window.height)
 
-        self.static_camera = arcade.camera.SimpleCamera()
-        self.highway_camera = arcade.camera.SimpleCamera()
+        self.static_camera = arcade.camera.Camera2D()
+        self.highway_camera = arcade.camera.Camera2D()
         self.song_time: float = 0
 
     @property

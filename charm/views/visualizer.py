@@ -86,7 +86,7 @@ class VisualizerView(DigiView):
 
         # Create background stars
         with LogSection(logger, "creating stars"):
-            self.star_camera = arcade.camera.SimpleCamera()
+            self.star_camera = arcade.camera.Camera2D()
             self.stars = arcade.SpriteList()
             self.scroll_speed = 20  # px/s
             stars_per_screen = 100
@@ -222,7 +222,7 @@ class VisualizerView(DigiView):
         self.gradient.draw()
 
         # Scroll star camera and draw stars
-        self.star_camera.move_to((0, 0 - (self.song.time * self.scroll_speed)))
+        self.star_camera.position = (self.window.center_x, 0 - (self.song.time * self.scroll_speed))
         self.star_camera.use()
         self.stars.draw()
 
