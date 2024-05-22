@@ -5,6 +5,9 @@ from math import cos, sin, radians
 
 import arcade
 
+from pyglet.math import Vec3
+
+
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView, shows_errors, ignore_imgui
 
@@ -21,21 +24,24 @@ class PerspectiveView(DigiView):
         super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, *args, **kwargs)
         self.volume = 1
 
-        self.bingo = arcade.SpriteSolidColor(100, 500, 0, 0)
+        self.bingo = arcade.SpriteSolidColor(100, 500, 0, 250)
         self.bingo.bottom = 0.0
         self.asdsa = arcade.SpriteList()
         self.asdsa.append(self.bingo)
 
         self.proj = PerspectiveProjector()
+        self.proj.projection.far = 10000.0
 
-        self.phi = 45.0
+        self.view_angle = 70.0
+        self.view_dist = 100.0
 
         data = self.proj.view
         data_h_fov = 0.5 * self.proj.projection.fov
 
-        data.position = (0.0, -10.0 * sin(radians(self.phi)), 10.0 * cos(radians(self.phi)))
-        data.forward, data.up = arcade.camera.grips.rotate_around_right(data, -self.phi - data_h_fov)
+        look_radians = radians(self.view_angle - data_h_fov)
 
+        data.position = (0.0, self.view_dist * sin(look_radians), self.view_dist * cos(look_radians))
+        data.up, data.forward = arcade.camera.grips.rotate_around_right(data, -self.view_angle)
 
     @shows_errors
     def setup(self):
@@ -80,7 +86,7 @@ class PerspectiveView(DigiView):
         self.small_logos_forward.draw()
         self.small_logos_backward.draw()
 
-        super().on_draw()
-
         with self.proj.activate():
             self.asdsa.draw(pixelated=True)
+
+        super().on_draw()

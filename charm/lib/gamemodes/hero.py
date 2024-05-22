@@ -713,6 +713,28 @@ class HeroHighway(Highway):
 
         super().__init__(chart, pos, size, gap, downscroll = True)
 
+        self.perp_static = arcade.camera.PerspectiveProjector()
+
+        self.view_angle = 70.0
+        self.view_dist = 400.0
+
+        data = self.perp_static.view
+        data_h_fov = 0.5 * self.perp_static.projection.fov
+        self.perp_static.projection.far = 10000.0
+
+        look_radians = math.radians(self.view_angle - data_h_fov)
+
+        self.perp_y_pos = self.view_dist * math.sin(look_radians)
+        self.perp_z_pos = self.view_dist * math.cos(look_radians)
+
+        data.position = (self.window.center_x, self.perp_y_pos-self.size[1]/2.0, self.perp_z_pos)
+        data.up, data.forward = arcade.camera.grips.rotate_around_right(data, -self.view_angle)
+
+        self.perp_moving = arcade.camera.PerspectiveProjector(
+            view=arcade.camera.data_types.duplicate_camera_data(data),
+            projection=self.perp_static.projection
+        )
+
         self.chart: HeroChart = self.chart
 
         self.viewport = 0.75  # TODO: Set dynamically.
@@ -768,6 +790,7 @@ class HeroHighway(Highway):
         self.last_update_time = self.song_time
 
         self.highway_camera.position = (self.window.center_x, self.window.center_y + self.pixel_offset)
+        self.perp_moving.view.position = (self.window.center_x, self.perp_y_pos + self.pixel_offset, self.perp_z_pos)
 
         if self.auto:
             # while self.note_sprites[self.note_index].note.time < self.song_time - 0.050:
@@ -810,7 +833,7 @@ class HeroHighway(Highway):
         return self._pixel_offset
 
     def draw(self):
-        with self.static_camera.activate():
+        with self.perp_static.activate():
             arcade.draw_lrbt_rectangle_filled(self.x, self.x + self.w,
                                               self.y, self.y + self.h,
                                               self.color)
@@ -819,9 +842,11 @@ class HeroHighway(Highway):
             for beat in self.chart.song.events_by_type(BeatEvent)[current_beat_idx:last_beat_idx + 1]:
                 px = self.note_y(beat.time) - (self.note_size / 2)
                 arcade.draw_line(self.x, px, self.x + self.w, px, arcade.color.DARK_GRAY, 3 if beat.major else 1)
-            self.strikeline.draw()
 
-        with self.highway_camera.activate():
+            self.strikeline.draw()
+            arcade.draw_point(0, 0, (255, 0, 0, 255), 10)
+
+        with self.perp_moving.activate():
             b = self.sprite_buckets.calc_bucket(self.song_time)
             for bucket in self.sprite_buckets.buckets[b:b + 2] + [self.sprite_buckets.overbucket]:
                 for note in bucket.sprite_list:
