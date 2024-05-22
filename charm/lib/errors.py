@@ -1,7 +1,7 @@
 import arcade
 import arcade.color
 import PIL, PIL.Image, PIL.ImageDraw  # noqa: E401
-from arcade import Sprite
+from arcade import Sprite, camera
 
 import charm.data.images.errors
 from charm.lib.utils import img_from_resource
@@ -28,16 +28,27 @@ class CharmException(Exception):
         _tex = arcade.Texture.create_empty(f"_error-{self.title}-{self.show_message}", (500, 200))
         default_atlas = window.ctx.default_atlas
         default_atlas.add(_tex)
+
         _icon_tex = arcade.Texture(self.icon)
+        default_atlas.add(_icon_tex)
         sprite = Sprite(_tex)
 
         with default_atlas.render_into(_tex) as fbo:
-            fbo.clear()
-            arcade.draw_lrbt_rectangle_filled(0, 500, 0, 200, arcade.color.BLANCHED_ALMOND)
-            arcade.draw_lrbt_rectangle_filled(0, 500, 150, 200, arcade.color.BRANDEIS_BLUE)
-            arcade.draw_text(self.title, 50, 165, font_size=24, bold=True, font_name="bananaslip plus")
-            arcade.draw_text(self.show_message, 5, 146, font_size=16, anchor_y="top", multiline=True, width=492, color=arcade.color.BLACK, font_name="bananaslip plus")
-            arcade.draw_texture_rectangle(25, 175, 32, 32, _icon_tex)
+            l, b, w, h = fbo.viewport
+            temp_cam = camera.Camera2D(
+                viewport=(l, b, w, h),
+                projection=(0, w, h, 0),
+                position=(0.0, 0.0),
+                render_target=fbo
+            )
+            with temp_cam.activate():
+                fbo.clear()
+
+                arcade.draw_lrbt_rectangle_filled(0, 500, 0, 200, arcade.color.BLANCHED_ALMOND)
+                arcade.draw_lrbt_rectangle_filled(0, 500, 150, 200, arcade.color.BRANDEIS_BLUE)
+                arcade.draw_text(self.title, 50, 165, font_size=24, bold=True, font_name="bananaslip plus")
+                arcade.draw_text(self.show_message, 5, 146, font_size=16, anchor_y="top", multiline=True, width=492, color=arcade.color.BLACK, font_name="bananaslip plus")
+                arcade.draw_texture_rectangle(25, 175, 32, 32, _icon_tex)
 
         return sprite
 
