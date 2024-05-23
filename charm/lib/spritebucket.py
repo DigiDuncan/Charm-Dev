@@ -10,6 +10,7 @@ class SpriteBucketCollection:
         self.sprites: list[arcade.Sprite] = []
         self.buckets: list[arcade.SpriteList] = []
         self.overbucket = arcade.SpriteList()
+        self.overbucket.program = self.overbucket.ctx.sprite_list_program_no_cull
 
     def append(self, sprite: arcade.Sprite, time: Seconds, length: Seconds):
         self.sprites.append(sprite)
