@@ -24,7 +24,7 @@ class PerspectiveView(DigiView):
         super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, *args, **kwargs)
         self.volume = 1
 
-        self.bingo = arcade.SpriteSolidColor(100, 500, 0, 250)
+        self.bingo = arcade.Sprite(r"C:\Users\Playtech\Desktop\Code\Python\Charm\charm\data\images\debug\highway_stick.png", center_y=250)
         self.bingo.bottom = 0.0
         self.asdsa = arcade.SpriteList()
         self.asdsa.append(self.bingo)
@@ -32,7 +32,7 @@ class PerspectiveView(DigiView):
         self.proj = PerspectiveProjector()
         self.proj.projection.far = 10000.0
 
-        self.view_angle = 70.0
+        self.view_angle = 85.0
         self.view_dist = 100.0
 
         data = self.proj.view
@@ -40,7 +40,7 @@ class PerspectiveView(DigiView):
 
         look_radians = radians(self.view_angle - data_h_fov)
 
-        data.position = (0.0, self.view_dist * sin(look_radians), self.view_dist * cos(look_radians))
+        data.position = (0.0, -self.view_dist * sin(look_radians), self.view_dist * cos(look_radians))
         data.up, data.forward = arcade.camera.grips.rotate_around_right(data, -self.view_angle)
 
     @shows_errors

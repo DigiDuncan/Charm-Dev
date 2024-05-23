@@ -116,6 +116,7 @@ class NoteTrail(MultiLineRenderer):
             offset = -self.point_depth / 2 if self.upscroll else self.point_depth / 2
             self.sprite.position = (self.note_center[0], self._trail_end + offset)
             self.curve_cap = arcade.SpriteList()
+            self.curve_cap.program = self.curve_cap.ctx.sprite_list_program_no_cull
             self.curve_cap.append(self.sprite)
         self.generate_fill()
 

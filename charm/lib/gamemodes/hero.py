@@ -27,8 +27,6 @@ from charm.objects.lyric_animator import LyricEvent
 from charm.objects.line_renderer import NoteTrail
 import charm.data.images.skins.hero as heroskin
 
-from charm.lib.perp_cam import PerspectiveProjector
-
 logger = logging.getLogger("charm")
 
 note_id = -1
@@ -716,7 +714,7 @@ class HeroHighway(Highway):
         self.perp_static = arcade.camera.PerspectiveProjector()
 
         self.view_angle = 70.0
-        self.view_dist = 400.0
+        self.view_dist = 800.0
 
         data = self.perp_static.view
         data_h_fov = 0.5 * self.perp_static.projection.fov
@@ -724,10 +722,10 @@ class HeroHighway(Highway):
 
         look_radians = math.radians(self.view_angle - data_h_fov)
 
-        self.perp_y_pos = self.view_dist * math.sin(look_radians)
+        self.perp_y_pos = -self.view_dist * math.sin(look_radians)
         self.perp_z_pos = self.view_dist * math.cos(look_radians)
 
-        data.position = (self.window.center_x, self.perp_y_pos-self.size[1]/2.0, self.perp_z_pos)
+        data.position = (self.window.center_x, self.perp_y_pos, self.perp_z_pos)
         data.up, data.forward = arcade.camera.grips.rotate_around_right(data, -self.view_angle)
 
         self.perp_moving = arcade.camera.PerspectiveProjector(
@@ -762,6 +760,7 @@ class HeroHighway(Highway):
             self.note_sprites.append(sprite)
 
         self.strikeline = arcade.SpriteList()
+        self.strikeline.program = self.strikeline.ctx.sprite_list_program_no_cull
         # TODO: Is this dumb?
         for i in range(5):
             sprite = HeroNoteSprite(HeroNote(self.chart, 0, i, 0, "strikeline"), self, self.note_size)
@@ -850,7 +849,7 @@ class HeroHighway(Highway):
             b = self.sprite_buckets.calc_bucket(self.song_time)
             for bucket in self.sprite_buckets.buckets[b:b + 2] + [self.sprite_buckets.overbucket]:
                 for note in bucket.sprite_list:
-                    if isinstance(note, HeroLongNoteSprite) and note.note.time < self.song_time + self.viewport and note.note.end > self.song_time:
+                    if isinstance(note, HeroLongNoteSprite):
                         note.draw_trail()
             self.sprite_buckets.draw(self.song_time)
 

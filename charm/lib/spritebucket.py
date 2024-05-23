@@ -21,8 +21,11 @@ class SpriteBucketCollection:
             self.overbucket.append(sprite)
 
     def append_bucket(self, sprite, b):
+        prog_no_cull = arcade.get_window().ctx.sprite_list_program_no_cull
         while len(self.buckets) <= b:
-            self.buckets.append(arcade.SpriteList())
+            s = arcade.SpriteList()
+            s.program = prog_no_cull
+            self.buckets.append(s)
         self.buckets[b].append(sprite)
 
     def update(self, time: Seconds, delta_time: float = 1 / 60):
