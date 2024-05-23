@@ -24,7 +24,7 @@ from charm.lib.spritebucket import SpriteBucketCollection
 from charm.lib.utils import img_from_resource, nuke_smart_quotes
 from charm.objects.lyric_animator import LyricEvent
 
-from charm.objects.line_renderer import NoteTrail
+from charm.objects.line_renderer import NoteTrail, LongNoteRenderer, NoteStruckState
 import charm.data.images.skins.hero as heroskin
 
 logger = logging.getLogger("charm")
@@ -680,27 +680,29 @@ class HeroNoteSprite(arcade.Sprite):
             self.alpha = 0
 
 
-class HeroLongNoteSprite(HeroNoteSprite):
+class HeroLongNoteSprites(LongNoteRenderer):
     def __init__(self, note: HeroNote, highway: "HeroHighway", height=128, *args, **kwargs):
-        super().__init__(note, highway, height, *args, **kwargs)
+        cap_texture = load_note_texture('cap', note.lane, 64)
+        cap_missed = load_note_texture('cap', 5, 64)
+        body_texture = load_note_texture('body', note.lane, 128)
+        body_missed = load_note_texture('body', 5, 128)
+        tail_texture = load_note_texture('tail', note.lane, 128)
+        tail_missed = load_note_texture('tail', 5, 128)
+
+        # Notes are positioned based on top left, so we have to shift down to the center
+        x = highway.lane_x(note.lane) + highway.note_size*0.5
+        y = highway.note_y(note.time) - highway.note_size*0.5
+
+        super().__init__(cap_texture, body_texture, tail_texture, highway.note_size, height, x, y,
+                         cap_missed, body_missed, tail_missed)
         global note_id  # TODO: globals suck, is there a way to store this on the class?
         note_id += 1
         self.id = note_id
 
-        color = NoteColor.from_note(self.note)
-        width = self.highway.note_size * 3 if note.lane == 7 else self.highway.note_size  # open notes LARG
-        self.trail = NoteTrail(self.id, self.position, self.note.time, self.note.length, self.highway.px_per_s,
-                               color, width = width, upscroll = False, fill_color = color[:3] + (60,), curve = True, point_depth = self.highway.note_size)
-        self.dead_trail = NoteTrail(self.id, self.position, self.note.time, self.note.length, self.highway.px_per_s,
-                                    arcade.color.DARK_SLATE_GRAY, width = width, upscroll = False, fill_color = arcade.color.DARK_GRAY[:3] + (60,), curve = True, point_depth = self.highway.note_size)
+        self.note = note
 
     def update_animation(self, delta_time: float):
-        self.trail.set_position(*self.position)
-        self.dead_trail.set_position(*self.position)
-        return super().update_animation(delta_time)
-
-    def draw_trail(self):
-        self.dead_trail.draw() if self.note.missed else self.trail.draw()
+        raise NotImplementedError("Currently Long Notes don't support animations")
 
 
 class HeroHighway(Highway):
@@ -745,19 +747,28 @@ class HeroHighway(Highway):
 
         self.note_sprites: list[HeroNoteSprite] = []
         self.sprite_buckets = SpriteBucketCollection()
+        self.long_notes: list[HeroLongNoteSprites] = []
         for note in self.notes:
-            sprite = HeroNoteSprite(note, self, self.note_size) if note.length == 0 else HeroLongNoteSprite(note, self, self.note_size)
-            sprite.top = self.note_y(note.time)
-            sprite.left = self.lane_x(note.lane)
-            if note.lane in [5, 6]:  # flags
-                sprite.left = self.lane_x(5)
-                if self._show_flags is False:
-                    sprite.alpha = 0
-            elif note.lane == 7:  # open
-                sprite.center_x = self.w / 2
-            note.sprite = sprite
-            self.sprite_buckets.append(sprite, note.time, note.length)
-            self.note_sprites.append(sprite)
+                sprite = HeroNoteSprite(note, self, self.note_size)
+                sprite.top = self.note_y(note.time)
+                sprite.left = self.lane_x(note.lane)
+                if note.lane in [5, 6]:  # flags
+                    sprite.left = self.lane_x(5)
+                    if self._show_flags is False:
+                        sprite.alpha = 0
+                elif note.lane == 7:  # open
+                    sprite.center_x = self.w / 2
+                note.sprite = sprite
+                self.sprite_buckets.append(sprite, note.time, note.length)
+                self.note_sprites.append(sprite)
+
+                # Add a trail
+                trail = None if note.length == 0 else HeroLongNoteSprites(note, self, self.note_size)
+                if trail is not None:
+                    self.long_notes.append(trail)
+                    for trail_sprite in trail.get_sprites():
+                        self.sprite_buckets.append(trail_sprite, note.time, note.length)
+
 
         self.strikeline = arcade.SpriteList()
         self.strikeline.program = self.strikeline.ctx.sprite_list_program_no_cull
@@ -811,6 +822,10 @@ class HeroHighway(Highway):
                 else:
                     self.strikeline[n].alpha = ease_linear(255, 64, note.end, note.end + 0.25, self.song_time)
 
+        for long_note in self.long_notes:
+            if long_note.note.missed and long_note._note_state is not NoteStruckState.MISSED:
+                long_note.miss()
+
     @property
     def pos(self) -> tuple[int, int]:
         return self._pos
@@ -843,14 +858,14 @@ class HeroHighway(Highway):
                 arcade.draw_line(self.x, px, self.x + self.w, px, arcade.color.DARK_GRAY, 3 if beat.major else 1)
 
             self.strikeline.draw()
-            arcade.draw_point(0, 0, (255, 0, 0, 255), 10)
 
         with self.perp_moving.activate():
             b = self.sprite_buckets.calc_bucket(self.song_time)
-            for bucket in self.sprite_buckets.buckets[b:b + 2] + [self.sprite_buckets.overbucket]:
-                for note in bucket.sprite_list:
-                    if isinstance(note, HeroLongNoteSprite):
-                        note.draw_trail()
+            # TODO: unused, maybe unnecessary?
+            # for bucket in self.sprite_buckets.buckets[b:b + 2] + [self.sprite_buckets.overbucket]:
+            #     for note in bucket.sprite_list:
+            #         if isinstance(note, HeroLongNoteSprite):
+            #             note.draw_trail()
             self.sprite_buckets.draw(self.song_time)
 
     def lane_x(self, lane_num):

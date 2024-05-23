@@ -151,3 +151,9 @@ class ActionNotInSetError(CharmException):
 class ScoreDBVersionMismatchError(CharmException):
     def __init__(self, version: str, correct_version: str, *args: object):
         super().__init__("Score DB version mismatch!", f"Version {version} mismatched with correct version {correct_version}!", "error", *args)
+
+
+class InvalidNoteLengthError(CharmException):
+
+    def __init__(self, length: float, body_length: float, *args):
+        super().__init__(f"Invalid Note Length!", f"The note is trying to be {length} but this makes the note's body {body_length} long.", "warning", *args)

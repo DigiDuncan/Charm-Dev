@@ -1,10 +1,68 @@
 from typing import Hashable
+from enum import IntEnum
 
 import arcade
 from arcade.types import Color
 
 from charm.lib.types import Point, TuplePoint
 from charm.objects.lyric_animator import Seconds
+from charm.lib.errors import InvalidNoteLengthError
+
+
+class NoteStruckState(IntEnum):
+    UNTOUCHED = 0
+    HIT = 1
+    MISSED = 2
+
+
+class LongNoteRenderer:
+
+    def __init__(self,
+                 cap_texture: arcade.Texture, body_texture: arcade.Texture, tail_texture: arcade.Texture,
+                 width: float, length: float, x: float, y: float,
+                 cap_missed: arcade.Texture = None, body_missed: arcade.Texture = None, tail_missed: arcade.Texture = None,
+                 cap_hit: arcade.Texture = None, body_hit: arcade.Texture = None, tail_hit: arcade.Texture = None
+    ):
+        self._cap_textures: tuple[arcade.Texture, ...] = (cap_texture, cap_hit or cap_texture, cap_missed or cap_texture)
+        self._body_textures: tuple[arcade.Texture, ...] = (body_texture, body_hit or body_texture, body_missed or body_texture)
+        self._tail_textures: tuple[arcade.Texture, ...] = (tail_texture, tail_hit or tail_texture, tail_missed or tail_texture)
+
+        self._note_state: NoteStruckState = NoteStruckState.UNTOUCHED
+
+        cap_inv_aspect = self._cap_textures[self._note_state].height / self._cap_textures[self._note_state].width
+        cap_width, cap_height = width, cap_inv_aspect * width
+
+        tail_inv_aspect = self._body_textures[self._note_state].height / self._body_textures[self._note_state].width
+        tail_width, tail_height = width, tail_inv_aspect * width
+
+        body_width, body_height = width, length - cap_height - tail_height / 2.0
+
+        if body_height < 0.0:
+            raise InvalidNoteLengthError(length, body_height)
+
+        self._cap = arcade.Sprite(self._cap_textures[self._note_state], center_x=x, center_y=y + body_height + (tail_height + cap_height)/2.0)
+        self._cap.width, self._cap.height = cap_width, cap_height
+        self._body = arcade.Sprite(self._body_textures[self._note_state], center_x=x, center_y=y + (tail_height + body_width)/2.0)
+        self._body.width, self._body.height = body_width, body_height
+        self._tail = arcade.Sprite(self._tail_textures[self._note_state], center_x=x, center_y=y)
+        self._tail.width, self._tail.height = tail_width, tail_height
+
+    def get_sprites(self):
+        return self._cap, self._body, self._tail
+
+    def miss(self):
+        self._note_state = NoteStruckState.MISSED
+
+        self._cap.texture = self._cap_textures[self._note_state]
+        self._body.texture = self._body_textures[self._note_state]
+        self._tail.texture = self._tail_textures[self._note_state]
+
+    def hit(self):
+        self._note_state = NoteStruckState.HIT
+
+        self._cap.texture = self._cap_textures[self._note_state]
+        self._body.texture = self._body_textures[self._note_state]
+        self._tail.texture = self._tail_textures[self._note_state]
 
 
 class LineRenderer:
