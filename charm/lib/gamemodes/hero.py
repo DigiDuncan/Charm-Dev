@@ -716,7 +716,7 @@ class HeroHighway(Highway):
         self.perp_static = arcade.camera.PerspectiveProjector()
 
         self.view_angle = 70.0
-        self.view_dist = 800.0
+        self.view_dist = 400.0
 
         data = self.perp_static.view
         data_h_fov = 0.5 * self.perp_static.projection.fov
@@ -761,14 +761,12 @@ class HeroHighway(Highway):
                 note.sprite = sprite
                 self.sprite_buckets.append(sprite, note.time, note.length)
                 self.note_sprites.append(sprite)
-
                 # Add a trail
-                trail = None if note.length == 0 else HeroLongNoteSprites(note, self, self.note_size)
+                trail = None if note.length == 0 else HeroLongNoteSprites(note, self, self.px_per_s * note.length)
                 if trail is not None:
                     self.long_notes.append(trail)
                     for trail_sprite in trail.get_sprites():
                         self.sprite_buckets.append(trail_sprite, note.time, note.length)
-
 
         self.strikeline = arcade.SpriteList()
         self.strikeline.program = self.strikeline.ctx.sprite_list_program_no_cull

@@ -42,7 +42,7 @@ class LongNoteRenderer:
 
         self._cap = arcade.Sprite(self._cap_textures[self._note_state], center_x=x, center_y=y + body_height + (tail_height + cap_height)/2.0)
         self._cap.width, self._cap.height = cap_width, cap_height
-        self._body = arcade.Sprite(self._body_textures[self._note_state], center_x=x, center_y=y + (tail_height + body_width)/2.0)
+        self._body = arcade.Sprite(self._body_textures[self._note_state], center_x=x, center_y=y + (tail_height + body_height)/2.0)
         self._body.width, self._body.height = body_width, body_height
         self._tail = arcade.Sprite(self._tail_textures[self._note_state], center_x=x, center_y=y)
         self._tail.width, self._tail.height = tail_width, tail_height

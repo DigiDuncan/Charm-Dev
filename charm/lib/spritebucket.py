@@ -16,6 +16,8 @@ class SpriteBucketCollection:
         self.sprites.append(sprite)
         b = self.calc_bucket(time)
         b2 = self.calc_bucket(time + length)
+        if length != 0:
+            print(b, b2)
         if b == b2:
             self.append_bucket(sprite, b)
         else:
