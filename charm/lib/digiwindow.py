@@ -33,7 +33,7 @@ class DebugSettings(TypedDict):
 
 
 class DigiWindow(arcade.Window):
-    def __init__(self, size: tuple[int, int], title: str, fps_cap: int, initial_view: "DigiView"):
+    def __init__(self, size: tuple[int, int], title: str, fps_cap: int, initial_view: DigiView | None):
         super().__init__(size[0], size[1], title, update_rate=1 / fps_cap, enable_polling=True, resizable=True)
 
         self.fps_cap = fps_cap
