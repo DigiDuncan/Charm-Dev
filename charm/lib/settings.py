@@ -1,11 +1,22 @@
-from addict import Dict
+from typing import Literal
+from dataclasses import dataclass
 
+MixerNames = Literal["default", "master", "music", "sound", "menu_music"]
 
-class Settings(Dict):
-    def __missing__(self, name):
-        raise KeyError(name)
+@dataclass
+class Volume:
+    master = 1.0
+    music = 1.0
+    menu_music = 1.0
+    sound = 1.0
 
-    def get_volume(self, mixer: str) -> float:
+class Settings:
+    def __init__(self):
+        self.volume = Volume()
+        self.resolution = (1280, 720)
+        self.fps = 10000
+
+    def get_volume(self, mixer: MixerNames) -> float:
         match mixer:
             case "default" | "master":
                 return self.volume.master
@@ -15,23 +26,6 @@ class Settings(Dict):
                 return self.volume.master * self.volume.sound
             case "menu_music":
                 return self.volume.master * self.volume.menu_music
-            case _:
-                return self.volume.master
 
 
-settings_dict = {
-    "volume": {
-        "master": 1.0,
-        "music": 1.0,
-        "menu_music": 1.0,
-        "sound": 1.0
-    },
-    "resolution": {
-        "width": 1280,
-        "height": 720
-
-    },
-    "fps": 10000
-}
-
-settings = Settings(settings_dict)
+settings = Settings()

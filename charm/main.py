@@ -20,8 +20,7 @@ from charm.lib.digiwindow import DigiWindow
 
 from .views.title import TitleView
 
-SCREEN_WIDTH = settings.resolution.width
-SCREEN_HEIGHT = settings.resolution.height
+SCREEN_WIDTH, SCREEN_HEIGHT = settings.resolution
 FPS_CAP = settings.fps
 SCREEN_TITLE = "Charm"
 

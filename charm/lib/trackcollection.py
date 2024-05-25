@@ -3,13 +3,13 @@ import logging
 import arcade
 import pyglet.media as media
 
-from charm.lib.settings import settings
+from charm.lib.settings import MixerNames, settings
 
 logger = logging.getLogger("charm")
 
 
 class TrackCollection:
-    def __init__(self, sounds: arcade.Sound, mixer = "music"):
+    def __init__(self, sounds: arcade.Sound, mixer: MixerNames = "music"):
         self.mixer = mixer
         self.tracks: list[media.Player] = [s.play(volume = settings.get_volume(self.mixer)) for s in sounds]
         self.pause()
