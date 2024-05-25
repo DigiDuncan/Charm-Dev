@@ -24,7 +24,7 @@ class PerspectiveView(DigiView):
         super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, *args, **kwargs)
         self.volume = 1
 
-        self.bingo = arcade.Sprite(r"C:\Users\Playtech\Desktop\Code\Python\Charm\charm\data\images\debug\highway_stick.png", center_y=250)
+        self.bingo = arcade.Sprite(r"C:\Users\DigiDuncan\Documents\GitHub\Charm\charm\data\images\no_image_found.png", center_y=250)
         self.bingo.bottom = 0.0
         self.asdsa = arcade.SpriteList()
         self.asdsa.append(self.bingo)
