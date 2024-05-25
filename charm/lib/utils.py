@@ -1,11 +1,12 @@
+from __future__ import annotations
 from functools import cache
 from pathlib import Path
-from typing import Any
-import collections
+from typing import Any, Iterator, Protocol, TypeAlias, TypeVar
+from collections.abc import Iterable
 import importlib.resources as pkg_resources
 
 import pyglet
-from pyglet.image import ImageData
+import pyglet.image
 import PIL.Image
 
 from charm.lib.types import RGB, RGBA
@@ -19,7 +20,25 @@ def int_or_str(i: Any) -> int | str:
     return o
 
 
-def clamp(minVal, val, maxVal):
+# Stolen from pylance
+_T_contra = TypeVar("_T_contra", contravariant=True)
+
+class SupportsDunderLT(Protocol[_T_contra]):
+    def __lt__(self, other: _T_contra, /) -> bool:
+        ...
+
+class SupportsDunderGT(Protocol[_T_contra]):
+    def __gt__(self, other: _T_contra, /) -> bool:
+        ...
+
+
+SupportsRichComparison: TypeAlias = SupportsDunderLT[Any] | SupportsDunderGT[Any]
+
+
+TT = TypeVar("TT", bound=SupportsRichComparison)
+
+
+def clamp(minVal: TT, val: TT, maxVal: TT) -> TT:
     """Clamp a `val` to be no lower than `minVal`, and no higher than `maxVal`."""
     return max(minVal, min(maxVal, val))
 
@@ -35,13 +54,13 @@ def img_from_resource(package: pkg_resources.Package, resource: pkg_resources.Re
 @cache
 def pyglet_img_from_resource(package: pkg_resources.Package, resource: pkg_resources.Resource) -> pyglet.image.AbstractImage:
     with pkg_resources.open_binary(package, resource) as f:
-        image: ImageData = pyglet.image.load("unknown.png", file=f)
+        image = pyglet.image.load("unknown.png", file=f)
     return image
 
 
 @cache
 def img_from_path(path: Path) -> PIL.Image.Image:
-    with open(path) as f:
+    with open(path, 'b') as f:
         image = PIL.Image.open(f)
         image.load()
     return image
@@ -60,15 +79,16 @@ def map_range(x: float, n1: float, m1: float, n2: float = -1, m2: float = 1) -> 
     ans = new_pos + n2
     return ans
 
-
-def flatten(x):
-    if isinstance(x, collections.Iterable):
+def flatten(x: Iterable[Any] | Any) -> list[Any]:
+    if isinstance(x, Iterable):
         return [a for i in x for a in flatten(i)]
     else:
         return [x]
 
 
-def findone(iterator):
+T = TypeVar("T")
+
+def findone(iterator: Iterator[T]) -> T | None:
     try:
         val = next(iterator)
     except StopIteration:
