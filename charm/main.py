@@ -1,14 +1,13 @@
 import importlib.resources as pkg_resources
 
 import pyglet
+# Fix font
+pyglet.options["win32_disable_shaping"] = True
 
 import arcade_accelerate
 arcade_accelerate.bootstrap()
 
-# Fix font
-pyglet.options["win32_disable_shaping"] = True
 import arcade
-arcade.pyglet.options["win32_disable_shaping"] = True
 import arcade.hitbox
 
 import charm
