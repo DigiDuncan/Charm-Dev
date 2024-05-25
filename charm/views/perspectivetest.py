@@ -12,6 +12,7 @@ from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView, shows_errors, ignore_imgui
 
 from charm.lib.perp_cam import PerspectiveProjector
+import charm.data.images
 
 logger = logging.getLogger("charm")
 
@@ -24,7 +25,8 @@ class PerspectiveView(DigiView):
         super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, *args, **kwargs)
         self.volume = 1
 
-        self.bingo = arcade.Sprite(r"C:\Users\DigiDuncan\Documents\GitHub\Charm\charm\data\images\no_image_found.png", center_y=250)
+        with pkg_resources.path(charm.data.images, "no_image_found.png") as p:
+            self.bingo = arcade.Sprite(p, center_y=250)
         self.bingo.bottom = 0.0
         self.asdsa = arcade.SpriteList()
         self.asdsa.append(self.bingo)
