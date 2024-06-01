@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
 from statistics import mean
+from types import ModuleType
 from typing import cast
 
 import arcade
@@ -113,7 +114,7 @@ def load_note_texture(note_type, note_lane, height, value = 0, fnf = False):
         # on it for readability.
         image_name = f"gray-{note_lane + 1}"
         try:
-            image = img_from_resource(fourkeyskin, image_name + ".png")
+            image = img_from_resource(cast(ModuleType, fourkeyskin), image_name + ".png")
             if image.height != height:
                 width = int((height / image.height) * image.width)
                 image = image.resize((width, height), PIL.Image.LANCZOS)
@@ -130,9 +131,9 @@ def load_note_texture(note_type, note_lane, height, value = 0, fnf = False):
         image_name = f"{note_type}-{note_lane + 1}"
         try:
             if fnf:  # HACK: probably not a great way to do this!
-                image = img_from_resource(fnfskin, image_name + ".png")
+                image = img_from_resource(cast(ModuleType, fnfskin), image_name + ".png")
             else:
-                image = img_from_resource(fourkeyskin, image_name + ".png")
+                image = img_from_resource(cast(ModuleType, fourkeyskin), image_name + ".png")
             if image.height != height:
                 width = int((height / image.height) * image.width)
                 image = image.resize((width, height), PIL.Image.LANCZOS)
@@ -207,7 +208,7 @@ class FourKeyLongNoteSprite(FourKeyNoteSprite):
     def update_animation(self, delta_time: float):
         self.trail.set_position(*self.position)
         self.dead_trail.set_position(*self.position)
-        return super().update_animation(delta_time)
+        super().update_animation(delta_time)
 
     def draw_trail(self):
         self.dead_trail.draw() if self.dead else self.trail.draw()

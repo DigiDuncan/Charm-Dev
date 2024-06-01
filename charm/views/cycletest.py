@@ -20,18 +20,16 @@ logger = logging.getLogger("charm")
 
 
 class IndexShifter:
-
-    def __init__(self, min_, max_, width, height, offset, shift, screen_size):
+    def __init__(self, min_: float, max_: float, width: float, height: float, offset: float, shift: float, screen_size: tuple[int, int]):
         self.min = min_
         self.max = max_
         self.width = width
         self.height = height
-        self.screen_width = screen_size[0]
-        self.screen_height = screen_size[1]
+        self.screen_width, self.screen_height = screen_size
         self.offset = offset
         self.shift = shift
 
-    def from_adjusted_y(self, adjusted_y: float):
+    def from_adjusted_y(self, adjusted_y: float) -> float:
         # Because the y value is already adjusted we don't need to use the screen height.
         # However, it may make more sense to adjust it within this function call.
 
@@ -46,7 +44,6 @@ class IndexShifter:
 
 
 class ListCycle:
-
     def __init__(self, texture: Texture, content: List[str], ease: EasingFunction = ease_linear,
                  height: int | None = None, width: int | None = None,
                  sprite_scale: float = 1.0,
@@ -68,7 +65,7 @@ class ListCycle:
             minimum_x_percent, maximum_x_percent,
             peak_x_percent, peak_width_percent,
             x_offset, peak_y_offset,
-            self.win.size
+            self.win.get_size()
         )
 
         # The extra amount the selected sprite should be adjusted
@@ -133,7 +130,7 @@ class ListCycle:
 
         self.trigger_layout()
 
-    def on_key(self, up: bool, pressed: bool):
+    def on_key(self, up: bool, pressed: bool) -> None:
         match (up, pressed):
             case (False, False):
                 if self.time_down_pressed > self.wait_for_long_scroll:
@@ -150,7 +147,7 @@ class ListCycle:
             case (True, True):
                 self.up_pressed = True
 
-    def scroll(self, dist: float):
+    def scroll(self, dist: float) -> None:
         # Start scrolling to the next target location based on how far we are told to scroll
         self.speed_scrolling = False
         self.speed_scroll_velocity = 0.0
@@ -161,7 +158,7 @@ class ListCycle:
         self.progress = 0.0
         self.duration = max(0.5, abs(self.target_offset - self.start_offset)) * self.shift_time
 
-    def speed_scroll(self, dist: float):
+    def speed_scroll(self, dist: float) -> None:
         # If the time since the last speed scroll is small enough then we want to massively boost the scroll
         # distance.
 
@@ -182,10 +179,10 @@ class ListCycle:
 
         self.speed_scrolling = True
 
-    def trigger_layout(self):
+    def trigger_layout(self) -> None:
         self.do_layout = True
 
-    def layout(self):
+    def layout(self) -> None:
         self.do_layout = False
         # Find where each sprite should be based on the total offset and the center of the screen
         center = self.bounds_height // 2
@@ -226,7 +223,7 @@ class ListCycle:
             sprite.right = x
             text.x = x - 10
 
-    def update(self, delta_time: float):
+    def update(self, delta_time: float) -> None:
         if self.up_pressed:
             self.time_up_pressed += delta_time
         if self.down_pressed:
@@ -282,7 +279,7 @@ class ListCycle:
                 self.duration = 0.0
                 self.progress = 0.0
 
-    def update_width(self, new_width: int):
+    def update_width(self, new_width: int) -> None:
         if new_width == self.bounds_width:
             return
 
@@ -291,7 +288,7 @@ class ListCycle:
 
         self.trigger_layout()
 
-    def update_height(self, new_height: int):
+    def update_height(self, new_height: int) -> None:
         if new_height == self.bounds_height:
             return
 
@@ -303,7 +300,7 @@ class ListCycle:
 
         self.trigger_layout()
 
-    def draw(self):
+    def draw(self) -> None:
         if self.do_layout:
             self.layout()
         self.sprite_list.draw()
@@ -317,7 +314,7 @@ class CycleView(DigiView):
         self.cycler: ListCycle | None = None
 
     @shows_errors
-    def setup(self):
+    def setup(self) -> None:
         super().setup()
 
         with pkg_resources.path(charm.data.images, "menu_card.png") as p:
@@ -332,12 +329,12 @@ class CycleView(DigiView):
         # Generate "gum wrapper" background
         self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
 
-    def on_show_view(self):
+    def on_show_view(self) -> None:
         self.window.theme_song.volume = 0
 
     @shows_errors
     @ignore_imgui
-    def on_key_press(self, symbol: int, modifiers: int):
+    def on_key_press(self, symbol: int, modifiers: int) -> None:
         match symbol:
             case arcade.key.BACKSPACE:
                 self.back.setup()
@@ -352,20 +349,20 @@ class CycleView(DigiView):
                 self.cycler.on_key(False, True)
                 arcade.play_sound(self.window.sounds["select"])
 
-        return super().on_key_press(symbol, modifiers)
+        super().on_key_press(symbol, modifiers)
 
     @shows_errors
     @ignore_imgui
-    def on_key_release(self, symbol: int, modifiers: int):
+    def on_key_release(self, symbol: int, modifiers: int) -> None:
         match symbol:
             case arcade.key.UP:
                 self.cycler.on_key(True, False)
             case arcade.key.DOWN:
                 self.cycler.on_key(False, False)
 
-        return super().on_key_press(symbol, modifiers)
+        super().on_key_press(symbol, modifiers)
 
-    def calculate_positions(self):
+    def calculate_positions(self) -> None:
         if self.cycler is not None:
             self.cycler.update_width(self.window.width)
             self.cycler.update_height(self.window.height)
@@ -373,13 +370,13 @@ class CycleView(DigiView):
 
     @shows_errors
     @ignore_imgui
-    def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int):
+    def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int) -> None:
         # the scroll_y is negative because we are going from top down.
         self.cycler.speed_scroll(-scroll_y)
         arcade.play_sound(self.window.sounds["select"])
 
     @shows_errors
-    def on_update(self, delta_time):
+    def on_update(self, delta_time) -> None:
         super().on_update(delta_time)
         if self.cycler is None:
             return
@@ -388,7 +385,7 @@ class CycleView(DigiView):
         move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
 
     @shows_errors
-    def on_draw(self):
+    def on_draw(self) -> None:
         self.window.camera.use()
         self.clear()
 

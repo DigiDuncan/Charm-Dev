@@ -1,4 +1,6 @@
 import math
+from types import ModuleType
+from typing import cast
 import arcade
 from arcade import Sprite
 from arcade.types import Color
@@ -16,7 +18,7 @@ class MainMenuItem(Sprite):
                  width: int = 200, border_color: Color = arcade.color.WHITE, border_width: int = 0,
                  *args, **kwargs):
         try:
-            self.icon = img_from_resource(charm.data.icons, f"{icon}.png")
+            self.icon = img_from_resource(cast(ModuleType, charm.data.icons), f"{icon}.png")
             self.icon = self.icon.resize((width, width), PIL.Image.LANCZOS)
         except Exception:
             self.icon = generate_missing_texture_image(width, width)

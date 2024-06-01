@@ -34,7 +34,7 @@ class FourKeySongView(DigiView):
         self.countdown_over = False
 
     @shows_errors
-    def setup(self):
+    def setup(self) -> None:
         with LogSection(logger, "loading audio"):
             audio_paths = [a for a in self.song_path.glob("*.mp3")] + [a for a in self.song_path.glob("*.wav")] + [a for a in self.song_path.glob("*.ogg")]
             trackfiles = []
@@ -87,16 +87,16 @@ class FourKeySongView(DigiView):
         super().setup()
         self.success = True
 
-    def on_show_view(self):
+    def on_show_view(self) -> None:
         self.window.theme_song.volume = 0
         if self.success is False:
             self.window.show_view(self.back)
             self.window.theme_song.volume = 0.25
         self.countdown = 4
-        super().on_show()
+        super().on_show_view()
 
     @shows_errors
-    def on_key_something(self, symbol: int, modifiers: int, press: bool):
+    def on_key_something(self, symbol: int, modifiers: int, press: bool) -> None:
         for key in get_keymap().get_set("fourkey"):
             if symbol == key:
                 key.state = press
@@ -107,7 +107,7 @@ class FourKeySongView(DigiView):
             if self.tracks.playing:
                 self.engine.process_keystate()
 
-    def generate_data_string(self):
+    def generate_data_string(self) -> str:
         return (f"Time: {int(self.tracks.time // 60)}:{int(self.tracks.time % 60):02}\n"
                 f"Score: {self.engine.score}\n"
                 f"Acc: {self.engine.accuracy:.2%} ({self.engine.grade})\n"
@@ -117,7 +117,7 @@ class FourKeySongView(DigiView):
 
     @shows_errors
     @ignore_imgui
-    def on_key_press(self, symbol: int, modifiers: int):
+    def on_key_press(self, symbol: int, modifiers: int) -> None:
         keymap = get_keymap()
         match symbol:
             case keymap.back:
@@ -143,20 +143,20 @@ class FourKeySongView(DigiView):
                         self.show_results()
 
         self.on_key_something(symbol, modifiers, True)
-        return super().on_key_press(symbol, modifiers)
+        super().on_key_press(symbol, modifiers)
 
     @shows_errors
-    def on_key_release(self, symbol: int, modifiers: int):
+    def on_key_release(self, symbol: int, modifiers: int) -> None:
         self.on_key_something(symbol, modifiers, False)
-        return super().on_key_release(symbol, modifiers)
+        super().on_key_release(symbol, modifiers)
 
-    def show_results(self):
+    def show_results(self) -> None:
         self.tracks.close()
         results_view = ResultsView(self.engine.generate_results(), back = self.back)
         results_view.setup()
         self.window.show_view(results_view)
 
-    def calculate_positions(self):
+    def calculate_positions(self) -> None:
         self.highway.pos = (0, 0)
         self.highway.x += self.window.center_x - self.highway.w // 2  # center the highway
         self.highway.hit_window_top = self.highway.note_y(-self.engine.judgements[-2].seconds)
@@ -165,9 +165,9 @@ class FourKeySongView(DigiView):
         self.countdown_text.position = self.window.center
         self.judgement_sprite.center_x = self.window.center_x
         self.judgement_sprite.center_y = self.window.height / 4
-        return super().calculate_positions()
+        super().calculate_positions()
 
-    def on_update(self, delta_time):
+    def on_update(self, delta_time) -> None:
         super().on_update(delta_time)
 
         if not self.tracks.loaded:
@@ -212,7 +212,7 @@ class FourKeySongView(DigiView):
 
         move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
 
-    def on_draw(self):
+    def on_draw(self) -> None:
         self.window.camera.use()
         self.clear()
 

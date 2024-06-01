@@ -15,34 +15,34 @@ class TemplateView(DigiView):
         self.volume = 1
 
     @shows_errors
-    def setup(self):
+    def setup(self) -> None:
         super().setup()
 
         # Generate "gum wrapper" background
         self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
 
-    def on_show_view(self):
+    def on_show_view(self) -> None:
         self.window.theme_song.volume = 0
 
     @shows_errors
     @ignore_imgui
-    def on_key_press(self, symbol: int, modifiers: int):
+    def on_key_press(self, symbol: int, modifiers: int) -> None:
         match symbol:
             case arcade.key.BACKSPACE:
                 self.back.setup()
                 self.window.show_view(self.back)
                 arcade.play_sound(self.window.sounds["back"])
 
-        return super().on_key_press(symbol, modifiers)
+        super().on_key_press(symbol, modifiers)
 
     @shows_errors
-    def on_update(self, delta_time):
+    def on_update(self, delta_time) -> None:
         super().on_update(delta_time)
 
         move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
 
     @shows_errors
-    def on_draw(self):
+    def on_draw(self) -> None:
         self.window.camera.use()
         self.clear()
 

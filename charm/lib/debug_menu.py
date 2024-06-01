@@ -136,15 +136,15 @@ class Console:
         self.auto_scroll = True
         self.scroll_to_bottom = False
 
-    def clear_log(self):
+    def clear_log(self) -> None:
         self._items.clear()
 
-    def add_log(self, item: DebugMessage | str):
+    def add_log(self, item: DebugMessage | str) -> None:
         if isinstance(item, str):
             item = DebugMessage(item)
         self._items.append(item)
 
-    def draw(self):
+    def draw(self) -> None:
         # Standard console text (not strictly necessary)
         imgui.text_wrapped("Debug Console")
         imgui.text_wrapped("Enter 'HELP' for help")
@@ -240,7 +240,7 @@ class Console:
         if reclaim_focus:
             imgui.set_keyboard_focus_here(-1)
 
-    def draw_floating(self):
+    def draw_floating(self) -> None:
         imgui.set_next_window_size(520, 600, imgui.FIRST_USE_EVER)
         if not imgui.begin("Console", True):
             imgui.end()
@@ -248,7 +248,7 @@ class Console:
         self.draw()
         imgui.end()
 
-    def execute_command(self, command_line: str):
+    def execute_command(self, command_line: str) -> None:
         self.add_log(DebugMessage(f"{command_line}", logging.COMMAND))
 
         self.history.append(command_line.upper())
@@ -276,7 +276,7 @@ class Console:
 
         self.scroll_to_bottom = True
 
-    def render(self):
+    def render(self) -> None:
         imgui.new_frame()
         self.draw()
         imgui.render()
@@ -298,7 +298,7 @@ class ImGuiHandler(logging.Handler):
         debug_message = DebugMessage(message, record.levelno)
         debug_log.add_log(debug_message)
 
-def draw(window: "DigiWindow"):
+def draw(window: DigiWindow) -> None:
     """Uses imgui to render a debug menu and console for developers."""
     impl = window.impl
     impl.process_inputs()

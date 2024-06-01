@@ -7,6 +7,7 @@ from typing import Optional, TypedDict
 
 import arcade
 import pyglet
+from pyglet.media import Player
 import pypresence
 import imgui
 from imgui.integrations.pyglet import create_renderer
@@ -44,7 +45,7 @@ class DigiWindow(arcade.Window):
         self.fps_checks = 0
         self.debug = False
         self.sounds: dict[str, arcade.Sound] = {}
-        self.theme_song: Optional[pyglet.media.Player] = None
+        self.theme_song: Player | None = None
 
         self.bpm_events = [BPMChangeEvent(0, 120), BPMChangeEvent(3, 220)]
         self.beat_animator = BPMAnimator(self.bpm_events, ease_expoout)

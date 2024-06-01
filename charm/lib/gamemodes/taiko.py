@@ -3,6 +3,7 @@ from enum import Enum
 from functools import cache
 from pathlib import Path
 import logging
+from types import ModuleType
 from typing import cast
 
 import PIL
@@ -96,7 +97,7 @@ class TaikoEngine(Engine):
 def load_note_texture(note_type: str, height: int):
     image_name = f"{note_type}"
     try:
-        image = img_from_resource(taikoskin, image_name + ".png")
+        image = img_from_resource(cast(ModuleType, taikoskin), image_name + ".png")
         if image.height != height:
             width = int((height / image.height) * image.width)
             image = image.resize((width, height), PIL.Image.LANCZOS)
@@ -116,7 +117,7 @@ class TaikoNoteSprite(Sprite):
     def update_animation(self, delta_time: float = 1 / 60) -> None:
         if self.note.type == NoteType.DENDEN:
             self.angle += 360 * delta_time / 3
-        return super().update_animation(delta_time)
+        super().update_animation(delta_time)
 
 
 class TaikoLongNoteSprite(TaikoNoteSprite):
@@ -129,7 +130,7 @@ class TaikoLongNoteSprite(TaikoNoteSprite):
 
     def update_animation(self, delta_time: float):
         self.trail.set_position(*self.position)
-        return super().update_animation(delta_time)
+        super().update_animation(delta_time)
 
     def draw_trail(self):
         self.trail.draw()

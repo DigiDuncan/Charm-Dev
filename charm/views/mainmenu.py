@@ -24,7 +24,7 @@ class MainMenuView(DigiView):
     def __init__(self, *args, **kwargs):
         super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, *args, **kwargs)
 
-    def setup(self):
+    def setup(self) -> None:
         super().setup()
 
         # Generate "gum wrapper" background
@@ -53,14 +53,14 @@ class MainMenuView(DigiView):
 
         self.load_countdown = None
 
-    def load(self):
+    def load(self) -> None:
         self.menu.selected.goto.setup()
         self.window.show_view(self.menu.selected.goto)
         arcade.play_sound(self.window.sounds["valid"])
 
     @shows_errors
     @ignore_imgui
-    def on_key_press(self, symbol: int, modifiers: int):
+    def on_key_press(self, symbol: int, modifiers: int) -> None:
         keymap = get_keymap()
         match symbol:
             case arcade.key.RIGHT:
@@ -82,17 +82,17 @@ class MainMenuView(DigiView):
             case arcade.key.F24:
                 raise TestError("F24, let's go!")
 
-        return super().on_key_press(symbol, modifiers)
+        super().on_key_press(symbol, modifiers)
 
     @shows_errors
     @ignore_imgui
-    def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int):
+    def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int) -> None:
         self.menu.selected_id += int(scroll_y)
         arcade.play_sound(self.window.sounds["select"])
 
     @shows_errors
     @ignore_imgui
-    def on_mouse_press(self, x: float, y: float, button: int, modifiers: int):
+    def on_mouse_press(self, x: float, y: float, button: int, modifiers: int) -> None:
         if button == arcade.MOUSE_BUTTON_LEFT:
             for item in self.menu.items:
                 if item.collides_with_point((x, y)):
@@ -105,12 +105,12 @@ class MainMenuView(DigiView):
                 self.menu.selected.jiggle_start = self.local_time
 
     @shows_errors
-    def on_resize(self, width: int, height: int):
+    def on_resize(self, width: int, height: int) -> None:
         self.menu.recreate()
-        return super().on_resize(width, height)
+        super().on_resize(width, height)
 
     @shows_errors
-    def on_update(self, delta_time):
+    def on_update(self, delta_time) -> None:
         super().on_update(delta_time)
 
         move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
@@ -122,7 +122,7 @@ class MainMenuView(DigiView):
             self.load()
 
     @shows_errors
-    def on_draw(self):
+    def on_draw(self) -> None:
         self.window.camera.use()
         self.clear()
 

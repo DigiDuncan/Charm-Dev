@@ -1,4 +1,6 @@
 from pathlib import Path
+from types import ModuleType
+from typing import cast
 
 import PIL.Image
 from arcade import Texture
@@ -27,7 +29,7 @@ def get_album_art(metadata: Metadata, size = 200) -> Texture:
 
     if art_path is None:
         # We *still* didn't find one? Fine.
-        album_art_img = img_from_resource(charm.data.images, "no_image_found.png")
+        album_art_img = img_from_resource(cast(ModuleType, charm.data.images), "no_image_found.png")
     else:
         album_art_img = PIL.Image.open(art_path)
 

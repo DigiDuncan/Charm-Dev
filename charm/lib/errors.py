@@ -1,3 +1,5 @@
+from types import ModuleType
+from typing import cast
 import arcade
 import arcade.color
 import PIL, PIL.Image, PIL.ImageDraw  # noqa: E401
@@ -11,14 +13,14 @@ class CharmException(Exception):
     def __init__(self, title: str, show_message: str, icon: str = "error", *args: object):
         self.title = title
         self.show_message = show_message
-        self._icon = icon
+        self.icon_name = icon
         super().__init__(show_message, *args)
         try:
             window = arcade.get_window()
         except RuntimeError:
             # If we aren't in an arcade Window (e.g., unit testing) we don't need the sprite stuff.
             return
-        self.icon = img_from_resource(charm.data.images.errors, f"{icon}.png")
+        self.icon = img_from_resource(cast(ModuleType, charm.data.images.errors), f"{self.icon_name}.png")
         self.icon.resize((32, 32), PIL.Image.LANCZOS)
         self.sprite = self.get_sprite()
         self.sprite.position = (window.width / 2, window.height / 2)

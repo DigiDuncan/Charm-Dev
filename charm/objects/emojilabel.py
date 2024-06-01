@@ -3,6 +3,8 @@ import json
 import logging
 import re
 from functools import cache
+from types import ModuleType
+from typing import cast
 
 import emoji_data_python
 from pyglet.image import AbstractImage
@@ -70,7 +72,7 @@ class EmojiPicker:
 def get_emoji_picker(id: str) -> EmojiPicker:
     rd = pkg_resources.read_text(charm.data.images.emoji, f"{id}.json")
     region_data = json.loads(rd)
-    png = pyglet_img_from_resource(charm.data.images.emoji, f"{id}.png")
+    png = pyglet_img_from_resource(cast(ModuleType, charm.data.images.emoji), f"{id}.png")
     return EmojiPicker(png, region_data)
 
 

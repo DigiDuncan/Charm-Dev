@@ -34,7 +34,7 @@ class SpriteLayerList:
         return self._position
 
     @position.setter
-    def position(self, value: Vec2):
+    def position(self, value: Vec2) -> None:
         self._position = value
         for sl in self.sprite_layers:
             sl._camera.position = self._position
@@ -44,7 +44,7 @@ class SpriteLayerList:
         return self._position.x
 
     @x.setter
-    def x(self, value: float):
+    def x(self, value: float) -> None:
         self._position = Vec2(value, self._position.y)
         for sl in self.sprite_layers:
             sl._camera.position = self._position
@@ -54,15 +54,15 @@ class SpriteLayerList:
         return self._position.y
 
     @y.setter
-    def y(self, value: float):
+    def y(self, value: float) -> None:
         self._position = Vec2(self._position.x, value)
         for sl in self.sprite_layers:
             sl._camera.position = self._position
 
-    def sort(self):
+    def sort(self) -> None:
         self.sprite_layers.sort(key=lambda x: x.z, reverse=True)
 
-    def draw(self):
+    def draw(self) -> None:
         for sl in self.sprite_layers:
             sl._camera.use()
             sl.sprite_list.draw()
@@ -90,7 +90,7 @@ class ParallaxView(DigiView):
     def __init__(self, *args, **kwargs):
         super().__init__(fade_in=1, bg_color=arcade.color.BLACK, *args, **kwargs)
 
-    def setup(self):
+    def setup(self) -> None:
         super().setup()
         self.parallax = SpriteLayerList()
         for i in range(1, DEPTH + 1):
@@ -104,11 +104,11 @@ class ParallaxView(DigiView):
             self.parallax.sprite_layers.append(SpriteLayer(sprite_list, z = i * 0.25))
         self.parallax.sort()
 
-    def on_show(self):
-        super().on_show()
+    def on_show_view(self) -> None:
+        super().on_show_view()
         self.window.theme_song.volume = 0
 
-    def on_update(self, delta_time: float):
+    def on_update(self, delta_time: float) -> None:
         PX_PER_S = 100
         if self.window.keyboard[arcade.key.W]:
             self.parallax.y += delta_time * PX_PER_S
@@ -127,7 +127,7 @@ class ParallaxView(DigiView):
 
         return super().on_update(delta_time)
 
-    def on_key_press(self, symbol: int, modifiers: int):
+    def on_key_press(self, symbol: int, modifiers: int) -> None:
         keymap = get_keymap()
         match symbol:
             case keymap.back:
@@ -135,9 +135,9 @@ class ParallaxView(DigiView):
                 self.window.show_view(self.back)
                 arcade.play_sound(self.window.sounds["back"])
 
-        return super().on_key_press(symbol, modifiers)
+        super().on_key_press(symbol, modifiers)
 
-    def on_draw(self):
+    def on_draw(self) -> None:
         self.window.camera.use()
         self.clear()
 

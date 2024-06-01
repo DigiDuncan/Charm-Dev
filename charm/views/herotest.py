@@ -2,7 +2,6 @@ import logging
 
 import arcade
 from pyglet.graphics import Batch
-import imgui
 
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
@@ -24,7 +23,7 @@ class HeroTestView(DigiView):
         self.volume = 0.25
 
     @shows_errors
-    def setup(self):
+    def setup(self) -> None:
         super().setup()
 
         # name = "mcmental"
@@ -54,13 +53,13 @@ class HeroTestView(DigiView):
         # Generate "gum wrapper" background
         self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
 
-    def on_show_view(self):
+    def on_show_view(self) -> None:
         self.window.theme_song.volume = 0
         self.song = arcade.play_sound(self._song, self.volume, loop=False)
 
     @shows_errors
     @ignore_imgui
-    def on_key_press(self, symbol: int, modifiers: int):
+    def on_key_press(self, symbol: int, modifiers: int) -> None:
         keymap = get_keymap()
         keymap.set_state(symbol, True)
         self.engine.process_keystate()
@@ -83,16 +82,16 @@ class HeroTestView(DigiView):
                 case arcade.key.F:
                     self.highway.show_flags = not self.highway.show_flags
 
-        return super().on_key_press(symbol, modifiers)
+        super().on_key_press(symbol, modifiers)
 
     @shows_errors
-    def on_key_release(self, symbol: int, modifiers: int):
+    def on_key_release(self, symbol: int, modifiers: int) -> None:
         keymap = get_keymap()
         keymap.set_state(symbol, False)
         self.engine.process_keystate()
 
     @shows_errors
-    def on_update(self, delta_time):
+    def on_update(self, delta_time) -> None:
         super().on_update(delta_time)
 
         self.highway.update(self.song.time)
@@ -123,7 +122,7 @@ class HeroTestView(DigiView):
         move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
 
     @shows_errors
-    def on_draw(self):
+    def on_draw(self) -> None:
         self.window.camera.use()
         self.clear()
 

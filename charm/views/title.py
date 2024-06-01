@@ -1,6 +1,8 @@
 import getpass
 import importlib.resources as pkg_resources
 import random
+from types import ModuleType
+from typing import cast
 
 import arcade
 import imgui
@@ -36,7 +38,7 @@ class TitleView(DigiView):
 
         self.dumb_fix_for_logo_pos = False
 
-    def calculate_positions(self):
+    def calculate_positions(self) -> None:
         self.logo.center_x = self.size[0] // 2
         self.logo.bottom = self.size[1] // 2
 
@@ -45,7 +47,7 @@ class TitleView(DigiView):
         self.splash_label.position = (*self.window.center, 0)
 
     @shows_errors
-    def setup(self):
+    def setup(self) -> None:
         self.hit_start = None
         self.local_time = 0
 
@@ -53,7 +55,7 @@ class TitleView(DigiView):
         self.main_sprites = arcade.SpriteList()
 
         # Set up main logo
-        logo_img = img_from_resource(charm.data.images, "logo.png")
+        logo_img = img_from_resource(cast(ModuleType, charm.data.images), "logo.png")
         logo_texture = arcade.Texture(logo_img)
         self.logo = arcade.Sprite(logo_texture)
 
@@ -97,7 +99,7 @@ class TitleView(DigiView):
 
         super().setup()
 
-    def generate_splash(self):
+    def generate_splash(self) -> None:
         if self.window.egg_roll == Eggs.TRICKY:
             # it's tricky
             self.splash_text = ""
@@ -121,7 +123,7 @@ class TitleView(DigiView):
 
     @shows_errors
     @ignore_imgui
-    def on_key_press(self, symbol: int, modifiers: int):
+    def on_key_press(self, symbol: int, modifiers: int) -> None:
         keymap = get_keymap()
         match symbol:
             case keymap.start:
@@ -137,11 +139,11 @@ class TitleView(DigiView):
                     self.window.theme_song.seek(3)
                     self.setup()
 
-        return super().on_key_press(symbol, modifiers)
+        super().on_key_press(symbol, modifiers)
 
     @shows_errors
     @ignore_imgui
-    def on_mouse_press(self, x: int, y: int, button: int, modifiers: int):
+    def on_mouse_press(self, x: int, y: int, button: int, modifiers: int) -> None:
         if imgui.is_window_hovered(imgui.HOVERED_ANY_WINDOW):
             return
         if button == arcade.MOUSE_BUTTON_LEFT:
@@ -149,7 +151,7 @@ class TitleView(DigiView):
             arcade.play_sound(self.window.sounds["valid"])
 
     @shows_errors
-    def on_update(self, delta_time):
+    def on_update(self, delta_time) -> None:
         self.local_time += delta_time
 
         move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
@@ -181,7 +183,7 @@ class TitleView(DigiView):
                 self.window.show_view(self.main_menu_view)
 
     @shows_errors
-    def on_draw(self):
+    def on_draw(self) -> None:
         self.window.camera.use()
         self.clear()
 

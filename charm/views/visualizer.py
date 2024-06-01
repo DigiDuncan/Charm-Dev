@@ -55,7 +55,7 @@ class VisualizerView(DigiView):
         super().__init__(fade_in=1, bg_color=arcade.color.BLACK, *args, **kwargs)
 
     @shows_errors
-    def setup(self):
+    def setup(self) -> None:
         super().setup()
 
         # Load song and get waveform
@@ -148,13 +148,13 @@ class VisualizerView(DigiView):
             self.window.update_rp("Vs. Scott Cawthon (demo)")
 
     @shows_errors
-    def on_show(self):
+    def on_show_view(self) -> None:
         self.window.theme_song.volume = 0
         self.song = arcade.play_sound(self._song, 1, loop=False)
-        super().on_show()
+        super().on_show_view()
 
     @shows_errors
-    def on_update(self, delta_time: float):
+    def on_update(self, delta_time: float) -> None:
         super().on_update(delta_time)
         if not self.shown:
             return
@@ -187,7 +187,7 @@ class VisualizerView(DigiView):
 
     @shows_errors
     @ignore_imgui
-    def on_key_press(self, symbol: int, modifiers: int):
+    def on_key_press(self, symbol: int, modifiers: int) -> None:
         keymap = get_keymap()
         match symbol:
             case keymap.back:
@@ -202,10 +202,10 @@ class VisualizerView(DigiView):
             case arcade.key.T:
                 self.show_text = not self.show_text
 
-        return super().on_key_press(symbol, modifiers)
+        super().on_key_press(symbol, modifiers)
 
     @shows_errors
-    def on_draw(self):
+    def on_draw(self) -> None:
         self.window.camera.use()
         self.clear()
         if not self.shown:

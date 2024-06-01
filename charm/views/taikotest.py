@@ -33,7 +33,7 @@ class TaikoSongView(DigiView):
         self.countdown_over = False
 
     @shows_errors
-    def setup(self):
+    def setup(self) -> None:
         with LogSection(logger, "loading audio"):
             audio_paths = [a for a in self.song_path.glob("*.mp3")] + [a for a in self.song_path.glob("*.wav")] + [a for a in self.song_path.glob("*.ogg")]
             trackfiles = []
@@ -61,24 +61,24 @@ class TaikoSongView(DigiView):
         self.success = True
 
     @shows_errors
-    def on_show_view(self):
+    def on_show_view(self) -> None:
         self.window.theme_song.volume = 0
         if self.success is False:
             self.window.show_view(self.back)
             self.window.theme_song.volume = 0.25
         self.countdown = 4
-        super().on_show()
+        super().on_show_view()
 
     @shows_errors
-    def on_key_something(self, symbol: int, modifiers: int, press: bool):
+    def on_key_something(self, symbol: int, modifiers: int, press: bool) -> None:
         pass
 
-    def generate_data_string(self):
+    def generate_data_string(self) -> str:
         return (f"Time: {int(self.tracks.time // 60)}:{int(self.tracks.time % 60):02}")
 
     @shows_errors
     @ignore_imgui
-    def on_key_press(self, symbol: int, modifiers: int):
+    def on_key_press(self, symbol: int, modifiers: int) -> None:
         keymap = get_keymap()
         match symbol:
             case keymap.back:
@@ -104,28 +104,28 @@ class TaikoSongView(DigiView):
                         self.show_results()
 
         self.on_key_something(symbol, modifiers, True)
-        return super().on_key_press(symbol, modifiers)
+        super().on_key_press(symbol, modifiers)
 
     @shows_errors
-    def on_key_release(self, symbol: int, modifiers: int):
+    def on_key_release(self, symbol: int, modifiers: int) -> None:
         self.on_key_something(symbol, modifiers, False)
-        return super().on_key_release(symbol, modifiers)
+        super().on_key_release(symbol, modifiers)
 
-    def show_results(self):
+    def show_results(self) -> None:
         self.tracks.close()
         results_view = ResultsView(self.engine.generate_results(), back = self.back)
         results_view.setup()
         self.window.show_view(results_view)
 
-    def calculate_positions(self):
+    def calculate_positions(self) -> None:
         self.highway.pos = (0, 0)
         self.highway.y += self.window.height // 2 - self.highway.h // 2  # center the highway
         self.text.position = (-5, self.window.height - 5)
         self.countdown_text.position = (self.window.width / 2, self.window.height / 2)
-        return super().calculate_positions()
+        super().calculate_positions()
 
     @shows_errors
-    def on_update(self, delta_time):
+    def on_update(self, delta_time) -> None:
         super().on_update(delta_time)
 
         if not self.tracks.loaded:
@@ -153,7 +153,7 @@ class TaikoSongView(DigiView):
         move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
 
     @shows_errors
-    def on_draw(self):
+    def on_draw(self) -> None:
         self.window.camera.use()
         self.clear()
 

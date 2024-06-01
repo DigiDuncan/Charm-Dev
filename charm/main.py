@@ -1,4 +1,6 @@
 import importlib.resources as pkg_resources
+from types import ModuleType
+from typing import cast
 
 import pyglet
 # Fix font
@@ -35,7 +37,7 @@ class CharmGame(DigiWindow):
         super().__init__((SCREEN_WIDTH, SCREEN_HEIGHT), SCREEN_TITLE, FPS_CAP, None)
         self.set_min_size(1, 1)
 
-        icon = pyglet_img_from_resource(charm.data.images, "charm-icon32t.png")
+        icon = pyglet_img_from_resource(cast(ModuleType, charm.data.images), "charm-icon32t.png")
         self.set_icon(icon)
 
         sfx = ["back", "select", "valid"]

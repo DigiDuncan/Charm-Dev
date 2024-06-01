@@ -110,7 +110,6 @@ class UIScrollArea(UIWidget):
         self.surface.draw((0, 0, width, height))
 
     def on_event(self, event: UIEvent) -> Optional[bool]:
-
         if isinstance(event, UIMouseDragEvent) and not self.rect.collide_with_point(event.x, event.y):
             return EVENT_UNHANDLED
 

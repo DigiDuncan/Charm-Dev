@@ -12,7 +12,7 @@ class SpriteTestView(DigiView):
     def __init__(self, *args, **kwargs):
         super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, *args, **kwargs)
 
-    def setup(self):
+    def setup(self) -> None:
         super().setup()
 
         SPRITE_NAME = "scott"
@@ -33,7 +33,7 @@ class SpriteTestView(DigiView):
         # Generate "gum wrapper" background
         self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
 
-    def on_key_press(self, symbol: int, modifiers: int):
+    def on_key_press(self, symbol: int, modifiers: int) -> None:
         keymap = get_keymap()
         match symbol:
             case keymap.back:
@@ -63,9 +63,9 @@ class SpriteTestView(DigiView):
                 self.sprite._current_animation_index += 1
                 self.sprite._current_animation_index %= len(self.sprite._current_animation)
 
-        return super().on_key_press(symbol, modifiers)
+        super().on_key_press(symbol, modifiers)
 
-    def on_update(self, delta_time):
+    def on_update(self, delta_time) -> None:
         super().on_update(delta_time)
         self.sprite.update_animation(delta_time)
         st = self.sprite._current_animation_sts[self.sprite._current_animation_index]
@@ -77,7 +77,7 @@ class SpriteTestView(DigiView):
 
         move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
 
-    def on_draw(self):
+    def on_draw(self) -> None:
         self.window.camera.use()
         self.clear()
 

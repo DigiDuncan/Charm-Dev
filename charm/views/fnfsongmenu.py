@@ -20,7 +20,7 @@ from charm.views.fnfsong import FNFSongView
 
 
 class FNFSongMenuView(DigiView):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(fade_in=0.5, bg_color=CharmColors.FADED_GREEN, *args, **kwargs)
 
         self.album_art_buffer = self.window.width // 20
@@ -33,7 +33,7 @@ class FNFSongMenuView(DigiView):
         self.ready = False
 
     @shows_errors
-    def setup(self):
+    def setup(self) -> None:
         super().setup()
 
         self.hit_start = None
@@ -77,11 +77,11 @@ class FNFSongMenuView(DigiView):
         self.ready = True
 
     @shows_errors
-    def on_show(self):
-        return super().on_show()
+    def on_show_view(self) -> None:
+        super().on_show_view()
 
     @shows_errors
-    def on_update(self, delta_time):
+    def on_update(self, delta_time) -> None:
         super().on_update(delta_time)
 
         if not self.ready:
@@ -97,7 +97,7 @@ class FNFSongMenuView(DigiView):
 
     @shows_errors
     @ignore_imgui
-    def on_key_press(self, symbol: int, modifiers: int):
+    def on_key_press(self, symbol: int, modifiers: int) -> None:
         keymap = get_keymap()
         old_id = self.menu.selected_id
         match symbol:
@@ -122,24 +122,24 @@ class FNFSongMenuView(DigiView):
             self.selection_changed = self.local_time
             self.album_art.texture = self.menu.selected.album_art
 
-        return super().on_key_press(symbol, modifiers)
+        super().on_key_press(symbol, modifiers)
 
     @shows_errors
     @ignore_imgui
-    def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int):
+    def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int) -> None:
         self.menu.selected_id += int(scroll_y)
         arcade.play_sound(self.window.sounds["select"])
 
     @shows_errors
     @ignore_imgui
-    def on_mouse_press(self, x: float, y: float, button: int, modifiers: int):
+    def on_mouse_press(self, x: float, y: float, button: int, modifiers: int) -> None:
         arcade.play_sound(self.window.sounds["valid"])
         songview = FNFSongView(self.menu.selected.song.path, back=self)
         songview.setup()
         self.window.show_view(songview)
 
     @shows_errors
-    def on_draw(self):
+    def on_draw(self) -> None:
         self.window.default_camera.use()
         self.clear()
 

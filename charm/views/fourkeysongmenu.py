@@ -30,7 +30,7 @@ class FourKeySongMenuView(DigiView):
         self.static_time = 0.25
 
     @shows_errors
-    def setup(self):
+    def setup(self) -> None:
         super().setup()
 
         self.hit_start = None
@@ -71,11 +71,11 @@ class FourKeySongMenuView(DigiView):
                                         font_name = "bananaslip plus")
 
     @shows_errors
-    def on_show(self):
-        return super().on_show()
+    def on_show_view(self) -> None:
+        super().on_show_view()
 
     @shows_errors
-    def on_update(self, delta_time):
+    def on_update(self, delta_time) -> None:
         super().on_update(delta_time)
 
         move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
@@ -88,7 +88,7 @@ class FourKeySongMenuView(DigiView):
 
     @shows_errors
     @ignore_imgui
-    def on_key_press(self, symbol: int, modifiers: int):
+    def on_key_press(self, symbol: int, modifiers: int) -> None:
         keymap = get_keymap()
         old_id = self.menu.selected_id
         match symbol:
@@ -111,24 +111,24 @@ class FourKeySongMenuView(DigiView):
             self.selection_changed = self.local_time
             self.album_art.texture = self.menu.selected.album_art
 
-        return super().on_key_press(symbol, modifiers)
+        super().on_key_press(symbol, modifiers)
 
     @shows_errors
     @ignore_imgui
-    def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int):
+    def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int) -> None:
         self.menu.selected_id += int(scroll_y)
         arcade.play_sound(self.window.sounds["select"])
 
     @shows_errors
     @ignore_imgui
-    def on_mouse_press(self, x: float, y: float, button: int, modifiers: int):
+    def on_mouse_press(self, x: float, y: float, button: int, modifiers: int) -> None:
         arcade.play_sound(self.window.sounds["valid"])
         songview = FourKeySongView(self.menu.selected.song.path, back=self)
         songview.setup()
         self.window.show_view(songview)
 
     @shows_errors
-    def on_draw(self):
+    def on_draw(self) -> None:
         self.window.camera.use()
         self.clear()
 

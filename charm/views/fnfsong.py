@@ -54,7 +54,7 @@ class FNFSongView(DigiView):
         self.success = False
 
     @shows_errors
-    def setup(self):
+    def setup(self) -> None:
         with LogSection(logger, "loading song data"):
             path = self.path
             self.songdata = FNFSong.parse(path)
@@ -152,7 +152,7 @@ class FNFSongView(DigiView):
 
         super().setup()
 
-    def calculate_positions(self):
+    def calculate_positions(self) -> None:
         self.highway_1.pos = (self.window.width / 3 * 2, 0)
         self.highway_1.h = self.window.height
         self.highway_2.h = self.window.height
@@ -164,14 +164,14 @@ class FNFSongView(DigiView):
         self.judgement_sprite.center_x = self.window.center_x
         self.judgement_sprite.center_y = self.window.height / 4
 
-    def on_show(self):
+    def on_show_view(self) -> None:
         if self.success is False:
             self.window.show_view(self.back)
         self.tracks.play()
-        super().on_show()
+        super().on_show_view()
 
     @shows_errors
-    def on_key_something(self, symbol: int, modifiers: int, press: bool):
+    def on_key_something(self, symbol: int, modifiers: int, press: bool) -> None:
         # AWFUL HACK: CRIME
         # (Why is this not being detected and handled by the keymapper??)
         for key in get_keymap().get_set("fourkey"):
@@ -187,7 +187,7 @@ class FNFSongView(DigiView):
 
     @shows_errors
     @ignore_imgui
-    def on_key_press(self, symbol: int, modifiers: int):
+    def on_key_press(self, symbol: int, modifiers: int) -> None:
         keymap = get_keymap()
         match symbol:
             case keymap.back:
@@ -218,21 +218,21 @@ class FNFSongView(DigiView):
                         self.show_results()
 
         self.on_key_something(symbol, modifiers, True)
-        return super().on_key_press(symbol, modifiers)
+        super().on_key_press(symbol, modifiers)
 
     @shows_errors
-    def on_key_release(self, symbol: int, modifiers: int):
+    def on_key_release(self, symbol: int, modifiers: int) -> None:
         self.on_key_something(symbol, modifiers, False)
-        return super().on_key_release(symbol, modifiers)
+        super().on_key_release(symbol, modifiers)
 
-    def show_results(self):
+    def show_results(self) -> None:
         self.tracks.close()
         results_view = ResultsView(self.engine.generate_results(), back = self.back)
         results_view.setup()
         self.window.show_view(results_view)
 
     @shows_errors
-    def on_update(self, delta_time):
+    def on_update(self, delta_time) -> None:
         super().on_update(delta_time)
 
         if not self.tracks.loaded:
@@ -283,7 +283,7 @@ class FNFSongView(DigiView):
             self.timer._clock = 0  # timer sync
         self.timer.update(delta_time)
 
-    def get_spotlight_position(self, song_time: float):
+    def get_spotlight_position(self, song_time: float) -> None:
         focus_pos = {
             1: 0,
             0: self.window.center_x
@@ -298,7 +298,7 @@ class FNFSongView(DigiView):
                 self.last_camera_event = current_camera_event
         self.spotlight_position = anim.ease_circout(self.last_spotlight_position, self.go_to_spotlight_position, self.last_spotlight_change, self.last_spotlight_change + 0.125, song_time)
 
-    def hp_draw(self):
+    def hp_draw(self) -> None:
         hp_min = self.size[0] // 2 - self.hp_bar_length // 2
         hp_max = self.size[0] // 2 + self.hp_bar_length // 2
         hp_normalized = map_range(self.engine.hp, self.engine.min_hp, self.engine.max_hp, 0, 1)
@@ -310,7 +310,7 @@ class FNFSongView(DigiView):
         )
         arcade.draw_circle_filled(hp, self.size[1] - 105, 20, arcade.color.BLUE)
 
-    def spotlight_draw(self):
+    def spotlight_draw(self) -> None:
         arcade.draw_lrbt_rectangle_filled(
             self.spotlight_position - self.window.center_x, self.spotlight_position, 0, self.window.height,
             arcade.color.BLACK[:3] + (127,)
@@ -321,7 +321,7 @@ class FNFSongView(DigiView):
         )
 
     @shows_errors
-    def on_draw(self):
+    def on_draw(self) -> None:
         self.window.camera.use()
         if self.chroma_key:
             self.clear(arcade.color.BLUE)

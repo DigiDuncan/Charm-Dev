@@ -1,5 +1,6 @@
 from collections import defaultdict
 from functools import cache
+from types import ModuleType
 from typing import cast, TypedDict
 from dataclasses import dataclass
 from pathlib import Path
@@ -649,7 +650,7 @@ def load_note_texture(note_type, note_lane, height):
     image_name = f"{note_type}-{note_lane + 1}"
     open_height = int(height / (128 / 48))
     try:
-        image = img_from_resource(heroskin, image_name + ".png")
+        image = img_from_resource(cast(ModuleType, heroskin), image_name + ".png")
         if image.height != height and note_lane != 7:
             width = int((height / image.height) * image.width)
             image = image.resize((width, height), PIL.Image.LANCZOS)
