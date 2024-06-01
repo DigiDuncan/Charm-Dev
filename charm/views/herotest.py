@@ -16,11 +16,10 @@ logger = logging.getLogger("charm")
 
 
 class HeroTestView(DigiView):
-    def __init__(self, *args, **kwargs):
-        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, *args, **kwargs)
+    def __init__(self, back: DigiView):
+        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, back=back)
         self.song = None
         self.highway = None
-        self.volume = 0.25
 
     @shows_errors
     def setup(self) -> None:
@@ -55,7 +54,8 @@ class HeroTestView(DigiView):
 
     def on_show_view(self) -> None:
         self.window.theme_song.volume = 0
-        self.song = arcade.play_sound(self._song, self.volume, loop=False)
+        VOLUME = 0.25
+        self.song = arcade.play_sound(self._song, VOLUME, loop=False)
 
     @shows_errors
     @ignore_imgui

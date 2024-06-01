@@ -3,7 +3,8 @@ import logging
 import random
 import statistics
 import typing
-from typing import Optional, TypedDict
+from typing import TypedDict
+import importlib.resources as pkg_resources
 
 import arcade
 import pyglet
@@ -15,7 +16,9 @@ from imgui.integrations.pyglet import create_renderer
 from charm.lib import debug_menu
 from charm.lib.anim import ease_expoout
 from charm.lib.bpmanim import BPMAnimator
+from charm.lib.errors import CharmException
 from charm.lib.generic.song import BPMChangeEvent
+import charm.data.audio
 
 logger = logging.getLogger("charm")
 
@@ -34,7 +37,7 @@ class DebugSettings(TypedDict):
 
 
 class DigiWindow(arcade.Window):
-    def __init__(self, size: tuple[int, int], title: str, fps_cap: int, initial_view: DigiView | None):
+    def __init__(self, size: tuple[int, int], title: str, fps_cap: int, initial_view: DigiView):
         super().__init__(size[0], size[1], title, update_rate=1 / fps_cap, enable_polling=True, resizable=True)
 
         self.fps_cap = fps_cap
@@ -45,7 +48,14 @@ class DigiWindow(arcade.Window):
         self.fps_checks = 0
         self.debug = False
         self.sounds: dict[str, arcade.Sound] = {}
-        self.theme_song: Player | None = None
+
+        # Play music
+        with pkg_resources.path(charm.data.audio, "song.mp3") as p:
+            song = arcade.Sound(p)
+        theme_song: Player | None = arcade.play_sound(song, 0, loop=True)
+        if theme_song is None:
+            raise CharmException("Song Failed", "Failed to load theme song")
+        self.theme_song = theme_song
 
         self.bpm_events = [BPMChangeEvent(0, 120), BPMChangeEvent(3, 220)]
         self.beat_animator = BPMAnimator(self.bpm_events, ease_expoout)
@@ -68,7 +78,7 @@ class DigiWindow(arcade.Window):
         else:
             logger.warn("Couldn't make a Discord RPC object!")
 
-        self.fps_averages = []
+        self.fps_averages: list[float] = []
 
         arcade.draw_text(" ", 0, 0)  # force font init (fixes lag on first text draw)
 
@@ -106,8 +116,8 @@ class DigiWindow(arcade.Window):
         imgui.get_io().display_size = 100, 100
         imgui.get_io().fonts.get_tex_data_as_rgba32()
         self.impl = create_renderer(self)
-        self.fps_list = deque()
-        self.beat_list = deque()
+        self.fps_list = deque[float]()
+        self.beat_list = deque[float]()
         self.debug_settings: DebugSettings = {
             "show_fps": False
         }
@@ -115,21 +125,19 @@ class DigiWindow(arcade.Window):
         # Egg roll
         self.egg_roll = random.randint(1, 1000)
 
-    def setup(self):
+    def setup(self) -> None:
         self.initial_view.setup()
         self.show_view(self.initial_view)
         self.update_rp()
 
-    def on_update(self, delta_time: float):
+    def on_update(self, delta_time: float) -> None:
         self.delta_time = delta_time
         self.time += delta_time
         self.update_rp()
         self.beat_animator.update(self.theme_song.time)
 
-    def on_resize(self, width: int, height: int):
+    def on_resize(self, width: int, height: int) -> None:
         super().on_resize(width, height)
-        # self.camera.match_screen(and_projection=True)
-        # self.camera.position = self.center
 
         self.overlay_camera.match_screen(and_projection=True)
         self.overlay_camera.position = self.center
@@ -139,8 +147,8 @@ class DigiWindow(arcade.Window):
         self.more_info_label.position = (0, self.height - self.fps_label.content_height - 5, 0)
         self.alpha_label.position = (self.width - 5, 5, 0)
 
-    def update_rp(self, new_state: Optional[str] = None):
-        if not self.rpc or not self.rpc_connected:
+    def update_rp(self, new_state: str | None = None) -> None:
+        if self.rpc is None or not self.rpc_connected:
             return
         if new_state and self.current_rp_state != new_state:
             self.current_rp_state = new_state
@@ -151,7 +159,7 @@ class DigiWindow(arcade.Window):
             self.last_rp_time = self.time
             self._rp_stale = False
 
-    def overlay_draw(self):
+    def overlay_draw(self) -> None:
         self.fps_checks += 1
         _cam = self.current_camera
         self.overlay_camera.use()
@@ -187,8 +195,7 @@ class DigiWindow(arcade.Window):
         if self.debug:
             debug_menu.draw(self)
 
-        if _cam is not None:
-            _cam.use()
+        _cam.use()
 
-    def save_atlas(self):
+    def save_atlas(self) -> None:
         self.ctx.default_atlas.save("atlas.png")

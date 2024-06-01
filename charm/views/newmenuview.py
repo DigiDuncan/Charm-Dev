@@ -11,10 +11,9 @@ logger = logging.getLogger("charm")
 
 
 class NewMenuView(DigiView):
-    def __init__(self, *args, **kwargs):
-        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, *args, **kwargs)
+    def __init__(self, back: DigiView):
+        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, back=)
         self.song = None
-        self.volume = 1
         self.menu: SongMenu = None
 
     def setup(self) -> None:

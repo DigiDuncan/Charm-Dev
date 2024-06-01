@@ -22,8 +22,8 @@ logger = logging.getLogger("charm")
 
 
 class FNFSongView(DigiView):
-    def __init__(self, path: Path, *args, **kwargs):
-        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, *args, **kwargs)
+    def __init__(self, path: Path, back: DigiView):
+        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, back=back)
         self.path = path
         self.engine: FNFEngine = None
         self.highway_1: FourKeyHighway = None

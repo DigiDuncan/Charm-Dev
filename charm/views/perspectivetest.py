@@ -21,9 +21,8 @@ CAM_SPEED = 400.0
 
 
 class PerspectiveView(DigiView):
-    def __init__(self, *args, **kwargs):
-        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, *args, **kwargs)
-        self.volume = 1
+    def __init__(self, back: DigiView):
+        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, back=back)
 
         with pkg_resources.path(charm.data.images, "no_image_found.png") as p:
             self.bingo = arcade.Sprite(p, center_y=250)

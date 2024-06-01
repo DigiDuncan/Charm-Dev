@@ -21,14 +21,13 @@ logger = logging.getLogger("charm")
 
 
 class TaikoSongView(DigiView):
-    def __init__(self, path: Path, *args, **kwargs):
-        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, *args, **kwargs)
+    def __init__(self, back: DigiView):
+        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, back=back)
         self.name = "Freedom Dive"
         self.song_path = paths.songspath / "osu" / self.name
         self.tracks: TrackCollection = None
         self.highway: TaikoHighway = None
         self.engine: FourKeyEngine = None
-        self.volume = 0.25
         self.countdown: float = 3
         self.countdown_over = False
 

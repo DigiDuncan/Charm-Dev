@@ -23,13 +23,12 @@ logger = logging.getLogger("charm")
 
 
 class FourKeySongView(DigiView):
-    def __init__(self, path: Path, *args, **kwargs):
-        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, *args, **kwargs)
+    def __init__(self, path: Path, back: DigiView):
+        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, back=back)
         self.song_path = path
         self.tracks: TrackCollection = None
         self.highway: FourKeyHighway = None
         self.engine: FourKeyEngine = None
-        self.volume = 0.25
         self.countdown: float = 3
         self.countdown_over = False
 

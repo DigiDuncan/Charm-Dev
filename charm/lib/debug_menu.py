@@ -286,11 +286,11 @@ cons = Console()
 
 
 class ImGuiHandler(logging.Handler):
-    def __init__(self, *args, showsource=False, **kwargs):
+    def __init__(self, level: int | str = logging.NOTSET, showsource: bool = False):
         self.showsource = showsource
-        super().__init__(*args, **kwargs)
+        super().__init__(level)
 
-    def emit(self, record):
+    def emit(self, record: logging.LogRecord) -> None:
         debug_log = cons
         message = record.getMessage()
         if self.showsource:

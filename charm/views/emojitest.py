@@ -10,10 +10,9 @@ logger = logging.getLogger("charm")
 
 
 class EmojiView(DigiView):
-    def __init__(self, *args, **kwargs):
-        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, *args, **kwargs)
+    def __init__(self, back: DigiView):
+        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, back=back)
         self.song = None
-        self.volume = 1
 
     def setup(self) -> None:
         super().setup()

@@ -87,8 +87,8 @@ HEIGHT = 30
 
 
 class ParallaxView(DigiView):
-    def __init__(self, *args, **kwargs):
-        super().__init__(fade_in=1, bg_color=arcade.color.BLACK, *args, **kwargs)
+    def __init__(self, back: DigiView):
+        super().__init__(fade_in=1, bg_color=arcade.color.BLACK, back=back)
 
     def setup(self) -> None:
         super().setup()

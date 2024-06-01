@@ -308,9 +308,8 @@ class ListCycle:
 
 
 class CycleView(DigiView):
-    def __init__(self, *args, **kwargs):
-        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, *args, **kwargs)
-        self.volume = 1
+    def __init__(self, back: DigiView):
+        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, back=back)
         self.cycler: ListCycle | None = None
 
     @shows_errors

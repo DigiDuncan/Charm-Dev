@@ -27,13 +27,8 @@ class TitleView(DigiView):
         super().__init__(bg_color=CharmColors.FADED_GREEN)
         self.logo = None
         self.song = None
-        self.volume = 0.0
         self.sounds: dict[str, arcade.Sound] = {}
         self.main_menu_view = MainMenuView(back=self)
-        # Play music
-        with pkg_resources.path(charm.data.audio, "song.mp3") as p:
-            song = arcade.Sound(p)
-            self.window.theme_song = arcade.play_sound(song, self.volume, loop=True)
         self.window.theme_song.seek(self.local_time + 3)
 
         self.dumb_fix_for_logo_pos = False
@@ -152,7 +147,7 @@ class TitleView(DigiView):
 
     @shows_errors
     def on_update(self, delta_time) -> None:
-        self.local_time += delta_time
+        super().on_update(delta_time)
 
         move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
 
@@ -176,7 +171,8 @@ class TitleView(DigiView):
         if self.hit_start is not None:
             # Fade music
             if self.local_time >= self.hit_start + FADE_DELAY:
-                self.window.theme_song.volume = ease_linear(self.volume, self.volume / 2, self.hit_start + FADE_DELAY, self.hit_start + SWITCH_DELAY, self.local_time)
+                VOLUME = 0
+                self.window.theme_song.volume = ease_linear(VOLUME, VOLUME / 2, self.hit_start + FADE_DELAY, self.hit_start + SWITCH_DELAY, self.local_time)
             # Go to main menu
             if self.local_time >= self.hit_start + SWITCH_DELAY:
                 self.main_menu_view.setup()

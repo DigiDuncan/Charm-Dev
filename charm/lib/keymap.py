@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Optional, Union
 import arcade.key
 from arcade.key import RETURN, ENTER, ESCAPE, BACKSPACE, D, F, J, K, KEY_7, GRAVE, \
@@ -30,7 +31,7 @@ class Action:
 
         self.state = False
 
-    def __eq__(self, other: Union[Key, 'Action']) -> bool:
+    def __eq__(self, other: Union[Key, Action]) -> bool:
         return other in self.inputs if isinstance(other, Key) else (self.name, self.inputs) == (other.name, other.inputs)
 
     def __str__(self) -> str:

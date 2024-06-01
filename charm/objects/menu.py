@@ -10,13 +10,13 @@ import charm.data.icons
 from charm.lib.anim import ease_circout
 from charm.lib.charm import CharmColors, generate_missing_texture_image
 from charm.lib.digiview import DigiView
+from charm.lib.digiwindow import DigiWindow
 from charm.lib.utils import img_from_resource
 
 
 class MainMenuItem(Sprite):
-    def __init__(self, label: str, icon: str, goto: DigiView,
-                 width: int = 200, border_color: Color = arcade.color.WHITE, border_width: int = 0,
-                 *args, **kwargs):
+    def __init__(self, label: str, icon: str, goto: DigiView | None,
+                 width: int = 200, border_color: Color = arcade.color.WHITE, border_width: int = 0):
         try:
             self.icon = img_from_resource(cast(ModuleType, charm.data.icons), f"{icon}.png")
             self.icon = self.icon.resize((width, width), PIL.Image.LANCZOS)
@@ -24,22 +24,31 @@ class MainMenuItem(Sprite):
             self.icon = generate_missing_texture_image(width, width)
         self.icon = PIL.ImageOps.expand(self.icon, border=border_width, fill=border_color)
         tex = arcade.Texture(self.icon)
-        super().__init__(tex, *args, **kwargs)
+        super().__init__(tex)
 
         self.goto = goto
 
         self.label = arcade.Text(label, 0, 0, CharmColors.PURPLE, anchor_x='center', anchor_y="top",
                                  font_name="bananaslip plus", font_size=24)
         self.center_y = arcade.get_window().height // 2
-        self.jiggle_start = 0
+        self.jiggle_start: float = 0
+        self.window: DigiWindow = cast(DigiWindow, arcade.get_window())
+
+    def go(self) -> bool:
+        if self.goto is None:
+            return False
+        self.goto.setup()
+        self.window.show_view(self.goto)
+        arcade.play_sound(self.window.sounds["valid"])
+        return True
 
 
 class MainMenu:
-    def __init__(self, items: list[MainMenuItem] = []) -> None:
+    def __init__(self, items: list[MainMenuItem]) -> None:
         self.items = items
-        self.window = arcade.get_window()
+        self.window: DigiWindow = cast(DigiWindow, arcade.get_window())
 
-        self.sprite_list = arcade.SpriteList()
+        self.sprite_list = arcade.SpriteList[MainMenuItem]()
         for item in self.items:
             self.sprite_list.append(item)
 
@@ -49,15 +58,18 @@ class MainMenu:
 
         self._selected_id = 0
 
-        self.local_time = 0
         self.move_start = 0
         self.move_speed = 0.3
 
-        self.old_pos = {}
+        self.old_pos: dict[MainMenuItem, tuple[float, float, int]] = {}
         for item in self.items:
             self.old_pos[item] = (item.center_x, item.scale, item.alpha)
 
-    def recreate(self):
+    @property
+    def local_time(self) -> float:
+        return self.window.time
+
+    def recreate(self) -> None:
         old_id = self._selected_id
         self = self.__class__(self.items)
         self._selected_id = old_id
@@ -69,7 +81,7 @@ class MainMenu:
         return self._selected_id
 
     @selected_id.setter
-    def selected_id(self, v: int):
+    def selected_id(self, v: int) -> None:
         self._selected_id = v % len(self.items)
         self.move_start = self.local_time
         for item in self.items:
@@ -83,15 +95,9 @@ class MainMenu:
     def move_end(self) -> float:
         return self.move_start + self.move_speed
 
-    def sort(self, key: str, rev: bool = False):
-        selected = self.items[self.selected_id]
-        self.items.sort(key=lambda item: getattr(item.song, key), reverse=rev)
-        self.selected_id = self.items.index(selected)
-
-    def update(self, local_time: float):
-        self.local_time = local_time
+    def on_update(self, delta_time: float) -> None:
         current = self.items[self.selected_id]
-        current.center_x = ease_circout(self.old_pos[current][0], self.window.width // 2, self.move_start, self.move_end, self.local_time)
+        current.center_x = ease_circout(self.old_pos[current][0], self.window.width // 2, self.move_start, self.move_end, local_time)
         current.scale = ease_circout(self.old_pos[current][1], 1, self.move_start, self.move_end, self.local_time)
         current.alpha = ease_circout(self.old_pos[current][2], 255, self.move_start, self.move_end, self.local_time)
         current.label.x = current.center_x
@@ -105,9 +111,9 @@ class MainMenu:
             rel_id = n - self.selected_id
             if rel_id == 0:  # current item
                 continue
-            item.center_x = ease_circout(self.old_pos[item][0], current.center_x + (x_bumper * rel_id), self.move_start, self.move_end, self.local_time)
+            item.center_x = ease_circout(self.old_pos[item][0], current.center_x + (x_bumper * rel_id), self.move_start, self.move_end, local_time)
             item.scale = ease_circout(self.old_pos[item][1], 0.5, self.move_start, self.move_end, self.local_time)
-            item.alpha = ease_circout(self.old_pos[item][2], 127, self.move_start, self.move_end, self.local_time)
+            item.alpha = int(ease_circout(self.old_pos[item][2], 127, self.move_start, self.move_end, self.local_time))
             item.label.x = item.center_x
             item.label.y = item.bottom
 
@@ -117,7 +123,7 @@ class MainMenu:
             jiggle_amount = 20 * math.sin(self.local_time * ((JIGGLES * 2) / JIGGLE_TIME))
             current.center_x += jiggle_amount
 
-    def draw(self):
+    def draw(self) -> None:
         self.sprite_list.draw()
 
         for i in self.items:

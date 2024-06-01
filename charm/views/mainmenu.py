@@ -1,3 +1,4 @@
+from typing import Literal
 import arcade
 
 from charm.lib.anim import ease_quartout
@@ -21,8 +22,8 @@ from charm.views.perspectivetest import PerspectiveView
 
 
 class MainMenuView(DigiView):
-    def __init__(self, *args, **kwargs):
-        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, *args, **kwargs)
+    def __init__(self, back: DigiView):
+        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, back=back)
 
     def setup(self) -> None:
         super().setup()
@@ -30,58 +31,49 @@ class MainMenuView(DigiView):
         # Generate "gum wrapper" background
         self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
 
-        self.menu = MainMenu(
-            [
-                MainMenuItem("Playlists", "playlists", None),
-                MainMenuItem("FNF Songs", "songs", FNFSongMenuView(back=self)),
-                MainMenuItem("4K Songs", "songs", FourKeySongMenuView(back=self)),
-                MainMenuItem("Options", "options", None),
-                MainMenuItem("Emoji Test", "test", EmojiView(window=self.window, back=self)),
-                MainMenuItem("Menu Test", "test", NewMenuView(back=self)),
-                MainMenuItem("Cycler Test", "test", CycleView(back=self)),
-                MainMenuItem("Sprite Test", "test", SpriteTestView(back=self)),
-                MainMenuItem("Parallax Test", "test", ParallaxView(back=self)),
-                MainMenuItem("Hero Test", "test", HeroTestView(back=self)),
-                MainMenuItem("Perspective Test", "test", PerspectiveView(back=self)),
-                MainMenuItem("Taiko Test", "test", TaikoSongView(None, back=self)),
-                MainMenuItem("Scott Test", "test", VisualizerView(back=self))
-            ]
-        )
+        self.menu = MainMenu([
+            MainMenuItem("Playlists", "playlists", None),
+            MainMenuItem("FNF Songs", "songs", FNFSongMenuView(back=self)),
+            MainMenuItem("4K Songs", "songs", FourKeySongMenuView(back=self)),
+            MainMenuItem("Options", "options", None),
+            MainMenuItem("Emoji Test", "test", EmojiView(back=self)),
+            MainMenuItem("Menu Test", "test", NewMenuView(back=self)),
+            MainMenuItem("Cycler Test", "test", CycleView(back=self)),
+            MainMenuItem("Sprite Test", "test", SpriteTestView(back=self)),
+            MainMenuItem("Parallax Test", "test", ParallaxView(back=self)),
+            MainMenuItem("Hero Test", "test", HeroTestView(back=self)),
+            MainMenuItem("Perspective Test", "test", PerspectiveView(back=self)),
+            MainMenuItem("Taiko Test", "test", TaikoSongView(back=self)),
+            MainMenuItem("Scott Test", "test", VisualizerView(back=self))
+        ])
 
         self.window.current_rp_state = "In Menus"
         self.window.update_rp("In Menus")
 
         self.load_countdown = None
 
-    def load(self) -> None:
-        self.menu.selected.goto.setup()
-        self.window.show_view(self.menu.selected.goto)
-        arcade.play_sound(self.window.sounds["valid"])
-
     @shows_errors
     @ignore_imgui
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         keymap = get_keymap()
-        match symbol:
-            case arcade.key.RIGHT:
-                self.menu.selected_id += 1
-            case arcade.key.LEFT:
-                self.menu.selected_id -= 1
-            case keymap.back:
-                self.back.setup()
-                self.window.show_view(self.back)
-                arcade.play_sound(self.window.sounds["back"], volume = settings.get_volume("sound"))
-            case keymap.start:
-                if self.menu.selected.goto is not None:
-                    self.menu.loading = True
-                    self.load_countdown = 3  # Pause for three frames before loading. Ensure the text draws.
-                else:
-                    self.menu.selected.jiggle_start = self.local_time
-            case arcade.key.E:
-                raise TestError("You hit the E button! Don't do that.")
-            case arcade.key.F24:
-                raise TestError("F24, let's go!")
-
+        if symbol == arcade.key.RIGHT:
+            self.menu.selected_id += 1
+        elif symbol == arcade.key.LEFT:
+            self.menu.selected_id -= 1
+        elif symbol == keymap.back:
+            self.back.setup()
+            self.window.show_view(self.back)
+            arcade.play_sound(self.window.sounds["back"], volume = settings.get_volume("sound"))
+        elif symbol == keymap.start:
+            if self.menu.selected.goto is not None:
+                self.menu.loading = True
+                self.load_countdown = 3  # Pause for three frames before loading. Ensure the text draws.
+            else:
+                self.menu.selected.jiggle_start = self.local_time
+        elif symbol == arcade.key.E:
+            raise TestError("You hit the E button! Don't do that.")
+        elif symbol == arcade.key.F24:
+            raise TestError("F24, let's go!")
         super().on_key_press(symbol, modifiers)
 
     @shows_errors
@@ -96,10 +88,7 @@ class MainMenuView(DigiView):
         if button == arcade.MOUSE_BUTTON_LEFT:
             for item in self.menu.items:
                 if item.collides_with_point((x, y)):
-                    if item.goto is not None:
-                        item.goto.setup()
-                        self.window.show_view(item.goto)
-                        arcade.play_sound(self.window.sounds["valid"])
+                    if item.go():
                         break
             else:
                 self.menu.selected.jiggle_start = self.local_time
@@ -110,16 +99,19 @@ class MainMenuView(DigiView):
         super().on_resize(width, height)
 
     @shows_errors
-    def on_update(self, delta_time) -> None:
+    def on_update(self, delta_time: float) -> None:
         super().on_update(delta_time)
 
         move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
-        self.menu.update(self.local_time)
+        self.menu.on_update(delta_time)
+        self.countdown()
 
+    def countdown(self) -> None:
         if self.load_countdown is not None:
             self.load_countdown -= 1
         if self.load_countdown == 0:
-            self.load()
+            self.load_countdown = None
+            self.menu.selected.go()
 
     @shows_errors
     def on_draw(self) -> None:

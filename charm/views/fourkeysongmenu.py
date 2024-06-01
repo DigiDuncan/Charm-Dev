@@ -23,8 +23,8 @@ logger = logging.getLogger("charm")
 
 
 class FourKeySongMenuView(DigiView):
-    def __init__(self, *args, **kwargs):
-        super().__init__(fade_in=0.5, bg_color=CharmColors.FADED_GREEN, *args, **kwargs)
+    def __init__(self, back: DigiView):
+        super().__init__(fade_in=0.5, bg_color=CharmColors.FADED_GREEN, back=back)
 
         self.album_art_buffer = self.window.width // 20
         self.static_time = 0.25

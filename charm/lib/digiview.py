@@ -59,21 +59,23 @@ class ErrorPopup:
 class DigiView(View):
     def __init__(
         self,
-        window: DigiWindow | None = None,
         *,
         back: DigiView | None = None,
         fade_in: float = 0,
         bg_color: RGBOrA255 = (0, 0, 0)
     ):
-        super().__init__(window)
+        super().__init__()
         self.window: DigiWindow
         self.back = back
         self.shown = False
         self.size = self.window.get_size()
-        self.local_time = 0.0
         self.fade_in = fade_in
         self.bg_color = bg_color
         self._errors: list[ErrorPopup] = []  # [error, seconds to show]
+
+    @property
+    def local_time(self) -> float:
+        return self.window.time
 
     def on_error(self, error: CharmException) -> None:
         offset = len(self._errors) * 4
@@ -86,13 +88,10 @@ class DigiView(View):
         pass
 
     def setup(self) -> None:
-        self.local_time = 0
-
         arcade.set_background_color(cast(RGBA255, (0,0,0))) # TODO: Fix Arcade typing
         self.calculate_positions()
 
     def on_show_view(self) -> None:
-        self.local_time = 0
         self.shown = True
 
     def on_resize(self, width: int, height: int) -> None:
@@ -113,12 +112,10 @@ class DigiView(View):
         elif symbol == keymap.fullscreen:
             self.window.set_fullscreen(not self.window.fullscreen)
         elif symbol == keymap.mute:
-            if self.window.theme_song is not None:
-                self.window.theme_song.volume = 0
+            self.window.theme_song.volume = 0
         super().on_key_press(symbol, modifiers)
 
     def on_update(self, delta_time: float) -> None:
-        self.local_time += delta_time
         self._errors = [popup for popup in self._errors if popup.expiry < self.local_time]
 
     def on_draw(self) -> None:

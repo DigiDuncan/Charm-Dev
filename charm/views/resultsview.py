@@ -18,10 +18,9 @@ logger = logging.getLogger("charm")
 
 
 class ResultsView(DigiView):
-    def __init__(self, results: Results, *args, **kwargs):
-        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, *args, **kwargs)
+    def __init__(self, results: Results, back: DigiView):
+        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, back=back)
         self.song = None
-        self.volume = 1
         self.results = results
 
     @shows_errors
@@ -71,7 +70,8 @@ class ResultsView(DigiView):
     @shows_errors
     def on_show_view(self) -> None:
         self.window.theme_song.volume = 0
-        self.song = arcade.play_sound(self._song, self.volume, loop=False)
+        VOLUME = 1
+        self.song = arcade.play_sound(self._song, VOLUME, loop=False)
 
     @shows_errors
     @ignore_imgui
