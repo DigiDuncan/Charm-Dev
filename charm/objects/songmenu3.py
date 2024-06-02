@@ -4,6 +4,7 @@ import logging
 import math
 from math import ceil
 from typing import List
+from typing_extensions import deprecated
 
 import arcade
 from arcade import Sprite, SpriteList, Texture, Text
@@ -309,9 +310,8 @@ class ListCycle:
         self.sprite_list.draw()
         self.label_batch.draw()
 
-
+@deprecated("Unused")
 class SongMenu:
-
     def __init__(self, songs: list[Metadata] = None):
         self.window = arcade.get_window()
         self.songs: list[Metadata] = songs

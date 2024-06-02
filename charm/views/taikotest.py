@@ -1,6 +1,5 @@
 import logging
 from math import ceil
-from pathlib import Path
 
 import arcade
 from charm.lib import paths
@@ -10,12 +9,12 @@ from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.errors import NoChartsError
 from charm.lib.gamemodes.four_key import FourKeyEngine
 from charm.lib.gamemodes.taiko import TaikoHighway, TaikoSong
-from charm.lib.keymap import get_keymap
+from charm.lib.keymap import keymap
 from charm.lib.logsection import LogSection
 from charm.lib.oggsound import OGGSound
-from charm.lib.settings import settings
 from charm.lib.trackcollection import TrackCollection
 from charm.views.resultsview import ResultsView
+from charm.lib.keymap import keymap
 
 logger = logging.getLogger("charm")
 
@@ -78,37 +77,32 @@ class TaikoSongView(DigiView):
     @shows_errors
     @ignore_imgui
     def on_key_press(self, symbol: int, modifiers: int) -> None:
-        keymap = get_keymap()
-        match symbol:
-            case keymap.back:
-                self.tracks.close()
-                self.back.setup()
-                self.window.show_view(self.back)
-                arcade.play_sound(self.window.sounds["back"], volume = settings.get_volume("sound"))
-            case keymap.pause:
-                if self.countdown <= 0:
-                    self.tracks.pause() if self.tracks.playing else self.tracks.play()
-            case arcade.key.KEY_0:
-                self.tracks.seek(0)
-            case arcade.key.MINUS:
-                self.tracks.seek(self.tracks.time - 5)
-            case arcade.key.EQUAL:
-                self.tracks.seek(self.tracks.time + 5)
-        if self.window.debug:
-            if modifiers & arcade.key.MOD_SHIFT:
-                match symbol:
-                    case arcade.key.H:
-                        self.highway.show_hit_window = not self.highway.show_hit_window
-                    case arcade.key.R:
-                        self.show_results()
-
-        self.on_key_something(symbol, modifiers, True)
         super().on_key_press(symbol, modifiers)
+        if keymap.back.pressed:
+            self.go_back()
+        elif keymap.pause.pressed:
+            if self.countdown <= 0:
+                self.tracks.pause() if self.tracks.playing else self.tracks.play()
+        elif keymap.seek_zero.pressed:
+            self.tracks.seek(0)
+        elif keymap.seek_backward.pressed:
+            self.tracks.seek(self.tracks.time - 5)
+        elif keymap.seek_forward.pressed:
+            self.tracks.seek(self.tracks.time + 5)
+        elif self.window.debug and keymap.debug_toggle_hit_window:
+            self.highway.show_hit_window = not self.highway.show_hit_window
+        elif self.window.debug and keymap.debug_show_results:
+            self.show_results()
+        self.on_key_something(symbol, modifiers, True)
 
     @shows_errors
     def on_key_release(self, symbol: int, modifiers: int) -> None:
-        self.on_key_something(symbol, modifiers, False)
         super().on_key_release(symbol, modifiers)
+        self.on_key_something(symbol, modifiers, False)
+
+    def go_back(self) -> None:
+        self.tracks.close()
+        super().go_back()
 
     def show_results(self) -> None:
         self.tracks.close()

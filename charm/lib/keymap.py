@@ -1,217 +1,239 @@
 from __future__ import annotations
-from typing import Optional, Union
+from collections.abc import Iterable
 import arcade.key
-from arcade.key import RETURN, ENTER, ESCAPE, BACKSPACE, D, F, J, K, KEY_7, GRAVE, \
-    KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, UP, DOWN, RSHIFT, SPACE, F11, M
-from charm.lib.utils import findone
+from arcade.key import \
+    A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z, \
+    GRAVE, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_0, MINUS, EQUAL, \
+    F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, \
+    F13, F14, F15, F16, F17, F18, F19, F20, F21, F22, F23, F24, \
+    RETURN, ENTER, ESCAPE, BACKSPACE, SPACE, UP, DOWN, LEFT, RIGHT, F11, \
+    MOD_SHIFT, RSHIFT
+
 from charm.lib.errors import MultipleKeyBindsError, ExclusiveKeyBindError, \
-    KeyUnboundError, ActionNameConflictError, ActionNotFoundError, SameInputMultipleError, \
-    SetNotFoundError, KeyNotFoundInActionError, KeyUnrecognizedError, ActionNotInSetError
+    KeyUnboundError, ActionNotFoundError, SetNotFoundError, ActionNotInSetError
 
+Mod = int
 Key = int
-Keys = list[int]
+KeyMod = tuple[Key, Mod]
+
+key_names = {v: k for k, v in arcade.key.__dict__.items() if isinstance(v, int) and not k.startswith("MOD_")}
+mod_names = {v: k for k, v in arcade.key.__dict__.items() if isinstance(v, int) and k.startswith("MOD_") and k != "MOD_ACCEL"}
+
+def get_keyname(k: Key | KeyMod) -> str:
+    k, m = to_keymod(k)
+    return " + ".join([mod_names[mod] for mod in split_mod(m)] + [key_names[k]])
+
+def to_keymod(k: Key | KeyMod) -> KeyMod:
+    if isinstance(k, Key):
+        return (k, 0)
+    return k
+
+def split_mod(m: Mod) -> list[Mod]:
+    mod_values = [1 << n for n in range(9)]
+    return [n for n in mod_values if m & n]
 
 
-def get_arcade_key_name(i: Key) -> str:
-    it = (k for k, v in arcade.key.__dict__.items() if v == i)
-    found = findone(it)
-    if found is None:
-        raise KeyUnrecognizedError(i)
-    return found
-
+REQUIRED = 1
+SINGLEBIND = 2
+EXCLUSIVE = 4
 
 class Action:
-    def __init__(self, name: str, inputs: Keys = None, required = False, allow_multiple = False, exclusive = False) -> None:
+    def __init__(self, keymap: KeyMap, name: str, defaults: Iterable[KeyMod | Key], flags: int = 0) -> None:
+        self.keymap = keymap
+        self.keymap.actions[self.name] = self
         self.name = name
-        self.default: Keys = inputs
-        self.inputs: Keys = [] if inputs is None else inputs
-        self.required = required
-        self.allow_multiple: bool = allow_multiple
-        self.exclusive: bool = exclusive
+        self.defaults: list[KeyMod] = [to_keymod(i) for i in defaults]
+        self.keys: list[KeyMod] = []
+        self.required = bool(flags & REQUIRED)
+        self.singlebind = bool(flags & SINGLEBIND)
+        self.exclusive = bool(flags & EXCLUSIVE)
+        self.set_defaults()
 
-        self.state = False
+    def _bind(self, key: KeyMod) -> None:
+        self.keys.append(key)
+        self.keymap.keys[key] = self
 
-    def __eq__(self, other: Union[Key, Action]) -> bool:
-        return other in self.inputs if isinstance(other, Key) else (self.name, self.inputs) == (other.name, other.inputs)
+    def bind(self, key: KeyMod | Key) -> None:
+        km = to_keymod(key)
+        if km in self.keymap.keys:
+            raise ValueError
+        self._bind(km)
 
-    def __str__(self) -> str:
-        return f"{self.name}{'*' if self.exclusive else ''}: {[get_arcade_key_name(i) for i in self.inputs]}{'*' if self.allow_multiple else ''} [{'X' if self.state else '_'}]"
+    def rebind(self, key: KeyMod | Key) -> None:
+        km = to_keymod(key)
+        if km in self.keymap.keys:
+            self.keymap.unbind(km)
+        self._bind(km)
 
+    def unbind(self, key: KeyMod | Key) -> None:
+        km = to_keymod(key)
+        if km not in self.keys:
+            return
+        self.keys.remove(km)
+        del self.keymap.keys[km]
 
-class ActionSet:
-    def __init__(self, d: dict[str, Action]):
-        self._dict: dict[str, Action] = d
+    def unbind_all(self) -> None:
+        for km in list(self.keys):
+            self.unbind(km)
+
+    def set_defaults(self) -> None:
+        self.unbind_all()
+        for km in self.defaults:
+            self.bind(km)
 
     @property
-    def state(self) -> tuple[bool]:
-        return tuple([a.state for a in self._dict.values()])
+    def pressed(self) -> bool:
+        for k, m in self.keys:
+            if k in self.keymap.pressed and self.keymap.pressed[k] == m:
+                return True
+        return False
 
-    def __getattr__(self, name: str) -> Action:
-        if name not in self._dict:
-            raise ActionNotInSetError(name)
-        return self._dict[name]
+    @property
+    def released(self) -> bool:
+        for k, m in self.keys:
+            if k in self.keymap.released and self.keymap.released[k] == m:
+                return True
+        return False
 
-    def __iter__(self):
-        return (getattr(self, name) for name in self._dict.keys())
+    @property
+    def held(self) -> bool:
+        for k, m in self.keys:
+            if k in self.keymap.held and self.keymap.held[k] == m:
+                return True
+        return False
+
+    def __str__(self) -> str:
+        return f"{self.name}: {[get_keyname(k) for k in self.keys]}"
+
+    def validate(self) -> bool:
+        """Check the action for errors."""
+        # Action doesn't allow multiple binds, but there are
+        if self.singlebind and len(self.keys) > 1:
+            raise MultipleKeyBindsError(self.name)
+        # Unbound
+        if self.required and not self.keys:
+            raise KeyUnboundError(self.name)
+        # Exclusive key found on multiple actions
+        for a in self.keymap.actions.values():
+            for key in self.keys:
+                if a.exclusive and key in a.keys:
+                    raise ExclusiveKeyBindError(get_keyname(key), [a.name, self.name])
+        return True
 
 
 class KeyMap:
     def __init__(self):
         """Access and set mappings for inputs to actions. Key binding."""
-        self.actions: list[Action] = [
-            Action('start', [RETURN, ENTER], True, True, True),
-            Action('back', [ESCAPE, BACKSPACE], True, True, True),
-            Action('debug', [GRAVE], False, True, True),
-            Action('pause', [SPACE], True, False, True),
-            Action('fullscreen', [F11], True, False, True),
-            Action('mute', [M], True, False, True),
-            Action('fourkey_1', [D], False, False, False),
-            Action('fourkey_2', [F], False, False, False),
-            Action('fourkey_3', [J], False, False, False),
-            Action('fourkey_4', [K], False, False, False),
-            Action('hero_1', [KEY_1], False, False, False),
-            Action('hero_2', [KEY_2], False, False, False),
-            Action('hero_3', [KEY_3], False, False, False),
-            Action('hero_4', [KEY_4], False, False, False),
-            Action('hero_5', [KEY_5], False, False, False),
-            Action('hero_strum_up', [UP], False, False, False),
-            Action('hero_strum_down', [DOWN], False, False, False),
-            Action('hero_power', [RSHIFT], False, False, False)
-        ]
+        self.actions: dict[str, Action] = {}
+        self.keys: dict[KeyMod, Action] = {}
+        self.held: dict[Key, Mod] = {}
+        self.pressed: dict[Key, Mod] = {}
+        self.released: dict[Key, Mod] = {}
 
-        # Make sure there's no duplicate action names since they're basically keys.
-        seen = set()
-        dupes = [x for x in [a.name for a in self.actions] if x in seen or seen.add(x)]
-        for d in dupes:
-            raise ActionNameConflictError(d)
+        self.start = Action(self, 'start', [RETURN, ENTER], REQUIRED | EXCLUSIVE)
+        self.back = Action(self, 'back', [ESCAPE, BACKSPACE], REQUIRED | EXCLUSIVE)
+        self.navup = Action(self, 'navup', [UP], REQUIRED | EXCLUSIVE)
+        self.navdown = Action(self, 'navdown', [DOWN], REQUIRED | EXCLUSIVE)
+        self.debug = Action(self, 'debug', [GRAVE], EXCLUSIVE)
+        self.pause = Action(self, 'pause', [SPACE], REQUIRED | SINGLEBIND | EXCLUSIVE)
+        self.fullscreen = Action(self, 'fullscreen', [F11], REQUIRED | SINGLEBIND | EXCLUSIVE)
+        self.mute = Action(self, 'mute', [M], REQUIRED | SINGLEBIND | EXCLUSIVE)
+        self.fourkey_1 = Action(self, 'fourkey_1', [D], SINGLEBIND)
+        self.fourkey_2 = Action(self, 'fourkey_2', [F], SINGLEBIND)
+        self.fourkey_3 = Action(self, 'fourkey_3', [J], SINGLEBIND)
+        self.fourkey_4 = Action(self, 'fourkey_4', [K], SINGLEBIND)
+        self.hero_1 = Action(self, 'hero_1', [KEY_1], SINGLEBIND)
+        self.hero_2 = Action(self, 'hero_2', [KEY_2], SINGLEBIND)
+        self.hero_3 = Action(self, 'hero_3', [KEY_3], SINGLEBIND)
+        self.hero_4 = Action(self, 'hero_4', [KEY_4], SINGLEBIND)
+        self.hero_5 = Action(self, 'hero_5', [KEY_5], SINGLEBIND)
+        self.hero_strum_up = Action(self, 'hero_strum_up', [UP], SINGLEBIND)
+        self.hero_strum_down = Action(self, 'hero_strum_down', [DOWN], SINGLEBIND)
+        self.hero_power = Action(self, 'hero_power', [RSHIFT], SINGLEBIND)
+        self.seek_zero = Action(self, 'seek_zero', [KEY_0], SINGLEBIND)
+        self.seek_backward = Action(self, 'seek_backward', [MINUS], SINGLEBIND)
+        self.seek_forward = Action(self, 'seek_forward', [EQUAL], SINGLEBIND)
+        self.log_sync = Action(self, 'log_sync', [S], SINGLEBIND)
+        self.toggle_distractions = Action(self, 'toggle_distractions', [KEY_8], SINGLEBIND)
+        self.toggle_chroma = Action(self, 'toggle_chroma', [B], SINGLEBIND)
+        self.debug_toggle_hit_window = Action(self, 'debug_toggle_hit_window', [(H, MOD_SHIFT)], SINGLEBIND)
+        self.debug_show_results = Action(self, 'debug_show_results', [(R, MOD_SHIFT)], SINGLEBIND)
+        self.dump_textures = Action(self, 'dump_textures', [E], SINGLEBIND)
+        self.debug_toggle_flags = Action(self, 'debug_toggle_flags', [F], SINGLEBIND)
+        self.navleft = Action(self, 'navleft', [LEFT], SINGLEBIND)
+        self.navright = Action(self, 'navright', [RIGHT], SINGLEBIND)
+        self.debug_e = Action(self, 'debug_e', [E], SINGLEBIND)
+        self.debug_f24 = Action(self, 'debug_f24', [F24], SINGLEBIND)
+        self.toggle_show_text = Action(self, 'toggle_show_text', [T], SINGLEBIND)
 
-        # Create action sets (hardcoded, frozen.)
-        self.sets: dict[str, ActionSet] = {
-            "fourkey": ActionSet({
-                "key1": self.fourkey_1,
-                "key2": self.fourkey_2,
-                "key3": self.fourkey_3,
-                "key4": self.fourkey_4
-            }),
-            "hero": ActionSet({
-                "green": self.hero_1,
-                "red": self.hero_2,
-                "yellow": self.hero_3,
-                "blue": self.hero_4,
-                "orange": self.hero_5,
-                "strumup": self.hero_strum_up,
-                "strumdown": self.hero_strum_down,
-                "power": self.hero_power
-            })
-        }
+        self.fourkey: FourKeyAliasMap = FourKeyAliasMap(self)
+        self.hero: HeroAliasMap = HeroAliasMap(self)
 
-    def __getattr__(self, item: str) -> Optional[Action]:
-        """Get an action by name."""
-        return findone((a for a in self.actions if a.name == item))
+    def unbind(self, key: Key | KeyMod) -> None:
+        km = to_keymod(key)
+        self.keys[km].unbind(km)
 
-    def get_set(self, name: str) -> ActionSet:
-        """Get an action set by name."""
-        s = self.sets.get(name, None)
-        if s is None:
-            raise SetNotFoundError(name)
-        return s
-
-    def bind_key(self, name: str, key: Key):
-        """Set `key` as a valid input for the '`name`' action."""
-        action = self[name]
-        key_string = get_arcade_key_name(key)
-        if action is None:
-            raise ActionNotFoundError(name)
-        if key in action.inputs:
-            raise SameInputMultipleError(name, key_string)
-        for a in self.actions:
-            if a.exclusive and key in a.inputs:
-                raise ExclusiveKeyBindError(key_string, [a.name, name])
-        action.inputs.append(key)
-        if not action.allow_multiple and len(action.inputs) >= 1:
-            raise MultipleKeyBindsError(name)
-
-    def replace_key(self, name: str, old_key: Key, new_key: Key):
-        """Replace the input `old_key` with `new_key` in the '`name`' action."""
-        action = self[name]
-        old_key_string = get_arcade_key_name(old_key)
-        new_key_string = get_arcade_key_name(new_key)
-        if action is None:
-            raise ActionNotFoundError(name)
-        if old_key not in action.inputs:
-            raise KeyNotFoundInActionError(name, old_key_string)
-        if new_key in action.inputs:
-            raise SameInputMultipleError(name, new_key_string)
-        for a in self.actions:
-            if a.exclusive and new_key in a.inputs:
-                raise ExclusiveKeyBindError(new_key_string, [a.name, name])
-        self.actions.remove(old_key)
-        self.actions.append(new_key)
-
-    def clear_keys(self, name: str):
+    def unbind_all(self) -> None:
         """Remove all inputs from the '`name`' action."""
-        action = self[name]
-        if action is None:
-            raise ActionNotFoundError(name)
-        action.inputs = []
+        for action in self.actions.values():
+            action.unbind_all()
 
-    def set_defaults(self, name: str):
-        """Set the '`name`' action's inputs to its default state."""
-        action = self[name]
-        if action is None:
-            raise ActionNotFoundError(name)
-        action.inputs = action.default.copy()
-
-    def set_all_defaults(self):
+    def set_defaults(self) -> None:
         """Set all actions inputs to their default state."""
-        for action in self.actions:
-            self.set_defaults(action.name)
-
-    def validate(self, name: str) -> bool:
-        """Check the action for errors."""
-        action = self[name]
-        # Action not found
-        if action is None:
-            raise ActionNotFoundError(name)
-        # Action doesn't allow multiple binds, but there are
-        if not action.allow_multiple and len(action.inputs) > 1:
-            raise MultipleKeyBindsError(name)
-        # Unbound
-        if action.required and not action.inputs:
-            raise KeyUnboundError(name)
-        # Exclusive key found on multiple actions
-        for a in self.actions:
-            for key in action.inputs:
-                key_string = get_arcade_key_name(key)
-                if a.exclusive and key in a.inputs:
-                    raise ExclusiveKeyBindError(key_string, [a.name, name])
-        return True
+        for action in self.actions.values():
+            action.set_defaults()
 
     def validate_all(self) -> bool:
         """Check all actions for errors."""
-        for action in self.actions:
-            self.validate(action.name)
+        for action in self.actions.values():
+            action.validate()
         return True
-
-    def set_state(self, key: Key, state: bool):
-        for action in [a for a in self.actions if a == key]:
-            action.state = state
 
     def __str__(self) -> str:
         return f"{[str(i) for i in self.actions]}"
 
+    def on_key_press(self, symbol: int, modifiers: int) -> None:
+        self.pressed = {symbol: modifiers}
+        self.held[symbol] = modifiers
 
-keymap = None
+    def on_key_release(self, symbol: int, modifiers: int) -> None:
+        self.released = {symbol: modifiers}
+        if symbol in self.held:
+            del self.held[symbol]
 
+class FourKeyAliasMap:
+    def __init__(self, keymap: KeyMap):
+        self.key1 = keymap.fourkey_1
+        self.key2 = keymap.fourkey_2
+        self.key3 = keymap.fourkey_3
+        self.key4 = keymap.fourkey_4
 
-def get_keymap() -> KeyMap:
-    global keymap
-    if keymap is not None:
-        return keymap
-    keymap = KeyMap()
-    return keymap
+    @property
+    def state(self) -> list[bool]:
+        return [self.key1.pressed, self.key2.pressed, self.key3.pressed, self.key4.pressed]
 
+class HeroAliasMap:
+    def __init__(self, keymap: KeyMap):
+        self.green = keymap.hero_1
+        self.red = keymap.hero_2
+        self.yellow = keymap.hero_3
+        self.blue = keymap.hero_4
+        self.orange = keymap.hero_5
+        self.strumup = keymap.hero_strum_up
+        self.strumdown = keymap.hero_strum_down
+        self.power = keymap.hero_power
 
-def set_keymap(new_keymap: KeyMap):
-    global keymap
-    keymap = new_keymap
+    @property
+    def state(self) -> list[bool]:
+        return [
+            self.green.pressed,
+            self.red.pressed,
+            self.yellow.pressed,
+            self.blue.pressed,
+            self.orange.pressed,
+            self.strumup.pressed,
+            self.strumdown.pressed,
+            self.power.pressed
+        ]
+
+keymap = KeyMap()

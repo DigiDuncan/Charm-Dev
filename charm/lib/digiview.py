@@ -12,11 +12,12 @@ import imgui
 from arcade import LRBT, XYWH, View
 from arcade.types import RGBOrA255, RGBA255
 
+from charm.lib.settings import settings
 from charm.lib.anim import ease_linear
 from charm.lib.charm import generate_gum_wrapper
 from charm.lib.digiwindow import DigiWindow
 from charm.lib.errors import CharmException, GenericError
-from charm.lib.keymap import get_keymap
+from charm.lib.keymap import keymap
 
 logger = logging.getLogger("charm")
 
@@ -106,14 +107,18 @@ class DigiView(View):
         self.calculate_positions()
 
     def on_key_press(self, symbol: int, modifiers: int) -> None:
-        keymap = get_keymap()
-        if symbol == keymap.debug:
+        keymap.on_key_press(symbol, modifiers)
+        if keymap.debug.pressed:
             self.window.debug = not self.window.debug
-        elif symbol == keymap.fullscreen:
+        elif keymap.fullscreen.pressed:
             self.window.set_fullscreen(not self.window.fullscreen)
-        elif symbol == keymap.mute:
+        elif keymap.mute.pressed:
             self.window.theme_song.volume = 0
         super().on_key_press(symbol, modifiers)
+
+    def on_key_release(self, symbol: int, modifiers: int) -> None:
+        keymap.on_key_release(symbol, modifiers)
+        super().on_key_release(symbol, modifiers)
 
     def on_update(self, delta_time: float) -> None:
         self._errors = [popup for popup in self._errors if popup.expiry < self.local_time]
@@ -128,3 +133,10 @@ class DigiView(View):
 
         for popup in self._errors:
             popup.error.sprite.draw()
+
+    def go_back(self) -> None:
+        if self.back is None:
+            return
+        self.back.setup()
+        self.window.show_view(self.back)
+        arcade.play_sound(self.window.sounds["back"], volume = settings.get_volume("sound"))

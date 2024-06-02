@@ -4,8 +4,7 @@ from charm.lib.adobexml import sprite_from_adobe
 
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView
-from charm.lib.keymap import get_keymap
-from charm.lib.settings import settings
+from charm.lib.keymap import keymap
 
 
 class SpriteTestView(DigiView):
@@ -34,36 +33,31 @@ class SpriteTestView(DigiView):
         self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
 
     def on_key_press(self, symbol: int, modifiers: int) -> None:
-        keymap = get_keymap()
-        match symbol:
-            case keymap.back:
-                self.back.setup()
-                self.window.show_view(self.back)
-                arcade.play_sound(self.window.sounds["back"], volume = settings.get_volume("sound"))
-            case keymap.start:
-                a = next(self.anims)
-                self.sprite.set_animation(a)
-                self.anim_label.text = a
-            case arcade.key.MINUS:
-                self.sprite.fps -= 1
-                self.fps = self.sprite.fps
-            case arcade.key.EQUAL:
-                self.sprite.fps += 1
-                self.fps = self.sprite.fps
-            case keymap.pause:
-                self.paused = not self.paused
-                if self.paused:
-                    self.sprite.fps = 0
-                else:
-                    self.sprite.fps = self.fps
-            case arcade.key.LEFT:
-                self.sprite._current_animation_index -= 1
-                self.sprite._current_animation_index %= len(self.sprite._current_animation)
-            case arcade.key.RIGHT:
-                self.sprite._current_animation_index += 1
-                self.sprite._current_animation_index %= len(self.sprite._current_animation)
-
         super().on_key_press(symbol, modifiers)
+        if keymap.back.pressed:
+            self.go_back()
+        elif keymap.start.pressed:
+            a = next(self.anims)
+            self.sprite.set_animation(a)
+            self.anim_label.text = a
+        elif keymap.seek_backward.pressed:
+            self.sprite.fps -= 1
+            self.fps = self.sprite.fps
+        elif keymap.seek_forward.pressed:
+            self.sprite.fps += 1
+            self.fps = self.sprite.fps
+        elif keymap.pause.pressed:
+            self.paused = not self.paused
+            if self.paused:
+                self.sprite.fps = 0
+            else:
+                self.sprite.fps = self.fps
+        elif keymap.navleft.pressed:
+            self.sprite._current_animation_index -= 1
+            self.sprite._current_animation_index %= len(self.sprite._current_animation)
+        elif keymap.navright.pressed:
+            self.sprite._current_animation_index += 1
+            self.sprite._current_animation_index %= len(self.sprite._current_animation)
 
     def on_update(self, delta_time) -> None:
         super().on_update(delta_time)

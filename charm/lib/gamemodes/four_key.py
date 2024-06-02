@@ -25,7 +25,7 @@ from charm.lib.generic.engine import DigitalKeyEvent, Engine, Judgement
 from charm.lib.generic.highway import Highway
 from charm.lib.generic.results import Results
 from charm.lib.generic.song import Note, Chart, Seconds, Song
-from charm.lib.keymap import get_keymap
+from charm.lib.keymap import keymap
 from charm.lib.spritebucket import SpriteBucketCollection
 from charm.lib.utils import img_from_resource, clamp
 from charm.objects.line_renderer import NoteTrail
@@ -349,7 +349,7 @@ class FourKeyJudgement(Judgement):
 class FourKeyEngine(Engine):
     def __init__(self, chart: FourKeyChart, offset: Seconds = -0.025):  # TODO: Set this dynamically
         hit_window: Seconds = 0.075
-        fk = get_keymap().get_set("fourkey")
+        fk = keymap.fourkey
         mapping = [fk.key1, fk.key2, fk.key3, fk.key4]
         judgements = [
             #               ("name",           "key"             ms, score, acc, hp=0)
@@ -387,7 +387,7 @@ class FourKeyEngine(Engine):
 
     def process_keystate(self):
         last_state = self.key_state
-        key_states = get_keymap().get_set("fourkey").state
+        key_states = keymap.fourkey.state
         if self.last_p1_note in (0, 1, 2, 3) and key_states[self.last_p1_note] is False:
             self.last_p1_note = None
         # ignore spam during front/back porch

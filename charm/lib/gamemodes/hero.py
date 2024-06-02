@@ -20,12 +20,12 @@ from charm.lib.errors import ChartParseError, ChartPostReadParseError, NoChartsE
 from charm.lib.generic.engine import DigitalKeyEvent, Engine, Judgement
 from charm.lib.generic.highway import Highway
 from charm.lib.generic.song import Chart, Event, Metadata, Note, Seconds, Song
-from charm.lib.keymap import get_keymap
+from charm.lib.keymap import keymap
 from charm.lib.spritebucket import SpriteBucketCollection
 from charm.lib.utils import img_from_resource, nuke_smart_quotes
 from charm.objects.lyric_animator import LyricEvent
 
-from charm.objects.line_renderer import NoteTrail, LongNoteRenderer, NoteStruckState
+from charm.objects.line_renderer import LongNoteRenderer, NoteStruckState
 import charm.data.images.skins.hero as heroskin
 
 logger = logging.getLogger("charm")
@@ -900,7 +900,7 @@ class StrumEvent(Event):
 
 class HeroEngine(Engine):
     def __init__(self, chart: Chart, offset: Seconds = 0):
-        hero_keys = get_keymap().get_set("hero")
+        hero_keys = keymap.hero
         mapping = [hero_keys.green, hero_keys.red, hero_keys.yellow, hero_keys.blue, hero_keys.orange, hero_keys.strumup, hero_keys.strumdown]
         hit_window = 0.050  # 50ms +/-
         judgements = [Judgement("pass", 50, 100, 1, 1), Judgement("miss", math.inf, 0, 0, -1)]
@@ -929,7 +929,7 @@ class HeroEngine(Engine):
 
     def process_keystate(self):
         last_state = self.key_state
-        key_states = get_keymap().get_set("hero").state
+        key_states = keymap.hero.state
         # ignore spam during front/back porch
         if (self.chart_time < self.chart.notes[0].time - self.hit_window \
            or self.chart_time > self.chart.notes[-1].time + self.hit_window):
@@ -958,7 +958,7 @@ class HeroEngine(Engine):
         self.key_state = key_states
 
     def calculate_score(self):
-        buttons = get_keymap().get_set("hero")  # noqa: F841
+        buttons = keymap.hero  # noqa: F841
 
         # CURRENTLY MISSING:
         # Sutains

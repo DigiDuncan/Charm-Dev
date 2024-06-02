@@ -10,9 +10,9 @@ from charm.lib import paths
 
 import charm.data.audio
 import charm.data.images.skins
-from charm.lib.keymap import get_keymap
+from charm.lib.keymap import keymap
 from charm.lib.scores import ScoreDB
-from charm.lib.settings import settings
+from charm.lib.keymap import keymap
 
 logger = logging.getLogger("charm")
 
@@ -76,15 +76,13 @@ class ResultsView(DigiView):
     @shows_errors
     @ignore_imgui
     def on_key_press(self, symbol: int, modifiers: int) -> None:
-        keymap = get_keymap()
-        match symbol:
-            case keymap.back | keymap.start:
-                self.song.volume = 0
-                self.back.setup()
-                self.window.show_view(self.back)
-                arcade.play_sound(self.window.sounds["back"], volume = settings.get_volume("sound"))
-
         super().on_key_press(symbol, modifiers)
+        if keymap.back.pressed or keymap.start.pressed:
+            self.go_back()
+
+    def go_back(self) -> None:
+        self.song.volume = 0
+        super().go_back()
 
     @shows_errors
     def on_update(self, delta_time) -> None:

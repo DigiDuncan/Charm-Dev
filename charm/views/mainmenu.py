@@ -5,8 +5,7 @@ from charm.lib.anim import ease_quartout
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.errors import TestError
-from charm.lib.keymap import get_keymap
-from charm.lib.settings import settings
+from charm.lib.keymap import keymap
 from charm.objects.menu import MainMenu, MainMenuItem
 from charm.views.cycletest import CycleView
 from charm.views.emojitest import EmojiView
@@ -19,6 +18,7 @@ from charm.views.spritetest import SpriteTestView
 from charm.views.taikotest import TaikoSongView
 from charm.views.visualizer import VisualizerView
 from charm.views.perspectivetest import PerspectiveView
+from charm.lib.keymap import keymap
 
 
 class MainMenuView(DigiView):
@@ -55,26 +55,23 @@ class MainMenuView(DigiView):
     @shows_errors
     @ignore_imgui
     def on_key_press(self, symbol: int, modifiers: int) -> None:
-        keymap = get_keymap()
-        if symbol == arcade.key.RIGHT:
+        super().on_key_press(symbol, modifiers)
+        if keymap.navright.pressed:
             self.menu.selected_id += 1
-        elif symbol == arcade.key.LEFT:
+        if keymap.navleft.pressed:
             self.menu.selected_id -= 1
-        elif symbol == keymap.back:
-            self.back.setup()
-            self.window.show_view(self.back)
-            arcade.play_sound(self.window.sounds["back"], volume = settings.get_volume("sound"))
-        elif symbol == keymap.start:
+        elif keymap.back.pressed:
+            self.go_back()
+        elif keymap.start.pressed:
             if self.menu.selected.goto is not None:
                 self.menu.loading = True
                 self.load_countdown = 3  # Pause for three frames before loading. Ensure the text draws.
             else:
                 self.menu.selected.jiggle_start = self.local_time
-        elif symbol == arcade.key.E:
+        elif keymap.debug_e.pressed:
             raise TestError("You hit the E button! Don't do that.")
-        elif symbol == arcade.key.F24:
+        elif keymap.debug_f24.pressed:
             raise TestError("F24, let's go!")
-        super().on_key_press(symbol, modifiers)
 
     @shows_errors
     @ignore_imgui

@@ -14,7 +14,7 @@ from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView, shows_errors, ignore_imgui
 from charm.lib.types import Seconds
 from charm.lib.utils import clamp
-
+from charm.lib.keymap import keymap
 
 logger = logging.getLogger("charm")
 
@@ -334,32 +334,33 @@ class CycleView(DigiView):
     @shows_errors
     @ignore_imgui
     def on_key_press(self, symbol: int, modifiers: int) -> None:
-        match symbol:
-            case arcade.key.BACKSPACE:
-                self.back.setup()
-                self.window.show_view(self.back)
-                arcade.play_sound(self.window.sounds["back"])
-            case arcade.key.UP:
-                self.cycler.scroll(-1.0)
-                self.cycler.on_key(True, True)
-                arcade.play_sound(self.window.sounds["select"])
-            case arcade.key.DOWN:
-                self.cycler.scroll(1.0)
-                self.cycler.on_key(False, True)
-                arcade.play_sound(self.window.sounds["select"])
-
         super().on_key_press(symbol, modifiers)
+        if keymap.back.pressed:
+            self.go_back()
+        elif keymap.navup.pressed:
+            self.navup()
+        elif keymap.navdown.pressed:
+            self.navdown()
+
+    def navup(self) -> None:
+        self.cycler.scroll(-1.0)
+        self.cycler.on_key(True, True)
+        arcade.play_sound(self.window.sounds["select"])
+
+    def navdown(self) -> None:
+        self.cycler.scroll(1.0)
+        self.cycler.on_key(False, True)
+        arcade.play_sound(self.window.sounds["select"])
 
     @shows_errors
     @ignore_imgui
     def on_key_release(self, symbol: int, modifiers: int) -> None:
-        match symbol:
-            case arcade.key.UP:
+        super().on_key_release(symbol, modifiers)
+        if keymap.navup.released:
                 self.cycler.on_key(True, False)
-            case arcade.key.DOWN:
+        elif keymap.navdown.released:
                 self.cycler.on_key(False, False)
 
-        super().on_key_press(symbol, modifiers)
 
     def calculate_positions(self) -> None:
         if self.cycler is not None:

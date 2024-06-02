@@ -13,10 +13,11 @@ from charm.lib.anim import ease_linear, ease_quadinout
 from charm.lib.charm import CharmColors, move_gum_wrapper
 from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.digiwindow import Eggs
-from charm.lib.keymap import get_keymap
+from charm.lib.keymap import keymap
 from charm.lib.settings import settings
 from charm.lib.utils import img_from_resource, typewriter
 from charm.views.mainmenu import MainMenuView
+from charm.lib.keymap import keymap
 
 FADE_DELAY = 1
 SWITCH_DELAY = 0.5 + FADE_DELAY
@@ -119,22 +120,17 @@ class TitleView(DigiView):
     @shows_errors
     @ignore_imgui
     def on_key_press(self, symbol: int, modifiers: int) -> None:
-        keymap = get_keymap()
-        match symbol:
-            case keymap.start:
-                self.hit_start = self.local_time
-                arcade.play_sound(self.window.sounds["valid"], volume = settings.get_volume("sound"))
-        if self.window.debug:
-            match symbol:
-                case arcade.key.S:
-                    self.splash_index += 1
-                    self.splash_index %= len(self.splashes)
-                    self.splash_text = self.splashes[self.splash_index]
-                case arcade.key.KEY_0:
-                    self.window.theme_song.seek(3)
-                    self.setup()
-
         super().on_key_press(symbol, modifiers)
+        if keymap.start.pressed:
+            self.hit_start = self.local_time
+            arcade.play_sound(self.window.sounds["valid"], volume = settings.get_volume("sound"))
+        elif self.window.debug and keymap.log_sync.pressed:
+            self.splash_index += 1
+            self.splash_index %= len(self.splashes)
+            self.splash_text = self.splashes[self.splash_index]
+        elif self.window.debug and keymap.seek_zero.pressed:
+            self.window.theme_song.seek(3)
+            self.setup()
 
     @shows_errors
     @ignore_imgui

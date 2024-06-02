@@ -4,8 +4,8 @@ import arcade
 
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView
-from charm.lib.settings import settings
 from charm.objects.songmenu2 import SongMenu
+from charm.lib.keymap import keymap
 
 logger = logging.getLogger("charm")
 
@@ -28,13 +28,10 @@ class NewMenuView(DigiView):
         self.window.theme_song.volume = 0
 
     def on_key_press(self, symbol: int, modifiers: int) -> None:
-        match symbol:
-            case arcade.key.BACKSPACE:
-                self.back.setup()
-                self.window.show_view(self.back)
-                arcade.play_sound(self.window.sounds["back"], volume = settings.get_volume("sound"))
-
         super().on_key_press(symbol, modifiers)
+        if keymap.back.pressed:
+            self.go_back()
+
 
     def on_update(self, delta_time) -> None:
         super().on_update(delta_time)

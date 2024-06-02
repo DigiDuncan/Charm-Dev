@@ -5,11 +5,9 @@ from math import cos, sin, radians
 
 import arcade
 
-from pyglet.math import Vec3
-
-
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView, shows_errors, ignore_imgui
+from charm.lib.keymap import keymap
 
 from charm.lib.perp_cam import PerspectiveProjector
 import charm.data.images
@@ -57,18 +55,16 @@ class PerspectiveView(DigiView):
     @shows_errors
     @ignore_imgui
     def on_key_press(self, symbol: int, modifiers: int) -> None:
-        match symbol:
-            case arcade.key.BACKSPACE:
-                self.back.setup()
-                self.window.show_view(self.back)
-                arcade.play_sound(self.window.sounds["back"])
-
         super().on_key_press(symbol, modifiers)
+        if keymap.back.pressed:
+            self.go_back()
+
 
     @shows_errors
     @ignore_imgui
-    def on_key_release(self, _symbol: int, _modifiers: int) -> None:
-        match _symbol:
+    def on_key_release(self, symbol: int, modifiers: int) -> None:
+        super().on_key_release(symbol, modifiers)
+        match symbol:
             case _:
                 return
 

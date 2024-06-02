@@ -2,6 +2,7 @@ import importlib.resources as pkg_resources
 import math
 import logging
 from pathlib import Path
+from typing import Literal
 
 import arcade
 
@@ -12,12 +13,13 @@ from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.gamemodes.sm import SMSong
 from charm.lib.generic.song import Song
-from charm.lib.keymap import get_keymap
+from charm.lib.keymap import keymap
 from charm.lib.paths import songspath
 from charm.lib.settings import settings
 from charm.objects.gif import GIF
 from charm.objects.songmenu import SongMenu
 from charm.views.fourkeysong import FourKeySongView
+from charm.lib.keymap import keymap
 
 logger = logging.getLogger("charm")
 
@@ -89,29 +91,30 @@ class FourKeySongMenuView(DigiView):
     @shows_errors
     @ignore_imgui
     def on_key_press(self, symbol: int, modifiers: int) -> None:
-        keymap = get_keymap()
-        old_id = self.menu.selected_id
-        match symbol:
-            case arcade.key.UP:
-                self.menu.selected_id -= 1
-                arcade.play_sound(self.window.sounds["select"], volume = settings.get_volume("sound"))
-            case arcade.key.DOWN:
-                self.menu.selected_id += 1
-                arcade.play_sound(self.window.sounds["select"], volume = settings.get_volume("sound"))
-            case keymap.start:
-                arcade.play_sound(self.window.sounds["valid"], volume = settings.get_volume("sound"))
-                songview = FourKeySongView(self.menu.selected.song.path, back=self)
-                songview.setup()
-                self.window.show_view(songview)
-            case keymap.back:
-                arcade.play_sound(self.window.sounds["back"], volume = settings.get_volume("sound"))
-                self.back.setup()
-                self.window.show_view(self.back)
-        if old_id != self.menu.selected_id:
-            self.selection_changed = self.local_time
-            self.album_art.texture = self.menu.selected.album_art
-
         super().on_key_press(symbol, modifiers)
+        if keymap.navup.pressed:
+            self.navup()
+        elif keymap.navdown.pressed:
+            self.navdown()
+        elif keymap.start.pressed:
+            arcade.play_sound(self.window.sounds["valid"], volume = settings.get_volume("sound"))
+            songview = FourKeySongView(self.menu.selected.song.path, back=self)
+            songview.setup()
+            self.window.show_view(songview)
+        elif keymap.back.pressed:
+            self.go_back()
+
+    def navup(self) -> None:
+        self.nav(-1)
+
+    def navdown(self) -> None:
+        self.nav(+1)
+
+    def nav(self, d: Literal[-1, 1]) -> None:
+        self.menu.selected_id += d
+        arcade.play_sound(self.window.sounds["select"], volume = settings.get_volume("sound"))
+        self.selection_changed = self.local_time
+        self.album_art.texture = self.menu.selected.album_art
 
     @shows_errors
     @ignore_imgui

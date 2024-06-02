@@ -60,7 +60,7 @@ class NoteColor:
     CAUTION = arcade.color.YELLOW
 
     @classmethod
-    def from_note(cls, note: "FNFNote"):
+    def from_note(cls, note: FNFNote):
         match note.type:
             case NoteType.NORMAL:
                 if note.lane == 0:

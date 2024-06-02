@@ -3,8 +3,9 @@ import arcade
 
 from arcade import camera
 
-from charm.lib.keymap import get_keymap
+from charm.lib.keymap import keymap
 from charm.lib.digiview import DigiView
+from charm.lib.keymap import keymap
 
 
 class SpriteLayer:
@@ -128,14 +129,10 @@ class ParallaxView(DigiView):
         return super().on_update(delta_time)
 
     def on_key_press(self, symbol: int, modifiers: int) -> None:
-        keymap = get_keymap()
-        match symbol:
-            case keymap.back:
-                self.back.setup()
-                self.window.show_view(self.back)
-                arcade.play_sound(self.window.sounds["back"])
-
         super().on_key_press(symbol, modifiers)
+        if keymap.back.pressed:
+            self.go_back()
+
 
     def on_draw(self) -> None:
         self.window.camera.use()

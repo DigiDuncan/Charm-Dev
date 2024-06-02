@@ -6,11 +6,11 @@ from pyglet.graphics import Batch
 from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.gamemodes.hero import HeroEngine, HeroHighway, HeroSong, SectionEvent
-from charm.lib.keymap import get_keymap
+from charm.lib.keymap import keymap
 from charm.lib.oggsound import OGGSound
 from charm.lib.paths import songspath
-from charm.lib.settings import settings
 from charm.objects.lyric_animator import LyricAnimator
+from charm.lib.keymap import keymap
 
 logger = logging.getLogger("charm")
 
@@ -60,15 +60,24 @@ class HeroTestView(DigiView):
     @shows_errors
     @ignore_imgui
     def on_key_press(self, symbol: int, modifiers: int) -> None:
-        keymap = get_keymap()
-        keymap.set_state(symbol, True)
+        super().on_key_press(symbol, modifiers)
+        if keymap.back.pressed:
+            self.go_back()
+        elif keymap.pause.pressed:
+            self.song.pause() if self.song.playing else self.song.play()
+        elif self.window.debug and keymap.seek_zero.pressed:
+            self.song.seek(0)
+        elif self.window.debug and keymap.seek_backward.pressed:
+            self.song.seek(self.song.time - 5)
+        elif self.window.debug and keymap.seek_forward.pressed:
+            self.song.seek(self.song.time + 5)
+        elif self.window.debug and keymap.debug_toggle_flags.pressed:
+            self.highway.show_flags = not self.highway.show_flags
+
+
         self.engine.process_keystate()
         match symbol:
             case keymap.back:
-                self.song.delete()
-                self.back.setup()
-                self.window.show_view(self.back)
-                arcade.play_sound(self.window.sounds["back"], volume = settings.get_volume("sound"))
             case keymap.pause:
                 self.song.pause() if self.song.playing else self.song.play()
         if self.window.debug:
@@ -82,13 +91,15 @@ class HeroTestView(DigiView):
                 case arcade.key.F:
                     self.highway.show_flags = not self.highway.show_flags
 
-        super().on_key_press(symbol, modifiers)
 
     @shows_errors
     def on_key_release(self, symbol: int, modifiers: int) -> None:
-        keymap = get_keymap()
-        keymap.set_state(symbol, False)
+        super().on_key_release(symbol, modifiers)
         self.engine.process_keystate()
+
+    def go_back(self) -> None:
+        self.song.delete()
+        super().go_back()
 
     @shows_errors
     def on_update(self, delta_time) -> None:

@@ -8,15 +8,15 @@ from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
 from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.gamemodes.fnf import CameraFocusEvent, FNFEngine, FNFSong
 from charm.lib.gamemodes.four_key import FourKeyHighway, load_note_texture
-from charm.lib.keymap import get_keymap
+from charm.lib.keymap import keymap
 from charm.lib.logsection import LogSection
 from charm.lib.oggsound import OGGSound
-from charm.lib.settings import settings
 from charm.lib.trackcollection import TrackCollection
 from charm.lib.utils import map_range
 from charm.objects.lyric_animator import LyricAnimator
 from charm.objects.timer import Timer
 from charm.views.resultsview import ResultsView
+from charm.lib.keymap import keymap
 
 logger = logging.getLogger("charm")
 
@@ -174,9 +174,6 @@ class FNFSongView(DigiView):
     def on_key_something(self, symbol: int, modifiers: int, press: bool) -> None:
         # AWFUL HACK: CRIME
         # (Why is this not being detected and handled by the keymapper??)
-        for key in get_keymap().get_set("fourkey"):
-            if symbol == key:
-                key.state = press
         if symbol in self.engine.mapping:
             i = self.engine.mapping.index(symbol)
             if not self.chroma_key:
@@ -188,42 +185,37 @@ class FNFSongView(DigiView):
     @shows_errors
     @ignore_imgui
     def on_key_press(self, symbol: int, modifiers: int) -> None:
-        keymap = get_keymap()
-        match symbol:
-            case keymap.back:
-                self.back.setup()
-                self.tracks.close()
-                self.window.show_view(self.back)
-                arcade.play_sound(self.window.sounds["back"], volume = settings.get_volume("sound"))
-            case keymap.pause:
-                self.paused = not self.paused
-                self.tracks.pause() if self.paused else self.tracks.play()
-                self.timer.paused = self.paused
-            case arcade.key.EQUAL:
-                self.tracks.seek(self.tracks.time + 5)
-            case arcade.key.MINUS:
-                self.tracks.seek(self.tracks.time - 5)
-            case arcade.key.S:
-                self.tracks.log_sync()
-            case arcade.key.KEY_8:
-                self.distractions = not self.distractions
-            case arcade.key.B:
-                self.chroma_key = not self.chroma_key
-        if self.window.debug:
-            if modifiers & arcade.key.MOD_SHIFT:
-                match symbol:
-                    case arcade.key.H:
-                        self.highway_1.show_hit_window = not self.highway_1.show_hit_window
-                    case arcade.key.R:
-                        self.show_results()
-
-        self.on_key_something(symbol, modifiers, True)
         super().on_key_press(symbol, modifiers)
+        if keymap.back.pressed:
+            self.go_back()
+        elif keymap.pause.pressed:
+            self.paused = not self.paused
+            self.tracks.pause() if self.paused else self.tracks.play()
+            self.timer.paused = self.paused
+        elif keymap.seek_backward.pressed:
+            self.tracks.seek(self.tracks.time - 5)
+        elif keymap.seek_forward.pressed:
+            self.tracks.seek(self.tracks.time + 5)
+        elif keymap.log_sync.pressed:
+            self.tracks.log_sync()
+        elif keymap.toggle_distractions.pressed:
+            self.distractions = not self.distractions
+        elif keymap.toggle_chroma.pressed:
+            self.chroma_key = not self.chroma_key
+        elif self.window.debug and keymap.debug_toggle_hit_window.pressed:
+            self.highway_1.show_hit_window = not self.highway_1.show_hit_window
+        elif self.window.debug and keymap.debug_show_results.pressed:
+            self.show_results()
+        self.on_key_something(symbol, modifiers, True)
 
     @shows_errors
     def on_key_release(self, symbol: int, modifiers: int) -> None:
-        self.on_key_something(symbol, modifiers, False)
         super().on_key_release(symbol, modifiers)
+        self.on_key_something(symbol, modifiers, False)
+
+    def go_back(self) -> None:
+        self.tracks.close()
+        super().go_back()
 
     def show_results(self) -> None:
         self.tracks.close()
@@ -270,10 +262,8 @@ class FNFSongView(DigiView):
                 self.grade_text._label.text = f"{self.engine.fc_type} | {round(self.engine.accuracy * 100, 2)}% ({self.engine.grade})"
 
         if self.engine.has_died and not self.window.debug:
-            self.back.setup()
             self.tracks.close()
-            self.window.show_view(self.back)
-            arcade.play_sound(self.window.sounds["back"])
+            self.go_back()
 
         if self.tracks.tracks and self.tracks.time >= self.tracks.duration:
             self.show_results()
