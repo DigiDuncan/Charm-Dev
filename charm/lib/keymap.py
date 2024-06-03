@@ -1,17 +1,17 @@
 from __future__ import annotations
 from collections.abc import Iterable
 from typing import Literal, cast, get_args
+
 import arcade.key
 from arcade.key import \
     A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z, \
     GRAVE, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_0, MINUS, EQUAL, \
     F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, \
     F13, F14, F15, F16, F17, F18, F19, F20, F21, F22, F23, F24, \
-    RETURN, ENTER, ESCAPE, BACKSPACE, SPACE, UP, DOWN, LEFT, RIGHT, F11, \
+    RETURN, ENTER, ESCAPE, BACKSPACE, SPACE, UP, DOWN, LEFT, RIGHT, \
     MOD_SHIFT, RSHIFT
 
-from charm.lib.errors import TooManyKeyBindError, ConflictingKeyBindError, \
-    MissingRequiredKeyBindError
+import charm.lib.data
 
 Mod = int
 Key = int
@@ -42,22 +42,53 @@ Context = Literal["global", "hero", "fourkey"]
 GLOBAL = "global"
 HERO = "hero"
 FOURKEY = "fourkey"
+ALL = None
+
+ActionJson = tuple[KeyMod, ...]
+KeyMapJson = dict[str, ActionJson]
+
+
+class KeyStateManager:
+    def __init__(self):
+        self.pressed: dict[Key, Mod] = {}
+        self.released: dict[Key, Mod] = {}
+        self.held: dict[Key, Mod] = {}
+
+    def on_key_press(self, symbol: int, modifiers: int) -> None:
+        self.pressed = {symbol: modifiers}
+        self.held[symbol] = modifiers
+
+    def on_key_release(self, symbol: int, modifiers: int) -> None:
+        self.released = {symbol: modifiers}
+        if symbol in self.held:
+            del self.held[symbol]
+
+    def is_key_pressed(self, key: KeyMod) -> bool:
+        k, m = key
+        return k in self.pressed and self.pressed[k] == m
+
+    def is_key_released(self, key: KeyMod) -> bool:
+        k, m = key
+        return k in self.released and self.released[k] == m
+
+    def is_key_held(self, key: KeyMod) -> bool:
+        k, m = key
+        return k in self.held and self.held[k] == m
 
 
 class Action:
-    def __init__(self, keymap: KeyMap, name: str, defaults: Iterable[KeyMod | Key], flags: int = 0, context: Context = GLOBAL) -> None:
+    def __init__(self, keymap: KeyMap, id: str, defaults: Iterable[KeyMod | Key], flags: int = 0, context: Context = GLOBAL) -> None:
         self._keymap = keymap
-        self._keymap.actions.append(self)
-        self._name = name
+        self.id = id
         self._defaults: list[KeyMod] = [to_keymod(k) for k in defaults]
-        self.keys: list[KeyMod] = []
+        self.keys: set[KeyMod] = set()
         self._required = bool(flags & REQUIRED)
         self._singlebind = bool(flags & SINGLEBIND)
         self._context: Context = context
         self.v_missing = False
         self.v_toomany = False
         self.conflicting_keys: set[KeyMod] = set()
-        self.set_defaults()
+        self._keymap.add_action(self)
 
     @property
     def v_conflict(self) -> bool:
@@ -67,26 +98,16 @@ class Action:
         """Bind a key to this Action"""
         if key in self.keys:
             return
-        self.keys.append(key)
-        if key not in self._keymap.keys:
-            self._keymap.keys[key] = []
-        self._keymap.keys[key].append(self)
-        if key not in self._keymap.context_keys[self._context]:
-            self._keymap.context_keys[self._context][key] = []
-        self._keymap.context_keys[self._context][key].append(self)
+        self.keys.add(key)
+        self._keymap.add_key(key, self, self._context)
         self._validate(key)
 
     def _unbind(self, key: KeyMod) -> None:
         """Unbind a key from this Action"""
         if key not in self.keys:
             return
-        self.keys.remove(key)
-        self._keymap.keys[key].remove(self)
-        if len(self._keymap.keys[key]) == 0:
-            del self._keymap.keys[key]
-        self._keymap.context_keys[self._context][key].remove(self)
-        if len(self._keymap.context_keys[self._context][key]) == 0:
-            del self._keymap.context_keys[self._context][key]
+        self.keys.discard(key)
+        self._keymap.remove_key(key, self, self._context)
         self._validate(key)
 
     def _validate(self, key: KeyMod) -> None:
@@ -97,7 +118,7 @@ class Action:
 
     def _validate_conflicts(self, key: KeyMod) -> None:
         """Update v_conflict validation flag"""
-        actions = self._get_context_actions_by_key(key)
+        actions = self._keymap.get_actions(key, self._context)
         if self not in actions:
             self.conflicting_keys.discard(key)
         has_conflict = len(actions) > 1
@@ -107,23 +128,15 @@ class Action:
             else:
                 action.conflicting_keys.discard(key)
 
-    def _get_context_actions_by_key(self, key: KeyMod) -> list[Action]:
-        """Get all Actions by key that are in a related context"""
-        if self._context == GLOBAL:
-            actions = self._keymap.keys.get(key, [])
-        else:
-            actions = self._keymap.context_keys[GLOBAL].get(key, []) + self._keymap.context_keys[self._context].get(key, [])
-        return actions
-
     def bind(self, key: KeyMod | Key) -> None:
         """Bind a key to this Action"""
-        km = to_keymod(key)
-        self._bind(km)
+        key = to_keymod(key)
+        self._bind(key)
 
     def unbind(self, key: KeyMod | Key) -> None:
         """Unbind a key from this Action"""
-        km = to_keymod(key)
-        self._unbind(km)
+        key = to_keymod(key)
+        self._unbind(key)
 
     def unbind_all(self) -> None:
         """Unbind all keys from this Action"""
@@ -136,39 +149,49 @@ class Action:
         for key in self._defaults:
             self._bind(key)
 
+    def to_json(self) -> ActionJson:
+        return tuple(sorted(self.keys))
+
+    def set_from_json(self, data: ActionJson) -> None:
+        self.unbind_all()
+        for key in data:
+            self.bind(key)
+
+    def __lt__(self, other: Action) -> bool:
+        if isinstance(other, Action):
+            return self.id < other.id
+        raise NotImplementedError
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, Action):
+            return self.id == other.id
+        return False
+
+    def __hash__(self) -> int:
+        return hash(self.id)
+
     @property
     def pressed(self) -> bool:
-        for k, m in self.keys:
-            if k in self._keymap.pressed and self._keymap.pressed[k] == m:
-                return True
-        return False
+        return any(self._keymap.state.is_key_pressed(key) for key in self.keys)
 
     @property
     def released(self) -> bool:
-        for k, m in self.keys:
-            if k in self._keymap.released and self._keymap.released[k] == m:
-                return True
-        return False
+        return any(self._keymap.state.is_key_released(key) for key in self.keys)
 
     @property
     def held(self) -> bool:
-        for k, m in self.keys:
-            if k in self._keymap.held and self._keymap.held[k] == m:
-                return True
-        return False
+        return any(self._keymap.state.is_key_held(key) for key in self.keys)
 
     def __str__(self) -> str:
-        return f"{self._name}: {[get_keyname(k) for k in self.keys]}"
+        return f"{self.id}: {[get_keyname(k) for k in self.keys]}"
+
 
 class KeyMap:
     def __init__(self):
         """Access and set mappings for inputs to actions. Key binding."""
-        self.actions: list[Action] = []
-        self.keys: dict[KeyMod, list[Action]] = {}
-        self.pressed: dict[Key, Mod] = {}
-        self.released: dict[Key, Mod] = {}
-        self.held: dict[Key, Mod] = {}
-        self.context_keys: dict[Context, dict[KeyMod, list[Action]]] = {ctx: {} for ctx in get_args(Context)}
+        self.actions: set[Action] = set()
+        self.keys: dict[Context | None, dict[KeyMod, set[Action]]] = {ctx: {} for ctx in [*get_args(Context), None]}
+        self.state = KeyStateManager()
 
         self.start =         Action(self, 'start',         [RETURN, ENTER],     REQUIRED)
         self.back =          Action(self, 'back',          [ESCAPE, BACKSPACE], REQUIRED)
@@ -212,13 +235,13 @@ class KeyMap:
         self.fourkey: FourKeyAliasMap = FourKeyAliasMap(self)
         self.hero: HeroAliasMap = HeroAliasMap(self)
 
+        self.set_defaults()
+
     def unbind(self, key: Key | KeyMod) -> None:
         """Unbind a particular key"""
-        km = to_keymod(key)
-        if km not in self.keys:
-            return
-        for action in self.keys[km]:
-            action.unbind(km)
+        key = to_keymod(key)
+        for action in self.get_actions(key):
+            action.unbind(key)
 
     def unbind_all(self) -> None:
         """Unbind all actions."""
@@ -230,17 +253,56 @@ class KeyMap:
         for action in self.actions:
             action.set_defaults()
 
+    def on_key_press(self, symbol: int, modifiers: int) -> None:
+        self.state.on_key_press(symbol, modifiers)
+
+    def on_key_release(self, symbol: int, modifiers: int) -> None:
+        self.state.on_key_release(symbol, modifiers)
+
+    def to_json(self) -> KeyMapJson:
+        return {action.id: action.to_json() for action in sorted(self.actions)}
+
+    def set_from_json(self, data: KeyMapJson) -> None:
+        for action in self.actions:
+            action.set_from_json(data.get(action.id, ()))
+
+    def save(self) -> None:
+        charm.lib.data.save("keymap.json", self.to_json())
+
+    def load(self) -> None:
+        self.set_from_json(cast(KeyMapJson, charm.lib.data.load("keymap.json")))
+
+    def get_actions(self, key: KeyMod | Key, context: Context | None = ALL) -> set[Action]:
+        """Get all Actions mapped to a particular key"""
+        key = to_keymod(key)
+        if context == GLOBAL:
+            context = ALL
+        actions = self.keys[context].get(key, set())
+        if context is not ALL:
+            actions |= set(self.keys[GLOBAL].get(key, set()))
+        return actions
+
     def __str__(self) -> str:
         return f"{[str(act) for act in self.actions]}"
 
-    def on_key_press(self, symbol: int, modifiers: int) -> None:
-        self.pressed = {symbol: modifiers}
-        self.held[symbol] = modifiers
+    def add_action(self, action: Action) -> None:
+        """INTERNAL"""
+        self.actions.add(action)
 
-    def on_key_release(self, symbol: int, modifiers: int) -> None:
-        self.released = {symbol: modifiers}
-        if symbol in self.held:
-            del self.held[symbol]
+    def add_key(self, key: KeyMod, action: Action, context: Context) -> None:
+        """INTERNAL"""
+        for ctx in (context, None):
+            if key not in self.keys[ctx]:
+                self.keys[ctx][key] = set()
+            self.keys[ctx][key].add(action)
+
+    def remove_key(self, key: KeyMod, action: Action, context: Context) -> None:
+        """INTERNAL"""
+        for ctx in (context, None):
+            self.keys[ctx][key].discard(action)
+            if len(self.keys[ctx][key]) == 0:
+                del self.keys[ctx][key]
+
 
 class FourKeyAliasMap:
     def __init__(self, keymap: KeyMap):
@@ -252,6 +314,7 @@ class FourKeyAliasMap:
     @property
     def state(self) -> list[bool]:
         return [self.key1.pressed, self.key2.pressed, self.key3.pressed, self.key4.pressed]
+
 
 class HeroAliasMap:
     def __init__(self, keymap: KeyMap):
@@ -276,5 +339,6 @@ class HeroAliasMap:
             self.strumdown.pressed,
             self.power.pressed
         ]
+
 
 keymap = KeyMap()
