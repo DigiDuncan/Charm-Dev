@@ -191,11 +191,11 @@ class VisualizerView(DigiView):
         super().on_key_press(symbol, modifiers)
         if keymap.back.pressed:
             self.go_back()
-        if keymap.pause.pressed:
+        elif keymap.pause.pressed:
             self.song.pause() if self.song.playing else self.song.play()
-        if arcade.key.NUM_0.pressed:
+        elif keymap.seek_zero.pressed:
             self.song.seek(0)
-        if arcade.key.T.pressed:
+        elif keymap.toggle_show_text.pressed:
             self.show_text = not self.show_text
 
     def go_back(self) -> None:
