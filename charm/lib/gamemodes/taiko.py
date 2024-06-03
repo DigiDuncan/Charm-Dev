@@ -42,7 +42,7 @@ class TaikoChart(Chart):
         self.song: TaikoSong = song
 
 
-class TaikoSong(Song):
+class TaikoSong(Song[TaikoChart]):
     def __init__(self, path: Path):
         super().__init__(path)
 

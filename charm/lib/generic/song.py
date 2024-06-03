@@ -164,25 +164,23 @@ class Chart:
         self.bpm: float = None
 
 
-class Song:
+class Song[C: Chart]:
     """A list of charts and global events, with some helpful metadata."""
     def __init__(self, path: Path):
         self.path: Path = path
         self.metadata = Metadata(path.stem, "Unknown Artist", "Unknown Album")
-        self.charts: list[Chart] = []
+        self.charts: list[C] = []
         self.events: list[Event] = []
         self.lyrics: list[LyricEvent] = []
 
     @cache
-    def get_chart(self, difficulty = None, instrument = None):
+    def get_chart(self, difficulty: str | None = None, instrument: str | None = None) -> C | None:
         if difficulty is None and instrument is None:
             raise ValueError(".get_chart() called with no arguments!")
-        elif difficulty is not None and instrument is not None:
-            return next((c for c in self.charts if c.difficulty == difficulty and c.instrument == instrument), None)
-        elif difficulty is not None:
-            return next((c for c in self.charts if c.difficulty == difficulty), None)
-        elif instrument is not None:
-            return next((c for c in self.charts if c.instrument == instrument), None)
+        charts = (c for c in self.charts if
+            (difficulty is None or difficulty == c.difficulty)
+            and (instrument is None or instrument == c.instrument))
+        return next(charts, None)
 
     def events_by_type(self, t: type):
         return [e for e in self.events if isinstance(e, t)]

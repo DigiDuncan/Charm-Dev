@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections import defaultdict
 from functools import cache
 from types import ModuleType
@@ -383,7 +385,7 @@ class HeroChart(Chart):
         self.indexes_by_time["chord"] = Index(self.chords, "time")
 
 
-class HeroSong(Song):
+class HeroSong(Song[HeroChart]):
     def __init__(self, path: Path):
         super().__init__(path)
         self.indexes_by_tick: IndexDict = {}
@@ -410,7 +412,7 @@ class HeroSong(Song):
                         gamemode = "hero")
 
     @classmethod
-    def parse(cls, path: Path) -> "HeroSong":
+    def parse(cls, path: Path) -> HeroSong:
         if not (path / "notes.chart").exists():
             raise NoChartsError(path.stem)
         with open(path / "notes.chart", encoding = "utf-8") as f:

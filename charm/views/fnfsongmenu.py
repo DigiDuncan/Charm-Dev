@@ -27,7 +27,6 @@ class FNFSongMenuView(DigiView):
 
         self.album_art_buffer = self.window.width // 20
         self.static_time = 0.25
-        self.hit_start = None
         self.album_art: arcade.Sprite = None
         self.static: arcade.AnimatedTimeBasedSprite = None
         self.menu: SongMenu = None
@@ -37,8 +36,6 @@ class FNFSongMenuView(DigiView):
     @shows_errors
     def setup(self) -> None:
         super().setup()
-
-        self.hit_start = None
 
         # Generate "gum wrapper" background
         self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)

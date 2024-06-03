@@ -52,10 +52,10 @@ class Action:
         self._required = bool(flags & REQUIRED)
         self._singlebind = bool(flags & SINGLEBIND)
         self._context: Context = context
-        self.set_defaults()
         self.v_missing = False
         self.v_toomany = False
         self.conflicting_keys: set[KeyMod] = set()
+        self.set_defaults()
 
     @property
     def v_conflict(self) -> bool:
@@ -80,7 +80,11 @@ class Action:
             return
         self.keys.remove(key)
         self._keymap.keys[key].remove(self)
+        if len(self._keymap.keys[key]) == 0:
+            del self._keymap.keys[key]
         self._keymap.context_keys[self._context][key].remove(self)
+        if len(self._keymap.context_keys[self._context][key]) == 0:
+            del self._keymap.context_keys[self._context][key]
         self._validate(key)
 
     def _validate(self, key: KeyMod) -> None:
@@ -104,9 +108,9 @@ class Action:
     def _get_context_actions_by_key(self, key: KeyMod) -> list[Action]:
         """Get all Actions by key that are in a related context"""
         if self._context == GLOBAL:
-            actions = self._keymap.keys[key]
+            actions = self._keymap.keys.get(key, [])
         else:
-            actions = self._keymap.context_keys[GLOBAL][key] + self._keymap.context_keys[self._context][key]
+            actions = self._keymap.context_keys[GLOBAL].get(key, []) + self._keymap.context_keys[self._context].get(key, [])
         return actions
 
     def bind(self, key: KeyMod | Key) -> None:

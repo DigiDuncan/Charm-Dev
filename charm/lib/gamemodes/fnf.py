@@ -128,10 +128,9 @@ class FNFChart(FourKeyChart):
         return [note.lane for note in self.notes if note.is_sustain and note.time <= time and note.end >= time]
 
 
-class FNFSong(Song):
+class FNFSong(Song[FNFChart]):
     def __init__(self, song_code: str) -> None:
         super().__init__(song_code)
-        self.charts: list[FNFChart] = []
 
     @classmethod
     def get_metadata(cls, folder: Path) -> Metadata:

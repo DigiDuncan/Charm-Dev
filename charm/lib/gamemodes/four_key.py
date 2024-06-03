@@ -158,7 +158,7 @@ class FourKeyChart(Chart):
         self.song: FourKeySong = song
 
 
-class FourKeySong(Song):
+class FourKeySong(Song[FourKeyChart]):
     def __init__(self, path: Path):
         """A generic four-key song. Don't use this raw, use a subclass instead."""
         super().__init__(path)

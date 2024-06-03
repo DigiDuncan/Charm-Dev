@@ -31,16 +31,15 @@ class FourKeySongMenuView(DigiView):
         self.album_art_buffer = self.window.width // 20
         self.static_time = 0.25
 
+        self.songs: list[SMSong] = []
+
     @shows_errors
     def setup(self) -> None:
         super().setup()
 
-        self.hit_start = None
-
         # Generate "gum wrapper" background
         self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
-
-        self.songs: list[Song] = []
+        self.songs = []
         rootdir = Path(songspath / "4k")
         dir_list = [d for d in rootdir.glob('**/*') if d.is_dir()]
         for d in dir_list:
