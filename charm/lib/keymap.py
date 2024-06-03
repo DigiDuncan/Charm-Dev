@@ -44,7 +44,6 @@ HERO = "hero"
 FOURKEY = "fourkey"
 
 
-
 class Action:
     def __init__(self, keymap: KeyMap, name: str, defaults: Iterable[KeyMod | Key], flags: int = 0, context: Context = GLOBAL) -> None:
         self._keymap = keymap
