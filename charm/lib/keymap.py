@@ -1,6 +1,6 @@
 from __future__ import annotations
 from collections.abc import Iterable
-from typing import Literal, get_args
+from typing import Literal, cast, get_args
 import arcade.key
 from arcade.key import \
     A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z, \
@@ -39,7 +39,10 @@ SINGLEBIND = 2
 
 # CONTEXTS
 Context = Literal["global", "hero", "fourkey"]
-GLOBAL, HERO, FOURKEY = get_args(Context)
+GLOBAL = "global"
+HERO = "hero"
+FOURKEY = "fourkey"
+
 
 
 class Action:
@@ -166,11 +169,7 @@ class KeyMap:
         self.pressed: dict[Key, Mod] = {}
         self.released: dict[Key, Mod] = {}
         self.held: dict[Key, Mod] = {}
-        self.context_keys: dict[Context, dict[KeyMod, list[Action]]] = {
-            GLOBAL: {},
-            FOURKEY: {},
-            HERO: {}
-        }
+        self.context_keys: dict[Context, dict[KeyMod, list[Action]]] = {ctx: {} for ctx in get_args(Context)}
 
         self.start =         Action(self, 'start',         [RETURN, ENTER],     REQUIRED)
         self.back =          Action(self, 'back',          [ESCAPE, BACKSPACE], REQUIRED)
