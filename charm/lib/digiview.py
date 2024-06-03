@@ -63,8 +63,11 @@ class DigiView(View):
         *,
         back: DigiView | None = None,
         fade_in: float = 0,
-        bg_color: RGBOrA255 = (0, 0, 0)
+        bg_color: RGBOrA255 = (0, 0, 0),
+        destinations: dict[str, DigiView] | None = None
     ):
+        if destinations is None:
+            destinations = {}
         super().__init__()
         self.window: DigiWindow
         self.back = back
@@ -73,10 +76,11 @@ class DigiView(View):
         self.fade_in = fade_in
         self.bg_color = bg_color
         self._errors: list[ErrorPopup] = []  # [error, seconds to show]
+        self.destinations = destinations
 
     @property
     def local_time(self) -> float:
-        return self.window.time
+        return self.window.time - self.local_start
 
     def on_error(self, error: CharmException) -> None:
         offset = len(self._errors) * 4
@@ -89,6 +93,7 @@ class DigiView(View):
         pass
 
     def setup(self) -> None:
+        self.local_start = self.window.time
         arcade.set_background_color(cast(RGBA255, (0,0,0))) # TODO: Fix Arcade typing
         self.calculate_positions()
 
@@ -140,3 +145,7 @@ class DigiView(View):
         self.back.setup()
         self.window.show_view(self.back)
         arcade.play_sound(self.window.sounds["back"], volume = settings.get_volume("sound"))
+
+    def goto(self, dest: str) -> None:
+        self.destinations[dest].setup()
+        self.window.show_view(self.destinations[dest])

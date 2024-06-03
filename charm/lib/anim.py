@@ -66,12 +66,12 @@ def ease_linear(minimum: float, maximum: float, start: float, end: float, x: flo
 
 def ease_quadinout(minimum: float, maximum: float, start: float, end: float, x: float) -> float:
     """https://easings.net/#easeInOutQuad"""
-    x = find_percent(start, end, x)
-    if x < 0.5:
-        zo = 2 * x * x
+    p = find_percent(start, end, x)
+    if p < 0.5:
+        progress = 2 * p * p
     else:
-        zo = 1 - math.pow(-2 * x + 2, 2) / 2
-    return lerp(minimum, maximum, zo)
+        progress = 1 - math.pow(-2 * p + 2, 2) / 2
+    return lerp(minimum, maximum, progress)
 
 
 def ease_quartout(minimum: float, maximum: float, start: float, end: float, x: float) -> float:

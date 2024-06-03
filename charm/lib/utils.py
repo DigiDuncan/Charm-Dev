@@ -119,7 +119,7 @@ def snap(n: float, increments: int) -> float:
     return round(increments * n) / increments
 
 
-def typewriter(s: str, cps: float, t: float, begin: float = 0) -> str:
-    t = t - begin
-    chars = int(max(0, (t * cps)))
+def typewriter(s: str, cps: float, now: float, begin: float = 0) -> str:
+    seconds = now - begin
+    chars = int(max(0, (seconds * cps)))
     return s[:chars]
