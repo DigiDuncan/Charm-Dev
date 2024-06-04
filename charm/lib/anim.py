@@ -5,17 +5,16 @@ from typing import Protocol
 from charm.lib.utils import clamp, snap
 
 class EasingFunction(Protocol):
-    """Eases a value between two values over an amount of time, smoothly.
+    def __call__(self, minimum: float, maximum: float, p: float) -> float:
+        """Eases a value between two values over an amount of time, smoothly.
 
-    * `minimum: float`: the value returned by f(`x`) = `start`, often a position
-    * `maximum: float`: the value returned by f(`x`) = `end`, often a position
-    * `start: float`: the beginning of the transition, often a time
-    * `end: float`: the end of the transition, often a time
-    * `x: float`: the current x, often a time
+        * `minimum: float`: the value returned by `p == 0`
+        * `maximum: float`: the value returned by `p == 1`
+        * `p: float`: percentage of progression, 0 to 1
 
-    Returns a factor as float."""
-    def __call__(self, minimum: float, maximum: float, start: float, end: float, x: float) -> float:
+        Returns a factor as float."""
         raise NotImplementedError
+
 
 @dataclass
 class LerpData:
@@ -25,14 +24,15 @@ class LerpData:
     end_time: float
 
 
-def find_percent(start: float, end: float, x: float) -> float:
+def perc(start: float, end: float, curr: float) -> float:
     """Convert a number to its progress through the range start -> end, from 0 to 1.
 
     https://www.desmos.com/calculator/d2qdk3lceh"""
-    if end - start == 0:
-        return 1
-    y = ((1 / (end - start)) * x) - (start / (end - start))
-    return clamp(0, y, 1)
+    if end - start <= 0:
+        return 1 if curr >= start else 0
+    duration = end - start
+    p = (curr - start) / duration
+    return clamp(0, p, 1)
 
 
 def lerp(start: float, end: float, i: float) -> float:
@@ -45,56 +45,62 @@ def bounce(n: float, m: float, bpm: float, x: float) -> float:
     return max(abs(math.sin(x * math.pi * (bpm / 60))) * m, n)
 
 
-# All ease_ functions are three steps:
-# find_percent(start, end, x)
-# manipulate x to redefine the curve
-# lerp(min, max, x)
+# All ease_ functions are two steps:
+# manipulate p to redefine the curve
+# lerp(min, max, p)
 
 # TODO: Just add all the ones from easings.net. It'll be helpful to have the around.
 # Might even be worth putting them in an "enum", EasingFunctions.
 
 
-def ease_linear(minimum: float, maximum: float, start: float, end: float, x: float) -> float:
-    """* `minimum: float`: the value returned by f(`x`) = `start`, often a position
-       * `maximum: float`: the value returned by f(`x`) = `end`, often a position
-       * `start: float`: the beginning of the transition, often a time
-       * `end: float`: the end of the transition, often a time
-       * `x: float`: the current x, often a time"""
-    x = find_percent(start, end, x)
-    return lerp(minimum, maximum, x)
+def ease_linear(minimum: float, maximum: float, p: float) -> float:
+    """* `minimum: float`: the value returned by `p == 0`
+       * `maximum: float`: the value returned by `p == 1`
+       * `p: float`: percentage of progression, 0 to 1"""
+    return lerp(minimum, maximum, p)
 
 
-def ease_quadinout(minimum: float, maximum: float, start: float, end: float, x: float) -> float:
-    """https://easings.net/#easeInOutQuad"""
-    p = find_percent(start, end, x)
+def ease_quadinout(minimum: float, maximum: float, p: float) -> float:
+    """https://easings.net/#easeInOutQuad
+       * `minimum: float`: the value returned by `p == 0`
+       * `maximum: float`: the value returned by `p == 1`
+       * `p: float`: percentage of progression, 0 to 1"""
     if p < 0.5:
-        progress = 2 * p * p
+        p2 = 2 * p * p
     else:
-        progress = 1 - math.pow(-2 * p + 2, 2) / 2
-    return lerp(minimum, maximum, progress)
+        p2 = 1 - math.pow(-2 * p + 2, 2) / 2
+    return lerp(minimum, maximum, p2)
 
 
-def ease_quartout(minimum: float, maximum: float, start: float, end: float, x: float) -> float:
-    """https://easings.net/#easeOutQuart"""
-    x = find_percent(start, end, x)
-    zo = 1 - math.pow(1 - x, 4)
-    return lerp(minimum, maximum, zo)
+def ease_quartout(minimum: float, maximum: float, p: float) -> float:
+    """https://easings.net/#easeOutQuart
+       * `minimum: float`: the value returned by `p == 0`
+       * `maximum: float`: the value returned by `p == 1`
+       * `p: float`: percentage of progression, 0 to 1"""
+    p2 = 1 - math.pow(1 - p, 4)
+    return lerp(minimum, maximum, p2)
 
 
-def ease_circout(minimum: float, maximum: float, start: float, end: float, x: float) -> float:
-    """https://easings.net/#easeOutCirc"""
-    x = find_percent(start, end, x)
-    zo = math.sqrt(1 - math.pow(x - 1, 2))
-    return lerp(minimum, maximum, zo)
+def ease_circout(minimum: float, maximum: float, p: float) -> float:
+    """https://easings.net/#easeOutCirc
+       * `minimum: float`: the value returned by `p == 0`
+       * `maximum: float`: the value returned by `p == 1`
+       * `p: float`: percentage of progression, 0 to 1"""
+    p2 = math.sqrt(1 - math.pow(p - 1, 2))
+    return lerp(minimum, maximum, p2)
 
 
-def ease_expoout(minimum: float, maximum: float, start: float, end: float, x: float) -> float:
-    x = find_percent(start, end, x)
-    zo = 1 - math.pow(2, -10 * x)
-    return lerp(minimum, maximum, zo)
+def ease_expoout(minimum: float, maximum: float, p: float) -> float:
+    """* `minimum: float`: the value returned by `p == 0`
+       * `maximum: float`: the value returned by `p == 1`
+       * `p: float`: percentage of progression, 0 to 1"""
+    p2 = 1 - math.pow(2, -10 * p)
+    return lerp(minimum, maximum, p2)
 
 
-def ease_snap(minimum: float, maximum: float, start: float, end: float, x: float) -> float:
-    x = find_percent(start, end, x)
-    zo = snap(x, 1)
-    return lerp(minimum, maximum, zo)
+def ease_snap(minimum: float, maximum: float, p: float) -> float:
+    """* `minimum: float`: the value returned by `p == 0`
+       * `maximum: float`: the value returned by `p == 1`
+       * `p: float`: percentage of progression, 0 to 1"""
+    p2 = snap(p, 1)
+    return lerp(minimum, maximum, p2)

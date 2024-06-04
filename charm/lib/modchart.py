@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 import typing
 
-from charm.lib.anim import ease_linear
+from charm.lib.anim import ease_linear, perc
 from charm.lib.generic.song import Seconds, Event
 
 if typing.TYPE_CHECKING:
@@ -90,8 +90,8 @@ class ModchartProcessor:
 
         # Excecute highway moves
         for move in self._active_highway_moves:
-            self.view.highway.x = ease_linear(move["x"], move["end_x"], move["start_time"], move["end_time"], self.view.tracks.time)
-            self.view.highway.y = ease_linear(move["y"], move["end_y"], move["start_time"], move["end_time"], self.view.tracks.time)
+            self.view.highway.x = int(ease_linear(move["x"], move["end_x"], perc(move["start_time"], move["end_time"], self.view.tracks.time)))
+            self.view.highway.y = int(ease_linear(move["y"], move["end_y"], perc(move["start_time"], move["end_time"], self.view.tracks.time)))
 
             if move["end_time"] < self.view.tracks.time:
                 self._active_highway_moves.remove(move)

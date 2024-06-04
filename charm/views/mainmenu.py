@@ -1,8 +1,7 @@
-from typing import Literal
 import arcade
 
-from charm.lib.anim import ease_quartout
-from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
+from charm.lib.anim import ease_quartout, perc
+from charm.lib.charm import CharmColors, GumWrapper
 from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.errors import TestError
 from charm.lib.keymap import keymap
@@ -29,7 +28,7 @@ class MainMenuView(DigiView):
         super().setup()
 
         # Generate "gum wrapper" background
-        self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
+        self.gum_wrapper = GumWrapper(self.size)
 
         self.menu = MainMenu([
             MainMenuItem("Playlists", "playlists", None),
@@ -99,7 +98,7 @@ class MainMenuView(DigiView):
     def on_update(self, delta_time: float) -> None:
         super().on_update(delta_time)
 
-        move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
+        self.gum_wrapper.on_update(delta_time)
         self.menu.on_update(delta_time)
         self.countdown()
 
@@ -116,10 +115,9 @@ class MainMenuView(DigiView):
         self.clear()
 
         # Charm BG
-        self.small_logos_forward.draw()
-        self.small_logos_backward.draw()
+        self.gum_wrapper.draw()
 
-        left = ease_quartout(self.size[0], 0, 0.5, 1.5, self.local_time)
+        left = ease_quartout(self.size[0], 0, perc(0.5, 1.5, self.local_time))
         arcade.draw_lrbt_rectangle_filled(left, self.size[0], self.size[1] // 4, (self.size[1] // 4) * 3, arcade.color.WHITE[:3] + (127,))
 
         self.menu.draw()

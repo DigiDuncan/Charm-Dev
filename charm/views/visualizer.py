@@ -11,7 +11,7 @@ import numpy as np
 
 import charm.data.audio
 from charm.lib.adobexml import sprite_from_adobe
-from charm.lib.anim import ease_linear, ease_quartout
+from charm.lib.anim import ease_linear, ease_quartout, perc
 from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.logsection import LogSection
 from charm.lib.gamemodes.four_key import FourKeyHighway
@@ -210,8 +210,8 @@ class VisualizerView(DigiView):
             return
 
         # Camera zoom
-        star_zoom = ease_quartout(1, 0.95, self.last_beat, self.last_beat + self.beat_time, self.song.time)
-        cam_zoom = ease_quartout(1.05, 1, self.last_beat, self.last_beat + self.beat_time, self.song.time)
+        star_zoom = ease_quartout(1, 0.95, perc(self.last_beat, self.last_beat + self.beat_time, self.song.time))
+        cam_zoom = ease_quartout(1.05, 1, perc(self.last_beat, self.last_beat + self.beat_time, self.song.time))
         self.star_camera.scale = (star_zoom, star_zoom)
         self.window.camera.scale = (1 / cam_zoom, 1 / cam_zoom)
         # self.highway.highway_camera.scale = 1 / cam_zoom, 1 / cam_zoom
@@ -232,14 +232,14 @@ class VisualizerView(DigiView):
             if player_note:
                 player_color = colormap[player_note.lane]
                 player_time = player_note.time
-                player_opacity = ease_linear(32, 0, player_time, player_time + self.beat_time, self.song.time)
+                player_opacity = ease_linear(32, 0, perc(player_time, player_time + self.beat_time, self.song.time))
                 player_color = player_color[:3] + (int(player_opacity),)
                 arcade.draw_xywh_rectangle_filled(self.window.width / 2, 0, self.window.width / 2, self.window.height, player_color)
             enemy_note = self.enemy_chart.lt(self.song.time)
             if enemy_note:
                 enemy_color = colormap[enemy_note.lane]
                 enemy_time = enemy_note.time
-                enemy_opacity = ease_linear(32, 0, enemy_time, enemy_time + self.beat_time, self.song.time)
+                enemy_opacity = ease_linear(32, 0, perc(enemy_time, enemy_time + self.beat_time, self.song.time))
                 enemy_color = enemy_color[:3] + (int(enemy_opacity),)
                 arcade.draw_xywh_rectangle_filled(0, 0, self.window.width / 2, self.window.height, enemy_color)
 

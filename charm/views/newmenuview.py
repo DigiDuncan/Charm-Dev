@@ -2,7 +2,7 @@ import logging
 
 import arcade
 
-from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
+from charm.lib.charm import CharmColors, GumWrapper
 from charm.lib.digiview import DigiView
 from charm.objects.songmenu2 import SongMenu
 from charm.lib.keymap import keymap
@@ -22,7 +22,7 @@ class NewMenuView(DigiView):
         self.menu = SongMenu([])
 
         # Generate "gum wrapper" background
-        self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
+        self.gum_wrapper = GumWrapper(self.size)
 
     def on_show_view(self) -> None:
         self.window.theme_song.volume = 0
@@ -70,15 +70,14 @@ class NewMenuView(DigiView):
 
         self.menu.update(delta_time)
 
-        move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
+        self.gum_wrapper.on_update(delta_time)
 
     def on_draw(self) -> None:
         self.window.camera.use()
         self.clear()
 
         # Charm BG
-        self.small_logos_forward.draw()
-        self.small_logos_backward.draw()
+        self.gum_wrapper.draw()
 
         # Menu
         self.menu.draw()

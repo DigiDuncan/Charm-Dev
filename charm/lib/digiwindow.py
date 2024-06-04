@@ -57,8 +57,8 @@ class DigiWindow(arcade.Window):
             raise CharmException("Song Failed", "Failed to load theme song")
         self.theme_song = theme_song
 
-        self.bpm_events = [BPMChangeEvent(0, 120), BPMChangeEvent(3, 220)]
-        self.beat_animator = BPMAnimator(self.bpm_events, ease_expoout)
+        bpm_events = [BPMChangeEvent(0, 120), BPMChangeEvent(3, 220)]
+        self.beat_animator = BPMAnimator(bpm_events, ease_expoout)
 
         # Discord RP
         try:

@@ -3,8 +3,8 @@ from pathlib import Path
 
 import arcade
 
-from charm.lib import anim
-from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
+from charm.lib.anim import perc, ease_circout, lerp
+from charm.lib.charm import CharmColors, GumWrapper
 from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.gamemodes.fnf import CameraFocusEvent, FNFEngine, FNFSong
 from charm.lib.gamemodes.four_key import FourKeyHighway, load_note_texture
@@ -44,8 +44,6 @@ class FNFSongView(DigiView):
         self.paused: bool = False
         self.show_text: bool = True
         self.logo_width: int = None
-        self.small_logos_forward: arcade.SpriteList = None
-        self.small_logos_backward: arcade.SpriteList = None
         self.distractions = True
         self.chroma_key = False
         self.camera_events = []
@@ -103,7 +101,7 @@ class FNFSongView(DigiView):
 
         with LogSection(logger, "loading gum wrapper"):
             # Generate "gum wrapper" background
-            self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
+            self.gum_wrapper = GumWrapper(self.size)
 
         with LogSection(logger, "loading judgements"):
             judgement_textures: list[arcade.Texture] = [j.get_texture() for j in self.engine.judgements]
@@ -230,7 +228,7 @@ class FNFSongView(DigiView):
         if not self.tracks.loaded:
             return
 
-        move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
+        self.gum_wrapper.on_update(delta_time)
 
         time = f"{int(self.tracks.time // 60)}:{int(self.tracks.time % 60):02}"
         if self.song_time_text._label.text != time:
@@ -252,8 +250,8 @@ class FNFSongView(DigiView):
         judgement_index = self.engine.judgements.index(self.engine.latest_judgement) if self.engine.latest_judgement else 0
         judgement_time = self.engine.latest_judgement_time
         if judgement_time:
-            self.judgement_sprite.center_y = anim.ease_circout(self.judgement_jump_pos, self.judgement_land_pos, judgement_time, judgement_time + 0.25, self.tracks.time)
-            self.judgement_sprite.alpha = anim.ease_circout(255, 0, judgement_time + 0.5, judgement_time + 1, self.tracks.time)
+            self.judgement_sprite.center_y = ease_circout(self.judgement_jump_pos, self.judgement_land_pos, perc(judgement_time, judgement_time + 0.25, self.tracks.time))
+            self.judgement_sprite.alpha = int(ease_circout(255, 0, perc(judgement_time + 0.5, judgement_time + 1, self.tracks.time)))
             self.judgement_sprite.set_texture(judgement_index)
 
         # FC type, etc.
@@ -286,13 +284,13 @@ class FNFSongView(DigiView):
                 self.last_spotlight_position = self.spotlight_position
                 self.go_to_spotlight_position = focus_pos[current_camera_event.focused_player]
                 self.last_camera_event = current_camera_event
-        self.spotlight_position = anim.ease_circout(self.last_spotlight_position, self.go_to_spotlight_position, self.last_spotlight_change, self.last_spotlight_change + 0.125, song_time)
+        self.spotlight_position = ease_circout(self.last_spotlight_position, self.go_to_spotlight_position, perc(self.last_spotlight_change, self.last_spotlight_change + 0.125, song_time))
 
     def hp_draw(self) -> None:
         hp_min = self.size[0] // 2 - self.hp_bar_length // 2
         hp_max = self.size[0] // 2 + self.hp_bar_length // 2
         hp_normalized = map_range(self.engine.hp, self.engine.min_hp, self.engine.max_hp, 0, 1)
-        hp = anim.lerp(hp_min, hp_max, hp_normalized)
+        hp = lerp(hp_min, hp_max, hp_normalized)
         arcade.draw_lrbt_rectangle_filled(
             hp_min, hp_max,
             self.size[1] - 110, self.size[1] - 100,
@@ -322,8 +320,7 @@ class FNFSongView(DigiView):
 
         # Charm BG
         if self.distractions and not self.chroma_key:
-            self.small_logos_forward.draw()
-            self.small_logos_backward.draw()
+            self.gum_wrapper.draw()
 
         if self.show_text and not self.chroma_key:
             # self.song_time_text.draw()

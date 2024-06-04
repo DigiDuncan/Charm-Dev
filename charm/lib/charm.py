@@ -1,10 +1,10 @@
 from functools import cache
-import math
+import itertools
 from types import ModuleType
 from typing import cast
 
 import arcade
-from arcade import SpriteList
+from arcade import BasicSprite
 from arcade.types import Color
 import PIL.Image
 import PIL.ImageDraw
@@ -33,43 +33,58 @@ def generate_missing_texture_image(w: int, h: int) -> PIL.Image.Image:
 
 
 @cache
-def load_missing_texture(height: int, width: int):
+def load_missing_texture(height: int, width: int) -> arcade.Texture:
     image = generate_missing_texture_image(height, width)
     return arcade.Texture(image)
 
 
+class GumWrapper:
+    def __init__(self, size: tuple[int, int]):
+        """Generate two SpriteLists that makes a gum wrapper-style background."""
+        screen_w, screen_h = size
+        logo_tex = arcade.Texture(img_from_resource(cast(ModuleType, charm.data.images), "small-logo.png"))
+        tex_w, tex_h = logo_tex.size
+        buffer_w, buffer_h = 20, 16
+        logo_w, logo_h = tex_w + buffer_w, tex_h + buffer_h
+        self.logos_forward = SlidingSpriteList[arcade.Sprite](loop_width=logo_w, speed=0.25, alpha=128)
+        self.logos_backward = SlidingSpriteList[arcade.Sprite](loop_width=logo_w, speed=-0.25, alpha=128)
+        spritelists = itertools.cycle([self.logos_forward, self.logos_backward])
+        for y in range(0, screen_h + logo_h, logo_h):
+            spritelist = next(spritelists)
+            for x in range(-logo_w, screen_w + logo_w, logo_w):
+                s = arcade.Sprite(
+                    logo_tex,
+                    center_x=x + logo_w / 2,
+                    center_y=y + logo_h / 2
+                )
+                spritelist.append(s)
+        self.logos_backward.move(logo_w / 2, 0)
 
-@cache
-def generate_gum_wrapper(size: tuple[int, int], buffer: int = 20, alpha: int = 128) -> tuple[int, SpriteList[arcade.Sprite], SpriteList[arcade.Sprite]]:
-    """Generate two SpriteLists that makes a gum wrapper-style background."""
-    w, h = size
-    small_logos_forward = arcade.SpriteList[arcade.Sprite]()
-    small_logos_backward = arcade.SpriteList[arcade.Sprite]()
-    small_logo_img = img_from_resource(cast(ModuleType, charm.data.images), "small-logo.png")
-    small_logo_texture = arcade.Texture(small_logo_img)
-    sprites_horiz = max(2, math.ceil(w / small_logo_texture.width))
-    sprites_vert = max(2, math.ceil(h / small_logo_texture.height / 1.5))  # why 1.5 tho?
-    logo_width = small_logo_texture.width + buffer
-    for i in range(sprites_vert):
-        for j in range(sprites_horiz):
-            s = arcade.Sprite(small_logo_texture)
-            s.original_bottom = s.bottom = small_logo_texture.height * i * 1.5
-            s.original_left = s.left = logo_width * (j - 2)
-            if i % 2:
-                small_logos_backward.append(s)
-            else:
-                small_logos_forward.append(s)
-    small_logos_forward.alpha = alpha
-    small_logos_backward.alpha = alpha
-    small_logos_backward.move(-logo_width / 2, 0)
-    return (logo_width, small_logos_forward, small_logos_backward)
+    def on_update(self, delta_time: float) -> None:
+        """Move background logos forwards and backwards, looping."""
+        self.logos_forward.on_update(delta_time)
+        self.logos_backward.on_update(delta_time)
+
+    def draw(self) -> None:
+        self.logos_forward.draw()
+        self.logos_backward.draw()
 
 
-def move_gum_wrapper(logo_width: int, small_logos_forward: SpriteList, small_logos_backward: SpriteList, delta_time: float, speed = 4) -> None:
-    """Move background logos forwards and backwards, looping."""
-    small_logos_forward.move((logo_width * delta_time / speed), 0)
-    if small_logos_forward[0].left - small_logos_forward[0].original_left >= logo_width:
-        small_logos_forward.move(-(small_logos_forward[0].left - small_logos_forward[0].original_left), 0)
-    small_logos_backward.move(-(logo_width * delta_time / speed), 0)
-    if small_logos_backward[0].original_left - small_logos_backward[0].left >= logo_width:
-        small_logos_backward.move(small_logos_backward[0].original_left - small_logos_backward[0].left, 0)
+class SlidingSpriteList[T: BasicSprite](arcade.SpriteList[T]):
+    def __init__(self, loop_width: float, speed: float, alpha: int):
+        self.loop_width = loop_width
+        self.speed = speed  # loops per second
+        self.x: float = 0.0
+        super().__init__()
+        self.alpha = alpha
+
+    def on_update(self, delta_time: float = 1 / 60) -> None:
+        """Move background logos forwards and backwards, looping."""
+        old_x = self.x
+        slide_x = self.loop_width * delta_time * self.speed
+        new_x = (old_x + slide_x) % self.loop_width
+        to_move = new_x - old_x
+        self.move(to_move, 0)
+        super().on_update(delta_time)
+
+

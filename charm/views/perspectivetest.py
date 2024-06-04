@@ -5,7 +5,7 @@ from math import cos, sin, radians
 
 import arcade
 
-from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
+from charm.lib.charm import CharmColors, GumWrapper
 from charm.lib.digiview import DigiView, shows_errors, ignore_imgui
 from charm.lib.keymap import keymap
 
@@ -47,7 +47,7 @@ class PerspectiveView(DigiView):
         super().setup()
 
         # Generate "gum wrapper" background
-        self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
+        self.gum_wrapper = GumWrapper(self.size)
 
     def on_show_view(self) -> None:
         self.window.theme_song.volume = 0
@@ -72,7 +72,7 @@ class PerspectiveView(DigiView):
     def on_update(self, delta_time) -> None:
         super().on_update(delta_time)
 
-        move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
+        self.gum_wrapper.on_update(delta_time)
 
     @shows_errors
     def on_draw(self) -> None:
@@ -80,8 +80,7 @@ class PerspectiveView(DigiView):
         self.clear()
 
         # Charm BG
-        self.small_logos_forward.draw()
-        self.small_logos_backward.draw()
+        self.gum_wrapper.draw()
 
         with self.proj.activate():
             self.asdsa.draw(pixelated=True)

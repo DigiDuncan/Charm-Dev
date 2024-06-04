@@ -4,7 +4,7 @@ from math import ceil
 import arcade
 from charm.lib import paths
 
-from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
+from charm.lib.charm import CharmColors, GumWrapper
 from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.errors import NoChartsError
 from charm.lib.gamemodes.four_key import FourKeyEngine
@@ -54,7 +54,7 @@ class TaikoSongView(DigiView):
         self.window.update_rp("Playing Taiko")
 
         # Generate "gum wrapper" background
-        self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
+        self.gum_wrapper = GumWrapper(self.size)
         super().setup()
         self.success = True
 
@@ -143,7 +143,7 @@ class TaikoSongView(DigiView):
         if self.tracks.time >= self.tracks.duration:
             self.show_results()
 
-        move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
+        self.gum_wrapper.on_update(delta_time)
 
     @shows_errors
     def on_draw(self) -> None:
@@ -151,8 +151,7 @@ class TaikoSongView(DigiView):
         self.clear()
 
         # Charm BG
-        self.small_logos_forward.draw()
-        self.small_logos_backward.draw()
+        self.gum_wrapper.draw()
 
         self.highway.draw()
 

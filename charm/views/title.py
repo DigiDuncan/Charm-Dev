@@ -12,10 +12,10 @@ import pyglet
 
 import charm.data.audio
 import charm.data.images
-from charm.lib.anim import ease_linear, ease_quadinout
-from charm.lib.charm import CharmColors, move_gum_wrapper
+from charm.lib.anim import ease_linear, ease_quadinout, perc
+from charm.lib.charm import CharmColors, GumWrapper
 from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
-from charm.lib.digiwindow import Eggs
+from charm.lib.digiwindow import DigiWindow, Eggs
 from charm.lib.keymap import keymap
 from charm.lib.settings import settings
 from charm.lib.utils import img_from_resource, typewriter
@@ -32,15 +32,14 @@ class TitleView(DigiView):
             bg_color=CharmColors.FADED_GREEN,
             destinations={"mainmenu": MainMenuView(back=self)}
         )
-        self.logo: arcade.Sprite
-        self.dumb_fix_for_logo_pos: bool
+        self.logo: LogoSprite
         self.main_sprites: arcade.SpriteList[arcade.Sprite]
-        self.goto_fade_time: float | None
-        self.goto_switch_time: float | None
         self.splash_label: SplashLogo | ClownLogo
         self.show_clown: bool = self.window.egg_roll == Eggs.TRICKY
         self.song_label: SongLabel
         self.press_label: PressLabel
+        self.goto_fade_time: float | None
+        self.goto_switch_time: float | None
 
     @shows_errors
     def setup(self) -> None:
@@ -49,13 +48,14 @@ class TitleView(DigiView):
 
         self.window.theme_song.seek(self.local_time + 3)
 
+        # Generate "gum wrapper" background
+        self.gum_wrapper = GumWrapper(self.size)
+
         arcade.set_background_color(CharmColors.FADED_GREEN)
         self.main_sprites = arcade.SpriteList()
 
         # Set up main logo
-        logo_img = img_from_resource(cast(ModuleType, charm.data.images), "logo.png")
-        logo_texture = arcade.Texture(logo_img)
-        self.logo = arcade.Sprite(logo_texture)
+        self.logo = LogoSprite()
 
         self.main_sprites.append(self.logo)
 
@@ -68,26 +68,17 @@ class TitleView(DigiView):
         # Press start prompt
         self.press_label = PressLabel(x=self.window.width // 2, y=self.window.height // 4)
 
-        self.welcome_label = arcade.Text(f"welcome, {getpass.getuser()}!",
-                                         font_name='bananaslip plus',
-                                         font_size=14,
-                                         x=self.window.width // 2, y=6,
-                                         anchor_x='center', anchor_y='bottom',
-                                         color=arcade.color.BLACK)
+        self.welcome_label = WelcomeLabel(x=self.window.width // 2, y=6)
 
-        self.dumb_fix_for_logo_pos = False
-
-        self.on_resize(*self.window.size)
+        self.on_resize(*self.size)
 
         super().setup()
 
     def calculate_positions(self) -> None:
-        self.logo.center_x = self.size[0] // 2
-        self.logo.bottom = self.size[1] // 2
-
-        self.press_label.position = (self.window.center_x, self.window.center_y / 2, 0)
-        self.welcome_label.position = (self.window.center_x, 6, 0)
-        self.splash_label.position = (*self.window.center, 0)
+        self.logo.calculate_positions(self.window)
+        self.press_label.calculate_positions(self.window)
+        self.welcome_label.calculate_positions(self.window)
+        self.splash_label.calculate_positions(self.window)
 
     def generate_splash(self) -> ClownLogo | SplashLogo:
         if self.show_clown:
@@ -122,7 +113,7 @@ class TitleView(DigiView):
     def on_update(self, delta_time: float) -> None:
         super().on_update(delta_time)
 
-        move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
+        self.gum_wrapper.on_update(delta_time)
 
         # Logo bounce
         self.logo.scale = 0.3 + (self.window.beat_animator.factor * 0.025)
@@ -138,7 +129,7 @@ class TitleView(DigiView):
             if self.local_time >= self.goto_fade_time:
                 # Fade music
                 VOLUME = 0
-                self.window.theme_song.volume = ease_linear(VOLUME, VOLUME / 2, self.goto_fade_time, self.goto_switch_time, self.local_time)
+                self.window.theme_song.volume = ease_linear(VOLUME, VOLUME / 2, perc(self.goto_fade_time, self.goto_switch_time, self.local_time))
             if self.local_time >= self.goto_switch_time:
                 # Go to main menu
                 self.goto("mainmenu")
@@ -148,21 +139,8 @@ class TitleView(DigiView):
         self.window.camera.use()
         self.clear()
 
-        if not self.dumb_fix_for_logo_pos:
-            # My guess is this is needed because the window size is wrong on the first tick?
-            self.calculate_positions()
-            self.dumb_fix_for_logo_pos = True
-
         # Charm BG
-        self.small_logos_forward.draw()
-        self.small_logos_backward.draw()
-
-        arcade.draw_polygon_filled(
-            [(self.welcome_label.x - self.welcome_label._label.content_width // 2, self.welcome_label._label.content_height + 10),
-             (self.welcome_label.x - self.welcome_label._label.content_width // 2 + self.welcome_label._label.content_width, self.welcome_label._label.content_height + 10),
-             (self.welcome_label.x - self.welcome_label._label.content_width // 2 + self.welcome_label._label.content_width + 20, 0), (self.welcome_label.x - self.welcome_label._label.content_width // 2 - 20, 0)],
-            CharmColors.FADED_PURPLE
-        )
+        self.gum_wrapper.draw()
 
         self.welcome_label.draw()
 
@@ -181,15 +159,13 @@ class TitleView(DigiView):
         self.goto_switch_time = self.local_time + SWITCH_DELAY
         arcade.play_sound(self.window.sounds["valid"], volume = settings.get_volume("sound"))
 
-
 class ClownLogo(arcade.Text):
     def __init__(self, x: int, y: int):
         super().__init__(
             "CLOWN KILLS YOU",
             font_name='Impact',
             font_size=48,
-            x=x,
-            y=y,
+            x=x, y=y,
             anchor_x='center', anchor_y='top',
             color=arcade.color.RED
         )
@@ -208,6 +184,10 @@ class ClownLogo(arcade.Text):
 
     def on_update(self, local_time: float) -> None:
         self.jiggle()
+
+    def calculate_positions(self, window: DigiWindow) -> None:
+        self.position = (*window.center, 0)
+
 
 class SplashLogo(pyglet.text.Label):
     def __init__(self, splashes: list[str], x: int, y: int):
@@ -238,33 +218,41 @@ class SplashLogo(pyglet.text.Label):
     def on_update(self, local_time: float) -> None:
         self.text = typewriter(self.splash_text, 20, local_time, 3)
 
+    def calculate_positions(self, window: DigiWindow) -> None:
+        self.position = (*window.center, 0)
+
+
 class SongLabel(pyglet.text.Label):
     def __init__(self):
         width = 540
-        self.x_1 = -width
-        self.x_2 = 5
+        x_left = -width
+        x_right = 5
+        self.transitions = [
+            (3, 5, x_left, x_right),
+            (8, 10, x_right, x_left)
+        ]
         super().__init__(
             "Run Around The Character Code!\nCamellia feat. nanahira\n3LEEP!",
             width=width,
             font_name='bananaslip plus',
             font_size=16,
-            x=self.x_1, y=5,
+            x=x_left, y=5,
             anchor_x='left', anchor_y='bottom',
             multiline=True,
             color=CharmColors.PURPLE
         )
 
     def on_update(self, local_time: float) -> None:
-        START_MOVE_RIGHT = 3
-        STOP_MOVE_RIGHT = 5
-        START_MOVE_LEFT = 8
-        STOP_MOVE_LEFT = 10
         # constraining the time when we update the position should decrease lag,
         # even though it's technically unnecessary because the function is clamped
-        if START_MOVE_RIGHT <= local_time <= STOP_MOVE_RIGHT:
-            self.x = ease_quadinout(self.x_1, self.x_2, START_MOVE_RIGHT, STOP_MOVE_RIGHT, local_time)
-        elif START_MOVE_LEFT <= local_time <= STOP_MOVE_LEFT:
-            self.x = ease_quadinout(self.x_2, self.x_1, START_MOVE_LEFT, STOP_MOVE_LEFT, local_time)
+        for start, stop, x_1, x_2 in self.transitions:
+            if start <= local_time <= stop:
+                p = perc(start, stop, local_time)
+                self.x = ease_quadinout(x_1, x_2, p)
+
+    def calculate_positions(self, window: DigiWindow) -> None:
+        return
+
 
 class PressLabel(pyglet.text.Label):
     def __init__(self, x: int, y: int):
@@ -287,3 +275,43 @@ class PressLabel(pyglet.text.Label):
     def draw(self) -> None:
         if self.drawme:
             super().draw()
+
+    def calculate_positions(self, window: DigiWindow) -> None:
+        self.position = (window.center_x, window.center_y / 2, 0)
+
+
+class WelcomeLabel(arcade.Text):
+    def __init__(self, x: int, y: int):
+        super().__init__(
+            f"welcome, {getpass.getuser()}!",
+            font_name='bananaslip plus',
+            font_size=14,
+            x=x, y=y,
+            anchor_x='center', anchor_y='bottom',
+            color=arcade.color.BLACK
+        )
+
+    def draw(self) -> None:
+        content_left = self.x - self.content_width // 2
+        arcade.draw_polygon_filled([
+            (content_left -  0,                      self.content_height + 10),
+            (content_left + self.content_width -  0, self.content_height + 10),
+            (content_left + self.content_width + 20, 0),
+            (content_left - 20,                      0)
+        ], CharmColors.FADED_PURPLE)
+        super().draw()
+
+    def calculate_positions(self, window: DigiWindow) -> None:
+        self.position = (window.center_x, 6, 0)
+
+
+class LogoSprite(arcade.Sprite):
+    def __init__(self):
+        logo_img = img_from_resource(cast(ModuleType, charm.data.images), "logo.png")
+        logo_texture = arcade.Texture(logo_img)
+        super().__init__(logo_texture)
+
+    def calculate_positions(self, window: DigiWindow) -> None:
+        w, h = window.get_size()
+        self.center_x = w // 2
+        self.bottom = h // 2

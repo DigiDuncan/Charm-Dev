@@ -8,8 +8,8 @@ import arcade
 import charm.data.audio
 import charm.data.images
 from charm.lib.settings import settings
-from charm.lib.anim import ease_quartout
-from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
+from charm.lib.anim import ease_quartout, perc
+from charm.lib.charm import CharmColors, GumWrapper
 from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.generic.song import Song
 from charm.lib.gamemodes.fnf import FNFSong
@@ -38,7 +38,7 @@ class FNFSongMenuView(DigiView):
         super().setup()
 
         # Generate "gum wrapper" background
-        self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
+        self.gum_wrapper = GumWrapper(self.size)
 
         self.songs: list[Song] = []
         rootdir = Path(songspath / "fnf")
@@ -86,7 +86,7 @@ class FNFSongMenuView(DigiView):
         if not self.ready:
             return
 
-        move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
+        self.gum_wrapper.on_update(delta_time)
 
         if self.menu.items:
             self.album_art.bottom = self.album_art.original_bottom + (math.sin(self.local_time * 2) * 25)
@@ -148,10 +148,9 @@ class FNFSongMenuView(DigiView):
             return
 
         # Charm BG
-        self.small_logos_forward.draw()
-        self.small_logos_backward.draw()
+        self.gum_wrapper.draw()
 
-        bottom = ease_quartout(self.size[1], 0, 0.5, 1.5, self.local_time)
+        bottom = ease_quartout(self.size[1], 0, perc(0.5, 1.5, self.local_time))
 
         if self.menu.items:
             arcade.draw_lrbt_rectangle_filled(self.album_art.left - self.album_art_buffer, self.size[0], bottom, self.size[1], arcade.color.WHITE[:3] + (127,))

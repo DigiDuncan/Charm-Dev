@@ -11,7 +11,7 @@ from arcade import Sprite, SpriteList, Texture, Text
 from pyglet.graphics import Batch
 
 import charm.data.images
-from charm.lib.anim import EasingFunction, ease_linear, ease_quadinout
+from charm.lib.anim import EasingFunction, ease_linear, ease_quadinout, perc
 from charm.lib.generic.song import Metadata
 from charm.lib.types import Seconds
 from charm.lib.utils import clamp
@@ -270,11 +270,7 @@ class ListCycle:
                 new_progress = self.duration
                 finished = True
 
-            self.total_offset = self.easing_func(
-                self.start_offset, self.target_offset,
-                0.0, self.duration,
-                new_progress
-            )
+            self.total_offset = self.easing_func(self.start_offset, self.target_offset, perc(0.0, self.duration, new_progress))
             self.trigger_layout()
 
             self.progress = new_progress

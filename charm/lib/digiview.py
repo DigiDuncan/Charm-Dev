@@ -13,8 +13,7 @@ from arcade import LRBT, XYWH, View
 from arcade.types import RGBOrA255, RGBA255
 
 from charm.lib.settings import settings
-from charm.lib.anim import ease_linear
-from charm.lib.charm import generate_gum_wrapper
+from charm.lib.anim import ease_linear, perc
 from charm.lib.digiwindow import DigiWindow
 from charm.lib.errors import CharmException, GenericError
 from charm.lib.keymap import keymap
@@ -72,11 +71,14 @@ class DigiView(View):
         self.window: DigiWindow
         self.back = back
         self.shown = False
-        self.size = self.window.get_size()
         self.fade_in = fade_in
         self.bg_color = bg_color
         self._errors: list[ErrorPopup] = []  # [error, seconds to show]
         self.destinations = destinations
+
+    @property
+    def size(self) -> tuple[int, int]:
+        return self.window.size
 
     @property
     def local_time(self) -> float:
@@ -101,13 +103,9 @@ class DigiView(View):
         self.shown = True
 
     def on_resize(self, width: int, height: int) -> None:
-        self.size = (width, height)
         self.window.camera.position = self.window.center
         self.window.camera.projection = LRBT(-width/2, width/2, -height/2, height/2)
         self.window.camera.viewport = XYWH(0, 0, width, height)
-
-        # Generate "gum wrapper" background
-        self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
 
         self.calculate_positions()
 
@@ -130,7 +128,7 @@ class DigiView(View):
 
     def on_draw(self) -> None:
         if self.local_time <= self.fade_in:
-            alpha = ease_linear(255, 0, 0, self.fade_in, self.local_time)
+            alpha = ease_linear(255, 0, perc(0, self.fade_in, self.local_time))
             arcade.draw_lrbt_rectangle_filled(0, self.window.width, 0, self.window.height,
                                              (0, 0, 0, int(alpha)))
 

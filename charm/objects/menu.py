@@ -7,7 +7,7 @@ from arcade.types import Color
 import PIL.Image, PIL.ImageOps  # noqa: E401
 
 import charm.data.icons
-from charm.lib.anim import ease_circout
+from charm.lib.anim import ease_circout, perc
 from charm.lib.charm import CharmColors, generate_missing_texture_image
 from charm.lib.digiview import DigiView
 from charm.lib.digiwindow import DigiWindow
@@ -97,9 +97,9 @@ class MainMenu:
 
     def on_update(self, delta_time: float) -> None:
         current = self.items[self.selected_id]
-        current.center_x = ease_circout(self.old_pos[current][0], self.window.width // 2, self.move_start, self.move_end, local_time)
-        current.scale = ease_circout(self.old_pos[current][1], 1, self.move_start, self.move_end, self.local_time)
-        current.alpha = ease_circout(self.old_pos[current][2], 255, self.move_start, self.move_end, self.local_time)
+        current.center_x = ease_circout(self.old_pos[current][0], self.window.width // 2, perc(self.move_start, self.move_end, self.local_time))
+        current.scale = ease_circout(self.old_pos[current][1], 1, perc(self.move_start, self.move_end, self.local_time))
+        current.alpha = int(ease_circout(self.old_pos[current][2], 255, perc(self.move_start, self.move_end, self.local_time)))
         current.label.x = current.center_x
         current.label.y = current.bottom
         self.loading_label.x = current.center_x
@@ -111,9 +111,9 @@ class MainMenu:
             rel_id = n - self.selected_id
             if rel_id == 0:  # current item
                 continue
-            item.center_x = ease_circout(self.old_pos[item][0], current.center_x + (x_bumper * rel_id), self.move_start, self.move_end, local_time)
-            item.scale = ease_circout(self.old_pos[item][1], 0.5, self.move_start, self.move_end, self.local_time)
-            item.alpha = int(ease_circout(self.old_pos[item][2], 127, self.move_start, self.move_end, self.local_time))
+            item.center_x = ease_circout(self.old_pos[item][0], current.center_x + (x_bumper * rel_id), perc(self.move_start, self.move_end, self.local_time))
+            item.scale = ease_circout(self.old_pos[item][1], 0.5, perc(self.move_start, self.move_end, self.local_time))
+            item.alpha = int(ease_circout(self.old_pos[item][2], 127, perc(self.move_start, self.move_end, self.local_time)))
             item.label.x = item.center_x
             item.label.y = item.bottom
 

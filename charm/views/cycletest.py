@@ -10,7 +10,7 @@ from pyglet.graphics import Batch
 
 import charm.data.images
 from charm.lib.anim import EasingFunction, ease_linear, ease_quadinout
-from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
+from charm.lib.charm import CharmColors, GumWrapper
 from charm.lib.digiview import DigiView, shows_errors, ignore_imgui
 from charm.lib.types import Seconds
 from charm.lib.utils import clamp
@@ -326,7 +326,7 @@ class CycleView(DigiView):
                                 )
 
         # Generate "gum wrapper" background
-        self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
+        self.gum_wrapper = GumWrapper(self.size)
 
     def on_show_view(self) -> None:
         self.window.theme_song.volume = 0
@@ -381,8 +381,7 @@ class CycleView(DigiView):
         if self.cycler is None:
             return
         self.cycler.update(delta_time)
-
-        move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
+        self.gum_wrapper.on_update(delta_time)
 
     @shows_errors
     def on_draw(self) -> None:
@@ -393,8 +392,7 @@ class CycleView(DigiView):
             return
 
         # Charm BG
-        self.small_logos_forward.draw()
-        self.small_logos_backward.draw()
+        self.gum_wrapper.draw()
 
         self.cycler.draw()
         super().on_draw()

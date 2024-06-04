@@ -5,8 +5,8 @@ from pathlib import Path
 import arcade
 import ndjson
 
-from charm.lib.anim import ease_circout
-from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
+from charm.lib.anim import ease_circout, perc
+from charm.lib.charm import CharmColors, GumWrapper
 from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.errors import NoChartsError
 from charm.lib.gamemodes.four_key import FourKeyHighway, FourKeyEngine, load_note_texture
@@ -81,7 +81,7 @@ class FourKeySongView(DigiView):
             self.modchart_processor = None
 
         # Generate "gum wrapper" background
-        self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
+        self.gum_wrapper = GumWrapper(self.size)  # noqa: F821
         super().setup()
         self.success = True
 
@@ -180,8 +180,8 @@ class FourKeySongView(DigiView):
         judgement_index = self.engine.judgements.index(self.engine.latest_judgement) if self.engine.latest_judgement else 0
         judgement_time = self.engine.latest_judgement_time
         if judgement_time:
-            self.judgement_sprite.center_y = ease_circout(self.judgement_jump_pos, self.judgement_land_pos, judgement_time, judgement_time + 0.25, self.tracks.time)
-            self.judgement_sprite.alpha = ease_circout(255, 0, judgement_time + 0.5, judgement_time + 1, self.tracks.time)
+            self.judgement_sprite.center_y = ease_circout(self.judgement_jump_pos, self.judgement_land_pos, perc(judgement_time, judgement_time + 0.25, self.tracks.time))
+            self.judgement_sprite.alpha = int(ease_circout(255, 0, perc(judgement_time + 0.5, judgement_time + 1, self.tracks.time)))
             self.judgement_sprite.set_texture(judgement_index)
 
         data_string = self.generate_data_string()
@@ -201,15 +201,14 @@ class FourKeySongView(DigiView):
         if self.tracks.time >= self.tracks.duration:
             self.show_results()
 
-        move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
+        self.gum_wrapper.on_update(delta_time)
 
     def on_draw(self) -> None:
         self.window.camera.use()
         self.clear()
 
         # Charm BG
-        self.small_logos_forward.draw()
-        self.small_logos_backward.draw()
+        self.gum_wrapper.draw()
 
         self.highway.draw()
         self.judgement_sprite.draw()

@@ -3,7 +3,7 @@ import logging
 import arcade
 from pyglet.graphics import Batch
 
-from charm.lib.charm import CharmColors, generate_gum_wrapper, move_gum_wrapper
+from charm.lib.charm import CharmColors, GumWrapper
 from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.gamemodes.hero import HeroEngine, HeroHighway, HeroSong, SectionEvent
 from charm.lib.keymap import keymap
@@ -50,7 +50,7 @@ class HeroTestView(DigiView):
             self.lyric_animator.prerender()
 
         # Generate "gum wrapper" background
-        self.logo_width, self.small_logos_forward, self.small_logos_backward = generate_gum_wrapper(self.size)
+        self.gum_wrapper = GumWrapper(self.size)
 
     def on_show_view(self) -> None:
         self.window.theme_song.volume = 0
@@ -130,7 +130,7 @@ class HeroTestView(DigiView):
         if self.lyric_animator:
             self.lyric_animator.update(self.song.time)
 
-        move_gum_wrapper(self.logo_width, self.small_logos_forward, self.small_logos_backward, delta_time)
+        self.gum_wrapper.on_update(delta_time)
 
     @shows_errors
     def on_draw(self) -> None:
@@ -138,8 +138,7 @@ class HeroTestView(DigiView):
         self.clear()
 
         # Charm BG
-        self.small_logos_forward.draw()
-        self.small_logos_backward.draw()
+        self.gum_wrapper.draw()
 
         self.highway.draw()
         self.text_batch.draw()

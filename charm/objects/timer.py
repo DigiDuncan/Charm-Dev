@@ -2,7 +2,7 @@ from arcade.color import Color, WHITE, BLACK
 from arcade.draw_commands import draw_rectangle_filled, draw_rectangle_outline, draw_lrbt_rectangle_filled
 from arcade.text import Text
 
-from charm.lib.anim import ease_linear, LerpData
+from charm.lib.anim import ease_linear, LerpData, perc
 from charm.lib.charm import CharmColors
 from charm.lib.utils import px_to_pt
 
@@ -111,10 +111,10 @@ class Timer:
         self._label.text = self.display_string
 
         for lerp in [v for v in self._current_time_lerps if v.end_time > self._clock]:
-            self.current_time_offset = ease_linear(lerp.minimum, lerp.maximum, lerp.start_time, lerp.end_time, self._clock)
+            self.current_time_offset = ease_linear(lerp.minimum, lerp.maximum, perc(lerp.start_time, lerp.end_time, self._clock))
 
         for lerp in [v for v in self._total_time_lerps if v.end_time > self._clock]:
-            self.total_time_offset = ease_linear(lerp.minimum, lerp.maximum, lerp.start_time, lerp.end_time, self._clock)
+            self.total_time_offset = ease_linear(lerp.minimum, lerp.maximum, perc(lerp.start_time, lerp.end_time, self._clock))
 
     def draw(self):
         draw_rectangle_filled(self.center_x, self.center_y, self.width, self.height, self.bar_bg_color)

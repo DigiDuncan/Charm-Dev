@@ -4,7 +4,7 @@ import logging
 import arcade
 from arcade import Sprite
 
-from charm.lib.anim import ease_circout
+from charm.lib.anim import ease_circout, perc
 from charm.lib.charm import CharmColors
 from charm.lib.generic.song import Metadata
 from charm.lib.utils import clamp
@@ -128,8 +128,8 @@ class SongMenu:
     def update(self, local_time: float):
         self.local_time = local_time
         current = self.items[self.selected_id]
-        current.left = ease_circout(self.old_pos[current][0], 0, self.move_start, self.move_end, self.local_time)
-        current.center_y = ease_circout(self.old_pos[current][1], self.window.height // 2, self.move_start, self.move_end, self.local_time)
+        current.left = ease_circout(self.old_pos[current][0], 0, perc(self.move_start, self.move_end, self.local_time))
+        current.center_y = ease_circout(self.old_pos[current][1], self.window.height // 2, perc(self.move_start, self.move_end, self.local_time))
         up_id = self.selected_id
         down_id = self.selected_id
         x_delta = current.width / (self.radius + 1) / 1.5
@@ -142,12 +142,12 @@ class SongMenu:
             y_offset += current.height + self.buffer
             if up_id > -1:
                 up = self.items[up_id]
-                up.left = ease_circout(self.old_pos[up][0], current.left - x_offset, self.move_start, self.move_end, self.local_time)
-                up.center_y = ease_circout(self.old_pos[up][1], y_offset + current.center_y, self.move_start, self.move_end, self.local_time)
+                up.left = ease_circout(self.old_pos[up][0], current.left - x_offset, perc(self.move_start, self.move_end, self.local_time))
+                up.center_y = ease_circout(self.old_pos[up][1], y_offset + current.center_y, perc(self.move_start, self.move_end, self.local_time))
             if down_id < len(self.items):
                 down = self.items[down_id]
-                down.left = ease_circout(self.old_pos[down][0], current.left - x_offset, self.move_start, self.move_end, self.local_time)
-                down.center_y = ease_circout(self.old_pos[down][1], -y_offset + current.center_y, self.move_start, self.move_end, self.local_time)
+                down.left = ease_circout(self.old_pos[down][0], current.left - x_offset, perc(self.move_start, self.move_end, self.local_time))
+                down.center_y = ease_circout(self.old_pos[down][1], -y_offset + current.center_y, perc(self.move_start, self.move_end, self.local_time))
 
     def draw(self):
         self.sprite_list.draw()

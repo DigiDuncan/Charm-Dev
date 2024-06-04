@@ -14,7 +14,7 @@ addict==2.4.0
 appdirs==1.4.4
     # via charm
     # via fs
-arcade @ git+https://github.com/pythonarcade/arcade@c6d00ddd0f49c12a4b4c200d2627e81ba90de88c
+arcade @ git+https://github.com/pythonarcade/arcade@aa5b3f0b5685d04d42c45f27f2c8ddfc6b2444c6
     # via charm
 arcade-accelerate==1.0.1
     # via charm

@@ -16,7 +16,7 @@ from nindex import Index
 import PIL.Image
 import arcade
 
-from charm.lib.anim import ease_linear
+from charm.lib.anim import ease_linear, perc
 from charm.lib.charm import load_missing_texture
 from charm.lib.errors import ChartParseError, ChartPostReadParseError, NoChartsError, NoMetadataError, MetadataParseError
 from charm.lib.generic.engine import DigitalKeyEvent, Engine, Judgement
@@ -821,7 +821,7 @@ class HeroHighway(Highway):
                 if note is None:
                     self.strikeline[n].alpha = 64
                 else:
-                    self.strikeline[n].alpha = ease_linear(255, 64, note.end, note.end + 0.25, self.song_time)
+                    self.strikeline[n].alpha = ease_linear(255, 64, perc(note.end, note.end + 0.25, self.song_time))
 
         for long_note in self.long_notes:
             if long_note.note.missed and long_note._note_state is not NoteStruckState.MISSED:
