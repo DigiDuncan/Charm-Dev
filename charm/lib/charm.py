@@ -83,6 +83,7 @@ class SlidingSpriteList[T: BasicSprite](arcade.SpriteList[T]):
         old_x = self.x
         slide_x = self.loop_width * delta_time * self.speed
         new_x = (old_x + slide_x) % self.loop_width
+        self.x = new_x
         to_move = new_x - old_x
         self.move(to_move, 0)
         super().on_update(delta_time)

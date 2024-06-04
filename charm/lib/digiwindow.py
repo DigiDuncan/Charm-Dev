@@ -1,17 +1,20 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING, TypedDict
+if TYPE_CHECKING:
+    from charm.lib.digiview import DigiView
+
 from collections import deque
 import logging
 import random
 import statistics
-import typing
-from typing import TypedDict
 import importlib.resources as pkg_resources
 
 import arcade
 import pyglet
 from pyglet.media import Player
 import pypresence
-import imgui
-from imgui.integrations.pyglet import create_renderer
+from imgui_bundle import imgui
+from imgui_bundle.python_backends import pyglet_backend
 
 from charm.lib import debug_menu
 from charm.lib.anim import ease_expoout
@@ -24,8 +27,6 @@ logger = logging.getLogger("charm")
 
 rpc_client_id = "1056710104348639305"  # Charm app on Discord.
 
-if typing.TYPE_CHECKING:
-    from charm.lib.digiview import DigiView
 
 
 class Eggs:
@@ -37,11 +38,11 @@ class DebugSettings(TypedDict):
 
 
 class DigiWindow(arcade.Window):
-    def __init__(self, size: tuple[int, int], title: str, fps_cap: int, initial_view: DigiView):
+    def __init__(self, size: tuple[int, int], title: str, fps_cap: int):
         super().__init__(size[0], size[1], title, update_rate=1 / fps_cap, enable_polling=True, resizable=True)
 
         self.fps_cap = fps_cap
-        self.initial_view = initial_view
+        self.initial_view: DigiView = None
 
         self.delta_time = 0.0
         self.time = 0.0
@@ -115,7 +116,7 @@ class DigiWindow(arcade.Window):
         imgui.create_context()
         imgui.get_io().display_size = 100, 100
         imgui.get_io().fonts.get_tex_data_as_rgba32()
-        self.impl = create_renderer(self)
+        self.impl = pyglet_backend.create_renderer(self)
         self.fps_list = deque[float]()
         self.beat_list = deque[float]()
         self.debug_settings: DebugSettings = {

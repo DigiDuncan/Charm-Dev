@@ -35,7 +35,7 @@ class FourKeySongMenuView(DigiView):
 
     @shows_errors
     def setup(self) -> None:
-        super().setup()
+        super().presetup()
 
         # Generate "gum wrapper" background
         self.gum_wrapper = GumWrapper(self.size)
@@ -70,6 +70,8 @@ class FourKeySongMenuView(DigiView):
         self.nothing_text = arcade.Text("No songs found!", *self.window.center,
                                         arcade.color.BLACK, 64, align = "center", anchor_x = "center", anchor_y = "center",
                                         font_name = "bananaslip plus")
+
+        super().postsetup()
 
     @shows_errors
     def on_show_view(self) -> None:

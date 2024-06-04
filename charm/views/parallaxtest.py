@@ -92,7 +92,8 @@ class ParallaxView(DigiView):
         super().__init__(fade_in=1, bg_color=arcade.color.BLACK, back=back)
 
     def setup(self) -> None:
-        super().setup()
+        super().presetup()
+
         self.parallax = SpriteLayerList()
         for i in range(1, DEPTH + 1):
             sprite_list = arcade.SpriteList()
@@ -104,6 +105,8 @@ class ParallaxView(DigiView):
                     sprite_list.append(sprite)
             self.parallax.sprite_layers.append(SpriteLayer(sprite_list, z = i * 0.25))
         self.parallax.sort()
+
+        super().postsetup()
 
     def on_show_view(self) -> None:
         super().on_show_view()

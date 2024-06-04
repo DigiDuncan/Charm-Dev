@@ -12,7 +12,7 @@ class SpriteTestView(DigiView):
         super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, back=back)
 
     def setup(self) -> None:
-        super().setup()
+        super().presetup()
 
         SPRITE_NAME = "scott"
         SPRITE_ANIM = "idle"
@@ -31,6 +31,8 @@ class SpriteTestView(DigiView):
 
         # Generate "gum wrapper" background
         self.gum_wrapper = GumWrapper(self.size)
+
+        super().postsetup()
 
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         super().on_key_press(symbol, modifiers)

@@ -12,17 +12,19 @@ logger = logging.getLogger("charm")
 
 class NewMenuView(DigiView):
     def __init__(self, back: DigiView):
-        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, back=)
+        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, back=back)
         self.song = None
         self.menu: SongMenu = None
 
     def setup(self) -> None:
-        super().setup()
+        super().presetup()
 
         self.menu = SongMenu([])
 
         # Generate "gum wrapper" background
         self.gum_wrapper = GumWrapper(self.size)
+
+        super().postsetup()
 
     def on_show_view(self) -> None:
         self.window.theme_song.volume = 0

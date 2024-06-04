@@ -12,20 +12,20 @@ import charm.data.audio
 import charm.data.images.skins
 from charm.lib.keymap import keymap
 from charm.lib.scores import ScoreDB
-from charm.lib.keymap import keymap
 
 logger = logging.getLogger("charm")
 
 
 class ResultsView(DigiView):
-    def __init__(self, results: Results, back: DigiView):
+    def __init__(self, back: DigiView):
         super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, back=back)
         self.song = None
-        self.results = results
+        self.results: Results
 
     @shows_errors
-    def setup(self) -> None:
-        super().setup()
+    def setup(self, results: Results) -> None:
+        super().presetup()
+        self.results = results
 
         with pkg_resources.path(charm.data.audio, "music-results.mp3") as p:
             self._song = arcade.Sound(p)
@@ -66,6 +66,8 @@ class ResultsView(DigiView):
         # Generate "gum wrapper" background
         self.gum_wrapper = GumWrapper(self.size)
         self.success = True
+
+        super().postsetup()
 
     @shows_errors
     def on_show_view(self) -> None:

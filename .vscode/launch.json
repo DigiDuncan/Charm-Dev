@@ -5,16 +5,8 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Current File",
-            "type": "python",
-            "request": "launch",
-            "program": "${file}",
-            "console": "integratedTerminal",
-            "justMyCode": true
-        },
-        {
-            "name": "Python: Module",
-            "type": "python",
+            "name": "Charm",
+            "type": "debugpy",
             "request": "launch",
             "module": "charm"
         }

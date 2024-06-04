@@ -34,7 +34,7 @@ with pkg_resources.path(charm.data.fonts, "bananaslipplus.otf") as p:
 
 class CharmGame(DigiWindow):
     def __init__(self):
-        super().__init__((SCREEN_WIDTH, SCREEN_HEIGHT), SCREEN_TITLE, FPS_CAP, TitleView())
+        super().__init__((SCREEN_WIDTH, SCREEN_HEIGHT), SCREEN_TITLE, FPS_CAP)
         self.set_min_size(1, 1)
 
         icon = pyglet_img_from_resource(cast(ModuleType, charm.data.images), "charm-icon32t.png")
@@ -52,6 +52,8 @@ class CharmGame(DigiWindow):
                 self.sounds["error-" + soundname] = arcade.Sound(p)
 
         arcade.hitbox.algo_default = arcade.hitbox.algo_bounding_box
+
+        self.initial_view = TitleView()
 
 
 def main():

@@ -35,7 +35,7 @@ class FNFSongMenuView(DigiView):
 
     @shows_errors
     def setup(self) -> None:
-        super().setup()
+        super().presetup()
 
         # Generate "gum wrapper" background
         self.gum_wrapper = GumWrapper(self.size)
@@ -74,6 +74,8 @@ class FNFSongMenuView(DigiView):
                                         font_name = "bananaslip plus")
 
         self.ready = True
+
+        super().postsetup()
 
     @shows_errors
     def on_show_view(self) -> None:

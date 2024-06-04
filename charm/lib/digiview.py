@@ -1,17 +1,18 @@
 from __future__ import annotations
-
+from typing import Concatenate, Protocol, cast, runtime_checkable
 from collections.abc import Callable
+
 from dataclasses import dataclass
 import functools
 import logging
 import traceback
-from typing import Concatenate, cast
 
 import arcade
-import imgui
-from arcade import LRBT, XYWH, View
+from imgui_bundle import imgui
+from arcade import LBWH, LRBT, View
 from arcade.types import RGBOrA255, RGBA255
 
+from charm.lib.component_manager import ComponentManager
 from charm.lib.settings import settings
 from charm.lib.anim import ease_linear, perc
 from charm.lib.digiwindow import DigiWindow
@@ -22,6 +23,7 @@ logger = logging.getLogger("charm")
 
 
 def shows_errors[S: DigiView, **P](fn: Callable[Concatenate[S, P], None]) -> Callable[Concatenate[S, P], None]:
+    return fn
     @functools.wraps(fn)
     def wrapper(self: S, *args: P.args, **kwargs: P.kwargs) -> None:
         try:
@@ -62,11 +64,8 @@ class DigiView(View):
         *,
         back: DigiView | None = None,
         fade_in: float = 0,
-        bg_color: RGBOrA255 = (0, 0, 0),
-        destinations: dict[str, DigiView] | None = None
+        bg_color: RGBOrA255 = (0, 0, 0)
     ):
-        if destinations is None:
-            destinations = {}
         super().__init__()
         self.window: DigiWindow
         self.back = back
@@ -74,7 +73,8 @@ class DigiView(View):
         self.fade_in = fade_in
         self.bg_color = bg_color
         self._errors: list[ErrorPopup] = []  # [error, seconds to show]
-        self.destinations = destinations
+        self.local_start: float = 0
+        self.components = ComponentManager()
 
     @property
     def size(self) -> tuple[int, int]:
@@ -91,13 +91,18 @@ class DigiView(View):
         self._errors.append(ErrorPopup(error, self.local_time + 3))
         arcade.play_sound(self.window.sounds[f"error-{error.icon_name}"])
 
-    def calculate_positions(self) -> None:
-        pass
-
-    def setup(self) -> None:
+    def presetup(self) -> None:
+        """Must be called at the beginning of setup()"""
         self.local_start = self.window.time
         arcade.set_background_color(cast(RGBA255, (0,0,0))) # TODO: Fix Arcade typing
-        self.calculate_positions()
+        self.components.reset()
+
+    def setup(self) -> None:
+        pass
+
+    def postsetup(self) -> None:
+        """Must be called at the end of setup()"""
+        self.on_resize(*self.window.size)
 
     def on_show_view(self) -> None:
         self.shown = True
@@ -105,9 +110,8 @@ class DigiView(View):
     def on_resize(self, width: int, height: int) -> None:
         self.window.camera.position = self.window.center
         self.window.camera.projection = LRBT(-width/2, width/2, -height/2, height/2)
-        self.window.camera.viewport = XYWH(0, 0, width, height)
-
-        self.calculate_positions()
+        self.window.camera.viewport = LBWH(0, 0, width, height)
+        self.components.on_resize(width, height)
 
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         keymap.on_key_press(symbol, modifiers)
@@ -125,6 +129,7 @@ class DigiView(View):
 
     def on_update(self, delta_time: float) -> None:
         self._errors = [popup for popup in self._errors if popup.expiry < self.local_time]
+        self.components.on_update(delta_time)
 
     def on_draw(self) -> None:
         if self.local_time <= self.fade_in:
@@ -136,6 +141,7 @@ class DigiView(View):
 
         for popup in self._errors:
             popup.error.sprite.draw()
+        self.components.on_draw()
 
     def go_back(self) -> None:
         if self.back is None:
@@ -144,6 +150,6 @@ class DigiView(View):
         self.window.show_view(self.back)
         arcade.play_sound(self.window.sounds["back"], volume = settings.get_volume("sound"))
 
-    def goto(self, dest: str) -> None:
-        self.destinations[dest].setup()
-        self.window.show_view(self.destinations[dest])
+    def goto(self, dest: DigiView) -> None:
+        dest.setup()
+        self.window.show_view(dest)

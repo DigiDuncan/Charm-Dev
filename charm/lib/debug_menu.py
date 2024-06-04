@@ -4,11 +4,10 @@ import typing
 import arcade
 import arrow
 
-import imgui
+from imgui_bundle import imgui
 from array import array
 
-if typing.TYPE_CHECKING:
-    from charm.lib.digiwindow import DigiWindow
+from charm.lib.digiwindow import DigiWindow
 
 class Filter:
     input_text_str = "Filter"

@@ -32,6 +32,8 @@ class TaikoSongView(DigiView):
 
     @shows_errors
     def setup(self) -> None:
+        super().presetup()
+
         with LogSection(logger, "loading audio"):
             audio_paths = [a for a in self.song_path.glob("*.mp3")] + [a for a in self.song_path.glob("*.wav")] + [a for a in self.song_path.glob("*.ogg")]
             trackfiles = []
@@ -55,8 +57,9 @@ class TaikoSongView(DigiView):
 
         # Generate "gum wrapper" background
         self.gum_wrapper = GumWrapper(self.size)
-        super().setup()
         self.success = True
+
+        super().postsetup()
 
     @shows_errors
     def on_show_view(self) -> None:
@@ -106,16 +109,16 @@ class TaikoSongView(DigiView):
 
     def show_results(self) -> None:
         self.tracks.close()
-        results_view = ResultsView(self.engine.generate_results(), back = self.back)
-        results_view.setup()
+        results_view = ResultsView(back = self.back)
+        results_view.setup(self.engine.generate_results())
         self.window.show_view(results_view)
 
-    def calculate_positions(self) -> None:
+    def on_resize(self, width: int, height: int) -> None:
+        super().on_resize(height, width)
         self.highway.pos = (0, 0)
         self.highway.y += self.window.height // 2 - self.highway.h // 2  # center the highway
         self.text.position = (-5, self.window.height - 5)
         self.countdown_text.position = (self.window.width / 2, self.window.height / 2)
-        super().calculate_positions()
 
     @shows_errors
     def on_update(self, delta_time) -> None:

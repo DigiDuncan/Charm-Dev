@@ -25,7 +25,7 @@ class MainMenuView(DigiView):
         super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, back=back)
 
     def setup(self) -> None:
-        super().setup()
+        super().presetup()
 
         # Generate "gum wrapper" background
         self.gum_wrapper = GumWrapper(self.size)
@@ -50,6 +50,8 @@ class MainMenuView(DigiView):
         self.window.update_rp("In Menus")
 
         self.load_countdown = None
+
+        super().postsetup()
 
     @shows_errors
     @ignore_imgui

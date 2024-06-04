@@ -16,7 +16,7 @@ class EmojiView(DigiView):
         self.song = None
 
     def setup(self) -> None:
-        super().setup()
+        super().presetup()
 
         self.label = EmojiLabel("rainbow :rainbow:", anchor_x = 'center',
                                 x = self.window.center_x, y = self.window.center_y,
@@ -24,6 +24,8 @@ class EmojiView(DigiView):
 
         # Generate "gum wrapper" background
         self.gum_wrapper = GumWrapper(self.size)
+
+        super().postsetup()
 
     def on_show_view(self) -> None:
         self.window.theme_song.volume = 0

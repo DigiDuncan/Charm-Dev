@@ -53,6 +53,8 @@ class FNFSongView(DigiView):
 
     @shows_errors
     def setup(self) -> None:
+        super().presetup()
+
         with LogSection(logger, "loading song data"):
             path = self.path
             self.songdata = FNFSong.parse(path)
@@ -148,9 +150,10 @@ class FNFSongView(DigiView):
 
             self.success = True
 
-        super().setup()
+        super().postsetup()
 
-    def calculate_positions(self) -> None:
+    def on_resize(self, width: int, height: int) -> None:
+        super().on_resize(width, height)
         self.highway_1.pos = (self.window.width / 3 * 2, 0)
         self.highway_1.h = self.window.height
         self.highway_2.h = self.window.height
@@ -217,8 +220,8 @@ class FNFSongView(DigiView):
 
     def show_results(self) -> None:
         self.tracks.close()
-        results_view = ResultsView(self.engine.generate_results(), back = self.back)
-        results_view.setup()
+        results_view = ResultsView(back = self.back)
+        results_view.setup(self.engine.generate_results())
         self.window.show_view(results_view)
 
     @shows_errors

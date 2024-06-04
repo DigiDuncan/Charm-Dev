@@ -33,6 +33,8 @@ class FourKeySongView(DigiView):
 
     @shows_errors
     def setup(self) -> None:
+        super().presetup()
+
         with LogSection(logger, "loading audio"):
             audio_paths = [a for a in self.song_path.glob("*.mp3")] + [a for a in self.song_path.glob("*.wav")] + [a for a in self.song_path.glob("*.ogg")]
             trackfiles = []
@@ -82,8 +84,10 @@ class FourKeySongView(DigiView):
 
         # Generate "gum wrapper" background
         self.gum_wrapper = GumWrapper(self.size)  # noqa: F821
-        super().setup()
+
         self.success = True
+
+        super().postsetup()
 
     def on_show_view(self) -> None:
         self.window.theme_song.volume = 0
@@ -143,11 +147,12 @@ class FourKeySongView(DigiView):
 
     def show_results(self) -> None:
         self.tracks.close()
-        results_view = ResultsView(self.engine.generate_results(), back = self.back)
-        results_view.setup()
+        results_view = ResultsView(back = self.back)
+        results_view.setup(self.engine.generate_results())
         self.window.show_view(results_view)
 
-    def calculate_positions(self) -> None:
+    def on_resize(self, width: int, height: int) -> None:
+        super().on_resize(width, height)
         self.highway.pos = (0, 0)
         self.highway.x += self.window.center_x - self.highway.w // 2  # center the highway
         self.highway.hit_window_top = self.highway.note_y(-self.engine.judgements[-2].seconds)
@@ -156,7 +161,6 @@ class FourKeySongView(DigiView):
         self.countdown_text.position = self.window.center
         self.judgement_sprite.center_x = self.window.center_x
         self.judgement_sprite.center_y = self.window.height / 4
-        super().calculate_positions()
 
     def on_update(self, delta_time) -> None:
         super().on_update(delta_time)

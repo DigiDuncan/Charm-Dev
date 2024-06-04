@@ -314,7 +314,7 @@ class CycleView(DigiView):
 
     @shows_errors
     def setup(self) -> None:
-        super().setup()
+        super().presetup()
 
         with pkg_resources.path(charm.data.images, "menu_card.png") as p:
             tex = arcade.load_texture(p)
@@ -327,6 +327,8 @@ class CycleView(DigiView):
 
         # Generate "gum wrapper" background
         self.gum_wrapper = GumWrapper(self.size)
+
+        super().postsetup()
 
     def on_show_view(self) -> None:
         self.window.theme_song.volume = 0
@@ -361,12 +363,11 @@ class CycleView(DigiView):
         elif keymap.navdown.released:
                 self.cycler.on_key(False, False)
 
-
-    def calculate_positions(self) -> None:
+    def on_resize(self, width: int, height: int) -> None:
+        super().on_resize(width, height)
         if self.cycler is not None:
             self.cycler.update_width(self.window.width)
             self.cycler.update_height(self.window.height)
-        super().calculate_positions()
 
     @shows_errors
     @ignore_imgui

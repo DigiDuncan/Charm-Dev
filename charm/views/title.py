@@ -1,13 +1,13 @@
 from __future__ import annotations
+from types import ModuleType
+from typing import cast
 
 import getpass
 import importlib.resources as pkg_resources
 import random
-from types import ModuleType
-from typing import cast
 
 import arcade
-import imgui
+from imgui_bundle import imgui
 import pyglet
 
 import charm.data.audio
@@ -28,65 +28,50 @@ SWITCH_DELAY = 0.5 + FADE_DELAY
 
 class TitleView(DigiView):
     def __init__(self):
-        super().__init__(
-            bg_color=CharmColors.FADED_GREEN,
-            destinations={"mainmenu": MainMenuView(back=self)}
-        )
-        self.logo: LogoSprite
-        self.main_sprites: arcade.SpriteList[arcade.Sprite]
+        super().__init__(bg_color=CharmColors.FADED_GREEN)
         self.splash_label: SplashLogo | ClownLogo
-        self.show_clown: bool = self.window.egg_roll == Eggs.TRICKY
-        self.song_label: SongLabel
         self.press_label: PressLabel
         self.goto_fade_time: float | None
         self.goto_switch_time: float | None
+        self.fade_volume: float | None
 
     @shows_errors
     def setup(self) -> None:
+        super().presetup()
         self.goto_fade_time = None
         self.goto_switch_time = None
+        self.fade_volume = None
 
         self.window.theme_song.seek(self.local_time + 3)
+        arcade.set_background_color(CharmColors.FADED_GREEN)
 
         # Generate "gum wrapper" background
-        self.gum_wrapper = GumWrapper(self.size)
-
-        arcade.set_background_color(CharmColors.FADED_GREEN)
-        self.main_sprites = arcade.SpriteList()
+        self.components.register(GumWrapper(self.size))
 
         # Set up main logo
-        self.logo = LogoSprite()
+        self.components.register(LogoSprite(self.window))
 
-        self.main_sprites.append(self.logo)
-
-        self.splash_label = self.generate_splash()
+        self.splash_label = self.components.register(self.generate_splash())
         self.splash_label.random_splash()
 
         # Song details
-        self.song_label = SongLabel()
+        self.components.register(SongLabel(self))
 
         # Press start prompt
-        self.press_label = PressLabel(x=self.window.width // 2, y=self.window.height // 4)
+        self.press_label = self.components.register(PressLabel(self, x=self.window.width // 2, y=self.window.height // 4))
 
-        self.welcome_label = WelcomeLabel(x=self.window.width // 2, y=6)
+        self.components.register(WelcomeLabel(x=self.window.width // 2, y=6))
 
-        self.on_resize(*self.size)
-
-        super().setup()
-
-    def calculate_positions(self) -> None:
-        self.logo.calculate_positions(self.window)
-        self.press_label.calculate_positions(self.window)
-        self.welcome_label.calculate_positions(self.window)
-        self.splash_label.calculate_positions(self.window)
+        super().postsetup()
 
     def generate_splash(self) -> ClownLogo | SplashLogo:
-        if self.show_clown:
+        show_clown: bool = self.window.egg_roll == Eggs.TRICKY
+        if show_clown:
             # it's tricky
             splash_label = ClownLogo(x=int(self.window.center_x + 100), y=int(self.window.center_y))
         else:
             splashes = pkg_resources.read_text(charm.data, "splashes.txt").splitlines()
-            splash_label = SplashLogo(splashes, x=int(self.window.center_x), y=int(self.window.center_y))
+            splash_label = SplashLogo(self, splashes, x=int(self.window.center_x), y=int(self.window.center_y))
         return splash_label
 
     @shows_errors
@@ -113,51 +98,29 @@ class TitleView(DigiView):
     def on_update(self, delta_time: float) -> None:
         super().on_update(delta_time)
 
-        self.gum_wrapper.on_update(delta_time)
-
-        # Logo bounce
-        self.logo.scale = 0.3 + (self.window.beat_animator.factor * 0.025)
-
-        # Splash text typewriter effect
-        self.splash_label.on_update(self.local_time)
-
-        self.song_label.on_update(self.local_time)
-
-        self.press_label.on_update(self.local_time, going=self.goto_fade_time is not None and self.goto_switch_time is not None)
-
-        if self.goto_fade_time is not None and self.goto_switch_time is not None:
-            if self.local_time >= self.goto_fade_time:
+        if self.goto_fade_time is not None and self.goto_switch_time is not None and self.fade_volume is not None:
+            if self.goto_fade_time <= self.local_time < self.goto_switch_time:
                 # Fade music
-                VOLUME = 0
-                self.window.theme_song.volume = ease_linear(VOLUME, VOLUME / 2, perc(self.goto_fade_time, self.goto_switch_time, self.local_time))
+                p = perc(self.goto_fade_time, self.goto_switch_time, self.local_time)
+                self.window.theme_song.volume = ease_linear(self.fade_volume, self.fade_volume / 2, p)
             if self.local_time >= self.goto_switch_time:
                 # Go to main menu
-                self.goto("mainmenu")
+                self.goto(MainMenuView(back=self))
 
     @shows_errors
     def on_draw(self) -> None:
         self.window.camera.use()
         self.clear()
-
-        # Charm BG
-        self.gum_wrapper.draw()
-
-        self.welcome_label.draw()
-
-        # Logo and text
-        self.main_sprites.draw()
-        self.splash_label.draw()
-        self.song_label.draw()
-        self.press_label.draw()
-
         super().on_draw()
 
     def start(self) -> None:
         if self.goto_fade_time is not None:
             return
+        self.press_label.going = True
         self.goto_fade_time = self.local_time + FADE_DELAY
         self.goto_switch_time = self.local_time + SWITCH_DELAY
         arcade.play_sound(self.window.sounds["valid"], volume = settings.get_volume("sound"))
+        self.fade_volume = cast(float, self.window.theme_song.volume)
 
 class ClownLogo(arcade.Text):
     def __init__(self, x: int, y: int):
@@ -182,15 +145,16 @@ class ClownLogo(arcade.Text):
     def jiggle(self) -> None:
         self.rotation = (random.random() * 10) - 5
 
-    def on_update(self, local_time: float) -> None:
+    def on_update(self, delta_time: float) -> None:
         self.jiggle()
 
-    def calculate_positions(self, window: DigiWindow) -> None:
-        self.position = (*window.center, 0)
+    def on_resize(self, width: float, height: float) -> None:
+        self.position = (height // 2, width // 2, 0)
 
 
 class SplashLogo(pyglet.text.Label):
-    def __init__(self, splashes: list[str], x: int, y: int):
+    def __init__(self, view: DigiView, splashes: list[str], x: int, y: int):
+        self.view = view
         self.splashes = splashes
         self.splash_index = 0
         super().__init__(
@@ -215,15 +179,17 @@ class SplashLogo(pyglet.text.Label):
     def random_splash(self) -> None:
         self.splash_index = random.randint(0, len(self.splashes) - 1)
 
-    def on_update(self, local_time: float) -> None:
-        self.text = typewriter(self.splash_text, 20, local_time, 3)
+    def on_update(self, delta_time: float) -> None:
+        # Splash text typewriter effect
+        self.text = typewriter(self.splash_text, 20, self.view.local_time, 3)
 
-    def calculate_positions(self, window: DigiWindow) -> None:
-        self.position = (*window.center, 0)
+    def on_resize(self, height: float, width: float) -> None:
+        self.position = (height // 2, width // 2, 0)
 
 
 class SongLabel(pyglet.text.Label):
-    def __init__(self):
+    def __init__(self, view: DigiView):
+        self.view = view
         width = 540
         x_left = -width
         x_right = 5
@@ -242,20 +208,18 @@ class SongLabel(pyglet.text.Label):
             color=CharmColors.PURPLE
         )
 
-    def on_update(self, local_time: float) -> None:
+    def on_update(self, delta_time: float) -> None:
         # constraining the time when we update the position should decrease lag,
         # even though it's technically unnecessary because the function is clamped
         for start, stop, x_1, x_2 in self.transitions:
-            if start <= local_time <= stop:
-                p = perc(start, stop, local_time)
+            if start <= self.view.local_time <= stop:
+                p = perc(start, stop, self.view.local_time)
                 self.x = ease_quadinout(x_1, x_2, p)
-
-    def calculate_positions(self, window: DigiWindow) -> None:
-        return
 
 
 class PressLabel(pyglet.text.Label):
-    def __init__(self, x: int, y: int):
+    def __init__(self, view: DigiView, x: int, y: int):
+        self.view = view
         super().__init__(
             "<press start>",
             font_name='bananaslip plus',
@@ -265,19 +229,21 @@ class PressLabel(pyglet.text.Label):
             color=CharmColors.PURPLE
         )
         self.drawme: bool = True
+        self.going = False
 
-    def on_update(self, local_time: float, going: bool) -> None:
-        if going:
-            self.drawme = bool(int(local_time) % 2)
+    def on_update(self, delta_time: float) -> None:
+        if self.going:
+            self.drawme = bool(int(self.view.local_time) % 2)
         else:
-            self.drawme = bool(int(local_time * 8) % 2)
+            self.drawme = bool(int(self.view.local_time * 8) % 2)
 
     def draw(self) -> None:
+        # Logo and text
         if self.drawme:
             super().draw()
 
-    def calculate_positions(self, window: DigiWindow) -> None:
-        self.position = (window.center_x, window.center_y / 2, 0)
+    def on_resize(self, width: int, height: int) -> None:
+        self.position = (width / 2, height / 2 / 2, 0)
 
 
 class WelcomeLabel(arcade.Text):
@@ -301,17 +267,20 @@ class WelcomeLabel(arcade.Text):
         ], CharmColors.FADED_PURPLE)
         super().draw()
 
-    def calculate_positions(self, window: DigiWindow) -> None:
-        self.position = (window.center_x, 6, 0)
+    def on_resize(self, height: int, width: int) -> None:
+        self.position = (width // 2, 6, 0)
 
 
 class LogoSprite(arcade.Sprite):
-    def __init__(self):
+    def __init__(self, window: DigiWindow):
+        self.window = window
         logo_img = img_from_resource(cast(ModuleType, charm.data.images), "logo.png")
         logo_texture = arcade.Texture(logo_img)
-        super().__init__(logo_texture)
+        super().__init__(logo_texture, scale=0.3)
 
-    def calculate_positions(self, window: DigiWindow) -> None:
-        w, h = window.get_size()
-        self.center_x = w // 2
-        self.bottom = h // 2
+    def on_resize(self, width: int, height: int) -> None:
+        self.center_x = width // 2
+        self.bottom = height // 2
+
+    def on_update(self, delta_time: float = 1 / 60) -> None:
+        self.scale = 0.3 + (self.window.beat_animator.factor * 0.025)

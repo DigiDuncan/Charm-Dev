@@ -23,7 +23,7 @@ class HeroTestView(DigiView):
 
     @shows_errors
     def setup(self) -> None:
-        super().setup()
+        super().presetup()
 
         # name = "mcmental"
         name = "run_around_the_character_code"
@@ -52,6 +52,8 @@ class HeroTestView(DigiView):
         # Generate "gum wrapper" background
         self.gum_wrapper = GumWrapper(self.size)
 
+        super().postsetup()
+
     def on_show_view(self) -> None:
         self.window.theme_song.volume = 0
         VOLUME = 0.25
@@ -77,8 +79,7 @@ class HeroTestView(DigiView):
 
         self.engine.process_keystate()
         match symbol:
-            case keymap.back:
-            case keymap.pause:
+            case keymap.back | keymap.pause:
                 self.song.pause() if self.song.playing else self.song.play()
         if self.window.debug:
             match symbol:

@@ -36,20 +36,26 @@ emoji-data-python==1.5.0
     # via charm
 fs==2.4.16
     # via simfile
+glfw==2.7.0
+    # via imgui-bundle
 idna==3.7
     # via requests
-imgui==2.0.0
+imgui-bundle==1.3.0
     # via charm
 msdparser==2.0.0
     # via simfile
+munch==4.0.0
+    # via imgui-bundle
 ndjson==0.3.1
     # via charm
 nindex==1.0.0
     # via charm
 numpy==1.26.4
     # via charm
+    # via imgui-bundle
 pillow==10.2.0
     # via arcade
+    # via imgui-bundle
 pycparser==2.22
     # via cffi
 pyglet==2.1.dev2
@@ -58,6 +64,8 @@ pymunk==6.6.0
     # via arcade
 pyogg==0.6.14a1
     # via charm
+pyopengl==3.1.7
+    # via imgui-bundle
 pypresence==4.2.1
     # via charm
 pysubs2==1.6.0

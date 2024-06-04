@@ -56,7 +56,7 @@ class VisualizerView(DigiView):
 
     @shows_errors
     def setup(self) -> None:
-        super().setup()
+        super().presetup()
 
         # Load song and get waveform
         with LogSection(logger, "loading song and waveform"):
@@ -146,6 +146,8 @@ class VisualizerView(DigiView):
             self.did_harcode = False
 
             self.window.update_rp("Vs. Scott Cawthon (demo)")
+
+        super().postsetup()
 
     @shows_errors
     def on_show_view(self) -> None:
