@@ -17,7 +17,6 @@ from charm.lib.logsection import LogSection
 from charm.lib.gamemodes.four_key import FourKeyHighway
 from charm.lib.gamemodes.fnf import FNFEngine, FNFNote, FNFSong
 from charm.lib.paths import songspath
-from charm.lib.keymap import keymap
 
 logger = logging.getLogger("charm")
 
@@ -52,11 +51,12 @@ BAD_HARDCODE_TIME = 129.857142857143
 
 class VisualizerView(DigiView):
     def __init__(self, back: DigiView):
-        super().__init__(fade_in=1, bg_color=arcade.color.BLACK, back=back)
+        super().__init__(fade_in=1, back=back)
 
     @shows_errors
     def setup(self) -> None:
         super().presetup()
+        arcade.set_background_color(arcade.color.BLACK)
 
         # Load song and get waveform
         with LogSection(logger, "loading song and waveform"):
@@ -145,7 +145,7 @@ class VisualizerView(DigiView):
             self.last_player_note: FNFNote = None
             self.did_harcode = False
 
-            self.window.update_rp("Vs. Scott Cawthon (demo)")
+            self.window.presence.set("Vs. Scott Cawthon (demo)")
 
         super().postsetup()
 
@@ -206,8 +206,7 @@ class VisualizerView(DigiView):
 
     @shows_errors
     def on_draw(self) -> None:
-        self.window.camera.use()
-        self.clear()
+        super().predraw()
         if not self.shown:
             return
 
@@ -223,10 +222,8 @@ class VisualizerView(DigiView):
 
         # Scroll star camera and draw stars
         self.star_camera.position = (self.window.center_x, 0 - (self.song.time * self.scroll_speed))
-        self.star_camera.use()
-        self.stars.draw()
-
-        self.window.camera.use()
+        with self.star_camera.activate():
+            self.stars.draw()
 
         # Note flashes
         if self.chart_available:
@@ -257,5 +254,4 @@ class VisualizerView(DigiView):
         if self.chart_available:
             self.sprite_list.draw()
             self.highway.draw()
-
-        super().on_draw()
+        super().postdraw()

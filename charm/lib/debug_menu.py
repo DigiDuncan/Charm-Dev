@@ -1,13 +1,21 @@
+from collections import deque
 import logging
+from pathlib import Path
 import re
-import typing
+import statistics
+from types import TracebackType
+from typing import Self, TypedDict
 import arcade
 import arrow
 
-from imgui_bundle import imgui
-from array import array
+from imgui_bundle.python_backends.pyglet_backend import create_renderer, PygletProgrammablePipelineRenderer # type: ignore
+from imgui_bundle import imgui, ImVec2
+
+import numpy as np
+import pyglet
 
 from charm.lib.digiwindow import DigiWindow
+
 
 class Filter:
     input_text_str = "Filter"
@@ -16,13 +24,13 @@ class Filter:
 
     def __init__(self):
         self._filter_str: str = ""
-        self._reg_ex: re.Pattern | None = None
+        self._reg_ex: re.Pattern[str] | None = None
 
     def draw(self):
         imgui.push_item_width(Filter.input_text_size)
         changed, filter_str = imgui.input_text_with_hint(Filter.input_text_str, "+incl, -excl, or regex", self._filter_str)
         if changed:
-            s: str = filter_str
+            s = filter_str
             if s.startswith("+"):
                 # This crazy method means that if any regex characters are used
                 # in the query they are treated like normal characters
@@ -46,14 +54,15 @@ class Filter:
     def get_filter(self) -> str:
         return self._filter_str
 
-    def get_filter_pattern(self) -> re.Pattern:
+    def get_filter_pattern(self) -> re.Pattern[str] | None:
         return self._reg_ex
 
-    def pass_filter(self, item: str):
+    def pass_filter(self, item: str) -> bool:
         if self._reg_ex is None:
             return True
 
-        return self._reg_ex.match(item)
+        return self._reg_ex.match(item) is not None
+
 
 class DebugMessage:
     def __init__(self, message: str, level: int = logging.INFO) -> None:
@@ -64,9 +73,9 @@ class DebugMessage:
     @property
     def color(self):
         match self.level:
-            case logging.COMMENT:
+            case logging.COMMENT: # type: ignore
                 return arcade.color.LIGHT_GRAY.normalized
-            case logging.COMMAND:
+            case logging.COMMAND: # type: ignore
                 return arcade.color.PASTEL_YELLOW.normalized
             case logging.DEBUG:
                 return arcade.color.BABY_BLUE.normalized
@@ -84,9 +93,9 @@ class DebugMessage:
     @property
     def prefix(self):
         match self.level:
-            case logging.COMMAND:
+            case logging.COMMAND: # type: ignore
                 return "$"
-            case logging.COMMENT:
+            case logging.COMMENT: # type: ignore
                 return "#"
             case logging.DEBUG:
                 return "DBG"
@@ -102,34 +111,33 @@ class DebugMessage:
                 return "???"
 
     def render(self) -> None:
-        if self.level not in [logging.COMMAND, logging.COMMENT]:
-            imgui.push_style_color(imgui.COLOR_TEXT, *arcade.color.PURPLE.normalized)
+        if self.level not in [logging.COMMAND, logging.COMMENT]: # type: ignore
+            imgui.push_style_color(imgui.Col_.text.value, imgui.ImVec4(*arcade.color.PURPLE.normalized))
             imgui.text_unformatted(self.time + " | ")
             imgui.pop_style_color()
             imgui.same_line()
 
-        imgui.push_style_color(imgui.COLOR_TEXT, *self.color)
+        imgui.push_style_color(imgui.Col_.text.value, imgui.ImVec4(*self.color))
         imgui.text_unformatted(self.prefix + " ")
         imgui.pop_style_color()
 
         imgui.same_line()
 
-        imgui.push_style_color(imgui.COLOR_TEXT, *self.color)
+        imgui.push_style_color(imgui.Col_.text.value, imgui.ImVec4(*self.color))
         imgui.text_unformatted(self.message)
         imgui.pop_style_color()
 
-class Console:
-    commands: dict[str, str] = {
-        "HELP": "list all commands and their description",
-        "CLEAR": "clear console of all logs",
-        "HISTORY": "Show the command history",
-        "SAVE": "Save the console to console_log.txt"
-    }
 
+class Console:
     def __init__(self):
         self._input_string: str = ""
         self._items: list[DebugMessage] = []
-        self.commands: list[str] = []
+        self.commands: dict[str, str] = {
+            "HELP": "list all commands and their description",
+            "CLEAR": "clear console of all logs",
+            "HISTORY": "Show the command history",
+            "SAVE": "Save the console to console_log.txt"
+        }
         self.history: list[str] = []
         self.text_filter: Filter = Filter()
         self.auto_scroll = True
@@ -248,30 +256,30 @@ class Console:
         imgui.end()
 
     def execute_command(self, command_line: str) -> None:
-        self.add_log(DebugMessage(f"{command_line}", logging.COMMAND))
+        self.add_log(DebugMessage(f"{command_line}", logging.COMMAND)) # type: ignore
 
         self.history.append(command_line.upper())
 
         match command_line:
             case "HELP":
                 self.add_log("Commands:")
-                for command, desc in Console.commands.items():
+                for command, desc in self.commands.items():
                     self.add_log(f"| - {command}:-> {desc}")
             case "CLEAR":
                 self.clear_log()
             case "HISTORY":
                 self.add_log("Command History:")
                 for command in self.history[-10:]:
-                    self.add_log(DebugMessage(f"| {command}", logging.COMMAND))
+                    self.add_log(DebugMessage(f"| {command}", logging.COMMAND)) # type: ignore
             case "SAVE":
-                with open("console_log.txt", "a") as file:
+                with Path("console_log.txt").open("a") as file:
                     file.write(f"Appending to log @ {arrow.now().isoformat()}\n")
                     for item in self._items:
                         file.write(f"{item}\n")
                     file.write(f"Completed appending to log @ {arrow.now().isoformat()}\n\n")
                 self.add_log(f"Finished saving to console_log.txt @ {arrow.now().isoformat()}")
             case _:
-                self.add_log(DebugMessage(f"? Unrecognized command:\n\t{command_line}", logging.COMMENT))
+                self.add_log(DebugMessage(f"? Unrecognized command:\n\t{command_line}", logging.COMMENT)) # type: ignore
 
         self.scroll_to_bottom = True
 
@@ -285,7 +293,7 @@ cons = Console()
 
 
 class ImGuiHandler(logging.Handler):
-    def __init__(self, level: int | str = logging.NOTSET, showsource: bool = False):
+    def __init__(self, level: int | str = logging.NOTSET, *, showsource: bool = False):
         self.showsource = showsource
         super().__init__(level)
 
@@ -297,62 +305,248 @@ class ImGuiHandler(logging.Handler):
         debug_message = DebugMessage(message, record.levelno)
         debug_log.add_log(debug_message)
 
-def draw(window: DigiWindow) -> None:
-    """Uses imgui to render a debug menu and console for developers."""
-    impl = window.impl
-    impl.process_inputs()
 
-    imgui.new_frame()
-    imgui.set_next_window_size(550, 350, condition = imgui.FIRST_USE_EVER)
+class DebugSettings(TypedDict):
+    show_fps: bool
 
-    imgui.begin("Charm Debug Menu", False)
 
-    with imgui.begin_tab_bar("Options") as tab_bar:
-        if tab_bar.opened:
-            with imgui.begin_tab_item("Settings") as settings:
-                if settings.selected:
-                    imgui.text("Settings")
-                    # Settings
-                    _, window.debug_settings["show_fps"] = imgui.checkbox("Show FPS", window.debug_settings["show_fps"])
-                    imgui.spacing()
-                    imgui.separator()
-                    imgui.text("Tools")
-                    # Tools
-                    if imgui.button("Save atlas..."):
-                        window.save_atlas()
-                    imgui.spacing()
-                    imgui.separator()
-            with imgui.begin_tab_item("Info") as info:
-                if info.selected:
-                    imgui.text("Info")
-                    imgui.text(f"Current Resolution: {window.size}")
-                    imgui.text(f"Egg Roll: {window.egg_roll}")
-                    imgui.text(f"Current BPM: {window.beat_animator.current_bpm}")
-                    # Beat Graph
-                    imgui.plot_lines(
-                        label="Beat",
-                        values=array("f", window.beat_list),
-                        values_count = len(window.beat_list),
-                        scale_min = 0,
-                        scale_max = 1,
-                    )
-                    imgui.text(f"Local Time: {window.current_view.local_time:.3f}")
-                    imgui.text(f"Song Time: {window.theme_song.time:.3f}")
-                    # FPS Graph
-                    imgui.plot_lines(
-                        label="FPS",
-                        values=array("f", window.fps_list),
-                        values_count = len(window.fps_list),
-                        scale_min = 120,
-                        scale_max = 240,
-                    )
-                    imgui.spacing()
-                    imgui.separator()
-                    imgui.text(f"{window.ctx.limits.RENDERER}")
-            with imgui.begin_tab_item("Log") as log:
-                if log.selected:
-                    cons.draw()
+class imgui_tab_bar:  # noqa: N801
+    def __init__(self, str_id: str, flags: imgui.TabBarFlags = 0):
+        self._str_id = str_id
+        self._flags = flags
+        self.opened: bool
 
-    imgui.end()
-    imgui.render()
-    impl.render(imgui.get_draw_data())
+    def __enter__(self) -> Self:
+        self.opened = imgui.begin_tab_bar(self._str_id, self._flags)
+        return self
+
+    def __exit__(self, typ: type[BaseException] | None, exc: BaseException | None, tb: TracebackType | None) -> None:
+        imgui.end_tab_bar()
+
+
+class imgui_tab_item:  # noqa: N801
+    def __init__(self, str_id: str, p_open: bool | None = None, flags: imgui.TabItemFlags = 0):
+        self._str_id = str_id
+        self._p_open = p_open
+        self._flags = flags
+        self.selected: bool
+
+    def __enter__(self) -> Self:
+        self.selected, _ = imgui.begin_tab_item(self._str_id, self._p_open, self._flags)
+        return self
+
+    def __exit__(self, typ: type[BaseException] | None, exc: BaseException | None, tb: TracebackType | None) -> None:
+        imgui.end_tab_item()
+
+
+class DebugMenu:
+    def __init__(self, window: DigiWindow) -> None:
+        self.camera = OverlayCamera()
+        self.enabled = False
+        imgui.create_context()
+        imgui.get_io().display_size = imgui.ImVec2(100, 100)
+        imgui.font_atlas_get_tex_data_as_rgba32(imgui.get_io().fonts) # type: ignore
+        self.impl: PygletProgrammablePipelineRenderer = create_renderer(self) # type: ignore
+        self.settings_tab = DebugSettingsTab(window)
+        self.info_tab = DebugInfoTab(window)
+        self.log_tab = DebugLogTab()
+        self.fps_counter = FPSCounter()
+        self.debug_label = pyglet.text.Label(
+            "DEBUG",
+            font_name='bananaslip plus',
+            font_size=12,
+            multiline=True, width=window.width,
+            anchor_x='left', anchor_y='top',
+            color=(0, 0, 0, 0xFF)
+        )
+        self.alpha_label = pyglet.text.Label(
+            "ALPHA",
+            font_name='bananaslip plus',
+            font_size=16,
+            anchor_x='right', anchor_y='bottom',
+            color=(0, 0, 0, 32)
+        )
+
+    @property
+    def show_fps(self) -> bool:
+        return self.settings_tab.show_fps or self.enabled
+
+    def on_update(self, delta_time: float) -> None:
+        self.settings_tab.on_update(delta_time)
+        self.info_tab.on_update(delta_time)
+        self.log_tab.on_update(delta_time)
+        self.fps_counter.enabled = self.show_fps
+        self.fps_counter.on_update(delta_time)
+
+    def on_resize(self, width: int, height: int) -> None:
+        self.fps_counter.on_resize(width, height)
+        self.debug_label.position = (0, height - self.fps_counter.fps_label.content_height - 5, 0)
+        self.alpha_label.position = (width - 5, 5, 0)
+
+    def draw(self) -> None:
+        with self.camera.activate():
+            self.fps_counter.draw()
+            self.alpha_label.draw()
+            if not self.enabled:
+                return
+            self.debug_label.draw()
+            self.impl.process_inputs()
+
+            imgui.new_frame()
+            imgui.set_next_window_size(ImVec2(550, 350), imgui.Cond_.first_use_ever.value)
+
+            imgui.begin("Charm Debug Menu", False)
+
+            self.draw_tab_bar()
+
+            imgui.end()
+            imgui.render()
+            self.impl.render(imgui.get_draw_data())
+
+    def draw_tab_bar(self) -> None:
+        with imgui_tab_bar("Options") as tab_bar:
+            if not tab_bar.opened:
+                return
+            self.settings_tab.draw()
+            self.info_tab.draw()
+            self.log_tab.draw()
+
+
+class DebugSettingsTab:
+    def __init__(self, window: DigiWindow) -> None:
+        self.show_fps = False
+        self.window = window
+
+    def on_update(self, delta_time: float) -> None:
+        pass
+
+    def draw(self) -> None:
+        with imgui_tab_item("Settings") as settings:
+            if not settings.selected:
+                return
+            imgui.text("Settings")
+            # Settings
+            _, self.show_fps = imgui.checkbox("Show FPS", self.show_fps)
+            imgui.spacing()
+            imgui.separator()
+            imgui.text("Tools")
+            # Tools
+            if imgui.button("Save atlas..."):
+                self.window.save_atlas()
+            imgui.spacing()
+            imgui.separator()
+
+
+class DebugInfoTab:
+    def __init__(self, window: DigiWindow) -> None:
+        self.window = window
+        self.beat_list = deque[float]()
+        self.fps_list = deque[float]()
+        self.local_time: float = 0.0
+
+    def on_update(self, delta_time: float) -> None:
+        # Beat Graph
+        self.beat_list.append(self.window.theme_song.beat_factor)
+        if len(self.beat_list) > 240:
+            self.beat_list.popleft()
+
+        # FPS Graph
+        curr_fps = 1 / delta_time
+        self.fps_list.append(curr_fps)
+        if len(self.fps_list) > 240:
+            self.fps_list.popleft()
+
+        # localtime
+        cv = self.window.current_view()
+        self.localtime = cv.local_time if cv is not None else 0.0
+
+    def draw(self) -> None:
+        with imgui_tab_item("Info") as info:
+            if not info.selected:
+                return
+            imgui.text("Info")
+            imgui.text(f"Current Resolution: {self.window.size}")
+            imgui.text(f"Egg Roll: {self.window.egg_roll}")
+            imgui.text(f"Current BPM: {self.window.theme_song.current_bpm}")
+            # Beat Graph
+            imgui.plot_lines( # type: ignore
+                label="Beat",
+                values=np.array(self.beat_list),
+                scale_min = 0,
+                scale_max = 1,
+            )
+            imgui.text(f"Local Time: {self.localtime:.3f}")
+            imgui.text(f"Song Time: {self.window.theme_song.time:.3f}")
+            # FPS Graph
+            imgui.plot_lines( # type: ignore
+                label="FPS",
+                values=np.array(self.fps_list),
+                scale_min = 120,
+                scale_max = 240,
+            )
+            imgui.spacing()
+            imgui.separator()
+            imgui.text(f"{self.window.ctx.limits.RENDERER}")
+
+
+class DebugLogTab:
+    def __init__(self) -> None:
+        pass
+
+    def on_update(self, delta_time: float) -> None:
+        pass
+
+    def draw(self) -> None:
+        with imgui_tab_item("Log") as log:
+            if not log.selected:
+                return
+            cons.draw()
+
+
+class FPSCounter:
+    def __init__(self):
+        self.enabled = False
+        self.frames: int = 0
+        self.fps_averages: list[float] = []
+        self.fps_label = pyglet.text.Label(
+            "???.? FPS",
+            font_name='bananaslip plus',
+            font_size=12,
+            anchor_x='left', anchor_y='top',
+            color=(0, 0, 0, 0xFF)
+        )
+        self.fps_shadow_label = pyglet.text.Label(
+            "???.? FPS",
+            font_name='bananaslip plus',
+            font_size=12,
+            anchor_x='left', anchor_y='top',
+            color=(0xAA, 0xAA, 0xAA, 0xFF)
+        )
+
+    def on_update(self, delta_time: float) -> None:
+        self.frames += 1
+        curr_fps = 1 / delta_time
+        # FPS Counter
+        if self.frames % 30 == 0:
+            average = statistics.mean(self.fps_averages)
+            self.fps_label.color = arcade.color.BLACK if average >= 120 else arcade.color.RED
+            self.fps_label.text = self.fps_shadow_label.text = f"{average:.1f} FPS"
+            self.fps_averages.clear()
+        else:
+            self.fps_averages.append(curr_fps)
+
+    def on_resize(self, width: int, height: int) -> None:
+        self.fps_label.position = (0, height, 0)
+        self.fps_shadow_label.position = (1, height - 1, 0)
+
+    def draw(self) -> None:
+        if not self.enabled:
+            return
+        self.fps_shadow_label.draw()
+        self.fps_label.draw()
+
+
+class OverlayCamera(arcade.camera.Camera2D):
+    def on_resize(self, width: int, height: int) -> None:
+        self.match_screen(and_projection=True)
+        self.position = arcade.Vec2(width // 2, height // 2)

@@ -3,7 +3,7 @@ import logging
 import arcade
 from pyglet.graphics import Batch
 
-from charm.lib.charm import CharmColors, GumWrapper
+from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.gamemodes.hero import HeroEngine, HeroHighway, HeroSong, SectionEvent
 from charm.lib.keymap import keymap
@@ -17,14 +17,14 @@ logger = logging.getLogger("charm")
 
 class HeroTestView(DigiView):
     def __init__(self, back: DigiView):
-        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, back=back)
+        super().__init__(fade_in=1, back=back)
         self.song = None
         self.highway = None
+        self._song: OGGSound
 
     @shows_errors
     def setup(self) -> None:
         super().presetup()
-
         # name = "mcmental"
         name = "run_around_the_character_code"
 
@@ -49,15 +49,12 @@ class HeroTestView(DigiView):
             self.lyric_animator = LyricAnimator(self.window.center_x, self.window.height - 100, self.hero_song.lyrics)
             self.lyric_animator.prerender()
 
-        # Generate "gum wrapper" background
         self.gum_wrapper = GumWrapper(self.size)
-
         super().postsetup()
 
     def on_show_view(self) -> None:
         self.window.theme_song.volume = 0
-        VOLUME = 0.25
-        self.song = arcade.play_sound(self._song, VOLUME, loop=False)
+        self.song = arcade.play_sound(self._song, 0.25, loop=False)
 
     @shows_errors
     @ignore_imgui
@@ -67,13 +64,13 @@ class HeroTestView(DigiView):
             self.go_back()
         elif keymap.pause.pressed:
             self.song.pause() if self.song.playing else self.song.play()
-        elif self.window.debug and keymap.seek_zero.pressed:
+        elif self.window.debug.enabled and keymap.seek_zero.pressed:
             self.song.seek(0)
-        elif self.window.debug and keymap.seek_backward.pressed:
+        elif self.window.debug.enabled and keymap.seek_backward.pressed:
             self.song.seek(self.song.time - 5)
-        elif self.window.debug and keymap.seek_forward.pressed:
+        elif self.window.debug.enabled and keymap.seek_forward.pressed:
             self.song.seek(self.song.time + 5)
-        elif self.window.debug and keymap.debug_toggle_flags.pressed:
+        elif self.window.debug.enabled and keymap.debug_toggle_flags.pressed:
             self.highway.show_flags = not self.highway.show_flags
 
 
@@ -81,7 +78,7 @@ class HeroTestView(DigiView):
         match symbol:
             case keymap.back | keymap.pause:
                 self.song.pause() if self.song.playing else self.song.play()
-        if self.window.debug:
+        if self.window.debug.enabled:
             match symbol:
                 case arcade.key.KEY_0:
                     self.song.seek(0)
@@ -135,9 +132,7 @@ class HeroTestView(DigiView):
 
     @shows_errors
     def on_draw(self) -> None:
-        self.window.camera.use()
-        self.clear()
-
+        super().predraw()
         # Charm BG
         self.gum_wrapper.draw()
 
@@ -147,5 +142,4 @@ class HeroTestView(DigiView):
         if self.lyric_animator:
             with self.window.default_camera.activate():
                 self.lyric_animator.draw()
-
-        super().on_draw()
+        super().postdraw()

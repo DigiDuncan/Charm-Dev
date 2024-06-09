@@ -1,19 +1,28 @@
-from itertools import cycle
-import arcade
-from charm.lib.adobexml import sprite_from_adobe
+from collections.abc import Iterator
 
-from charm.lib.charm import CharmColors, GumWrapper
+from itertools import cycle
+from typing import cast
+import arcade
+from charm.lib.adobexml import Subtexture, sprite_from_adobe, AdobeSprite
+
+from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView
 from charm.lib.keymap import keymap
 
 
 class SpriteTestView(DigiView):
     def __init__(self, back: DigiView):
-        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, back=back)
+        super().__init__(fade_in=1, back=back)
+        self.sprite: AdobeSprite
+        self.anims: Iterator[str]
+        self.anim_label: arcade.Text
+        self.data_label: arcade.Text
+        self.fps: int
+        self.paused: bool
+        self.gum_wrapper: GumWrapper
 
     def setup(self) -> None:
         super().presetup()
-
         SPRITE_NAME = "scott"
         SPRITE_ANIM = "idle"
 
@@ -29,9 +38,7 @@ class SpriteTestView(DigiView):
         self.fps = self.sprite.fps
         self.paused = False
 
-        # Generate "gum wrapper" background
         self.gum_wrapper = GumWrapper(self.size)
-
         super().postsetup()
 
     def on_key_press(self, symbol: int, modifiers: int) -> None:
@@ -39,49 +46,61 @@ class SpriteTestView(DigiView):
         if keymap.back.pressed:
             self.go_back()
         elif keymap.start.pressed:
-            a = next(self.anims)
-            self.sprite.set_animation(a)
-            self.anim_label.text = a
+            self.cycle_anim()
         elif keymap.seek_backward.pressed:
-            self.sprite.fps -= 1
-            self.fps = self.sprite.fps
+            self.fps_down()
         elif keymap.seek_forward.pressed:
-            self.sprite.fps += 1
-            self.fps = self.sprite.fps
+            self.fps_up()
         elif keymap.pause.pressed:
-            self.paused = not self.paused
-            if self.paused:
-                self.sprite.fps = 0
-            else:
-                self.sprite.fps = self.fps
+            self.toggle_pause()
         elif keymap.navleft.pressed:
-            self.sprite._current_animation_index -= 1
-            self.sprite._current_animation_index %= len(self.sprite._current_animation)
+            self.frame_back()
         elif keymap.navright.pressed:
-            self.sprite._current_animation_index += 1
-            self.sprite._current_animation_index %= len(self.sprite._current_animation)
+            self.frame_forward()
 
-    def on_update(self, delta_time) -> None:
+    def toggle_pause(self) -> None:
+        self.paused = not self.paused
+        if self.paused:
+            self.sprite.fps = 0
+        else:
+            self.sprite.fps = self.fps
+
+    def cycle_anim(self) -> None:
+        anim = next(self.anims)
+        self.sprite.set_animation(anim)
+        self.anim_label.text = anim
+
+    def fps_up(self) -> None:
+        self.sprite.fps += 1
+        self.fps = self.sprite.fps
+
+    def fps_down(self) -> None:
+        self.sprite.fps -= 1
+        self.fps = self.sprite.fps
+
+    def frame_back(self) -> None:
+        self.sprite._current_animation_index -= 1
+        self.sprite._current_animation_index %= len(self.sprite._current_animation)
+
+    def frame_forward(self) -> None:
+        self.sprite._current_animation_index += 1
+        self.sprite._current_animation_index %= len(self.sprite._current_animation)
+
+    def on_update(self, delta_time: float) -> None:
         super().on_update(delta_time)
         self.sprite.update_animation(delta_time)
-        st = self.sprite._current_animation_sts[self.sprite._current_animation_index]
+        st = cast(Subtexture, self.sprite._current_animation_sts[self.sprite._current_animation_index])
         self.data_label.text = f"""
         Sprite FPS: {self.fps}
         Sprite F#: {self.sprite._current_animation_index}
         X,Y,W,H: {st.x}, {st.y}, {st.width}, {st.height}
         FX,FY,FW,FH: {st.frame_x}, {st.frame_y}, {st.frame_width}, {st.frame_height}"""
-
         self.gum_wrapper.on_update(delta_time)
 
     def on_draw(self) -> None:
-        self.window.camera.use()
-        self.clear()
-
-        # Charm BG
+        super().predraw()
         self.gum_wrapper.draw()
-
         self.sprite.draw()
         self.anim_label.draw()
         self.data_label.draw()
-
-        super().on_draw()
+        super().postdraw()

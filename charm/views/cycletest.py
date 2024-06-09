@@ -2,15 +2,15 @@ import importlib.resources as pkg_resources
 import logging
 import math
 from math import ceil
-from typing import List
 
 import arcade
 from arcade import Sprite, SpriteList, Texture, Text
 from pyglet.graphics import Batch
 
 import charm.data.images
+from charm.lib import settings
 from charm.lib.anim import EasingFunction, ease_linear, ease_quadinout
-from charm.lib.charm import CharmColors, GumWrapper
+from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView, shows_errors, ignore_imgui
 from charm.lib.types import Seconds
 from charm.lib.utils import clamp
@@ -44,7 +44,7 @@ class IndexShifter:
 
 
 class ListCycle:
-    def __init__(self, texture: Texture, content: List[str], ease: EasingFunction = ease_linear,
+    def __init__(self, texture: Texture, content: list[str], ease: EasingFunction = ease_linear,
                  height: int | None = None, width: int | None = None,
                  sprite_scale: float = 1.0,
                  shift_time: Seconds = 0.25,
@@ -76,7 +76,7 @@ class ListCycle:
 
         # The strings used as the "content" of each sprite
         # can be replaced by whatever you actually want shown
-        self.content: List[str] = content
+        self.content: list[str] = content
         self.content_index: int = 0
         self.content_count: int = len(content)
 
@@ -130,22 +130,23 @@ class ListCycle:
 
         self.trigger_layout()
 
-    def on_key(self, up: bool, pressed: bool) -> None:
-        match (up, pressed):
-            case (False, False):
-                if self.time_down_pressed > self.wait_for_long_scroll:
-                    self.scroll(0)
-                self.down_pressed = False
-                self.time_down_pressed = 0.0
-            case (True, False):
-                if self.time_up_pressed > self.wait_for_long_scroll:
-                    self.scroll(0)
-                self.up_pressed = False
-                self.time_up_pressed = 0.0
-            case (False, True):
-                self.down_pressed = True
-            case (True, True):
-                self.up_pressed = True
+    def release_down(self) -> None:
+        if self.time_down_pressed > self.wait_for_long_scroll:
+            self.scroll(0)
+        self.down_pressed = False
+        self.time_down_pressed = 0.0
+
+    def release_up(self) -> None:
+        if self.time_up_pressed > self.wait_for_long_scroll:
+            self.scroll(0)
+        self.up_pressed = False
+        self.time_up_pressed = 0.0
+
+    def press_down(self) -> None:
+        self.down_pressed = True
+
+    def press_up(self) -> None:
+        self.up_pressed = True
 
     def scroll(self, dist: float) -> None:
         # Start scrolling to the next target location based on how far we are told to scroll
@@ -279,6 +280,10 @@ class ListCycle:
                 self.duration = 0.0
                 self.progress = 0.0
 
+    def on_resize(self, width: int, height: int) -> None:
+        self.update_width(width)
+        self.update_height(height)
+
     def update_width(self, new_width: int) -> None:
         if new_width == self.bounds_width:
             return
@@ -309,25 +314,24 @@ class ListCycle:
 
 class CycleView(DigiView):
     def __init__(self, back: DigiView):
-        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, back=back)
-        self.cycler: ListCycle | None = None
+        super().__init__(fade_in=1, back=back)
+        self.cycler: ListCycle
+        self.gum_wrapper: GumWrapper
 
     @shows_errors
     def setup(self) -> None:
         super().presetup()
-
         with pkg_resources.path(charm.data.images, "menu_card.png") as p:
             tex = arcade.load_texture(p)
-
-        self.cycler = ListCycle(texture=tex, content=["a"] * 1000,
-                                ease=ease_quadinout,
-                                shift_time=0.25,
-                                sprite_scale=0.4,
-                                )
-
+        self.cycler = ListCycle(
+            texture=tex,
+            content=["a"] * 1000,
+            ease=ease_quadinout,
+            shift_time=0.25,
+            sprite_scale=0.4,
+        )
         # Generate "gum wrapper" background
         self.gum_wrapper = GumWrapper(self.size)
-
         super().postsetup()
 
     def on_show_view(self) -> None:
@@ -344,56 +348,45 @@ class CycleView(DigiView):
         elif keymap.navdown.pressed:
             self.navdown()
 
-    def navup(self) -> None:
-        self.cycler.scroll(-1.0)
-        self.cycler.on_key(True, True)
-        arcade.play_sound(self.window.sounds["select"])
-
-    def navdown(self) -> None:
-        self.cycler.scroll(1.0)
-        self.cycler.on_key(False, True)
-        arcade.play_sound(self.window.sounds["select"])
-
     @shows_errors
     @ignore_imgui
     def on_key_release(self, symbol: int, modifiers: int) -> None:
         super().on_key_release(symbol, modifiers)
         if keymap.navup.released:
-                self.cycler.on_key(True, False)
+            self.cycler.release_up()
         elif keymap.navdown.released:
-                self.cycler.on_key(False, False)
+            self.cycler.release_down()
 
     def on_resize(self, width: int, height: int) -> None:
         super().on_resize(width, height)
-        if self.cycler is not None:
-            self.cycler.update_width(self.window.width)
-            self.cycler.update_height(self.window.height)
+        self.cycler.on_resize(width, height)
 
     @shows_errors
     @ignore_imgui
     def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int) -> None:
         # the scroll_y is negative because we are going from top down.
         self.cycler.speed_scroll(-scroll_y)
-        arcade.play_sound(self.window.sounds["select"])
+        self.sfx.select.play()
 
     @shows_errors
-    def on_update(self, delta_time) -> None:
+    def on_update(self, delta_time: float) -> None:
         super().on_update(delta_time)
-        if self.cycler is None:
-            return
         self.cycler.update(delta_time)
         self.gum_wrapper.on_update(delta_time)
 
     @shows_errors
     def on_draw(self) -> None:
-        self.window.camera.use()
-        self.clear()
-
-        if self.cycler is None:
-            return
-
-        # Charm BG
-        self.gum_wrapper.draw()
-
+        super().predraw()
         self.cycler.draw()
-        super().on_draw()
+        self.gum_wrapper.draw()
+        super().postdraw()
+
+    def navup(self) -> None:
+        self.cycler.scroll(-1.0)
+        self.cycler.press_up()
+        self.sfx.select.play()
+
+    def navdown(self) -> None:
+        self.cycler.scroll(1.0)
+        self.cycler.press_down()
+        self.sfx.select.play()

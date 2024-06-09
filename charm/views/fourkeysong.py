@@ -6,7 +6,7 @@ import arcade
 import ndjson
 
 from charm.lib.anim import ease_circout, perc
-from charm.lib.charm import CharmColors, GumWrapper
+from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.errors import NoChartsError
 from charm.lib.gamemodes.four_key import FourKeyHighway, FourKeyEngine, load_note_texture
@@ -23,7 +23,7 @@ logger = logging.getLogger("charm")
 
 class FourKeySongView(DigiView):
     def __init__(self, path: Path, back: DigiView):
-        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, back=back)
+        super().__init__(fade_in=1, back=back)
         self.song_path = path
         self.tracks: TrackCollection = None
         self.highway: FourKeyHighway = None
@@ -72,7 +72,7 @@ class FourKeySongView(DigiView):
             self.judgement_land_pos = self.judgement_sprite.center_y
             self.judgement_sprite.alpha = 0
 
-        self.window.update_rp("Playing 4K")
+        self.window.presence.set("Playing 4K")
 
         if (self.song_path / "modchart.ndjson").exists():
             with open(self.song_path / "modchart.ndjson") as p:
@@ -129,9 +129,9 @@ class FourKeySongView(DigiView):
             self.tracks.seek(self.tracks.time - 5)
         elif keymap.seek_forward.pressed:
             self.tracks.seek(self.tracks.time + 5)
-        elif self.window.debug and keymap.debug_toggle_hit_window.pressed:
+        elif self.window.debug.enabled and keymap.debug_toggle_hit_window.pressed:
             self.highway.show_hit_window = not self.highway.show_hit_window
-        elif self.window.debug and keymap.debug_show_results.pressed:
+        elif self.window.debug.enabled and keymap.debug_show_results.pressed:
             self.show_results()
 
         self.on_key_something(symbol, modifiers, True)
@@ -147,8 +147,8 @@ class FourKeySongView(DigiView):
 
     def show_results(self) -> None:
         self.tracks.close()
-        results_view = ResultsView(back = self.back)
-        results_view.setup(self.engine.generate_results())
+        results_view = ResultsView(back = self.back, self.engine.generate_results())
+        results_view.setup()
         self.window.show_view(results_view)
 
     def on_resize(self, width: int, height: int) -> None:
@@ -162,7 +162,7 @@ class FourKeySongView(DigiView):
         self.judgement_sprite.center_x = self.window.center_x
         self.judgement_sprite.center_y = self.window.height / 4
 
-    def on_update(self, delta_time) -> None:
+    def on_update(self, delta_time: float) -> None:
         super().on_update(delta_time)
 
         if not self.tracks.loaded:
@@ -208,10 +208,7 @@ class FourKeySongView(DigiView):
         self.gum_wrapper.on_update(delta_time)
 
     def on_draw(self) -> None:
-        self.window.camera.use()
-        self.clear()
-
-        # Charm BG
+        super().predraw()
         self.gum_wrapper.draw()
 
         self.highway.draw()
@@ -221,5 +218,4 @@ class FourKeySongView(DigiView):
 
         if self.countdown > 0:
             self.countdown_text.draw()
-
-        super().on_draw()
+        super().postdraw()

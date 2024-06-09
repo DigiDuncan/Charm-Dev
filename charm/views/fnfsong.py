@@ -16,14 +16,13 @@ from charm.lib.utils import map_range
 from charm.objects.lyric_animator import LyricAnimator
 from charm.objects.timer import Timer
 from charm.views.resultsview import ResultsView
-from charm.lib.keymap import keymap
 
 logger = logging.getLogger("charm")
 
 
 class FNFSongView(DigiView):
     def __init__(self, path: Path, back: DigiView):
-        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, back=back)
+        super().__init__(fade_in=1, back=back)
         self.path = path
         self.engine: FNFEngine = None
         self.highway_1: FourKeyHighway = None
@@ -54,7 +53,6 @@ class FNFSongView(DigiView):
     @shows_errors
     def setup(self) -> None:
         super().presetup()
-
         with LogSection(logger, "loading song data"):
             path = self.path
             self.songdata = FNFSong.parse(path)
@@ -146,7 +144,7 @@ class FNFSongView(DigiView):
             self.timer.center_x = self.window.width // 2
             self.timer.center_y = 25
 
-            self.window.update_rp(f"Playing {self.songdata.metadata.title}")
+            self.window.presence.set(f"Playing {self.songdata.metadata.title}")
 
             self.success = True
 
@@ -166,8 +164,10 @@ class FNFSongView(DigiView):
         self.judgement_sprite.center_y = self.window.height / 4
 
     def on_show_view(self) -> None:
-        if self.success is False:
-            self.window.show_view(self.back)
+        if not self.success:
+            if self.back:
+                self.window.show_view(self.back)
+            return
         self.tracks.play()
         super().on_show_view()
 
@@ -203,9 +203,9 @@ class FNFSongView(DigiView):
             self.distractions = not self.distractions
         elif keymap.toggle_chroma.pressed:
             self.chroma_key = not self.chroma_key
-        elif self.window.debug and keymap.debug_toggle_hit_window.pressed:
+        elif self.window.debug.enabled and keymap.debug_toggle_hit_window.pressed:
             self.highway_1.show_hit_window = not self.highway_1.show_hit_window
-        elif self.window.debug and keymap.debug_show_results.pressed:
+        elif self.window.debug.enabled and keymap.debug_show_results.pressed:
             self.show_results()
         self.on_key_something(symbol, modifiers, True)
 
@@ -220,13 +220,20 @@ class FNFSongView(DigiView):
 
     def show_results(self) -> None:
         self.tracks.close()
-        results_view = ResultsView(back = self.back)
-        results_view.setup(self.engine.generate_results())
+        results_view = ResultsView(back = self.back, self.engine.generate_results())
+        results_view.setup()
         self.window.show_view(results_view)
 
     @shows_errors
-    def on_update(self, delta_time) -> None:
+    def on_update(self, delta_time: float) -> None:
         super().on_update(delta_time)
+        if self.chroma_key:
+            bg_color = arcade.color.BLUE
+        elif not self.distractions:
+            bg_color = arcade.color.SLATE_GRAY
+        else:
+            bg_color = CharmColors.FADED_GREEN
+        arcade.set_background_color(bg_color)
 
         if not self.tracks.loaded:
             return
@@ -262,7 +269,7 @@ class FNFSongView(DigiView):
             if self.grade_text._label.text != f"{self.engine.fc_type} | {round(self.engine.accuracy * 100, 2)}% ({self.engine.grade})":
                 self.grade_text._label.text = f"{self.engine.fc_type} | {round(self.engine.accuracy * 100, 2)}% ({self.engine.grade})"
 
-        if self.engine.has_died and not self.window.debug:
+        if self.engine.has_died and not self.window.debug.enabled:
             self.tracks.close()
             self.go_back()
 
@@ -313,14 +320,7 @@ class FNFSongView(DigiView):
 
     @shows_errors
     def on_draw(self) -> None:
-        self.window.camera.use()
-        if self.chroma_key:
-            self.clear(arcade.color.BLUE)
-        elif not self.distractions:
-            self.clear(arcade.color.SLATE_GRAY)
-        else:
-            self.clear()
-
+        super().predraw()
         # Charm BG
         if self.distractions and not self.chroma_key:
             self.gum_wrapper.draw()
@@ -351,5 +351,4 @@ class FNFSongView(DigiView):
             self.lyric_animator.draw()
 
         self.timer.draw()
-
-        super().on_draw()
+        super().postdraw()

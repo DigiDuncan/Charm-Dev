@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Concatenate, Protocol, cast, runtime_checkable
+from typing import Concatenate
 from collections.abc import Callable
 
 from dataclasses import dataclass
@@ -9,15 +9,15 @@ import traceback
 
 import arcade
 from imgui_bundle import imgui
-from arcade import LBWH, LRBT, View
-from arcade.types import RGBOrA255, RGBA255
+from arcade import LBWH, LRBT, Rect, View
 
+from charm.lib.charm import CharmColors
 from charm.lib.component_manager import ComponentManager
-from charm.lib.settings import settings
 from charm.lib.anim import ease_linear, perc
 from charm.lib.digiwindow import DigiWindow
 from charm.lib.errors import CharmException, GenericError
 from charm.lib.keymap import keymap
+from charm.lib.sfxmanager import SfxManager
 
 logger = logging.getLogger("charm")
 
@@ -43,10 +43,11 @@ def shows_errors[S: DigiView, **P](fn: Callable[Concatenate[S, P], None]) -> Cal
             logger.debug(traceback.format_exc())
     return wrapper
 
+
 def ignore_imgui[**P](fn: Callable[P, None]) -> Callable[P, None]:
     @functools.wraps(fn)
     def wrapper(*args: P.args, **kwargs: P.kwargs) -> None:
-        if imgui.is_window_hovered(imgui.HOVERED_ANY_WINDOW):
+        if imgui.is_window_hovered(imgui.HoveredFlags_.any_window.value):
             return
         fn(*args, **kwargs)
     return wrapper
@@ -63,18 +64,20 @@ class DigiView(View):
         self,
         *,
         back: DigiView | None = None,
-        fade_in: float = 0,
-        bg_color: RGBOrA255 = (0, 0, 0)
+        fade_in: float = 0
     ):
         super().__init__()
         self.window: DigiWindow
         self.back = back
         self.shown = False
-        self.fade_in = fade_in
-        self.bg_color = bg_color
         self._errors: list[ErrorPopup] = []  # [error, seconds to show]
         self.local_start: float = 0
+        self.fader = Fader(self, fade_in)
         self.components = ComponentManager()
+
+    @property
+    def sfx(self) -> SfxManager:
+        return self.window.sfx
 
     @property
     def size(self) -> tuple[int, int]:
@@ -89,12 +92,12 @@ class DigiView(View):
         error.sprite.center_x += offset
         error.sprite.center_y += offset
         self._errors.append(ErrorPopup(error, self.local_time + 3))
-        arcade.play_sound(self.window.sounds[f"error-{error.icon_name}"])
+        self.sfx.error.play()
 
     def presetup(self) -> None:
         """Must be called at the beginning of setup()"""
         self.local_start = self.window.time
-        arcade.set_background_color(cast(RGBA255, (0,0,0))) # TODO: Fix Arcade typing
+        arcade.set_background_color(CharmColors.FADED_GREEN)
         self.components.reset()
 
     def setup(self) -> None:
@@ -111,12 +114,13 @@ class DigiView(View):
         self.window.camera.position = self.window.center
         self.window.camera.projection = LRBT(-width/2, width/2, -height/2, height/2)
         self.window.camera.viewport = LBWH(0, 0, width, height)
+        self.fader.on_resize(width, height)
         self.components.on_resize(width, height)
 
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         keymap.on_key_press(symbol, modifiers)
         if keymap.debug.pressed:
-            self.window.debug = not self.window.debug
+            self.window.debug.enabled = not self.window.debug.enabled
         elif keymap.fullscreen.pressed:
             self.window.set_fullscreen(not self.window.fullscreen)
         elif keymap.mute.pressed:
@@ -129,27 +133,59 @@ class DigiView(View):
 
     def on_update(self, delta_time: float) -> None:
         self._errors = [popup for popup in self._errors if popup.expiry < self.local_time]
+        self.fader.on_update(delta_time)
         self.components.on_update(delta_time)
 
+    def predraw(self) -> None:
+        self.window.camera.use()
+        self.clear()
+
     def on_draw(self) -> None:
-        if self.local_time <= self.fade_in:
-            alpha = ease_linear(255, 0, perc(0, self.fade_in, self.local_time))
-            arcade.draw_lrbt_rectangle_filled(0, self.window.width, 0, self.window.height,
-                                             (0, 0, 0, int(alpha)))
+        self.predraw()
+        self.postdraw()
 
-        self.window.overlay_draw()
-
+    def postdraw(self) -> None:
+        self.components.on_draw()
         for popup in self._errors:
             popup.error.sprite.draw()
-        self.components.on_draw()
+        self.window.debug.draw()
+        self.fader.on_draw()
 
     def go_back(self) -> None:
         if self.back is None:
             return
         self.back.setup()
         self.window.show_view(self.back)
-        arcade.play_sound(self.window.sounds["back"], volume = settings.get_volume("sound"))
+        self.sfx.back.play()
 
     def goto(self, dest: DigiView) -> None:
         dest.setup()
         self.window.show_view(dest)
+
+
+class Fader:
+    def __init__(self, view: DigiView, fade_in: float):
+        self.view = view
+        self.fade_in = fade_in
+        self.color = (0, 0, 0, 255)
+        self.screen: Rect
+        self.on_resize(*self.view.size)
+
+    @property
+    def visible(self) -> bool:
+        return self.view.local_time <= self.fade_in
+
+    def on_update(self, delta_time: float) -> None:
+        if not self.visible:
+            return
+        p = perc(0, self.fade_in, self.view.local_time)
+        alpha = ease_linear(255, 0, p)
+        self.color = (0, 0, 0, int(alpha))
+
+    def on_resize(self, width: int, height: int) -> None:
+        self.screen = LBWH(0, 0, width, height)
+
+    def on_draw(self) -> None:
+        if not self.visible:
+            return
+        arcade.draw_rect_filled(self.screen, self.color)

@@ -2,8 +2,9 @@ import importlib.resources as pkg_resources
 import logging
 
 import arcade
+from pyglet.media import Player
 
-from charm.lib.charm import CharmColors, GumWrapper
+from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.generic.results import Results, Heatmap
 from charm.lib import paths
@@ -17,18 +18,16 @@ logger = logging.getLogger("charm")
 
 
 class ResultsView(DigiView):
-    def __init__(self, back: DigiView):
-        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, back=back)
-        self.song = None
-        self.results: Results
-
-    @shows_errors
-    def setup(self, results: Results) -> None:
-        super().presetup()
+    def __init__(self, back: DigiView, results: Results):
+        super().__init__(fade_in=1, back=back)
+        self.song: Player
         self.results = results
 
+    @shows_errors
+    def setup(self) -> None:
+        super().presetup()
         with pkg_resources.path(charm.data.audio, "music-results.mp3") as p:
-            self._song = arcade.Sound(p)
+            self.song_sound = arcade.Sound(p)
 
         with pkg_resources.path(charm.data.images.skins.base, f"grade-{self.results.grade}.png") as p:
             self.grade_sprite = arcade.Sprite(p)
@@ -57,23 +56,19 @@ class ResultsView(DigiView):
         self.heatmap.bottom = 10
         self.heatmap.right = self.window.width - 10
 
-        self.sprites = arcade.SpriteList()
-        self.sprites.append(self.heatmap)
-
         # Save score
         ScoreDB(paths.scorespath).add_score(self.results.chart.hash, self.results)
 
-        # Generate "gum wrapper" background
         self.gum_wrapper = GumWrapper(self.size)
         self.success = True
-
         super().postsetup()
 
     @shows_errors
     def on_show_view(self) -> None:
         self.window.theme_song.volume = 0
-        VOLUME = 1
-        self.song = arcade.play_sound(self._song, VOLUME, loop=False)
+        song = arcade.play_sound(self.song_sound, 0.25, loop=False)
+        if song is not None:
+            self.song = song
 
     @shows_errors
     @ignore_imgui
@@ -87,23 +82,17 @@ class ResultsView(DigiView):
         super().go_back()
 
     @shows_errors
-    def on_update(self, delta_time) -> None:
+    def on_update(self, delta_time: float) -> None:
         super().on_update(delta_time)
-
         self.gum_wrapper.on_update(delta_time)
 
     @shows_errors
     def on_draw(self) -> None:
-        self.window.camera.use()
-        self.clear()
-
-        # Charm BG
+        super().predraw()
         self.gum_wrapper.draw()
-
         self.grade_sprite.draw()
         self.score_text.draw()
         self.data_text.draw()
         self.judgements_text.draw()
-        self.sprites.draw()
-
-        super().on_draw()
+        self.heatmap.draw()
+        super().postdraw()

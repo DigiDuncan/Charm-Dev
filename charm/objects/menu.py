@@ -7,6 +7,7 @@ from arcade.types import Color
 import PIL.Image, PIL.ImageOps  # noqa: E401
 
 import charm.data.icons
+from charm.lib import settings
 from charm.lib.anim import ease_circout, perc
 from charm.lib.charm import CharmColors, generate_missing_texture_image
 from charm.lib.digiview import DigiView
@@ -39,7 +40,7 @@ class MainMenuItem(Sprite):
             return False
         self.goto.setup()
         self.window.show_view(self.goto)
-        arcade.play_sound(self.window.sounds["valid"])
+        self.sfx.valid.play()
         return True
 
 

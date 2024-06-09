@@ -1,7 +1,7 @@
 import arcade
 
 from charm.lib.anim import ease_quartout, perc
-from charm.lib.charm import CharmColors, GumWrapper
+from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.errors import TestError
 from charm.lib.keymap import keymap
@@ -17,12 +17,11 @@ from charm.views.spritetest import SpriteTestView
 from charm.views.taikotest import TaikoSongView
 from charm.views.visualizer import VisualizerView
 from charm.views.perspectivetest import PerspectiveView
-from charm.lib.keymap import keymap
 
 
 class MainMenuView(DigiView):
     def __init__(self, back: DigiView):
-        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, back=back)
+        super().__init__(fade_in=1, back=back)
 
     def setup(self) -> None:
         super().presetup()
@@ -46,8 +45,7 @@ class MainMenuView(DigiView):
             MainMenuItem("Scott Test", "test", VisualizerView(back=self))
         ])
 
-        self.window.current_rp_state = "In Menus"
-        self.window.update_rp("In Menus")
+        self.window.presence.set("In Menus")
 
         self.load_countdown = None
 
@@ -78,7 +76,7 @@ class MainMenuView(DigiView):
     @ignore_imgui
     def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int) -> None:
         self.menu.selected_id += int(scroll_y)
-        arcade.play_sound(self.window.sounds["select"])
+        self.sfx.select.play()
 
     @shows_errors
     @ignore_imgui
@@ -113,9 +111,7 @@ class MainMenuView(DigiView):
 
     @shows_errors
     def on_draw(self) -> None:
-        self.window.camera.use()
-        self.clear()
-
+        super().predraw()
         # Charm BG
         self.gum_wrapper.draw()
 
@@ -123,5 +119,4 @@ class MainMenuView(DigiView):
         arcade.draw_lrbt_rectangle_filled(left, self.size[0], self.size[1] // 4, (self.size[1] // 4) * 3, arcade.color.WHITE[:3] + (127,))
 
         self.menu.draw()
-
-        super().on_draw()
+        super().postdraw()

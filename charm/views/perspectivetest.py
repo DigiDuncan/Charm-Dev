@@ -20,7 +20,7 @@ CAM_SPEED = 400.0
 
 class PerspectiveView(DigiView):
     def __init__(self, back: DigiView):
-        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, back=back)
+        super().__init__(fade_in=1, back=back)
 
         with pkg_resources.path(charm.data.images, "no_image_found.png") as p:
             self.bingo = arcade.Sprite(p, center_y=250)
@@ -71,20 +71,16 @@ class PerspectiveView(DigiView):
                 return
 
     @shows_errors
-    def on_update(self, delta_time) -> None:
+    def on_update(self, delta_time: float) -> None:
         super().on_update(delta_time)
 
         self.gum_wrapper.on_update(delta_time)
 
     @shows_errors
     def on_draw(self) -> None:
-        self.window.camera.use()
-        self.clear()
-
-        # Charm BG
+        super().predraw()
         self.gum_wrapper.draw()
 
         with self.proj.activate():
             self.asdsa.draw(pixelated=True)
-
-        super().on_draw()
+        super().postdraw()

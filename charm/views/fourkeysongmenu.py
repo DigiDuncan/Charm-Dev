@@ -9,24 +9,21 @@ import arcade
 import charm.data.audio
 import charm.data.images
 from charm.lib.anim import ease_quartout, perc
-from charm.lib.charm import CharmColors, GumWrapper
+from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.gamemodes.sm import SMSong
-from charm.lib.generic.song import Song
 from charm.lib.keymap import keymap
 from charm.lib.paths import songspath
-from charm.lib.settings import settings
 from charm.objects.gif import GIF
 from charm.objects.songmenu import SongMenu
 from charm.views.fourkeysong import FourKeySongView
-from charm.lib.keymap import keymap
 
 logger = logging.getLogger("charm")
 
 
 class FourKeySongMenuView(DigiView):
     def __init__(self, back: DigiView):
-        super().__init__(fade_in=0.5, bg_color=CharmColors.FADED_GREEN, back=back)
+        super().__init__(fade_in=0.5, back=back)
 
         self.album_art_buffer = self.window.width // 20
         self.static_time = 0.25
@@ -36,8 +33,6 @@ class FourKeySongMenuView(DigiView):
     @shows_errors
     def setup(self) -> None:
         super().presetup()
-
-        # Generate "gum wrapper" background
         self.gum_wrapper = GumWrapper(self.size)
         self.songs = []
         rootdir = Path(songspath / "4k")
@@ -78,7 +73,7 @@ class FourKeySongMenuView(DigiView):
         super().on_show_view()
 
     @shows_errors
-    def on_update(self, delta_time) -> None:
+    def on_update(self, delta_time: float) -> None:
         super().on_update(delta_time)
 
         self.gum_wrapper.on_update(delta_time)
@@ -98,7 +93,7 @@ class FourKeySongMenuView(DigiView):
         elif keymap.navdown.pressed:
             self.navdown()
         elif keymap.start.pressed:
-            arcade.play_sound(self.window.sounds["valid"], volume = settings.get_volume("sound"))
+            self.sfx.valid.play()
             songview = FourKeySongView(self.menu.selected.song.path, back=self)
             songview.setup()
             self.window.show_view(songview)
@@ -113,7 +108,7 @@ class FourKeySongMenuView(DigiView):
 
     def nav(self, d: Literal[-1, 1]) -> None:
         self.menu.selected_id += d
-        arcade.play_sound(self.window.sounds["select"], volume = settings.get_volume("sound"))
+        self.sfx.select.play()
         self.selection_changed = self.local_time
         self.album_art.texture = self.menu.selected.album_art
 
@@ -121,22 +116,19 @@ class FourKeySongMenuView(DigiView):
     @ignore_imgui
     def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int) -> None:
         self.menu.selected_id += int(scroll_y)
-        arcade.play_sound(self.window.sounds["select"])
+        self.sfx.select.play()
 
     @shows_errors
     @ignore_imgui
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int) -> None:
-        arcade.play_sound(self.window.sounds["valid"])
+        self.sfx.valid.play()
         songview = FourKeySongView(self.menu.selected.song.path, back=self)
         songview.setup()
         self.window.show_view(songview)
 
     @shows_errors
     def on_draw(self) -> None:
-        self.window.camera.use()
-        self.clear()
-
-        # Charm BG
+        super().predraw()
         self.gum_wrapper.draw()
 
         if self.menu.items:
@@ -150,5 +142,4 @@ class FourKeySongMenuView(DigiView):
                 self.album_art.draw()
         else:
             self.nothing_text.draw()
-
-        super().on_draw()
+        super().postdraw()

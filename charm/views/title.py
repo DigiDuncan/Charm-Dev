@@ -7,7 +7,6 @@ import importlib.resources as pkg_resources
 import random
 
 import arcade
-from imgui_bundle import imgui
 import pyglet
 
 import charm.data.audio
@@ -17,10 +16,8 @@ from charm.lib.charm import CharmColors, GumWrapper
 from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.digiwindow import DigiWindow, Eggs
 from charm.lib.keymap import keymap
-from charm.lib.settings import settings
 from charm.lib.utils import img_from_resource, typewriter
 from charm.views.mainmenu import MainMenuView
-from charm.lib.keymap import keymap
 
 FADE_DELAY = 1
 SWITCH_DELAY = 0.5 + FADE_DELAY
@@ -28,7 +25,7 @@ SWITCH_DELAY = 0.5 + FADE_DELAY
 
 class TitleView(DigiView):
     def __init__(self):
-        super().__init__(bg_color=CharmColors.FADED_GREEN)
+        super().__init__()
         self.splash_label: SplashLogo | ClownLogo
         self.press_label: PressLabel
         self.goto_fade_time: float | None
@@ -43,7 +40,6 @@ class TitleView(DigiView):
         self.fade_volume = None
 
         self.window.theme_song.seek(self.local_time + 3)
-        arcade.set_background_color(CharmColors.FADED_GREEN)
 
         # Generate "gum wrapper" background
         self.components.register(GumWrapper(self.size))
@@ -61,7 +57,6 @@ class TitleView(DigiView):
         self.press_label = self.components.register(PressLabel(self, x=self.window.width // 2, y=self.window.height // 4))
 
         self.components.register(WelcomeLabel(x=self.window.width // 2, y=6))
-
         super().postsetup()
 
     def generate_splash(self) -> ClownLogo | SplashLogo:
@@ -80,17 +75,15 @@ class TitleView(DigiView):
         super().on_key_press(symbol, modifiers)
         if keymap.start.pressed:
             self.start()
-        elif self.window.debug and keymap.log_sync.pressed:
+        elif self.window.debug.enabled and keymap.log_sync.pressed:
             self.splash_label.next_splash()
-        elif self.window.debug and keymap.seek_zero.pressed:
+        elif self.window.debug.enabled and keymap.seek_zero.pressed:
             self.window.theme_song.seek(3)
             self.setup()
 
     @shows_errors
     @ignore_imgui
     def on_mouse_press(self, x: int, y: int, button: int, modifiers: int) -> None:
-        if imgui.is_window_hovered(imgui.HOVERED_ANY_WINDOW):
-            return
         if button == arcade.MOUSE_BUTTON_LEFT:
             self.start()
 
@@ -101,17 +94,10 @@ class TitleView(DigiView):
         if self.goto_fade_time is not None and self.goto_switch_time is not None and self.fade_volume is not None:
             if self.goto_fade_time <= self.local_time < self.goto_switch_time:
                 # Fade music
-                p = perc(self.goto_fade_time, self.goto_switch_time, self.local_time)
-                self.window.theme_song.volume = ease_linear(self.fade_volume, self.fade_volume / 2, p)
+                self.window.theme_song.volume = ease_linear(self.fade_volume, self.fade_volume / 2, perc(self.goto_fade_time, self.goto_switch_time, self.local_time))
             if self.local_time >= self.goto_switch_time:
                 # Go to main menu
                 self.goto(MainMenuView(back=self))
-
-    @shows_errors
-    def on_draw(self) -> None:
-        self.window.camera.use()
-        self.clear()
-        super().on_draw()
 
     def start(self) -> None:
         if self.goto_fade_time is not None:
@@ -119,8 +105,9 @@ class TitleView(DigiView):
         self.press_label.going = True
         self.goto_fade_time = self.local_time + FADE_DELAY
         self.goto_switch_time = self.local_time + SWITCH_DELAY
-        arcade.play_sound(self.window.sounds["valid"], volume = settings.get_volume("sound"))
+        self.sfx.valid.play()
         self.fade_volume = cast(float, self.window.theme_song.volume)
+
 
 class ClownLogo(arcade.Text):
     def __init__(self, x: int, y: int):
@@ -283,4 +270,4 @@ class LogoSprite(arcade.Sprite):
         self.bottom = height // 2
 
     def on_update(self, delta_time: float = 1 / 60) -> None:
-        self.scale = 0.3 + (self.window.beat_animator.factor * 0.025)
+        self.scale = 0.3 + (self.window.theme_song.beat_factor * 0.025)

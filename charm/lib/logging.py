@@ -3,6 +3,7 @@ from digiformatter import logger as digilogger
 from charm.lib.debug_menu import ImGuiHandler
 
 # https://stackoverflow.com/questions/2183233/how-to-add-a-custom-loglevel-to-pythons-logging-facility/35804945#35804945
+# TODO: There's got to be a better way to do this
 def add_logging_level(level_name, level_num, method_name=None):
     """
     Comprehensively adds a new logging level to the `logging` module and the

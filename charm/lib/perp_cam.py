@@ -56,7 +56,6 @@ class PerspectiveProjector:
             self._window.width / self._window.height,  # Aspect
             60,  # Field of View,
             0.01, 100.0,  # near, # far
-            (0, 0, self._window.width, self._window.height)  # Viewport
         )
 
     @property

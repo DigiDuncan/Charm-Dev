@@ -16,7 +16,7 @@ class BPMAnimator:
 
         self.events_by_time = Index(events, "time")
 
-    def update(self, time: float = None) -> None:
+    def update(self, time: float) -> None:
         """Syncs the animator to the current song time."""
         old_bpm = self.current_bpm
         self.t = time

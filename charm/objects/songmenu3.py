@@ -12,6 +12,7 @@ from pyglet.graphics import Batch
 
 import charm.data.images
 from charm.lib.anim import EasingFunction, ease_linear, ease_quadinout, perc
+from charm.lib.digiwindow import DigiWindow
 from charm.lib.generic.song import Metadata
 from charm.lib.types import Seconds
 from charm.lib.utils import clamp
@@ -309,7 +310,7 @@ class ListCycle:
 @deprecated("Unused")
 class SongMenu:
     def __init__(self, songs: list[Metadata] = None):
-        self.window = arcade.get_window()
+        self.window: DigiWindow = arcade.get_window()
         self.songs: list[Metadata] = songs
 
         with pkg_resources.path(charm.data.images, "menu_card.png") as p:
@@ -326,11 +327,11 @@ class SongMenu:
             case arcade.key.UP:
                 self.cycler.scroll(-1.0)
                 self.cycler.on_key(True, True)
-                arcade.play_sound(self.window.sounds["select"])
+                self.sfx.select.play()
             case arcade.key.DOWN:
                 self.cycler.scroll(1.0)
                 self.cycler.on_key(False, True)
-                arcade.play_sound(self.window.sounds["select"])
+                self.sfx.select.play()
 
     def on_key_release(self, symbol: int, modifiers: int):
         match symbol:
@@ -342,7 +343,7 @@ class SongMenu:
     def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int):
         # the scroll_y is negative because we are going from top down.
         self.cycler.speed_scroll(-scroll_y)
-        arcade.play_sound(self.window.sounds["select"])
+        self.sfx.select.play()
 
     def update_size(self, new_width: int | None = 0, new_height: int | None = 0):
         if new_width is not None:

@@ -2,7 +2,7 @@ import logging
 
 import arcade
 
-from charm.lib.charm import CharmColors, GumWrapper
+from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView
 from charm.objects.songmenu2 import SongMenu
 from charm.lib.keymap import keymap
@@ -12,7 +12,7 @@ logger = logging.getLogger("charm")
 
 class NewMenuView(DigiView):
     def __init__(self, back: DigiView):
-        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, back=back)
+        super().__init__(fade_in=1, back=back)
         self.song = None
         self.menu: SongMenu = None
 
@@ -75,9 +75,7 @@ class NewMenuView(DigiView):
         self.gum_wrapper.on_update(delta_time)
 
     def on_draw(self) -> None:
-        self.window.camera.use()
-        self.clear()
-
+        super().predraw()
         # Charm BG
         self.gum_wrapper.draw()
 
@@ -86,5 +84,4 @@ class NewMenuView(DigiView):
 
         arcade.draw_text(f"{self.menu.min_factor=}\n{self.menu.max_factor=}\n{self.menu.offset=}\n{self.menu.in_sin=}\n{self.menu.out_sin=}\n{self.menu.shift=}\n{self.menu.move_forward=}",
                          self.window.width, self.window.height, arcade.color.BLACK, width = self.window.width, align = "right", anchor_x = "right", anchor_y = "top", multiline = True, font_size = 16)
-
-        super().on_draw()
+        super().postdraw()

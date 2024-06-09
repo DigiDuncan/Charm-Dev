@@ -38,10 +38,7 @@ REQUIRED = 1
 SINGLEBIND = 2
 
 # CONTEXTS
-Context = Literal["global", "hero", "fourkey"]
-GLOBAL = "global"
-HERO = "hero"
-FOURKEY = "fourkey"
+Context = Literal["global", "hero", "fourkey", "menu", "parallax"]
 ALL = None
 
 ActionJson = tuple[KeyMod, ...]
@@ -77,7 +74,7 @@ class KeyStateManager:
 
 
 class Action:
-    def __init__(self, keymap: KeyMap, id: str, defaults: Iterable[KeyMod | Key], flags: int = 0, context: Context = GLOBAL) -> None:
+    def __init__(self, keymap: KeyMap, id: str, defaults: Iterable[KeyMod | Key], flags: int = 0, context: Context = "global") -> None:
         self._keymap = keymap
         self.id = id
         self._defaults: list[KeyMod] = [to_keymod(k) for k in defaults]
@@ -195,42 +192,51 @@ class KeyMap:
 
         self.start =         Action(self, 'start',         [RETURN, ENTER],     REQUIRED)
         self.back =          Action(self, 'back',          [ESCAPE, BACKSPACE], REQUIRED)
-        self.navup =         Action(self, 'navup',         [UP],                REQUIRED)
-        self.navdown =       Action(self, 'navdown',       [DOWN],              REQUIRED)
-        self.navleft =       Action(self, 'navleft',       [LEFT],              SINGLEBIND)
-        self.navright =      Action(self, 'navright',      [RIGHT],             SINGLEBIND)
-        self.seek_zero =     Action(self, 'seek_zero',     [KEY_0],             SINGLEBIND)
-        self.seek_backward = Action(self, 'seek_backward', [MINUS],             SINGLEBIND)
-        self.seek_forward =  Action(self, 'seek_forward',  [EQUAL],             SINGLEBIND)
-        self.pause =         Action(self, 'pause',         [SPACE],             REQUIRED | SINGLEBIND)
-        self.fullscreen =    Action(self, 'fullscreen',    [F11],               REQUIRED | SINGLEBIND)
-        self.mute =          Action(self, 'mute',          [M],                 REQUIRED | SINGLEBIND)
+        self.pause =         Action(self, 'pause',         [SPACE],             REQUIRED)
+        self.fullscreen =    Action(self, 'fullscreen',    [F11],               REQUIRED)
+        self.mute =          Action(self, 'mute',          [M],                 REQUIRED)
+
+        self.navup =         Action(self, 'navup',         [UP],                REQUIRED, context="menu")
+        self.navdown =       Action(self, 'navdown',       [DOWN],              REQUIRED, context="menu")
+        self.navleft =       Action(self, 'navleft',       [LEFT],              REQUIRED, context="menu")
+        self.navright =      Action(self, 'navright',      [RIGHT],             REQUIRED, context="menu")
+
+        self.seek_zero =     Action(self, 'seek_zero',     [KEY_0])
+        self.seek_backward = Action(self, 'seek_backward', [MINUS])
+        self.seek_forward =  Action(self, 'seek_forward',  [EQUAL])
 
         self.debug =                   Action(self, 'debug',                   [GRAVE])
-        self.log_sync =                Action(self, 'log_sync',                [S],              SINGLEBIND)
-        self.toggle_distractions =     Action(self, 'toggle_distractions',     [KEY_8],          SINGLEBIND)
-        self.toggle_chroma =           Action(self, 'toggle_chroma',           [B],              SINGLEBIND)
-        self.debug_toggle_hit_window = Action(self, 'debug_toggle_hit_window', [(H, MOD_SHIFT)], SINGLEBIND)
-        self.debug_show_results =      Action(self, 'debug_show_results',      [(R, MOD_SHIFT)], SINGLEBIND)
-        self.dump_textures =           Action(self, 'dump_textures',           [E],              SINGLEBIND)
-        self.debug_toggle_flags =      Action(self, 'debug_toggle_flags',      [F],              SINGLEBIND)
-        self.debug_e =                 Action(self, 'debug_e',                 [E],              SINGLEBIND)
-        self.debug_f24 =               Action(self, 'debug_f24',               [F24],            SINGLEBIND)
-        self.toggle_show_text =        Action(self, 'toggle_show_text',        [T],              SINGLEBIND)
+        self.log_sync =                Action(self, 'log_sync',                [S]            )
+        self.toggle_distractions =     Action(self, 'toggle_distractions',     [KEY_8]        )
+        self.toggle_chroma =           Action(self, 'toggle_chroma',           [B]            )
+        self.debug_toggle_hit_window = Action(self, 'debug_toggle_hit_window', [(H, MOD_SHIFT)])
+        self.debug_show_results =      Action(self, 'debug_show_results',      [(R, MOD_SHIFT)])
+        self.dump_textures =           Action(self, 'dump_textures',           [E]            )
+        self.debug_toggle_flags =      Action(self, 'debug_toggle_flags',      [F]            )
+        self.debug_e =                 Action(self, 'debug_e',                 [E]            )
+        self.debug_f24 =               Action(self, 'debug_f24',               [F24]          )
+        self.toggle_show_text =        Action(self, 'toggle_show_text',        [T]            )
 
-        self.fourkey_1 =       Action(self, 'fourkey_1',       [D],      SINGLEBIND, context=FOURKEY)
-        self.fourkey_2 =       Action(self, 'fourkey_2',       [F],      SINGLEBIND, context=FOURKEY)
-        self.fourkey_3 =       Action(self, 'fourkey_3',       [J],      SINGLEBIND, context=FOURKEY)
-        self.fourkey_4 =       Action(self, 'fourkey_4',       [K],      SINGLEBIND, context=FOURKEY)
+        self.parallax_up =       Action(self, 'parallax_up',       [W],  REQUIRED,              context="parallax")
+        self.parallax_down =     Action(self, 'parallax_down',     [S],  REQUIRED,              context="parallax")
+        self.parallax_left =     Action(self, 'parallax_left',     [A],  REQUIRED,              context="parallax")
+        self.parallax_right =    Action(self, 'parallax_right',    [D],  REQUIRED,              context="parallax")
+        self.parallax_zoom_in =  Action(self, 'parallax_zoom_in',  [R],  REQUIRED,              context="parallax")
+        self.parallax_zoom_out = Action(self, 'parallax_zoom_out', [F],  REQUIRED,              context="parallax")
 
-        self.hero_1 =          Action(self, 'hero_1',          [KEY_1],  SINGLEBIND, context=HERO)
-        self.hero_2 =          Action(self, 'hero_2',          [KEY_2],  SINGLEBIND, context=HERO)
-        self.hero_3 =          Action(self, 'hero_3',          [KEY_3],  SINGLEBIND, context=HERO)
-        self.hero_4 =          Action(self, 'hero_4',          [KEY_4],  SINGLEBIND, context=HERO)
-        self.hero_5 =          Action(self, 'hero_5',          [KEY_5],  SINGLEBIND, context=HERO)
-        self.hero_strum_up =   Action(self, 'hero_strum_up',   [UP],     SINGLEBIND, context=HERO)
-        self.hero_strum_down = Action(self, 'hero_strum_down', [DOWN],   SINGLEBIND, context=HERO)
-        self.hero_power =      Action(self, 'hero_power',      [RSHIFT], SINGLEBIND, context=HERO)
+        self.fourkey_1 =       Action(self, 'fourkey_1',       [D],      REQUIRED | SINGLEBIND, context="fourkey")
+        self.fourkey_2 =       Action(self, 'fourkey_2',       [F],      REQUIRED | SINGLEBIND, context="fourkey")
+        self.fourkey_3 =       Action(self, 'fourkey_3',       [J],      REQUIRED | SINGLEBIND, context="fourkey")
+        self.fourkey_4 =       Action(self, 'fourkey_4',       [K],      REQUIRED | SINGLEBIND, context="fourkey")
+
+        self.hero_1 =          Action(self, 'hero_1',          [KEY_1],  REQUIRED | SINGLEBIND, context="hero")
+        self.hero_2 =          Action(self, 'hero_2',          [KEY_2],  REQUIRED | SINGLEBIND, context="hero")
+        self.hero_3 =          Action(self, 'hero_3',          [KEY_3],  REQUIRED | SINGLEBIND, context="hero")
+        self.hero_4 =          Action(self, 'hero_4',          [KEY_4],  REQUIRED | SINGLEBIND, context="hero")
+        self.hero_5 =          Action(self, 'hero_5',          [KEY_5],  REQUIRED | SINGLEBIND, context="hero")
+        self.hero_strum_up =   Action(self, 'hero_strum_up',   [UP],     REQUIRED | SINGLEBIND, context="hero")
+        self.hero_strum_down = Action(self, 'hero_strum_down', [DOWN],   REQUIRED | SINGLEBIND, context="hero")
+        self.hero_power =      Action(self, 'hero_power',      [RSHIFT], REQUIRED | SINGLEBIND, context="hero")
 
         self.fourkey: FourKeyAliasMap = FourKeyAliasMap(self)
         self.hero: HeroAliasMap = HeroAliasMap(self)
@@ -275,11 +281,11 @@ class KeyMap:
     def get_actions(self, key: KeyMod | Key, context: Context | None = ALL) -> set[Action]:
         """Get all Actions mapped to a particular key"""
         key = to_keymod(key)
-        if context == GLOBAL:
+        if context == "global":
             context = ALL
         actions = self.keys[context].get(key, set())
         if context is not ALL:
-            actions |= set(self.keys[GLOBAL].get(key, set()))
+            actions |= set(self.keys["global"].get(key, set()))
         return actions
 
     def __str__(self) -> str:

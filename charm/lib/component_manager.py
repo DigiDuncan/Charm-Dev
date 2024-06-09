@@ -1,5 +1,6 @@
 from typing import Protocol, runtime_checkable
 
+from arcade import BasicSprite, SpriteList
 
 @runtime_checkable
 class HasOnUpdate(Protocol):
@@ -23,18 +24,23 @@ class ComponentManager:
     def __init__(self):
         self.has_on_update: list[HasOnUpdate] = []
         self.has_draw: list[HasDraw] = []
+        self.has_draw_sprites = SpriteList[BasicSprite]()
         self.has_on_resize: list[HasOnResize] = []
 
     def reset(self) -> None:
         self.has_on_update = []
         self.has_draw = []
+        self.has_draw_sprites = SpriteList[BasicSprite]()
         self.has_on_resize = []
 
     def register[T](self, component: T) -> T:
         if isinstance(component, HasOnUpdate):
             self.has_on_update.append(component)
         if isinstance(component, HasDraw):
-            self.has_draw.append(component)
+            if isinstance(component, BasicSprite):
+                self.has_draw_sprites.append(component)
+            else:
+                self.has_draw.append(component)
         if isinstance(component, HasOnResize):
             self.has_on_resize.append(component)
         return component
@@ -50,3 +56,4 @@ class ComponentManager:
     def on_draw(self) -> None:
         for component in self.has_draw:
             component.draw()
+        self.has_draw_sprites.draw()

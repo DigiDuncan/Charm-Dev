@@ -21,7 +21,7 @@ logger = logging.getLogger("charm")
 
 class TaikoSongView(DigiView):
     def __init__(self, back: DigiView):
-        super().__init__(fade_in=1, bg_color=CharmColors.FADED_GREEN, back=back)
+        super().__init__(fade_in=1, back=back)
         self.name = "Freedom Dive"
         self.song_path = paths.songspath / "osu" / self.name
         self.tracks: TrackCollection = None
@@ -53,7 +53,7 @@ class TaikoSongView(DigiView):
         self.text = arcade.Text("[LOADING]", -5, self.window.height - 5, color = arcade.color.BLACK, font_size = 24, align = "right", anchor_y="top", font_name = "bananaslip plus", width = self.window.width, multiline = True)
         self.countdown_text = arcade.Text("0", self.window.width / 2, self.window.height / 2, arcade.color.BLACK, 72, align="center", anchor_x="center", anchor_y="center", font_name = "bananaslip plus", width = 100)
 
-        self.window.update_rp("Playing Taiko")
+        self.window.presence.set("Playing Taiko")
 
         # Generate "gum wrapper" background
         self.gum_wrapper = GumWrapper(self.size)
@@ -92,9 +92,9 @@ class TaikoSongView(DigiView):
             self.tracks.seek(self.tracks.time - 5)
         elif keymap.seek_forward.pressed:
             self.tracks.seek(self.tracks.time + 5)
-        elif self.window.debug and keymap.debug_toggle_hit_window:
+        elif self.window.debug.enabled and keymap.debug_toggle_hit_window:
             self.highway.show_hit_window = not self.highway.show_hit_window
-        elif self.window.debug and keymap.debug_show_results:
+        elif self.window.debug.enabled and keymap.debug_show_results:
             self.show_results()
         self.on_key_something(symbol, modifiers, True)
 
@@ -109,8 +109,8 @@ class TaikoSongView(DigiView):
 
     def show_results(self) -> None:
         self.tracks.close()
-        results_view = ResultsView(back = self.back)
-        results_view.setup(self.engine.generate_results())
+        results_view = ResultsView(back = self.back, self.engine.generate_results())
+        results_view.setup()
         self.window.show_view(results_view)
 
     def on_resize(self, width: int, height: int) -> None:
@@ -150,9 +150,7 @@ class TaikoSongView(DigiView):
 
     @shows_errors
     def on_draw(self) -> None:
-        self.window.camera.use()
-        self.clear()
-
+        super().predraw()
         # Charm BG
         self.gum_wrapper.draw()
 
@@ -162,5 +160,4 @@ class TaikoSongView(DigiView):
 
         if self.countdown > 0:
             self.countdown_text.draw()
-
-        super().on_draw()
+        super().postdraw()

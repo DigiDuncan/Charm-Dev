@@ -3,12 +3,7 @@ from types import ModuleType
 from typing import cast
 
 import pyglet
-# Fix font
-pyglet.options["win32_disable_shaping"] = True
-
 import arcade_accelerate
-arcade_accelerate.bootstrap()
-
 import arcade
 import arcade.hitbox
 
@@ -21,12 +16,9 @@ from charm.lib.settings import settings
 from charm.lib.utils import pyglet_img_from_resource
 from charm.lib.digiwindow import DigiWindow
 
-from .views.title import TitleView
-
-SCREEN_WIDTH, SCREEN_HEIGHT = settings.resolution
-FPS_CAP = settings.fps
-SCREEN_TITLE = "Charm"
-
+# Fix font
+pyglet.options["win32_disable_shaping"] = True
+arcade_accelerate.bootstrap()
 
 with pkg_resources.path(charm.data.fonts, "bananaslipplus.otf") as p:
     arcade.text.load_font(str(p))
@@ -34,29 +26,14 @@ with pkg_resources.path(charm.data.fonts, "bananaslipplus.otf") as p:
 
 class CharmGame(DigiWindow):
     def __init__(self):
-        super().__init__((SCREEN_WIDTH, SCREEN_HEIGHT), SCREEN_TITLE, FPS_CAP)
+        super().__init__(settings.resolution, "Charm", settings.fps)
         self.set_min_size(1, 1)
-
         icon = pyglet_img_from_resource(cast(ModuleType, charm.data.images), "charm-icon32t.png")
         self.set_icon(icon)
-
-        sfx = ["back", "select", "valid"]
-        err = ["error", "warning", "info"]
-
-        # Menu sounds
-        for soundname in sfx:
-            with pkg_resources.path(charm.data.audio, f"sfx-{soundname}.wav") as p:
-                self.sounds[soundname] = arcade.Sound(p)
-        for soundname in err:
-            with pkg_resources.path(charm.data.audio, f"error-{soundname}.wav") as p:
-                self.sounds["error-" + soundname] = arcade.Sound(p)
-
         arcade.hitbox.algo_default = arcade.hitbox.algo_bounding_box
 
-        self.initial_view = TitleView()
 
-
-def main():
+def main() -> None:
     setup_logging()
     window = CharmGame()
     window.setup()

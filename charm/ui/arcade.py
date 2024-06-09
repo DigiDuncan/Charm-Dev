@@ -1,4 +1,5 @@
-from typing import Iterable, Optional
+from typing import Optional
+from collections.abc import Iterable
 from pathlib import Path
 
 from pyglet.event import EVENT_UNHANDLED
@@ -7,7 +8,6 @@ import arcade
 from arcade.gui import UIManager, UIBoxLayout, UILabel, \
     UIFlatButton, UISpace, UIWidget, Property, Surface, bind, UIEvent, UIMouseDragEvent, UIMouseScrollEvent, \
     UIMouseEvent, UIImage, UIAnchorLayout
-from charm.lib.charm import CharmColors
 from charm.lib.digiview import DigiView
 from charm.lib.generic.song import Metadata
 from charm.ui.utils import get_album_art
@@ -156,7 +156,7 @@ class UIScrollArea(UIWidget):
 
 class ArcadeUITestView(DigiView):
     def __init__(self, *args, **kwargs):
-        super().__init__(fade_in=0.5, bg_color=CharmColors.FADED_GREEN, *args, **kwargs)
+        super().__init__(fade_in=0.5, *args, **kwargs)
 
         self.ui = UIManager()
         self.ui.enable()
@@ -211,6 +211,6 @@ class ArcadeUITestView(DigiView):
 
         self.debug = title_scroll
 
-    def on_draw(self):
+    def on_draw(self) -> None:
         arcade.start_render()
         self.ui.draw()
