@@ -1,17 +1,18 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING, Literal
+if TYPE_CHECKING:
+    from charm.lib.generic.song import Song
+
 import importlib.resources as pkg_resources
 import math
 from pathlib import Path
-from typing import Literal
 
 import arcade
 
-import charm.data.audio
 import charm.data.images
-from charm.lib.settings import settings
 from charm.lib.anim import ease_quartout, perc
 from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
-from charm.lib.generic.song import Song
 from charm.lib.gamemodes.fnf import FNFSong
 from charm.lib.keymap import keymap
 from charm.lib.paths import songspath

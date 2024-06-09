@@ -1,6 +1,8 @@
 from __future__ import annotations
-from typing import Concatenate
+from typing import TYPE_CHECKING, Concatenate
 from collections.abc import Callable
+if TYPE_CHECKING:
+    from charm.lib.digiwindow import DigiWindow
 
 from dataclasses import dataclass
 import functools
@@ -14,7 +16,6 @@ from arcade import LBWH, LRBT, Rect, View
 from charm.lib.charm import CharmColors
 from charm.lib.component_manager import ComponentManager
 from charm.lib.anim import ease_linear, perc
-from charm.lib.digiwindow import DigiWindow
 from charm.lib.errors import CharmException, GenericError
 from charm.lib.keymap import keymap
 from charm.lib.sfxmanager import SfxManager

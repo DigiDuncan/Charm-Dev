@@ -1,9 +1,11 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING, cast
 from types import ModuleType
-from typing import cast
+if TYPE_CHECKING:
+    from charm.lib.digiwindow import DigiWindow
 
 import getpass
-import importlib.resources as pkg_resources
+from importlib.resources import files
 import random
 
 import arcade
@@ -14,7 +16,6 @@ import charm.data.images
 from charm.lib.anim import ease_linear, ease_quadinout, perc
 from charm.lib.charm import CharmColors, GumWrapper
 from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
-from charm.lib.digiwindow import DigiWindow, Eggs
 from charm.lib.keymap import keymap
 from charm.lib.utils import img_from_resource, typewriter
 from charm.views.mainmenu import MainMenuView
@@ -60,12 +61,11 @@ class TitleView(DigiView):
         super().postsetup()
 
     def generate_splash(self) -> ClownLogo | SplashLogo:
-        show_clown: bool = self.window.egg_roll == Eggs.TRICKY
+        show_clown: bool = random.randint(0, 999) == 0
         if show_clown:
-            # it's tricky
             splash_label = ClownLogo(x=int(self.window.center_x + 100), y=int(self.window.center_y))
         else:
-            splashes = pkg_resources.read_text(charm.data, "splashes.txt").splitlines()
+            splashes = (files(charm.data) / "splashes.txt").read_text().splitlines()
             splash_label = SplashLogo(self, splashes, x=int(self.window.center_x), y=int(self.window.center_y))
         return splash_label
 
@@ -106,7 +106,7 @@ class TitleView(DigiView):
         self.goto_fade_time = self.local_time + FADE_DELAY
         self.goto_switch_time = self.local_time + SWITCH_DELAY
         self.sfx.valid.play()
-        self.fade_volume = cast(float, self.window.theme_song.volume)
+        self.fade_volume = self.window.theme_song.volume
 
 
 class ClownLogo(arcade.Text):

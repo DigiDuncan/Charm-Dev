@@ -1,6 +1,7 @@
+import logging
+
 from pypresence import Presence, DiscordNotFound, DiscordError
 
-import logging
 
 logger = logging.getLogger("charm")
 

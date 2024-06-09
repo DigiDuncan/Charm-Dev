@@ -109,7 +109,7 @@ class TaikoSongView(DigiView):
 
     def show_results(self) -> None:
         self.tracks.close()
-        results_view = ResultsView(back = self.back, self.engine.generate_results())
+        results_view = ResultsView(back=self.back, results=self.engine.generate_results())
         results_view.setup()
         self.window.show_view(results_view)
 

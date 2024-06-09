@@ -7,26 +7,14 @@ if TYPE_CHECKING:
     from charm.lib.digiview import DigiView
 
 import logging
-import random
-import importlib.resources as pkg_resources
 
 import arcade
-from pyglet.media import Player
 
 from charm.lib.debug_menu import DebugMenu
-from charm.lib.anim import ease_expoout
-from charm.lib.bpmanim import BPMAnimator
-from charm.lib.errors import CharmException
-from charm.lib.generic.song import BPMChangeEvent
 from charm.lib.presencemanager import PresenceManager
-import charm.data.audio
+from charm.lib.themesong import ThemeSong
 
 logger = logging.getLogger("charm")
-
-
-
-class Eggs:
-    TRICKY = 666
 
 
 class DigiWindow(arcade.Window):
@@ -53,9 +41,6 @@ class DigiWindow(arcade.Window):
         # Debug menu
         self.debug = DebugMenu(self)
 
-        # Egg roll
-        self.egg_roll = random.randint(1, 1000)
-
     def setup(self) -> None:
         self.initial_view.setup()
         self.show_view(self.initial_view)
@@ -74,46 +59,4 @@ class DigiWindow(arcade.Window):
         self.ctx.default_atlas.save("atlas.png")
 
     def current_view(self) -> DigiView | None: # type: ignore
-        return cast(DigiView | None, super().current_view)
-
-
-class ThemeSong:
-    def __init__(self) -> None:
-        with pkg_resources.path(charm.data.audio, "song.mp3") as p:
-            song = arcade.Sound(p)
-        try:
-            self.player: Player = song.play(volume=0, loop=True)
-        except Exception as err:
-            raise CharmException(
-                title="Song Failed",
-                message="Failed to load theme song"
-            ) from err
-        bpm_events = [BPMChangeEvent(0, 120), BPMChangeEvent(3, 220)]
-        self.beat_animator = BPMAnimator(bpm_events, ease_expoout)
-
-    def on_update(self, delta_time: float) -> None:
-        self.beat_animator.update(self.time)
-
-    @property
-    def beat_factor(self) -> float:
-        return self.beat_animator.factor
-
-    @property
-    def time(self) -> float:
-        return self.player.time
-
-    @property
-    def volume(self) -> float:
-        return self.player.volume # type: ignore
-
-    @volume.setter
-    def volume(self, value: float) -> None:
-        self.player.volume = value # type: ignore
-
-    def seek(self, value: float) -> None:
-        self.player.seek(value)
-
-    @property
-    def current_bpm(self) -> float:
-        return self.beat_animator.current_bpm
-
+        return super().current_view # type: ignore

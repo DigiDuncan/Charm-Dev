@@ -1,16 +1,15 @@
-import importlib.resources as pkg_resources
 from types import ModuleType
 from typing import cast
+
+from importlib.resources import files, as_file
 
 import pyglet
 import arcade_accelerate
 import arcade
 import arcade.hitbox
 
-import charm
 import charm.data.fonts
 import charm.data.images
-import charm.data.audio
 from charm.lib.logging import setup_logging
 from charm.lib.settings import settings
 from charm.lib.utils import pyglet_img_from_resource
@@ -20,8 +19,9 @@ from charm.lib.digiwindow import DigiWindow
 pyglet.options["win32_disable_shaping"] = True
 arcade_accelerate.bootstrap()
 
-with pkg_resources.path(charm.data.fonts, "bananaslipplus.otf") as p:
-    arcade.text.load_font(str(p))
+
+with as_file(files(charm.data.fonts) / "bananaslipplus.otf") as f:
+    arcade.text.load_font(str(f))
 
 
 class CharmGame(DigiWindow):

@@ -1,20 +1,21 @@
-from collections import deque
-import logging
-from pathlib import Path
-import re
-import statistics
+from __future__ import annotations
+from typing import TYPE_CHECKING, Self, TypedDict
 from types import TracebackType
-from typing import Self, TypedDict
-import arcade
-import arrow
+if TYPE_CHECKING:
+    from charm.lib.digiwindow import DigiWindow
 
+import logging
+from collections import deque
+from pathlib import Path
+import statistics
+import re
+
+import arrow
+import numpy as np
 from imgui_bundle.python_backends.pyglet_backend import create_renderer, PygletProgrammablePipelineRenderer # type: ignore
 from imgui_bundle import imgui, ImVec2
-
-import numpy as np
+import arcade
 import pyglet
-
-from charm.lib.digiwindow import DigiWindow
 
 
 class Filter:
@@ -346,7 +347,7 @@ class DebugMenu:
         imgui.create_context()
         imgui.get_io().display_size = imgui.ImVec2(100, 100)
         imgui.font_atlas_get_tex_data_as_rgba32(imgui.get_io().fonts) # type: ignore
-        self.impl: PygletProgrammablePipelineRenderer = create_renderer(self) # type: ignore
+        self.impl: PygletProgrammablePipelineRenderer = create_renderer(window) # type: ignore
         self.settings_tab = DebugSettingsTab(window)
         self.info_tab = DebugInfoTab(window)
         self.log_tab = DebugLogTab()
@@ -466,7 +467,7 @@ class DebugInfoTab:
                 return
             imgui.text("Info")
             imgui.text(f"Current Resolution: {self.window.size}")
-            imgui.text(f"Egg Roll: {self.window.egg_roll}")
+            imgui.text("Egg Roll: 🥚")
             imgui.text(f"Current BPM: {self.window.theme_song.current_bpm}")
             # Beat Graph
             imgui.plot_lines( # type: ignore

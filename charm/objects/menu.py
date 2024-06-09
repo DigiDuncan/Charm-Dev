@@ -1,17 +1,20 @@
-import math
+from __future__ import annotations
+from typing import TYPE_CHECKING, cast
 from types import ModuleType
-from typing import cast
+if TYPE_CHECKING:
+    from charm.lib.digiwindow import DigiWindow
+    from charm.lib.digiview import DigiView
+
+import math
+
+import PIL.Image, PIL.ImageOps  # noqa: E401
 import arcade
 from arcade import Sprite
 from arcade.types import Color
-import PIL.Image, PIL.ImageOps  # noqa: E401
 
 import charm.data.icons
-from charm.lib import settings
 from charm.lib.anim import ease_circout, perc
 from charm.lib.charm import CharmColors, generate_missing_texture_image
-from charm.lib.digiview import DigiView
-from charm.lib.digiwindow import DigiWindow
 from charm.lib.utils import img_from_resource
 
 
@@ -33,21 +36,21 @@ class MainMenuItem(Sprite):
                                  font_name="bananaslip plus", font_size=24)
         self.center_y = arcade.get_window().height // 2
         self.jiggle_start: float = 0
-        self.window: DigiWindow = cast(DigiWindow, arcade.get_window())
+        self.window: DigiWindow = arcade.get_window() # type: ignore
 
     def go(self) -> bool:
         if self.goto is None:
             return False
         self.goto.setup()
         self.window.show_view(self.goto)
-        self.sfx.valid.play()
+        self.window.sfx.valid.play()
         return True
 
 
 class MainMenu:
     def __init__(self, items: list[MainMenuItem]) -> None:
         self.items = items
-        self.window: DigiWindow = cast(DigiWindow, arcade.get_window())
+        self.window: DigiWindow = arcade.get_window() # type: ignore
 
         self.sprite_list = arcade.SpriteList[MainMenuItem]()
         for item in self.items:
