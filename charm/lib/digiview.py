@@ -197,6 +197,9 @@ class Fader:
     def on_draw(self) -> None:
         if not self.visible:
             return
+        
+        self.view.window.ctx.enable(self.view.window.ctx.BLEND)
+        self.view.window.ctx.blend_func = self.view.window.ctx.BLEND_DEFAULT
         arcade.draw_rect_filled(self.screen, self.color)     # This seems to ignore the alpha value
 
 
