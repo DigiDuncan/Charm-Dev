@@ -3,7 +3,7 @@ from hashlib import sha1
 import logging
 
 import arcade
-from arcade import Sprite
+from arcade import LBWH, LRBT, Sprite
 
 from charm.lib.anim import ease_circout, perc
 from charm.lib.charm import CharmColors
@@ -42,8 +42,8 @@ class SongMenuItem(Sprite):
         with arcade.get_window().ctx.default_atlas.render_into(self._tex) as fbo:
             l, b, w, h = fbo.viewport
             temp_cam = arcade.camera.Camera2D(
-                viewport=(l, b, w, h),
-                projection=(0, w, h, 0),
+                viewport=LBWH(l, b, w, h),
+                projection=LRBT(0, w, h, 0),
                 position=(0.0, 0.0),
                 render_target=fbo
             )
@@ -59,17 +59,34 @@ class SongMenuItem(Sprite):
                         # only album name
                         artistalbum = self.album
                     arcade.draw_text(
-                        self.title, self.width - self.height / 2 - 5, self.height / 2, arcade.color.BLACK,
-                        font_size=self.height / 3 * (3 / 4), font_name="bananaslip plus", anchor_x="right"
+                        self.title,
+                        int(self.width - self.height / 2 - 5),
+                        int(self.height / 2),
+                        arcade.color.BLACK,
+                        font_size=self.height / 3 * (3 / 4),
+                        font_name="bananaslip plus",
+                        anchor_x="right"
                     )
                     arcade.draw_text(
-                        artistalbum, self.width - self.height / 2 - 5, self.height / 2, arcade.color.BLACK,
-                        font_size=self.height / 4 * (3 / 4), font_name="bananaslip plus", anchor_x="right", anchor_y="top"
+                        artistalbum,
+                        int(self.width - self.height / 2 - 5),
+                        int(self.height / 2),
+                        arcade.color.BLACK,
+                        font_size=self.height / 4 * (3 / 4),
+                        font_name="bananaslip plus",
+                        anchor_x="right",
+                        anchor_y="top"
                     )
                 else:
                     arcade.draw_text(
-                        self.title, self.width - self.height / 2 - 5, self.height / 2, arcade.color.BLACK,
-                        font_size=self.height / 3, font_name="bananaslip plus", anchor_x="right", anchor_y="center"
+                        self.title,
+                        int(self.width - self.height / 2 - 5),
+                        int(self.height / 2),
+                        arcade.color.BLACK,
+                        font_size=self.height / 3,
+                        font_name="bananaslip plus",
+                        anchor_x="right",
+                        anchor_y="center"
                     )
 
         # logger.info(f"Loaded MenuItem {self.title}")

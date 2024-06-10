@@ -32,6 +32,15 @@ class TitleView(DigiView):
         self.goto_fade_time: float | None
         self.goto_switch_time: float | None
         self.fade_volume: float | None
+        self.components.register(GumWrapper(self.size))
+        # Set up main logo
+        self.components.register(LogoSprite(self.window))
+        self.splash_label = self.components.register(self.generate_splash())
+        # Song details
+        self.components.register(SongLabel(self))
+        # Press start prompt
+        self.press_label = self.components.register(PressLabel(self, x=self.window.width // 2, y=self.window.height // 4))
+        self.components.register(WelcomeLabel(x=self.window.width // 2, y=6))
 
     @shows_errors
     def setup(self) -> None:
@@ -39,25 +48,8 @@ class TitleView(DigiView):
         self.goto_fade_time = None
         self.goto_switch_time = None
         self.fade_volume = None
-
         self.window.theme_song.seek(self.local_time + 3)
-
-        # Generate "gum wrapper" background
-        self.components.register(GumWrapper(self.size))
-
-        # Set up main logo
-        self.components.register(LogoSprite(self.window))
-
-        self.splash_label = self.components.register(self.generate_splash())
         self.splash_label.random_splash()
-
-        # Song details
-        self.components.register(SongLabel(self))
-
-        # Press start prompt
-        self.press_label = self.components.register(PressLabel(self, x=self.window.width // 2, y=self.window.height // 4))
-
-        self.components.register(WelcomeLabel(x=self.window.width // 2, y=6))
         super().postsetup()
 
     def generate_splash(self) -> ClownLogo | SplashLogo:
@@ -97,7 +89,7 @@ class TitleView(DigiView):
                 self.window.theme_song.volume = ease_linear(self.fade_volume, self.fade_volume / 2, perc(self.goto_fade_time, self.goto_switch_time, self.local_time))
             if self.local_time >= self.goto_switch_time:
                 # Go to main menu
-                self.goto(MainMenuView(back=self))
+                self.go_start()
 
     def start(self) -> None:
         if self.goto_fade_time is not None:
@@ -107,6 +99,9 @@ class TitleView(DigiView):
         self.goto_switch_time = self.local_time + SWITCH_DELAY
         self.sfx.valid.play()
         self.fade_volume = self.window.theme_song.volume
+
+    def go_start(self) -> None:
+        self.goto(MainMenuView(back=self))
 
 
 class ClownLogo(arcade.Text):

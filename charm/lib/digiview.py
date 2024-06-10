@@ -1,4 +1,5 @@
 from __future__ import annotations
+import time
 from typing import TYPE_CHECKING, Concatenate
 from collections.abc import Callable
 if TYPE_CHECKING:
@@ -75,6 +76,7 @@ class DigiView(View):
         self.local_start: float = 0
         self.fader = Fader(self, fade_in)
         self.components = ComponentManager()
+        self.debug_timer = DebugTimer()
 
     @property
     def sfx(self) -> SfxManager:
@@ -97,9 +99,12 @@ class DigiView(View):
 
     def presetup(self) -> None:
         """Must be called at the beginning of setup()"""
+        self.debug_timer.setup_start()
         self.local_start = self.window.time
+        self.setup_end = None
+        self.draw_start = None
+        self.draw_end = None
         arcade.set_background_color(CharmColors.FADED_GREEN)
-        self.components.reset()
 
     def setup(self) -> None:
         pass
@@ -107,6 +112,7 @@ class DigiView(View):
     def postsetup(self) -> None:
         """Must be called at the end of setup()"""
         self.on_resize(*self.window.size)
+        self.debug_timer.setup_end()
 
     def on_show_view(self) -> None:
         self.shown = True
@@ -138,6 +144,7 @@ class DigiView(View):
         self.components.on_update(delta_time)
 
     def predraw(self) -> None:
+        self.debug_timer.draw_start()
         self.window.camera.use()
         self.clear()
 
@@ -151,6 +158,7 @@ class DigiView(View):
             popup.error.sprite.draw()
         self.window.debug.draw()
         self.fader.on_draw()
+        self.debug_timer.draw_end()
 
     def go_back(self) -> None:
         if self.back is None:
@@ -189,4 +197,40 @@ class Fader:
     def on_draw(self) -> None:
         if not self.visible:
             return
-        arcade.draw_rect_filled(self.screen, self.color)
+        arcade.draw_rect_filled(self.screen, self.color)     # This seems to ignore the alpha value
+
+
+class DebugTimer:
+    def __init__(self):
+        self.setup_start_time = None
+        self.setup_end_time = None
+        self.draw_start_time = None
+        self.draw_end_time = None
+
+    def setup_start(self) -> None:
+        self.setup_start_time = time.time()
+        self.setup_end_time = None
+        self.draw_start_time = None
+        self.draw_end_time = None
+        logger.debug("SETUP START")
+
+    def setup_end(self) -> None:
+        if self.setup_end_time is not None or self.setup_start_time is None:
+            return
+        self.setup_end_time = time.time()
+        duration = self.setup_end_time - self.setup_start_time
+        logger.debug(f"SETUP END: DURATION={int(duration*1000)}ms")
+
+    def draw_start(self) -> None:
+        if self.draw_start_time is not None or self.setup_end_time is None:
+            return
+        self.draw_start_time = time.time()
+        duration = self.draw_start_time - self.setup_end_time
+        logger.debug(f"DRAW START: DELAY={int(duration*1000)}ms")
+
+    def draw_end(self) -> None:
+        if self.draw_end_time is not None or self.draw_start_time is None:
+            return
+        self.draw_end_time = time.time()
+        duration = self.draw_end_time - self.draw_start_time
+        logger.debug(f"DRAW END: DURATION={int(duration*1000)}ms")

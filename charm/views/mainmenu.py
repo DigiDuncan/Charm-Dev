@@ -22,13 +22,8 @@ from charm.views.perspectivetest import PerspectiveTestView
 class MainMenuView(DigiView):
     def __init__(self, back: DigiView):
         super().__init__(fade_in=1, back=back)
-
-    def setup(self) -> None:
-        super().presetup()
-
         # Generate "gum wrapper" background
         self.gum_wrapper = GumWrapper(self.size)
-
         self.menu = MainMenu([
             MainMenuItem("Playlists", "playlists", None),
             MainMenuItem("FNF Songs", "songs", FNFSongMenuView(back=self)),
@@ -45,10 +40,10 @@ class MainMenuView(DigiView):
             MainMenuItem("Scott Test", "test", VisualizerView(back=self))
         ])
 
+    def setup(self) -> None:
+        super().presetup()
         self.window.presence.set("In Menus")
-
         self.load_countdown = None
-
         super().postsetup()
 
     @shows_errors
@@ -90,13 +85,12 @@ class MainMenuView(DigiView):
 
     @shows_errors
     def on_resize(self, width: int, height: int) -> None:
-        self.menu.recreate()
+        # self.menu.recreate()
         super().on_resize(width, height)
 
     @shows_errors
     def on_update(self, delta_time: float) -> None:
         super().on_update(delta_time)
-
         self.gum_wrapper.on_update(delta_time)
         self.menu.on_update(delta_time)
         self.countdown()
@@ -113,9 +107,7 @@ class MainMenuView(DigiView):
         super().predraw()
         # Charm BG
         self.gum_wrapper.draw()
-
         left = ease_quartout(self.size[0], 0, perc(0.5, 1.5, self.local_time))
         arcade.draw_lrbt_rectangle_filled(left, self.size[0], self.size[1] // 4, (self.size[1] // 4) * 3, arcade.color.WHITE[:3] + (127,))
-
         self.menu.draw()
         super().postdraw()

@@ -96,10 +96,10 @@ class MainMenu:
 
     def recreate(self) -> None:
         old_id = self._selected_id
-        self = self.__class__(self.items)
+        self = type(self)(self.items)
         self._selected_id = old_id
-        for i in self.items:
-            i.center_y = arcade.get_window().height // 2
+        for item in self.items:
+            item.center_y = arcade.get_window().height // 2
 
     @property
     def selected_id(self) -> int:
