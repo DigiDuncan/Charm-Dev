@@ -9,7 +9,7 @@ from arcade.key import \
     F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, \
     F13, F14, F15, F16, F17, F18, F19, F20, F21, F22, F23, F24, \
     RETURN, ENTER, ESCAPE, BACKSPACE, SPACE, UP, DOWN, LEFT, RIGHT, \
-    MOD_SHIFT, RSHIFT
+    MOD_SHIFT, RSHIFT, MOD_CAPSLOCK, MOD_NUMLOCK, MOD_SCROLLLOCK
 
 import charm.lib.data
 
@@ -50,12 +50,15 @@ class KeyStateManager:
         self.pressed: dict[Key, Mod] = {}
         self.released: dict[Key, Mod] = {}
         self.held: dict[Key, Mod] = {}
+        self.ignore_mods = MOD_CAPSLOCK | MOD_NUMLOCK | MOD_SCROLLLOCK
 
     def on_key_press(self, symbol: int, modifiers: int) -> None:
+        modifiers = modifiers & ~self.ignore_mods
         self.pressed = {symbol: modifiers}
         self.held[symbol] = modifiers
 
     def on_key_release(self, symbol: int, modifiers: int) -> None:
+        modifiers = modifiers & ~self.ignore_mods
         self.released = {symbol: modifiers}
         if symbol in self.held:
             del self.held[symbol]

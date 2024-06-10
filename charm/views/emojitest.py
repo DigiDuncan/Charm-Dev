@@ -10,7 +10,7 @@ from charm.lib.keymap import keymap
 logger = logging.getLogger("charm")
 
 
-class EmojiView(DigiView):
+class EmojiTestView(DigiView):
     def __init__(self, back: DigiView):
         super().__init__(fade_in=1, back=back)
         self.label: EmojiLabel

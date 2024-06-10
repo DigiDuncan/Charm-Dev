@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from hashlib import sha1
 import logging
 
@@ -75,14 +76,11 @@ class SongMenuItem(Sprite):
 
 
 class SongMenu:
-    def __init__(self, songs: list[Metadata] = None, radius = 4, buffer = 5, move_speed = 0.2) -> None:
+    def __init__(self, songs: Iterable[Metadata] = (), radius = 4, buffer = 5, move_speed = 0.2) -> None:
         self._songs = songs
-        self.items: list[SongMenuItem] = []
-        if songs:
-            for song in self._songs:
-                self.items.append(SongMenuItem(song))
+        self.items: list[SongMenuItem] = [SongMenuItem(song) for song in self._songs]
         # atlas = arcade.TextureAtlas((16384, 16384))
-        self.sprite_list = arcade.SpriteList()
+        self.sprite_list = arcade.SpriteList[SongMenuItem]()
         for item in self.items:
             self.sprite_list.append(item)
 

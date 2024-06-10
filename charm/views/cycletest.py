@@ -312,7 +312,7 @@ class ListCycle:
         self.label_batch.draw()
 
 
-class CycleView(DigiView):
+class CycleTestView(DigiView):
     def __init__(self, back: DigiView):
         super().__init__(fade_in=1, back=back)
         self.cycler: ListCycle

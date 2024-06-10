@@ -6,17 +6,17 @@ from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.errors import TestError
 from charm.lib.keymap import keymap
 from charm.objects.menu import MainMenu, MainMenuItem
-from charm.views.cycletest import CycleView
-from charm.views.emojitest import EmojiView
+from charm.views.cycletest import CycleTestView
+from charm.views.emojitest import EmojiTestView
 from charm.views.fnfsongmenu import FNFSongMenuView
 from charm.views.fourkeysongmenu import FourKeySongMenuView
 from charm.views.herotest import HeroTestView
-from charm.views.newmenuview import NewMenuView
-from charm.views.parallaxtest import ParallaxView
+from charm.views.newmenu import NewMenuView
+from charm.views.parallaxtest import ParallaxTestView
 from charm.views.spritetest import SpriteTestView
-from charm.views.taikotest import TaikoSongView
+from charm.views.taikosongtest import TaikoSongTestView
 from charm.views.visualizer import VisualizerView
-from charm.views.perspectivetest import PerspectiveView
+from charm.views.perspectivetest import PerspectiveTestView
 
 
 class MainMenuView(DigiView):
@@ -34,14 +34,14 @@ class MainMenuView(DigiView):
             MainMenuItem("FNF Songs", "songs", FNFSongMenuView(back=self)),
             MainMenuItem("4K Songs", "songs", FourKeySongMenuView(back=self)),
             MainMenuItem("Options", "options", None),
-            MainMenuItem("Emoji Test", "test", EmojiView(back=self)),
+            MainMenuItem("Emoji Test", "test", EmojiTestView(back=self)),
             MainMenuItem("Menu Test", "test", NewMenuView(back=self)),
-            MainMenuItem("Cycler Test", "test", CycleView(back=self)),
+            MainMenuItem("Cycler Test", "test", CycleTestView(back=self)),
             MainMenuItem("Sprite Test", "test", SpriteTestView(back=self)),
-            MainMenuItem("Parallax Test", "test", ParallaxView(back=self)),
+            MainMenuItem("Parallax Test", "test", ParallaxTestView(back=self)),
             MainMenuItem("Hero Test", "test", HeroTestView(back=self)),
-            MainMenuItem("Perspective Test", "test", PerspectiveView(back=self)),
-            MainMenuItem("Taiko Test", "test", TaikoSongView(back=self)),
+            MainMenuItem("Perspective Test", "test", PerspectiveTestView(back=self)),
+            MainMenuItem("Taiko Test", "test", TaikoSongTestView(back=self)),
             MainMenuItem("Scott Test", "test", VisualizerView(back=self))
         ])
 
@@ -82,12 +82,11 @@ class MainMenuView(DigiView):
     @ignore_imgui
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int) -> None:
         if button == arcade.MOUSE_BUTTON_LEFT:
-            for item in self.menu.items:
-                if item.collides_with_point((x, y)):
-                    if item.go():
-                        break
+            clicked_item = self.menu.get_item_at(x, y)
+            if clicked_item is not None:
+                clicked_item.go()
             else:
-                self.menu.selected.jiggle_start = self.local_time
+                self.menu.selected.start_jiggle()
 
     @shows_errors
     def on_resize(self, width: int, height: int) -> None:

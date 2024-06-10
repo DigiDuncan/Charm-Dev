@@ -18,25 +18,46 @@ from charm.lib.charm import CharmColors, generate_missing_texture_image
 from charm.lib.utils import img_from_resource
 
 
+def load_icon_texture(icon: str, width: int, border_width: int, border_color: Color) -> arcade.Texture:
+    try:
+        image = img_from_resource(cast(ModuleType, charm.data.icons), f"{icon}.png").resize((width, width), PIL.Image.LANCZOS)
+    except Exception:
+        image = generate_missing_texture_image(width, width)
+    image_expanded = PIL.ImageOps.expand(image, border=border_width, fill=border_color)
+    tex = arcade.Texture(image_expanded)
+    return tex
+
+
 class MainMenuItem(Sprite):
-    def __init__(self, label: str, icon: str, goto: DigiView | None,
-                 width: int = 200, border_color: Color = arcade.color.WHITE, border_width: int = 0):
-        try:
-            self.icon = img_from_resource(cast(ModuleType, charm.data.icons), f"{icon}.png")
-            self.icon = self.icon.resize((width, width), PIL.Image.LANCZOS)
-        except Exception:
-            self.icon = generate_missing_texture_image(width, width)
-        self.icon = PIL.ImageOps.expand(self.icon, border=border_width, fill=border_color)
-        tex = arcade.Texture(self.icon)
+    def __init__(
+        self,
+        label: str,
+        icon: str,
+        goto: DigiView | None,
+        width: int = 200,
+        border_color: Color = arcade.color.WHITE,
+        border_width: int = 0
+    ):
+        tex = load_icon_texture(icon, width, border_width, border_color)
         super().__init__(tex)
 
         self.goto = goto
 
-        self.label = arcade.Text(label, 0, 0, CharmColors.PURPLE, anchor_x='center', anchor_y="top",
-                                 font_name="bananaslip plus", font_size=24)
+        self.label = arcade.Text(
+            label,
+            0, 0,
+            CharmColors.PURPLE if self.goto is not None else arcade.color.GRAY,
+            anchor_x="center",
+            anchor_y="top",
+            font_name="bananaslip plus",
+            font_size=24
+        )
         self.center_y = arcade.get_window().height // 2
         self.jiggle_start: float = 0
         self.window: DigiWindow = arcade.get_window() # type: ignore
+
+    def start_jiggle(self) -> None:
+        self.jiggle_start = self.window.time
 
     def go(self) -> bool:
         if self.goto is None:
@@ -99,8 +120,14 @@ class MainMenu:
     def move_end(self) -> float:
         return self.move_start + self.move_speed
 
+    def get_item_at(self, x: float, y: float) -> MainMenuItem | None:
+        for item in self.items:
+            if item.collides_with_point((x, y)):
+                return item
+        return None
+
     def on_update(self, delta_time: float) -> None:
-        current = self.items[self.selected_id]
+        current = self.selected
         current.center_x = ease_circout(self.old_pos[current][0], self.window.width // 2, perc(self.move_start, self.move_end, self.local_time))
         current.scale = ease_circout(self.old_pos[current][1], 1, perc(self.move_start, self.move_end, self.local_time))
         current.alpha = int(ease_circout(self.old_pos[current][2], 255, perc(self.move_start, self.move_end, self.local_time)))
@@ -112,9 +139,9 @@ class MainMenu:
         x_bumper = self.window.width // 4
 
         for n, item in enumerate(self.items):
-            rel_id = n - self.selected_id
-            if rel_id == 0:  # current item
+            if self.selected_id == n:  # current item
                 continue
+            rel_id = n - self.selected_id
             item.center_x = ease_circout(self.old_pos[item][0], current.center_x + (x_bumper * rel_id), perc(self.move_start, self.move_end, self.local_time))
             item.scale = ease_circout(self.old_pos[item][1], 0.5, perc(self.move_start, self.move_end, self.local_time))
             item.alpha = int(ease_circout(self.old_pos[item][2], 127, perc(self.move_start, self.move_end, self.local_time)))
@@ -123,8 +150,8 @@ class MainMenu:
 
         JIGGLE_TIME = 0.3
         JIGGLES = 5
-        if self.selected.jiggle_start != 0 and self.local_time <= self.selected.jiggle_start + JIGGLE_TIME:
-            jiggle_amount = 20 * math.sin(self.local_time * ((JIGGLES * 2) / JIGGLE_TIME))
+        if self.selected.jiggle_start != 0 and self.window.time <= self.selected.jiggle_start + JIGGLE_TIME:
+            jiggle_amount = 20 * math.sin(self.window.time * ((JIGGLES * 2) / JIGGLE_TIME))
             current.center_x += jiggle_amount
 
     def draw(self) -> None:

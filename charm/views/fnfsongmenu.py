@@ -1,11 +1,8 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Literal
-if TYPE_CHECKING:
-    from charm.lib.generic.song import Song
+from typing import Literal
 
 import importlib.resources as pkg_resources
 import math
-from pathlib import Path
 
 import arcade
 
@@ -13,12 +10,13 @@ import charm.data.images
 from charm.lib.anim import ease_quartout, perc
 from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
-from charm.lib.gamemodes.fnf import FNFSong
 from charm.lib.keymap import keymap
-from charm.lib.paths import songspath
 from charm.objects.gif import GIF
 from charm.objects.songmenu import SongMenu
 from charm.views.fnfsong import FNFSongView
+from charm.lib.generic.song import Metadata
+from charm.lib.songloader import load_songs_fnf
+
 
 
 class FNFSongMenuView(DigiView):
@@ -27,10 +25,11 @@ class FNFSongMenuView(DigiView):
 
         self.album_art_buffer = self.window.width // 20
         self.static_time = 0.25
-        self.album_art: arcade.Sprite = None
-        self.static: arcade.AnimatedTimeBasedSprite = None
-        self.menu: SongMenu = None
-
+        self.album_art: arcade.Sprite | None = None
+        self.static: arcade.TextureAnimationSprite | None = None
+        self.score_text: arcade.Text | None = None
+        self.nothing_text: arcade.Text | None = None
+        self.menu: SongMenu
         self.ready = False
 
     @shows_errors
@@ -40,18 +39,9 @@ class FNFSongMenuView(DigiView):
         # Generate "gum wrapper" background
         self.gum_wrapper = GumWrapper(self.size)
 
-        self.songs: list[Song] = []
-        rootdir = Path(songspath / "fnf")
-        dir_list = [d for d in rootdir.glob('**/*') if d.is_dir()]
-        for d in dir_list:
-            k = d.name
-            for diff, suffix in [("expert", "-ex"), ("hard", "-hard"), ("normal", ""), ("easy", "-easy")]:
-                if (d / f"{k}{suffix}.json").exists():
-                    songdata = FNFSong.get_metadata(d)
-                    self.songs.append(songdata)
-                    break
+        songs: list[Metadata] = load_songs_fnf()
 
-        self.menu = SongMenu(self.songs)
+        self.menu = SongMenu(songs)
         self.menu.sort("title")
         self.menu.selected_id = 0
         self.selection_changed = 0
@@ -68,10 +58,18 @@ class FNFSongMenuView(DigiView):
             self.score_text = arcade.Text("N/A", self.album_art.center_x, self.album_art.bottom - 50, arcade.color.BLACK,
                                       font_size = 48, font_name = "bananaslip plus", anchor_x = "center", anchor_y = "top",
                                       align = "center")
-
-        self.nothing_text = arcade.Text("No songs found!", *self.window.center,
-                                        arcade.color.BLACK, 64, align = "center", anchor_x = "center", anchor_y = "center",
-                                        font_name = "bananaslip plus")
+        else:
+            self.nothing_text = arcade.Text(
+                "No songs found!",
+                self.window.width // 2,
+                self.window.height // 2,
+                arcade.color.BLACK,
+                64,
+                align = "center",
+                anchor_x = "center",
+                anchor_y = "center",
+                font_name = "bananaslip plus"
+            )
 
         self.ready = True
 

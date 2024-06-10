@@ -15,7 +15,7 @@ from charm.lib.trackcollection import TrackCollection
 from charm.lib.utils import map_range
 from charm.objects.lyric_animator import LyricAnimator
 from charm.objects.timer import Timer
-from charm.views.resultsview import ResultsView
+from charm.views.results import ResultsView
 
 logger = logging.getLogger("charm")
 

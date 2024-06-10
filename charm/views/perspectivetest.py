@@ -5,7 +5,7 @@ from math import cos, sin, radians
 
 import arcade
 
-from charm.lib.charm import CharmColors, GumWrapper
+from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView, shows_errors, ignore_imgui
 from charm.lib.keymap import keymap
 
@@ -18,7 +18,7 @@ logger = logging.getLogger("charm")
 CAM_SPEED = 400.0
 
 
-class PerspectiveView(DigiView):
+class PerspectiveTestView(DigiView):
     def __init__(self, back: DigiView):
         super().__init__(fade_in=1, back=back)
 

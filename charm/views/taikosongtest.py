@@ -4,7 +4,7 @@ from math import ceil
 import arcade
 from charm.lib import paths
 
-from charm.lib.charm import CharmColors, GumWrapper
+from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.errors import NoChartsError
 from charm.lib.gamemodes.four_key import FourKeyEngine
@@ -13,13 +13,12 @@ from charm.lib.keymap import keymap
 from charm.lib.logsection import LogSection
 from charm.lib.oggsound import OGGSound
 from charm.lib.trackcollection import TrackCollection
-from charm.views.resultsview import ResultsView
-from charm.lib.keymap import keymap
+from charm.views.results import ResultsView
 
 logger = logging.getLogger("charm")
 
 
-class TaikoSongView(DigiView):
+class TaikoSongTestView(DigiView):
     def __init__(self, back: DigiView):
         super().__init__(fade_in=1, back=back)
         self.name = "Freedom Dive"
