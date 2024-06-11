@@ -1,7 +1,6 @@
 from typing import Protocol
 
 class Drawable(Protocol):
-
     @property
     def position(self) -> tuple[float, float]:
         ...

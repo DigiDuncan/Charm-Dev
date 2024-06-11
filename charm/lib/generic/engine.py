@@ -1,8 +1,10 @@
-from dataclasses import dataclass
-from typing import Literal, TYPE_CHECKING
-from charm.lib.generic.song import Chart, Note, Seconds
+from __future__ import annotations
+from typing import TYPE_CHECKING, Literal
 if TYPE_CHECKING:
     from charm.lib.generic.results import Results
+    from charm.lib.generic.song import Chart, Note, Seconds
+
+from dataclasses import dataclass
 
 KeyStates = list[bool]
 Key = int
@@ -131,7 +133,7 @@ class Engine:
     def update(self, song_time: Seconds):
         self.chart_time = song_time + self.offset
 
-    def process_keystate(self, key_states: KeyStates):
+    def process_keystate(self, key_states: KeyStates) -> None:
         raise NotImplementedError
 
     def get_note_judgement(self, note: Note) -> Judgement:

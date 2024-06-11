@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import TypedDict
 from charm.lib.errors import ScoreDBVersionMismatchError
 
-from charm.lib.generic.results import Results, ScoreJSON
+from charm.lib.generic.results import Results, ScoreJson
 
 logger = logging.getLogger("charm")
 
@@ -14,7 +14,7 @@ CURRENT_VERSION = 0
 
 class ScoreDBJSON(TypedDict):
     version: int
-    scores: dict[str, list[ScoreJSON]]
+    scores: dict[str, list[ScoreJson]]
 
 
 class ScoreDB:
@@ -46,13 +46,17 @@ class ScoreDB:
             logger.debug("Creating new score DB...")
         return scores
 
-    def get_scores(self, chart_hash: str) -> list[ScoreJSON]:
+    def get_scores(self, chart_hash: str | None) -> list[ScoreJson]:
+        if chart_hash is None:
+            return []
         scores = self.load()
         if chart_hash in scores["scores"]:
             return scores["scores"][chart_hash]
         return []
 
-    def get_best_score(self, chart_hash: str) -> ScoreJSON | None:
+    def get_best_score(self, chart_hash: str | None) -> ScoreJson | None:
+        if chart_hash is None:
+            return None
         scores = self.load()
         if chart_hash in scores["scores"]:
             l = scores["scores"][chart_hash]
@@ -60,15 +64,16 @@ class ScoreDB:
             return None
         return max(l, key = "score")
 
-    def add_score(self, chart_hash: str, results: Results):
+    def add_score(self, chart_hash: str | None, results: Results) -> None:
+        if chart_hash is None:
+            return
         scores = self.load()
-        j = results.to_score_JSON()
+        j = results.to_score_json()
         if chart_hash not in scores["scores"]:
-            scores["scores"][chart_hash] = [j]
-        else:
-            scores["scores"][chart_hash].append(j)
+            scores["scores"][chart_hash] = []
+        scores["scores"][chart_hash].append(j)
         json_string = dumps(scores)
         reencrypted = standard_b64encode(bytes(json_string, "utf-8"))
-        with open(self.path, "w+") as f:
+        with self.path.open("w+") as f:
             f.write(reencrypted.decode())
         logger.debug(f"Wrote new score to score DB for hash '{chart_hash}'!")

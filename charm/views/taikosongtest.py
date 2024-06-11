@@ -1,7 +1,8 @@
 import logging
 from math import ceil
 
-import arcade
+from arcade import Text, Sound, color as colors
+
 from charm.lib import paths
 
 from charm.lib.charm import GumWrapper
@@ -37,8 +38,8 @@ class TaikoSongTestView(DigiView):
             audio_paths = [a for a in self.song_path.glob("*.mp3")] + [a for a in self.song_path.glob("*.wav")] + [a for a in self.song_path.glob("*.ogg")]
             trackfiles = []
             for s in audio_paths:
-                trackfiles.append(OGGSound(s) if s.suffix == ".ogg" else arcade.Sound(s))
-            self.tracks = TrackCollection([arcade.Sound(s) for s in audio_paths])
+                trackfiles.append(OGGSound(s) if s.suffix == ".ogg" else Sound(s))
+            self.tracks = TrackCollection([Sound(s) for s in audio_paths])
 
         with LogSection(logger, "loading song data"):
             self.taiko_song = TaikoSong.parse(self.song_path)
@@ -49,8 +50,8 @@ class TaikoSongTestView(DigiView):
         with LogSection(logger, "loading highway"):
             self.highway = TaikoHighway(self.chart, (0, self.window.height / 2), (self.window.width, 100), auto = True)
 
-        self.text = arcade.Text("[LOADING]", -5, self.window.height - 5, color = arcade.color.BLACK, font_size = 24, align = "right", anchor_y="top", font_name = "bananaslip plus", width = self.window.width, multiline = True)
-        self.countdown_text = arcade.Text("0", self.window.width / 2, self.window.height / 2, arcade.color.BLACK, 72, align="center", anchor_x="center", anchor_y="center", font_name = "bananaslip plus", width = 100)
+        self.text = Text("[LOADING]", -5, self.window.height - 5, color = colors.BLACK, font_size = 24, align = "right", anchor_y="top", font_name = "bananaslip plus", width = self.window.width, multiline = True)
+        self.countdown_text = Text("0", self.window.width / 2, self.window.height / 2, colors.BLACK, 72, align="center", anchor_x="center", anchor_y="center", font_name = "bananaslip plus", width = 100)
 
         self.window.presence.set("Playing Taiko")
 

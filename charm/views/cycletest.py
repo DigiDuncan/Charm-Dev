@@ -1,4 +1,4 @@
-import importlib.resources as pkg_resources
+from importlib.resources import files, as_file
 import logging
 import math
 from math import ceil
@@ -8,7 +8,6 @@ from arcade import Sprite, SpriteList, Texture, Text
 from pyglet.graphics import Batch
 
 import charm.data.images
-from charm.lib import settings
 from charm.lib.anim import EasingFunction, ease_linear, ease_quadinout
 from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView, shows_errors, ignore_imgui
@@ -321,7 +320,7 @@ class CycleTestView(DigiView):
     @shows_errors
     def setup(self) -> None:
         super().presetup()
-        with pkg_resources.path(charm.data.images, "menu_card.png") as p:
+        with as_file(files(charm.data.images) / "menu_card.png") as p:
             tex = arcade.load_texture(p)
         self.cycler = ListCycle(
             texture=tex,

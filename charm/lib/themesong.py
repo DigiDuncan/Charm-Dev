@@ -1,26 +1,23 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from pyglet.media import Player
 
 from importlib.resources import files, as_file
 
-import arcade
+from arcade import Sound
 
 from charm.lib.anim import ease_expoout
 from charm.lib.bpmanim import BPMAnimator
-from charm.lib.errors import CharmException
+from charm.lib.errors import CharmError
 from charm.lib.generic.song import BPMChangeEvent
 import charm.data.audio
 
 class ThemeSong:
     def __init__(self) -> None:
         with as_file(files(charm.data.audio) / "song.mp3") as f:
-            song = arcade.Sound(f)
+            song = Sound(f)
         try:
-            self.player: Player = song.play(volume=0, loop=True)
+            self.player = song.play(volume=0, loop=True)
         except Exception as err:
-            raise CharmException(
+            raise CharmError(
                 title="Song Failed",
                 message="Failed to load theme song"
             ) from err

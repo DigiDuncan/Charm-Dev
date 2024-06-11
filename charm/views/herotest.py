@@ -1,6 +1,7 @@
 import logging
 
 import arcade
+from arcade import Text, color as colors
 from pyglet.graphics import Batch
 
 from charm.lib.charm import GumWrapper
@@ -10,7 +11,6 @@ from charm.lib.keymap import keymap
 from charm.lib.oggsound import OGGSound
 from charm.lib.paths import songspath
 from charm.objects.lyric_animator import LyricAnimator
-from charm.lib.keymap import keymap
 
 logger = logging.getLogger("charm")
 
@@ -38,11 +38,11 @@ class HeroTestView(DigiView):
         self.text_batch = Batch()
 
         metadata_string = f"{self.hero_song.metadata.title}\n{self.hero_song.metadata.artist}\n{self.hero_song.metadata.album}"
-        self.metadata_text = arcade.Text(metadata_string, 5, 5, arcade.color.BLACK, 16, align = "left", anchor_x = "left", anchor_y = "bottom", multiline = True, font_name = "bananaslip plus", width=self.window.width, batch = self.text_batch)
-        self.section_text = arcade.Text("", self.window.width - 5, 5, arcade.color.BLACK, 16, anchor_x = "right", font_name = "bananaslip plus", width=self.window.width, batch = self.text_batch)
-        self.time_text = arcade.Text("0:00", self.window.width - 5, 35, arcade.color.BLACK, 16, anchor_x = "right", font_name = "bananaslip plus", width=self.window.width, batch = self.text_batch)
-        self.score_text = arcade.Text("0", self.window.width - 5, 65, arcade.color.BLACK, 24, anchor_x = "right", font_name = "bananaslip plus", width=self.window.width, batch = self.text_batch)
-        self.multiplier_text = arcade.Text("x1", self.window.width - 5, 95, arcade.color.BLACK, 16, anchor_x = "right", font_name = "bananaslip plus", width=self.window.width, batch = self.text_batch)
+        self.metadata_text = Text(metadata_string, 5, 5, colors.BLACK, 16, align = "left", anchor_x = "left", anchor_y = "bottom", multiline = True, font_name = "bananaslip plus", width=self.window.width, batch = self.text_batch)
+        self.section_text = Text("", self.window.width - 5, 5, colors.BLACK, 16, anchor_x = "right", font_name = "bananaslip plus", width=self.window.width, batch = self.text_batch)
+        self.time_text = Text("0:00", self.window.width - 5, 35, colors.BLACK, 16, anchor_x = "right", font_name = "bananaslip plus", width=self.window.width, batch = self.text_batch)
+        self.score_text = Text("0", self.window.width - 5, 65, colors.BLACK, 24, anchor_x = "right", font_name = "bananaslip plus", width=self.window.width, batch = self.text_batch)
+        self.multiplier_text = Text("x1", self.window.width - 5, 95, colors.BLACK, 16, anchor_x = "right", font_name = "bananaslip plus", width=self.window.width, batch = self.text_batch)
 
         self.lyric_animator = None
         if self.hero_song.lyrics:
@@ -74,26 +74,24 @@ class HeroTestView(DigiView):
             self.highway.show_flags = not self.highway.show_flags
 
 
-        self.engine.process_keystate()
-        match symbol:
-            case keymap.back | keymap.pause:
-                self.song.pause() if self.song.playing else self.song.play()
+        self.engine.process_keystate(keymap.hero.state)
+        if keymap.back.pressed or keymap.pause.pressed:
+            self.song.pause() if self.song.playing else self.song.play()
         if self.window.debug.enabled:
-            match symbol:
-                case arcade.key.KEY_0:
-                    self.song.seek(0)
-                case arcade.key.MINUS:
-                    self.song.seek(self.song.time - 5)
-                case arcade.key.EQUAL:
-                    self.song.seek(self.song.time + 5)
-                case arcade.key.F:
-                    self.highway.show_flags = not self.highway.show_flags
+            if keymap.seek_zero.pressed:
+                self.song.seek(0)
+            if keymap.seek_backward.pressed:
+                self.song.seek(0)
+            if keymap.seek_forward.pressed:
+                self.song.seek(self.song.time + 5)
+            if keymap.debug_toggle_flags.pressed:
+                self.highway.show_flags = not self.highway.show_flags
 
 
     @shows_errors
     def on_key_release(self, symbol: int, modifiers: int) -> None:
         super().on_key_release(symbol, modifiers)
-        self.engine.process_keystate()
+        self.engine.process_keystate(keymap.hero.state)
 
     def go_back(self) -> None:
         self.song.delete()

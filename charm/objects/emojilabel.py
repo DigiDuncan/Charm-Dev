@@ -1,19 +1,22 @@
-import importlib.resources as pkg_resources
-import json
+from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from pyglet.image import AbstractImage
+    from pyglet.text.document import AbstractDocument
+
 import logging
-import re
+from importlib.resources import files
 from functools import cache
-from types import ModuleType
-from typing import cast
+import json
+import re
 
 import emoji_data_python
-from pyglet.image import AbstractImage
 from pyglet.text.formats.structured import ImageElement
-from pyglet.text.document import AbstractDocument, FormattedDocument
+from pyglet.text.document import FormattedDocument
 from pyglet.text import DocumentLabel
 
-import charm.data.images.emoji
-from charm.lib.utils import pt_to_px, pyglet_img_from_resource
+import charm.data.images
+from charm.lib.utils import pt_to_px, pyglet_img_from_path
 
 logger = logging.getLogger("charm")
 
@@ -70,9 +73,9 @@ class EmojiPicker:
 
 
 def get_emoji_picker(id: str) -> EmojiPicker:
-    rd = pkg_resources.read_text(charm.data.images.emoji, f"{id}.json")
-    region_data = json.loads(rd)
-    png = pyglet_img_from_resource(cast(ModuleType, charm.data.images.emoji), f"{id}.png")
+    with (files(charm.data.images) / "emoji" / f"{id}.json").open("r") as f:
+        region_data = json.load(f)
+    png = pyglet_img_from_path(files(charm.data.images) / "emoji" / f"{id}.png")
     return EmojiPicker(png, region_data)
 
 

@@ -1,15 +1,18 @@
 from dataclasses import dataclass
-import importlib.resources as pkg_resources
+from importlib.resources import files, as_file
 import logging
+
 from random import randint
 import wave
 
 import arcade
-from charm.lib.keymap import keymap
-import nindex
+from arcade import XYWH, SpriteCircle, SpriteList, Text, TextureAtlas, Camera2D, Sound, color as colors
+
 import numpy as np
+import nindex
 
 import charm.data.audio
+from charm.lib.keymap import keymap
 from charm.lib.adobexml import sprite_from_adobe
 from charm.lib.anim import ease_linear, ease_quartout, perc
 from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
@@ -33,10 +36,10 @@ class Beat:
 
 
 colormap = [
-    arcade.color.PURPLE,
-    arcade.color.CYAN,
-    arcade.color.GREEN,
-    arcade.color.MAGENTA
+    colors.PURPLE,
+    colors.CYAN,
+    colors.GREEN,
+    colors.MAGENTA
 ]
 
 animationmap = [
@@ -56,12 +59,12 @@ class VisualizerView(DigiView):
     @shows_errors
     def setup(self) -> None:
         super().presetup()
-        arcade.set_background_color(arcade.color.BLACK)
+        arcade.set_background_color(colors.BLACK)
 
         # Load song and get waveform
         with LogSection(logger, "loading song and waveform"):
-            with pkg_resources.path(charm.data.audio, "fourth_wall.wav") as p:
-                self._song = arcade.Sound(p)
+            with as_file(files(charm.data.audio) / "fourth_wall.wav") as p:
+                self._song = Sound(p)
                 f = open(p, "rb")
                 self.wave = wave.open(f, "rb")
                 self.sample_count = self.wave.getnframes()
@@ -86,21 +89,21 @@ class VisualizerView(DigiView):
 
         # Create background stars
         with LogSection(logger, "creating stars"):
-            self.star_camera = arcade.camera.Camera2D()
-            self.stars = arcade.SpriteList()
+            self.star_camera = Camera2D()
+            self.stars = SpriteList()
             self.scroll_speed = 20  # px/s
             stars_per_screen = 100
             star_height = self.window.height + int(self._song.source.duration * self.scroll_speed)
             star_amount = int(stars_per_screen * (star_height / self.window.height))
             logger.info(f"Generating {star_amount} stars...")
             for i in range(star_amount):
-                sprite = arcade.SpriteCircle(5, arcade.color.WHITE, True)
+                sprite = SpriteCircle(5, colors.WHITE, True)
                 sprite.center_x = randint(0, self.window.width)
                 sprite.center_y = randint(-(star_height - self.window.height), self.window.height)
                 self.stars.append(sprite)
 
         with LogSection(logger, "creating text"):
-            self.text = arcade.Text("Fourth Wall by Jacaris", self.window.width / 4, self.window.height * (0.9),
+            self.text = Text("Fourth Wall by Jacaris", self.window.width / 4, self.window.height * (0.9),
                                     font_name = "bananaslip plus", font_size = 32, align="center",
                                     anchor_x="center", anchor_y="center",
                                     width = self.window.width, color = (255, 255, 255, 128))
@@ -109,12 +112,12 @@ class VisualizerView(DigiView):
             # Gradient
             self.gradient = arcade.shape_list.create_rectangle_filled_with_colors(
                 [(-250, self.window.height), (self.window.width + 250, self.window.height), (self.window.width + 250, -250), (-250, -250)],
-                [arcade.color.BLACK, arcade.color.BLACK, arcade.color.DARK_PASTEL_PURPLE, arcade.color.DARK_PASTEL_PURPLE]
+                [colors.BLACK, colors.BLACK, colors.DARK_PASTEL_PURPLE, colors.DARK_PASTEL_PURPLE]
             )
 
         with LogSection(logger, "loading sprites"):
-            self.scott_atlas = arcade.TextureAtlas((8192, 8192))
-            self.sprite_list = arcade.SpriteList(atlas = self.scott_atlas)
+            self.scott_atlas = TextureAtlas((8192, 8192))
+            self.sprite_list = SpriteList(atlas = self.scott_atlas)
             self.sprite = sprite_from_adobe("scott", ("bottom", "left"))
             self.boyfriend = sprite_from_adobe("bfScott", ("bottom", "right"))
             self.sprite_list.append(self.sprite)
@@ -233,14 +236,14 @@ class VisualizerView(DigiView):
                 player_time = player_note.time
                 player_opacity = ease_linear(32, 0, perc(player_time, player_time + self.beat_time, self.song.time))
                 player_color = player_color[:3] + (int(player_opacity),)
-                arcade.draw_xywh_rectangle_filled(self.window.width / 2, 0, self.window.width / 2, self.window.height, player_color)
+                arcade.draw_rect_filled(XYWH(self.window.width / 2, 0, self.window.width / 2, self.window.height), player_color)
             enemy_note = self.enemy_chart.lt(self.song.time)
             if enemy_note:
                 enemy_color = colormap[enemy_note.lane]
                 enemy_time = enemy_note.time
                 enemy_opacity = ease_linear(32, 0, perc(enemy_time, enemy_time + self.beat_time, self.song.time))
                 enemy_color = enemy_color[:3] + (int(enemy_opacity),)
-                arcade.draw_xywh_rectangle_filled(0, 0, self.window.width / 2, self.window.height, enemy_color)
+                arcade.draw_rect_filled(XYWH(0, 0, self.window.width / 2, self.window.height), enemy_color)
 
         # Text
         if self.show_text:

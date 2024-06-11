@@ -1,7 +1,13 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from pathlib import Path
+    from arcade import Texture
+
 import logging
-from pathlib import Path
 
 import arcade
+from arcade import Sprite, Text, Sound, color as colors
 
 from charm.lib.anim import perc, ease_circout, lerp
 from charm.lib.charm import CharmColors, GumWrapper
@@ -29,11 +35,11 @@ class FNFSongView(DigiView):
         self.highway_2: FourKeyHighway = None
         self.songdata: FNFSong = None
         self.tracks: TrackCollection = None
-        self.song_time_text: arcade.Text = None
-        self.score_text: arcade.Text = None
-        self.grade_text: arcade.Text = None
-        self.pause_text: arcade.Text = None
-        self.dead_text: arcade.Text = None
+        self.song_time_text: Text = None
+        self.score_text: Text = None
+        self.grade_text: Text = None
+        self.pause_text: Text = None
+        self.dead_text: Text = None
         self.last_camera_event: CameraFocusEvent = None
         self.last_spotlight_position: float = 0
         self.last_spotlight_change: float = 0
@@ -73,30 +79,30 @@ class FNFSongView(DigiView):
             soundfiles = [f for f in path.iterdir() if f.is_file() and f.suffix in [".ogg", ".mp3", ".wav"]]
             trackfiles = []
             for s in soundfiles:
-                trackfiles.append(OGGSound(s) if s.suffix == ".ogg" else arcade.Sound(s))
+                trackfiles.append(OGGSound(s) if s.suffix == ".ogg" else Sound(s))
             self.tracks = TrackCollection(trackfiles)
 
             self.window.theme_song.volume = 0
 
         with LogSection(logger, "loading text"):
-            self.song_time_text = arcade.Text("??:??", (self.size[0] // 2), 10, font_size=24,
-                                              anchor_x="center", color=arcade.color.BLACK,
+            self.song_time_text = Text("??:??", (self.size[0] // 2), 10, font_size=24,
+                                              anchor_x="center", color=colors.BLACK,
                                               font_name="bananaslip plus")
 
-            self.score_text = arcade.Text("0", (self.size[0] // 2), self.size[1] - 10, font_size=24,
-                                          anchor_x="center", anchor_y="top", color=arcade.color.BLACK,
+            self.score_text = Text("0", (self.size[0] // 2), self.size[1] - 10, font_size=24,
+                                          anchor_x="center", anchor_y="top", color=colors.BLACK,
                                           font_name="bananaslip plus")
 
-            self.grade_text = arcade.Text("Clear", (self.size[0] // 2), self.size[1] - 135, font_size=16,
-                                          anchor_x="center", anchor_y="center", color=arcade.color.BLACK,
+            self.grade_text = Text("Clear", (self.size[0] // 2), self.size[1] - 135, font_size=16,
+                                          anchor_x="center", anchor_y="center", color=colors.BLACK,
                                           font_name="bananaslip plus")
 
-            self.pause_text = arcade.Text("PAUSED", (self.size[0] // 2), (self.size[1] // 2), font_size=92,
-                                          anchor_x="center", anchor_y="center", color=arcade.color.BLACK,
+            self.pause_text = Text("PAUSED", (self.size[0] // 2), (self.size[1] // 2), font_size=92,
+                                          anchor_x="center", anchor_y="center", color=colors.BLACK,
                                           font_name="bananaslip plus")
 
-            self.dead_text = arcade.Text("DEAD.", (self.size[0] // 2), (self.size[1] // 3) * 2, font_size=64,
-                                         anchor_x="center", anchor_y="center", color=arcade.color.BLACK,
+            self.dead_text = Text("DEAD.", (self.size[0] // 2), (self.size[1] // 3) * 2, font_size=64,
+                                         anchor_x="center", anchor_y="center", color=colors.BLACK,
                                          font_name="bananaslip plus")
 
         with LogSection(logger, "loading gum wrapper"):
@@ -104,8 +110,8 @@ class FNFSongView(DigiView):
             self.gum_wrapper = GumWrapper(self.size)
 
         with LogSection(logger, "loading judgements"):
-            judgement_textures: list[arcade.Texture] = [j.get_texture() for j in self.engine.judgements]
-            self.judgement_sprite = arcade.Sprite(judgement_textures[0])
+            judgement_textures: list[Texture] = [j.get_texture() for j in self.engine.judgements]
+            self.judgement_sprite = Sprite(judgement_textures[0])
             self.judgement_sprite.textures = judgement_textures
             self.judgement_sprite.scale = (self.highway_1.w * 0.8) / self.judgement_sprite.width
             self.judgement_sprite.center_x = self.window.width / 2
@@ -181,7 +187,7 @@ class FNFSongView(DigiView):
                 self.highway_1.strikeline[i].alpha = 255 if press else 64
             self.highway_1.strikeline[i].texture = load_note_texture("normal" if press else "strikeline", i, self.highway_1.note_size)
             if self.tracks.playing:
-                self.engine.process_keystate()
+                self.engine.process_keystate(keymap.fourkey.state)
 
     @shows_errors
     @ignore_imgui
@@ -228,9 +234,9 @@ class FNFSongView(DigiView):
     def on_update(self, delta_time: float) -> None:
         super().on_update(delta_time)
         if self.chroma_key:
-            bg_color = arcade.color.BLUE
+            bg_color = colors.BLUE
         elif not self.distractions:
-            bg_color = arcade.color.SLATE_GRAY
+            bg_color = colors.SLATE_GRAY
         else:
             bg_color = CharmColors.FADED_GREEN
         arcade.set_background_color(bg_color)
@@ -304,18 +310,18 @@ class FNFSongView(DigiView):
         arcade.draw_lrbt_rectangle_filled(
             hp_min, hp_max,
             self.size[1] - 110, self.size[1] - 100,
-            arcade.color.BLACK
+            colors.BLACK
         )
-        arcade.draw_circle_filled(hp, self.size[1] - 105, 20, arcade.color.BLUE)
+        arcade.draw_circle_filled(hp, self.size[1] - 105, 20, colors.BLUE)
 
     def spotlight_draw(self) -> None:
         arcade.draw_lrbt_rectangle_filled(
             self.spotlight_position - self.window.center_x, self.spotlight_position, 0, self.window.height,
-            arcade.color.BLACK[:3] + (127,)
+            colors.BLACK[:3] + (127,)
         )
         arcade.draw_lrbt_rectangle_filled(
             self.spotlight_position + self.window.center_x, self.spotlight_position + self.window.width, 0, self.window.height,
-            arcade.color.BLACK[:3] + (127,)
+            colors.BLACK[:3] + (127,)
         )
 
     @shows_errors

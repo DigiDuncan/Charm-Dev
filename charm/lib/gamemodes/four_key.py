@@ -1,33 +1,31 @@
 from __future__ import annotations
 
-import importlib.resources as pkg_resources
+from importlib.resources import files, as_file
 import logging
 import math
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
 from statistics import mean
-from types import ModuleType
-from typing import cast
 
 import arcade
+from arcade import Sprite, SpriteList, Texture, Text, color as colors
+from arcade.types import Color
 import pyglet
 import PIL
 import PIL.ImageFilter
 import PIL.ImageOps
 import PIL.ImageEnhance
 
-import charm.data.images.skins.fourkey as fourkeyskin
-import charm.data.images.skins.fnf as fnfskin
-import charm.data.images.skins.base as baseskin
+import charm.data.images.skins as skins
 from charm.lib.charm import load_missing_texture
-from charm.lib.generic.engine import DigitalKeyEvent, Engine, Judgement
+from charm.lib.generic.engine import DigitalKeyEvent, Engine, Judgement, KeyStates
 from charm.lib.generic.highway import Highway
 from charm.lib.generic.results import Results
 from charm.lib.generic.song import Note, Chart, Seconds, Song
 from charm.lib.keymap import keymap
 from charm.lib.spritebucket import SpriteBucketCollection
-from charm.lib.utils import img_from_resource, clamp
+from charm.lib.utils import img_from_path, clamp
 from charm.objects.line_renderer import NoteTrail
 
 logger = logging.getLogger("charm")
@@ -43,78 +41,65 @@ class NoteType:
 
 # SKIN
 class NoteColor:
-    GREEN = arcade.color.LIME_GREEN
-    RED = arcade.color.RED
-    PINK = arcade.color.PINK
-    BLUE = arcade.color.CYAN
-    BOMB = arcade.color.DARK_RED
-    DEATH = arcade.color.BLACK
-    HEAL = arcade.color.WHITE
-    CAUTION = arcade.color.YELLOW
+    GREEN = colors.LIME_GREEN
+    RED = colors.RED
+    PINK = colors.PINK
+    BLUE = colors.CYAN
+    BOMB = colors.DARK_RED
+    DEATH = colors.BLACK
+    HEAL = colors.WHITE
+    CAUTION = colors.YELLOW
 
     @classmethod
-    def from_note(cls, note: "FourKeyNote"):
-        match note.type:
-            case NoteType.NORMAL:
-                if note.lane == 0:
-                    return cls.PINK
-                elif note.lane == 1:
-                    return cls.BLUE
-                elif note.lane == 2:
-                    return cls.GREEN
-                elif note.lane == 3:
-                    return cls.RED
-            case NoteType.BOMB:
-                return cls.BOMB
-            case NoteType.DEATH:
-                return cls.DEATH
-            case NoteType.HEAL:
-                return cls.HEAL
-            case NoteType.CAUTION:
-                return cls.CAUTION
-            case _:
-                return arcade.color.BLACK
+    def from_note(cls, note: FourKeyNote) -> Color:
+        if note.type == NoteType.NORMAL:
+            if note.lane == 0:
+                return cls.PINK
+            if note.lane == 1:
+                return cls.BLUE
+            if note.lane == 2:
+                return cls.GREEN
+            if note.lane == 3:
+                return cls.RED
+        if note.type == NoteType.BOMB:
+            return cls.BOMB
+        if note.type == NoteType.DEATH:
+            return cls.DEATH
+        if note.type == NoteType.HEAL:
+            return cls.HEAL
+        if note.type == NoteType.CAUTION:
+            return cls.CAUTION
+        return colors.BLACK
 
 # SKIN
 def get_note_color_by_beat(beat: int) -> tuple[int, int, int]:
-    match beat:
-        case 1:
-            return (0xFF, 0x00, 0x00)  # #FF0000
-        case 2:
-            return (0x00, 0x00, 0xFF)  # #0000FF
-        case 3:
-            return (0x00, 0xFF, 0x00)  # #00FF00
-        case 4:
-            return (0xFF, 0xFF, 0x00)  # #FFFF00
-        case 5:
-            return (0xAA, 0xAA, 0xAA)  # #AAAAAA
-        case 6:
-            return (0xFF, 0x00, 0xFF)  # #FF00FF
-        case 8:
-            return (0xFF, 0x77, 0x00)  # #FF7700
-        case 12:
-            return (0x00, 0xFF, 0xFF)  # #00FFFF
-        case 16:
-            return (0x00, 0x77, 0x00)  # #007700
-        case 24:
-            return (0xCC, 0xCC, 0xCC)  # #CCCCCC
-        case 32:
-            return (0xAA, 0xAA, 0xFF)  # #AAAAFF
-        case 48:
-            return (0x55, 0x77, 0x55)  # #557755
-        case _:
-            return (0x00, 0x22, 0x22)  # #002222
+    beat_color = {
+        1: (0xFF, 0x00, 0x00),
+        2: (0x00, 0x00, 0xFF),
+        3: (0x00, 0xFF, 0x00),
+        4: (0xFF, 0xFF, 0x00),
+        5: (0xAA, 0xAA, 0xAA),
+        6: (0xFF, 0x00, 0xFF),
+        8: (0xFF, 0x77, 0x00),
+        12: (0x00, 0xFF, 0xFF),
+        16: (0x00, 0x77, 0x00),
+        24: (0xCC, 0xCC, 0xCC),
+        32: (0xAA, 0xAA, 0xFF),
+        48: (0x55, 0x77, 0x55)
+    }
+    default_color = (0x00, 0x22, 0x22)
+    return beat_color.get(beat, default_color)
 
 # SKIN
 @cache
-def load_note_texture(note_type, note_lane, height, value = 0, fnf = False):
+def load_note_texture(note_type: str, note_lane: int, height: int, value: int = 0, fnf: bool = False) -> Texture:
     if value and note_type == NoteType.NORMAL:
         # "Beat colors", which color a note based on where it lands in the beat.
         # This is useful for desnely packed patterns, and some rhythm games rely
         # on it for readability.
         image_name = f"gray-{note_lane + 1}"
         try:
-            image = img_from_resource(cast(ModuleType, fourkeyskin), image_name + ".png")
+            image = img_from_path(files(skins) / "fourkey" / f"{image_name}.png")
             if image.height != height:
                 width = int((height / image.height) * image.width)
                 image = image.resize((width, height), PIL.Image.LANCZOS)
@@ -131,29 +116,29 @@ def load_note_texture(note_type, note_lane, height, value = 0, fnf = False):
         image_name = f"{note_type}-{note_lane + 1}"
         try:
             if fnf:  # HACK: probably not a great way to do this!
-                image = img_from_resource(cast(ModuleType, fnfskin), image_name + ".png")
+                image = img_from_path(files(skins) / "fnf" / f"{image_name}.png")
             else:
-                image = img_from_resource(cast(ModuleType, fourkeyskin), image_name + ".png")
+                image = img_from_path(files(skins) / "fourkey" / f"{image_name}.png")
             if image.height != height:
                 width = int((height / image.height) * image.width)
                 image = image.resize((width, height), PIL.Image.LANCZOS)
         except Exception:
             logger.error(f"Unable to load texture: {image_name}")
             return load_missing_texture(height, height)
-    return arcade.Texture(image)
+    return Texture(image)
 
 
 @dataclass(repr = False)
 class FourKeyNote(Note):
     parent: FourKeyNote = None
-    sprite: "FourKeyNoteSprite" | "FourKeyLongNoteSprite" = None
+    sprite: FourKeyNoteSprite | FourKeyLongNoteSprite = None
 
     def __lt__(self, other):
         return (self.time, self.lane, self.type) < (other.time, other.lane, other.type)
 
 
 class FourKeyChart(Chart):
-    def __init__(self, song: 'Song', difficulty, hash: str):
+    def __init__(self, song: Song, difficulty, hash: str | None):
         super().__init__(song, "4k", difficulty, "4k", 4, hash)
         self.song: FourKeySong = song
 
@@ -164,11 +149,11 @@ class FourKeySong(Song[FourKeyChart]):
         super().__init__(path)
 
     @classmethod
-    def parse(cls, folder: Path):
+    def parse(cls, path: Path) -> FourKeySong:
         raise NotImplementedError
 
 
-class FourKeyNoteSprite(arcade.Sprite):
+class FourKeyNoteSprite(Sprite):
     def __init__(self, note: FourKeyNote, highway: FourKeyHighway, height=128, *args, **kwargs):
         self.note: FourKeyNote = note
         self.note.sprite = self
@@ -203,7 +188,7 @@ class FourKeyLongNoteSprite(FourKeyNoteSprite):
         self.trail = NoteTrail(self.id, self.position, self.note.time, self.note.length, self.highway.px_per_s,
                                color, width=self.highway.note_size, upscroll=True, fill_color=color[:3] + (60,), resolution=100)
         self.dead_trail = NoteTrail(self.id, self.position, self.note.time, self.note.length, self.highway.px_per_s,
-                                    arcade.color.GRAY, width=self.highway.note_size, upscroll=True, fill_color=arcade.color.GRAY[:3] + (60,), resolution=100)
+                                    colors.GRAY, width=self.highway.note_size, upscroll=True, fill_color=colors.GRAY[:3] + (60,), resolution=100)
 
     def update_animation(self, delta_time: float):
         self.trail.set_position(*self.position)
@@ -239,12 +224,12 @@ class FourKeyHighway(Highway):
             self.sprite_buckets.append(sprite, note.time, note.length)
 
         self.text_batch = pyglet.graphics.Batch()
-        self.text_objects: list[arcade.Text] = []
+        self.text_objects: list[Text] = []
         # DO NOT LET THIS SHIP PLEASE.
         for sprite in self.sprite_buckets.sprites:
             sprite = cast(FourKeyLongNoteSprite, sprite)
             value_string = "" if sprite.note.value == 0 else str(sprite.note.value)
-            self.text_objects.append(arcade.Text(value_string, sprite.center_x, sprite.center_y,
+            self.text_objects.append(Text(value_string, sprite.center_x, sprite.center_y,
                                                  font_size = 24, align = "center", font_name = "bananaslip plus",
                                                  color = (0, 0, 0, 255), batch = self.text_batch,
                                                  anchor_x = "center", anchor_y = "center"))
@@ -252,7 +237,7 @@ class FourKeyHighway(Highway):
 
         logger.debug(f"Sustains: {len([s for s in self.sprite_buckets.sprites if isinstance(s, FourKeyLongNoteSprite)])}")
 
-        self.strikeline = arcade.SpriteList()
+        self.strikeline = SpriteList()
         for i in [0, 1, 2, 3]:
             sprite = FourKeyNoteSprite(FourKeyNote(self.chart, 0, i, 0, "strikeline"), self, self.note_size)
             sprite.top = self.strikeline_y
@@ -340,9 +325,9 @@ class FourKeyHighway(Highway):
 
 # SKIN
 class FourKeyJudgement(Judgement):
-    def get_texture(self) -> arcade.Texture:
-        with pkg_resources.path(baseskin, f"judgement-{self.key}.png") as image_path:
-            tex = arcade.load_texture(image_path)
+    def get_texture(self) -> Texture:
+        with as_file(files(skins) / "base" / f"judgement-{self.key}.png") as p:
+            tex = arcade.load_texture(p)
         return tex
 
 
@@ -385,9 +370,8 @@ class FourKeyEngine(Engine):
         self.active_sustains: list[FourKeyNote] = []
         self.last_sustain_tick = 0
 
-    def process_keystate(self):
+    def process_keystate(self, key_states: KeyStates) -> None:
         last_state = self.key_state
-        key_states = keymap.fourkey.state
         if self.last_p1_note in (0, 1, 2, 3) and key_states[self.last_p1_note] is False:
             self.last_p1_note = None
         # ignore spam during front/back porch

@@ -1,30 +1,31 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, cast
-from types import ModuleType
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from charm.lib.digiwindow import DigiWindow
     from charm.lib.digiview import DigiView
+    from arcade.types import Color
 
+from importlib.resources import files
 import math
 
-import PIL.Image, PIL.ImageOps  # noqa: E401
+import PIL.Image
+import PIL.ImageOps
 import arcade
-from arcade import Sprite
-from arcade.types import Color
+from arcade import Sprite, SpriteList, Texture, Text, color as colors
 
 import charm.data.icons
 from charm.lib.anim import ease_circout, perc
 from charm.lib.charm import CharmColors, generate_missing_texture_image
-from charm.lib.utils import img_from_resource
+from charm.lib.utils import img_from_path
 
 
-def load_icon_texture(icon: str, width: int, border_width: int, border_color: Color) -> arcade.Texture:
+def load_icon_texture(icon: str, width: int, border_width: int, border_color: Color) -> Texture:
     try:
-        image = img_from_resource(cast(ModuleType, charm.data.icons), f"{icon}.png").resize((width, width), PIL.Image.LANCZOS)
+        image = img_from_path(files(charm.data.icons) / f"{icon}.png").resize((width, width), PIL.Image.LANCZOS)
     except Exception:
         image = generate_missing_texture_image(width, width)
     image_expanded = PIL.ImageOps.expand(image, border=border_width, fill=border_color)
-    tex = arcade.Texture(image_expanded)
+    tex = Texture(image_expanded)
     return tex
 
 
@@ -35,7 +36,7 @@ class MainMenuItem(Sprite):
         icon: str,
         goto: DigiView | None,
         width: int = 200,
-        border_color: Color = arcade.color.WHITE,
+        border_color: Color = colors.WHITE,
         border_width: int = 0
     ):
         tex = load_icon_texture(icon, width, border_width, border_color)
@@ -43,10 +44,10 @@ class MainMenuItem(Sprite):
 
         self.goto = goto
 
-        self.label = arcade.Text(
+        self.label = Text(
             label,
             0, 0,
-            CharmColors.PURPLE if self.goto is not None else arcade.color.GRAY,
+            CharmColors.PURPLE if self.goto is not None else colors.GRAY,
             anchor_x="center",
             anchor_y="top",
             font_name="bananaslip plus",
@@ -73,12 +74,12 @@ class MainMenu:
         self.items = items
         self.window: DigiWindow = arcade.get_window() # type: ignore
 
-        self.sprite_list = arcade.SpriteList[MainMenuItem]()
+        self.sprite_list = SpriteList[MainMenuItem]()
         for item in self.items:
             self.sprite_list.append(item)
 
         self.loading = False
-        self.loading_label = arcade.Text("LOADING...", 0, 0, arcade.color.BLACK, anchor_x='center', anchor_y="bottom",
+        self.loading_label = Text("LOADING...", 0, 0, colors.BLACK, anchor_x='center', anchor_y="bottom",
                                          font_name="bananaslip plus", font_size=24)
 
         self._selected_id = 0

@@ -1,16 +1,19 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from arcade import BasicSprite
+
+from importlib.resources import files
 from functools import cache
 import itertools
-from types import ModuleType
-from typing import cast
 
-import arcade
-from arcade import BasicSprite
-from arcade.types import Color
 import PIL.Image
 import PIL.ImageDraw
+from arcade import Sprite, SpriteList, Texture, color as colors
+from arcade.types import Color
 
 import charm.data.images
-from charm.lib.utils import img_from_resource
+from charm.lib.utils import img_from_path
 
 
 class CharmColors:
@@ -25,34 +28,34 @@ class CharmColors:
 @cache
 def generate_missing_texture_image(w: int, h: int) -> PIL.Image.Image:
     """Generate a classic missing texture of wxh."""
-    mt = PIL.Image.new("RGBA", (w, h), arcade.color.BLACK)
+    mt = PIL.Image.new("RGBA", (w, h), colors.BLACK)
     d = PIL.ImageDraw.Draw(mt)
-    d.rectangle(((0, 0), (w // 2 - 1, h // 2 - 1)), arcade.color.MAGENTA)  # upper left
-    d.rectangle(((w // 2, h // 2), (w, h)), arcade.color.MAGENTA)          # lower right
+    d.rectangle(((0, 0), (w // 2 - 1, h // 2 - 1)), colors.MAGENTA)  # upper left
+    d.rectangle(((w // 2, h // 2), (w, h)), colors.MAGENTA)          # lower right
     return mt
 
 
 @cache
-def load_missing_texture(height: int, width: int) -> arcade.Texture:
+def load_missing_texture(height: int, width: int) -> Texture:
     image = generate_missing_texture_image(height, width)
-    return arcade.Texture(image)
+    return Texture(image)
 
 
 class GumWrapper:
     def __init__(self, size: tuple[int, int]):
         """Generate two SpriteLists that makes a gum wrapper-style background."""
         screen_w, screen_h = size
-        logo_tex = arcade.Texture(img_from_resource(cast(ModuleType, charm.data.images), "small-logo.png"))
+        logo_tex = Texture(img_from_path(files(charm.data.images) / "small-logo.png"))
         tex_w, tex_h = logo_tex.size
         buffer_w, buffer_h = 20, 16
         logo_w, logo_h = tex_w + buffer_w, tex_h + buffer_h
-        self.logos_forward = SlidingSpriteList[arcade.Sprite](loop_width=logo_w, speed=0.25, alpha=128)
-        self.logos_backward = SlidingSpriteList[arcade.Sprite](loop_width=logo_w, speed=-0.25, alpha=128)
+        self.logos_forward = SlidingSpriteList[Sprite](loop_width=logo_w, speed=0.25, alpha=128)
+        self.logos_backward = SlidingSpriteList[Sprite](loop_width=logo_w, speed=-0.25, alpha=128)
         spritelists = itertools.cycle([self.logos_forward, self.logos_backward])
         for y in range(0, screen_h + logo_h, logo_h):
             spritelist = next(spritelists)
             for x in range(-logo_w, screen_w + logo_w, logo_w):
-                s = arcade.Sprite(
+                s = Sprite(
                     logo_tex,
                     center_x=x + logo_w / 2,
                     center_y=y + logo_h / 2
@@ -70,7 +73,7 @@ class GumWrapper:
         self.logos_backward.draw()
 
 
-class SlidingSpriteList[T: BasicSprite](arcade.SpriteList[T]):
+class SlidingSpriteList[T: BasicSprite](SpriteList[T]):
     def __init__(self, loop_width: float, speed: float, alpha: int):
         self.loop_width = loop_width
         self.speed = speed  # loops per second

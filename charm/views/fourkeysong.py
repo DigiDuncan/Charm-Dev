@@ -2,7 +2,8 @@ import logging
 from math import ceil
 from pathlib import Path
 
-import arcade
+from arcade import Sprite, Texture, Text, Sound, color as colors
+
 import ndjson
 
 from charm.lib.anim import ease_circout, perc
@@ -39,8 +40,8 @@ class FourKeySongView(DigiView):
             audio_paths = [a for a in self.song_path.glob("*.mp3")] + [a for a in self.song_path.glob("*.wav")] + [a for a in self.song_path.glob("*.ogg")]
             trackfiles = []
             for s in audio_paths:
-                trackfiles.append(OGGSound(s) if s.suffix == ".ogg" else arcade.Sound(s))
-            self.tracks = TrackCollection([arcade.Sound(s) for s in audio_paths])
+                trackfiles.append(OGGSound(s) if s.suffix == ".ogg" else Sound(s))
+            self.tracks = TrackCollection([Sound(s) for s in audio_paths])
 
         with LogSection(logger, "loading song data"):
             self.sm_song = SMSong.parse(self.song_path)
@@ -58,12 +59,12 @@ class FourKeySongView(DigiView):
         with LogSection(logger, "loading highway"):
             self.highway = FourKeyHighway(self.chart, self.engine, (0, 0))
 
-        self.text = arcade.Text("[LOADING]", -5, self.window.height - 5, color = arcade.color.BLACK, font_size = 24, align = "right", anchor_y="top", font_name = "bananaslip plus", width = self.window.width, multiline = True)
-        self.countdown_text = arcade.Text("0", *self.window.center, arcade.color.BLACK, 72, align="center", anchor_x="center", anchor_y="center", font_name = "bananaslip plus", width = 100)
+        self.text = Text("[LOADING]", -5, self.window.height - 5, color = colors.BLACK, font_size = 24, align = "right", anchor_y="top", font_name = "bananaslip plus", width = self.window.width, multiline = True)
+        self.countdown_text = Text("0", *self.window.center, colors.BLACK, 72, align="center", anchor_x="center", anchor_y="center", font_name = "bananaslip plus", width = 100)
 
         with LogSection(logger, "loading judgements"):
-            judgement_textures: list[arcade.Texture] = [j.get_texture() for j in self.engine.judgements]
-            self.judgement_sprite = arcade.Sprite(judgement_textures[0])
+            judgement_textures: list[Texture] = [j.get_texture() for j in self.engine.judgements]
+            self.judgement_sprite = Sprite(judgement_textures[0])
             self.judgement_sprite.textures = judgement_textures
             self.judgement_sprite.scale = (self.highway.w * 0.8) / self.judgement_sprite.width
             self.judgement_sprite.center_x = self.window.center_x
@@ -104,7 +105,7 @@ class FourKeySongView(DigiView):
             self.highway.strikeline[i].alpha = 255 if press else 64
             self.highway.strikeline[i].texture = load_note_texture("normal" if press else "strikeline", i, self.highway.note_size)
             if self.tracks.playing:
-                self.engine.process_keystate()
+                self.engine.process_keystate(keymap.fourkey.state)
 
     def generate_data_string(self) -> str:
         return (f"Time: {int(self.tracks.time // 60)}:{int(self.tracks.time % 60):02}\n"

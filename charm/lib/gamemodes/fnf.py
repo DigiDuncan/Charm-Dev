@@ -1,15 +1,16 @@
 from __future__ import annotations
 
-import importlib.resources as pkg_resources
+from importlib.resources import files, as_file
 import json
 import logging
 import math
 from dataclasses import dataclass
 from hashlib import sha1
 from pathlib import Path
-from typing import Optional, TypedDict
+from typing import TypedDict
 
 import arcade
+from arcade import Texture, color as colors
 
 from charm.lib.errors import NoChartsError, UnknownLanesError, ChartPostReadParseError
 from charm.lib.gamemodes.four_key import FourKeyChart, FourKeyEngine, FourKeyJudgement, \
@@ -17,7 +18,7 @@ from charm.lib.gamemodes.four_key import FourKeyChart, FourKeyEngine, FourKeyJud
 from charm.lib.generic.song import BPMChangeEvent, Event, Metadata, Song
 from charm.lib.types import Seconds, Milliseconds
 from charm.lib.utils import clamp
-import charm.data.images.skins.fnf as fnfskin
+import charm.data.images.skins as skins
 from charm.objects.lyric_animator import LyricEvent
 
 logger = logging.getLogger("charm")
@@ -50,14 +51,14 @@ class NoteType:
 
 
 class NoteColor:
-    GREEN = arcade.color.LIME_GREEN
-    RED = arcade.color.RED
-    PINK = arcade.color.PINK
-    BLUE = arcade.color.CYAN
-    BOMB = arcade.color.DARK_RED
-    DEATH = arcade.color.BLACK
-    HEAL = arcade.color.WHITE
-    CAUTION = arcade.color.YELLOW
+    GREEN = colors.LIME_GREEN
+    RED = colors.RED
+    PINK = colors.PINK
+    BLUE = colors.CYAN
+    BOMB = colors.DARK_RED
+    DEATH = colors.BLACK
+    HEAL = colors.WHITE
+    CAUTION = colors.YELLOW
 
     @classmethod
     def from_note(cls, note: FNFNote):
@@ -80,7 +81,7 @@ class NoteColor:
             case NoteType.CAUTION:
                 return cls.CAUTION
             case _:
-                return arcade.color.BLACK
+                return colors.BLACK
 
 
 @dataclass
@@ -104,14 +105,14 @@ class FNFNote(FourKeyNote):
 
 
 class FNFJudgement(FourKeyJudgement):
-    def get_texture(self) -> arcade.Texture:
-        with pkg_resources.path(fnfskin, f"judgement-{self.key}.png") as image_path:
-            tex = arcade.load_texture(image_path)
+    def get_texture(self) -> Texture:
+        with as_file(files(skins) / "fnf" / f"judgement-{self.key}.png") as p:
+            tex = arcade.load_texture(p)
         return tex
 
 
 class FNFChart(FourKeyChart):
-    def __init__(self, song: FNFSong, difficulty: str, player: int, speed: float, hash: str):
+    def __init__(self, song: FNFSong, difficulty: str, player: int, speed: float, hash: str | None):
         super().__init__(song, difficulty, hash)
         self.player1 = "bf"
         self.player2 = "dad"
@@ -136,24 +137,22 @@ class FNFSong(Song[FNFChart]):
     def get_metadata(cls, folder: Path) -> Metadata:
         """Gets metadata from a chart file."""
         title = folder.stem.replace("-", " ").title()
-        artist = ""
-        album = ""
-        return Metadata(title, artist, album, hash = f"fnf-{title}", path = folder, gamemode = "fnf")
+        return Metadata(path=folder, title=title, hash=f"fnf-{title}", gamemode="fnf")
 
     @classmethod
-    def parse(cls, folder: Path) -> FNFSong:
-        folder_path = Path(folder)
+    def parse(cls, path: Path) -> FNFSong:
+        folder_path = Path(path)
         stem = folder_path.stem
-        song = FNFSong(folder)
+        song = FNFSong(path)
 
         charts = song.path.glob(f"./{stem}*.json")
         parsed_charts = [cls.parse_chart(chart, song) for chart in charts]
+        if len(parsed_charts) == 0:
+            raise NoChartsError(path.stem)
         for charts in parsed_charts:
             for chart in charts:
                 song.charts.append(chart)
 
-        if not song.charts:
-            raise NoChartsError(folder)
 
         # Global attributes that are stored per-chart, for some reason.
         chart: FNFChart = song.charts[0]
@@ -196,7 +195,7 @@ class FNFSong(Song[FNFChart]):
         sections = songdata["song"]  # Unused
 
         last_bpm = bpm
-        last_focus: Optional[int] = None
+        last_focus: int | None = None
         section_start = 0.0
         events: list[Event] = []
         sections = songdata["notes"]

@@ -1,9 +1,9 @@
-import importlib.resources as pkg_resources
+from importlib.resources import files, as_file
 
 import logging
 import math
 from math import ceil
-from typing import List
+from operator import attrgetter
 from typing_extensions import deprecated
 
 import arcade
@@ -48,8 +48,7 @@ class IndexShifter:
 
 
 class ListCycle:
-
-    def __init__(self, texture: Texture, content: List[str], ease: EasingFunction = ease_linear,
+    def __init__(self, texture: Texture, content: list[str], ease: EasingFunction = ease_linear,
                  height: int | None = None, width: int | None = None,
                  sprite_scale: float = 1.0,
                  shift_time: Seconds = 0.25,
@@ -81,7 +80,7 @@ class ListCycle:
 
         # The strings used as the "content" of each sprite
         # can be replaced by whatever you actually want shown
-        self.content: List[str] = content
+        self.content: list[str] = content
         self.content_index: int = 0
         self.content_count: int = len(content)
 
@@ -313,7 +312,7 @@ class SongMenu:
         self.window: DigiWindow = arcade.get_window()
         self.songs: list[Metadata] = songs
 
-        with pkg_resources.path(charm.data.images, "menu_card.png") as p:
+        with as_file(files(charm.data.images) / "menu_card.png") as p:
             tex = arcade.load_texture(p)
 
         self.cycler: ListCycle = ListCycle(texture=tex, content=["a"] * 1000,
@@ -364,10 +363,10 @@ class SongMenu:
     def selected(self) -> Metadata:
         return self.songs[self.selected_id]
 
-    def sort(self, key: str, rev: bool = False):
+    def sort(self, key: str, *, reverse: bool = False) -> None:
         if self.songs:
             selected = self.songs[self.selected_id]
-            self.songs.sort(key=lambda item: item.get(key, ""), reverse=rev)
+            self.songs.sort(key=attrgetter(key), reverse=reverse)
             self.selected_id = self.songs.index(selected)
             self.cycler.trigger_layout()
 

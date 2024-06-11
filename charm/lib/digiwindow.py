@@ -1,23 +1,22 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, cast
-
-from charm.lib.sfxmanager import SfxManager
-from charm.views.title import TitleView
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from charm.lib.digiview import DigiView
 
 import logging
 
 import arcade
+from arcade import Window, Camera2D
 
+from charm.lib.sfxmanager import SfxManager
 from charm.lib.debug_menu import DebugMenu
 from charm.lib.presencemanager import PresenceManager
 from charm.lib.themesong import ThemeSong
+from charm.views.title import TitleView
 
 logger = logging.getLogger("charm")
 
-
-class DigiWindow(arcade.Window):
+class DigiWindow(Window):
     def __init__(self, size: tuple[int, int], title: str, fps_cap: int):
         super().__init__(*size, title, update_rate=1 / fps_cap, enable_polling=True, resizable=True)
         self.sfx = SfxManager()
@@ -36,7 +35,7 @@ class DigiWindow(arcade.Window):
         arcade.draw_text(" ", 0, 0)  # force font init (fixes lag on first text draw)
 
         # Cameras and text labels
-        self.camera = arcade.camera.Camera2D()
+        self.camera = Camera2D()
 
         # Debug menu
         self.debug = DebugMenu(self)

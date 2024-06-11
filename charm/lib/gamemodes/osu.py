@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from functools import total_ordering
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal
 import logging
 import math
 import re
@@ -57,7 +57,7 @@ class OsuHitSample:
     addition_set: int = 0
     index: int = 0
     volume: float = 0
-    filename: Optional[str] = None
+    filename: str | None = None
 
 
 @total_ordering
@@ -188,9 +188,9 @@ class OsuGeneralData:
 class OsuMetadata:
     """Metadata that an osu! chart supports."""
     title: str = None
-    title_unicode: Optional[str] = None
+    title_unicode: str | None = None
     artist: str = None
-    artist_unicode: Optional[str] = None
+    artist_unicode: str | None = None
     charter: str = None
     difficulty: str = None
     source: str = None

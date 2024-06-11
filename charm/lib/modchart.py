@@ -1,13 +1,14 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from charm.views.fourkeysong import FourKeySongView
+    from charm.lib.generic.song import Seconds
 
 from dataclasses import asdict, dataclass
-import typing
 
 from charm.lib.anim import ease_linear, perc
-from charm.lib.generic.song import Seconds, Event
+from charm.lib.generic.song import Event
 
-if typing.TYPE_CHECKING:
-    from charm.views.fourkeysong import FourKeySongView
 
 
 @dataclass
@@ -34,7 +35,7 @@ class ModchartEvent(Event):
 class HighwayMoveEvent(ModchartEvent):
     """Move the highway (dx, dy) in t seconds."""
     type: typing.ClassVar[str] = "highway_move"
-    t: float
+    t: float = 0.0
     dx: float = 0.0
     dy: float = 0.0
 
@@ -66,7 +67,7 @@ class Modchart:
 
 
 class ModchartProcessor:
-    def __init__(self, modchart: Modchart, view: "FourKeySongView"):
+    def __init__(self, modchart: Modchart, view: FourKeySongView):
         self.modchart = modchart
         self.view = view
 

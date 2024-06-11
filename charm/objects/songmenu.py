@@ -1,47 +1,51 @@
 from collections.abc import Iterable
 from hashlib import sha1
 import logging
+from operator import attrgetter
+from typing import cast
 
 import arcade
-from arcade import LBWH, LRBT, Sprite
+from arcade import LBWH, LRBT, Sprite, SpriteList, Texture, Camera2D, color as colors
 
 from charm.lib.anim import ease_circout, perc
 from charm.lib.charm import CharmColors
+from charm.lib.errors import NoSongsFoundError
 from charm.lib.generic.song import Metadata
 from charm.lib.utils import clamp
 
-from charm.ui.utils import get_album_art
+from charm.lib.utils import get_album_art
 
 logger = logging.getLogger("charm")
 
 
 class SongMenuItem(Sprite):
-    def __init__(self, song: Metadata, w: int = None, h: int = None, *args, **kwargs):
+    def __init__(self, song: Metadata):
         self.song = song
 
         self.title = song.title
         self.artist = song.artist
         self.album = song.album
 
-        # Make a real hash, probably on Song.
-        self.key = sha1((str(self.title) + str(self.artist) + str(self.album)).encode()).hexdigest()
+        self.album_art = get_album_art(self.song)
+
 
         window = arcade.get_window()
 
-        self.album_art = get_album_art(self.song)
-
-        self._w = w if w else window.width // 2
-        self._h = h if h else window.height // 8
-
-        self._tex = arcade.Texture.create_empty(f"{self.key}-menuitem", (self._w, self._h))
-        super().__init__(self._tex, *args, **kwargs)
-        arcade.get_window().ctx.default_atlas.add(self._tex)
+        # Make a real hash, probably on Song.
+        key = sha1((str(self.title) + str(self.artist) + str(self.album)).encode()).hexdigest()
+        size = (
+            window.width // 2,
+            window.height // 8
+        )
+        _tex = Texture.create_empty(f"{key}-menuitem", size)
+        super().__init__(_tex)
+        window.ctx.default_atlas.add(_tex)
 
         self.position = (0, -window.height)
 
-        with arcade.get_window().ctx.default_atlas.render_into(self._tex) as fbo:
-            l, b, w, h = fbo.viewport
-            temp_cam = arcade.camera.Camera2D(
+        with window.ctx.default_atlas.render_into(_tex) as fbo:
+            l, b, w, h = cast(tuple[int, int, int, int], fbo.viewport)
+            temp_cam = Camera2D(
                 viewport=LBWH(l, b, w, h),
                 projection=LRBT(0, w, h, 0),
                 position=(0.0, 0.0),
@@ -53,16 +57,19 @@ class SongMenuItem(Sprite):
                 arcade.draw_lrbt_rectangle_filled(0, self.width - self.height / 2, 0, self.height, CharmColors.FADED_PURPLE)
                 if (self.artist or self.album):
                     if self.artist:
+                        # Has artist
                         # add the comma
                         artistalbum = self.artist + ", " + str(self.album)
                     else:
+                        # No artist but has Album
                         # only album name
                         artistalbum = self.album
+                    # Has artist OR album
                     arcade.draw_text(
                         self.title,
                         int(self.width - self.height / 2 - 5),
                         int(self.height / 2),
-                        arcade.color.BLACK,
+                        colors.BLACK,
                         font_size=self.height / 3 * (3 / 4),
                         font_name="bananaslip plus",
                         anchor_x="right"
@@ -71,35 +78,34 @@ class SongMenuItem(Sprite):
                         artistalbum,
                         int(self.width - self.height / 2 - 5),
                         int(self.height / 2),
-                        arcade.color.BLACK,
+                        colors.BLACK,
                         font_size=self.height / 4 * (3 / 4),
                         font_name="bananaslip plus",
                         anchor_x="right",
                         anchor_y="top"
                     )
                 else:
+                    # No artist & No album
                     arcade.draw_text(
                         self.title,
                         int(self.width - self.height / 2 - 5),
                         int(self.height / 2),
-                        arcade.color.BLACK,
+                        colors.BLACK,
                         font_size=self.height / 3,
                         font_name="bananaslip plus",
                         anchor_x="right",
                         anchor_y="center"
                     )
 
-        # logger.info(f"Loaded MenuItem {self.title}")
 
 
 class SongMenu:
-    def __init__(self, songs: Iterable[Metadata] = (), radius = 4, buffer = 5, move_speed = 0.2) -> None:
-        self._songs = songs
-        self.items: list[SongMenuItem] = [SongMenuItem(song) for song in self._songs]
-        # atlas = arcade.TextureAtlas((16384, 16384))
-        self.sprite_list = arcade.SpriteList[SongMenuItem]()
-        for item in self.items:
-            self.sprite_list.append(item)
+    def __init__(self, songs: Iterable[Metadata] = (), radius: int = 4, buffer: int = 5, move_speed: float = 0.2) -> None:
+        self.items = [SongMenuItem(song) for song in songs]
+        if len(self.items) == 0:
+            raise NoSongsFoundError
+        self.sprite_list = SpriteList[SongMenuItem]()
+        self.sprite_list.extend(self.items)
 
         self.buffer = buffer
         self.move_speed = move_speed
@@ -109,9 +115,7 @@ class SongMenu:
 
         self.local_time = 0
         self.move_start = 0
-        self.old_pos = {}
-        for item in self.items:
-            self.old_pos[item] = (item.left, item.center_y)
+        self.old_pos = {item: (item.left, item.center_y) for item in self.items}
 
         self.window = arcade.get_window()
 
@@ -120,7 +124,7 @@ class SongMenu:
         return self._selected_id
 
     @selected_id.setter
-    def selected_id(self, v: int):
+    def selected_id(self, v: int) -> None:
         self._selected_id = clamp(0, v, len(self.items) - 1)
         self.move_start = self.local_time
         for item in self.items:
@@ -134,15 +138,16 @@ class SongMenu:
     def move_end(self) -> float:
         return self.move_start + self.move_speed
 
-    def sort(self, key: str, rev: bool = False):
-        if self.items:
-            selected = self.items[self.selected_id]
-            self.items.sort(key=lambda item: item.song.get(key, ""), reverse=rev)
-            self.selected_id = self.items.index(selected)
+    def sort(self, key: str, *, reverse: bool = False) -> None:
+        if len(self.items) == 0:
+            return
+        selected = self.selected
+        self.items.sort(key=attrgetter(key), reverse=reverse)
+        self.selected_id = self.items.index(selected)
 
-    def update(self, local_time: float):
+    def update(self, local_time: float) -> None:
         self.local_time = local_time
-        current = self.items[self.selected_id]
+        current = self.selected
         current.left = ease_circout(self.old_pos[current][0], 0, perc(self.move_start, self.move_end, self.local_time))
         current.center_y = ease_circout(self.old_pos[current][1], self.window.height // 2, perc(self.move_start, self.move_end, self.local_time))
         up_id = self.selected_id

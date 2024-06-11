@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pathlib import Path
 
 from charm.lib.gamemodes.four_key import FourKeyChart, FourKeyEngine, FourKeyNote, FourKeySong
@@ -11,10 +13,10 @@ class ManiaSong(FourKeySong):
         super().__init__(path)
 
     @classmethod
-    def parse(cls, folder: Path) -> "ManiaSong":
-        song = ManiaSong(folder)
+    def parse(cls, path: Path) -> ManiaSong:
+        song = ManiaSong(path)
 
-        chart_files = folder.glob("*.osu")
+        chart_files = path.glob("*.osu")
 
         added_bpm_events = False
 
@@ -30,24 +32,24 @@ class ManiaSong(FourKeySong):
                 elif isinstance(hit_object, OsuHold):
                     chart.notes.append(FourKeyNote(chart, hit_object.time, hit_object.get_lane(4), length = hit_object.length))
             song.charts.append(chart)
-
+        # TODO: Handle no charts
         return song
 
     @classmethod
-    def get_metadata(self, folder: Path) -> Metadata:
+    def get_metadata(cls, folder: Path) -> Metadata:
         chart_files = folder.glob("*.osu")
         raw_chart = RawOsuChart.parse(next(chart_files))
         m = raw_chart.metadata
         return Metadata(
-            m.title,
-            m.artist,
-            m.source,
-            charter = m.charter,
-            path = folder,
-            gamemode = "4k"
+            path=folder,
+            title=m.title,
+            artist=m.artist,
+            album=m.source,
+            charter=m.charter,
+            gamemode="4k"
         )
 
 
 class ManiaEngine(FourKeyEngine):
-    def score_sustains(self):
+    def score_sustains(self) -> None:
         pass

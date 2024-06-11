@@ -1,33 +1,39 @@
-from typing import Optional
 from collections.abc import Iterable
 from pathlib import Path
+from typing_extensions import deprecated
 
 from pyglet.event import EVENT_UNHANDLED
 
 import arcade
-from arcade.gui import UIManager, UIBoxLayout, UILabel, \
-    UIFlatButton, UISpace, UIWidget, Property, Surface, bind, UIEvent, UIMouseDragEvent, UIMouseScrollEvent, \
-    UIMouseEvent, UIImage, UIAnchorLayout
+from arcade import MOUSE_BUTTON_MIDDLE, color as colors
+from arcade.gui import (
+    UIManager, Surface,
+    UIBoxLayout, UIAnchorLayout,
+    UIWidget, UILabel, UIFlatButton, UISpace, UIImage,
+    Property, bind,
+    UIEvent, UIMouseDragEvent, UIMouseScrollEvent, UIMouseEvent,
+)
+
 from charm.lib.digiview import DigiView
 from charm.lib.generic.song import Metadata
-from charm.ui.utils import get_album_art
+from charm.lib.utils import get_album_art
 from charm.lib.gamemodes.fnf import FNFSong
 from charm.lib.paths import songspath
 
 
-def UIFlatButton_from_metadata(metadata: Metadata) -> UIFlatButton:
+def uiflatbutton_from_metadata(metadata: Metadata) -> UIFlatButton:
     return UIFlatButton(text = metadata.title,
                         size_hint = (1 / 12, 1.0),
                         width = 300,
                         height = 10)
 
 
-def UIImage_from_metadata(metadata: Metadata) -> UIImage:
+def uiimage_from_metadata(metadata: Metadata) -> UIImage:
     t = get_album_art(metadata)
     return UIImage(t)
 
 
-def UILabel_from_metadata(metadata: Metadata) -> UILabel:
+def uilabel_from_metadata(metadata: Metadata) -> UILabel:
     t = f"Artist: {metadata.artist}\nAlbum: {metadata.album}\nCharter: {metadata.charter}"
     return UILabel(
         width = 1280 / 4,
@@ -37,6 +43,7 @@ def UILabel_from_metadata(metadata: Metadata) -> UILabel:
     )
 
 
+@deprecated("Unused")
 class SongMenuLayout(UIAnchorLayout):
     def __init__(self, metadatas: list[Metadata], **kwargs):
         super().__init__(**kwargs)
@@ -44,8 +51,8 @@ class SongMenuLayout(UIAnchorLayout):
         self.selected_index = 0
         self.sidebar = UIBoxLayout()
         self.sidebar.add(
-            UIImage_from_metadata(self.metadatas[self.selected_index]))
-        tw = UILabel_from_metadata(self.metadatas[self.selected_index])
+            uiimage_from_metadata(self.metadatas[self.selected_index]))
+        tw = uilabel_from_metadata(self.metadatas[self.selected_index])
         self.sidebar.add(tw)
         self.add(
             self.sidebar,
@@ -109,12 +116,12 @@ class UIScrollArea(UIWidget):
         self.surface.position = (-self.scroll_x, -self.scroll_y)
         self.surface.draw((0, 0, width, height))
 
-    def on_event(self, event: UIEvent) -> Optional[bool]:
+    def on_event(self, event: UIEvent) -> bool | None:
         if isinstance(event, UIMouseDragEvent) and not self.rect.collide_with_point(event.x, event.y):
             return EVENT_UNHANDLED
 
         # drag scroll area around with middle mouse button
-        if isinstance(event, UIMouseDragEvent) and event.buttons & arcade.MOUSE_BUTTON_MIDDLE:
+        if isinstance(event, UIMouseDragEvent) and event.buttons & MOUSE_BUTTON_MIDDLE:
             self.scroll_x -= event.dx
             self.scroll_y -= event.dy
             return True
@@ -154,6 +161,7 @@ class UIScrollArea(UIWidget):
 # │  scroll area to 75%  │ │    UIFlatButtons     │  │        Label)        │
 # └──────────────────────┘ └──────────────────────┘  └──────────────────────┘
 
+@deprecated("Unused")
 class ArcadeUITestView(DigiView):
     def __init__(self, *args, **kwargs):
         super().__init__(fade_in=0.5, *args, **kwargs)
@@ -183,7 +191,7 @@ class ArcadeUITestView(DigiView):
         )
         for s in self.songs:
             # width and height have to be set, because the UIBoxLayout would shrink everything down to 0
-            button = UIFlatButton_from_metadata(s)
+            button = uiflatbutton_from_metadata(s)
             title_box.add(button)
         title_box.fit_content()  # resize the box to fit the content
 
@@ -192,11 +200,11 @@ class ArcadeUITestView(DigiView):
         title_scroll.add(title_box)
 
         detail_box = UIBoxLayout(vertical=True, size_hint=(0.25, 1), space_between=10)  # holds the details
-        detail_box.add(UIImage_from_metadata(self.songs[0]))
-        detail_box.add(UILabel_from_metadata(self.songs[0]))
+        detail_box.add(uiimage_from_metadata(self.songs[0]))
+        detail_box.add(uilabel_from_metadata(self.songs[0]))
 
         # horizontal line
-        self.spacer = UISpace(size_hint=(0, 0.9), size_hint_min=(2, 2), color=arcade.color.GRAY)
+        self.spacer = UISpace(size_hint=(0, 0.9), size_hint_min=(2, 2), color=colors.GRAY)
 
         # put everything together
         root.add(title_scroll)

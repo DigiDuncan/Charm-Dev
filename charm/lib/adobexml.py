@@ -1,17 +1,20 @@
+from __future__ import annotations
+
 from functools import cache
 import logging
 import math
 from os import PathLike
 from pathlib import Path
-import importlib.resources as pkg_resources
+from importlib.resources import files, as_file
 import re
 import xml.etree.ElementTree as ET
 
 import PIL.Image
 import PIL.ImageDraw
 
-from arcade import Sprite
 import arcade
+from arcade import Sprite, Texture, color as colors
+from arcade.hitbox import HitBox
 
 import charm.data.images.spritesheets
 
@@ -22,18 +25,28 @@ subtexture_name = re.compile(r"(.+?)(\d+)$")
 
 def strint(i: int | str | None) -> int | None:
     """Convert a str to an int, or return an existing int or None."""
-    if isinstance(i, int) or i is None:
-        return i
-    elif isinstance(i, str):
+    if isinstance(i, str):
         return int(i)
-    else:
-        raise ValueError(f"{i} is not a int or str.")
+    if isinstance(i, int | None):
+        return i
+    raise ValueError(f"{i} is not a int or str.")
 
 
 class Subtexture:
-    def __init__(self, name: str, x: int | str, y: int | str, width: int | str, height: int | str,
-                 frame_x: int | str = None, frame_y: int | str = None, frame_width: int | str = None, frame_height: int | str = None,
-                 offset_x: int | str = None, offset_y: int | str = None):
+    def __init__(
+        self,
+        name: str,
+        x: int | str,
+        y: int | str,
+        width: int | str,
+        height: int | str,
+        frame_x: int | str = None,
+        frame_y: int | str = None,
+        frame_width: int | str = None,
+        frame_height: int | str = None,
+        offset_x: int | str = None,
+        offset_y: int | str = None
+    ):
         self._name = name
         name_re = subtexture_name.match(self._name)
         if name_re is None:
@@ -65,15 +78,15 @@ class AdobeTextureAtlas:
         self.subtextures = subtextures
 
     @property
-    def width(self):
+    def width(self) -> int:
         return max([st.frame_width for st in self.subtextures if st.frame_width is not None] + [st.width for st in self.subtextures if st.width is not None])
 
     @property
-    def height(self):
+    def height(self) -> int:
         return max([st.frame_height for st in self.subtextures if st.frame_height is not None] + [st.height for st in self.subtextures if st.height is not None])
 
     @classmethod
-    def parse(cls, s: str, offsets: str = "") -> "AdobeTextureAtlas":
+    def parse(cls, s: str, offsets: str = "") -> AdobeTextureAtlas:
         tree = ET.ElementTree(ET.fromstring(s))
         root = tree.getroot()
         image_path = root.attrib["imagePath"]
@@ -130,12 +143,12 @@ class AdobeSprite(Sprite):
                 tx = arcade.load_texture(self._image_path, x = st.x, y = st.y, width = st.width, height = st.height)
                 im = PIL.Image.new("RGBA", (st.frame_width, st.frame_height))
                 im.paste(tx.image, (-st.frame_x, -st.frame_y))
-                tx = arcade.Texture(im)
+                tx = Texture(im)
             else:
                 tx = arcade.load_texture(self._image_path, x = st.x, y = st.y, width = st.width, height = st.height)
             if debug:
                 draw = PIL.ImageDraw.ImageDraw(tx.image)
-                draw.rectangle((0, 0, tx.image.width - 1, tx.image.height - 1), outline = arcade.color.RED)
+                draw.rectangle((0, 0, tx.image.width - 1, tx.image.height - 1), outline = colors.RED)
             textures.append(tx)
             self.texture_map[st] = n
 
@@ -159,7 +172,7 @@ class AdobeSprite(Sprite):
         # TODO: Can be very slow.
         for texture in self.textures:
             self.texture = texture
-            self.hit_box = arcade.hitbox.HitBox(self.texture.hit_box_points, (self.center_x, self.center_y))
+            self.hit_box = HitBox(self.texture.hit_box_points, (self.center_x, self.center_y))
             # logger.info(f"Cached texture {texture.name}")
 
     def set_animation(self, name: str):
@@ -203,7 +216,7 @@ class AdobeSprite(Sprite):
             # Is there an animation override to be played once?
             if self._current_once_animation:
                 self.set_texture(self._current_once_animation.pop(0))
-                self.hit_box = arcade.hitbox.HitBox(self.texture.hit_box_points, (self.center_x, self.center_y))
+                self.hit_box = HitBox(self.texture.hit_box_points, (self.center_x, self.center_y))
                 self._animation_time = 0
             # If not, an animation override?
             elif self._current_animation_override:
@@ -214,7 +227,7 @@ class AdobeSprite(Sprite):
                 self._current_animation_index %= len(self._current_animation_override)
 
                 self.set_texture(self._current_animation_override[self._current_animation_index])
-                self.hit_box = arcade.hitbox.HitBox(self.texture.hit_box_points, (self.center_x, self.center_y))
+                self.hit_box = HitBox(self.texture.hit_box_points, (self.center_x, self.center_y))
                 self._animation_time = 0
             # If not, is there a normal animation?
             elif self._current_animation:
@@ -225,7 +238,7 @@ class AdobeSprite(Sprite):
                 self._current_animation_index %= len(self._current_animation)
 
                 self.set_texture(self._current_animation[self._current_animation_index])
-                self.hit_box = arcade.hitbox.HitBox(self.texture.hit_box_points, (self.center_x, self.center_y))
+                self.hit_box = HitBox(self.texture.hit_box_points, (self.center_x, self.center_y))
                 self._animation_time = 0
             # Set anchors
             if self.anchors:
@@ -234,7 +247,7 @@ class AdobeSprite(Sprite):
 
 
 @cache
-def sprite_from_adobe(s: str, anchors: tuple[str] = ("bottom"), debug = False) -> AdobeSprite:
-    with pkg_resources.path(charm.data.images.spritesheets, f"{s}.xml") as p:
+def sprite_from_adobe(s: str, anchors: tuple[str] = ("bottom",), *, debug: bool = False) -> AdobeSprite:
+    with as_file(files(charm.data.images.spritesheets) / f"{s}.xml") as p:
         parent = p.parent
         return AdobeSprite(parent, s, anchors, debug)

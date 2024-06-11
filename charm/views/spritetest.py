@@ -1,10 +1,11 @@
+from typing import cast
 from collections.abc import Iterator
 
 from itertools import cycle
-from typing import cast
-import arcade
-from charm.lib.adobexml import Subtexture, sprite_from_adobe, AdobeSprite
 
+from arcade import Text, color as colors
+
+from charm.lib.adobexml import Subtexture, sprite_from_adobe, AdobeSprite
 from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView
 from charm.lib.keymap import keymap
@@ -15,8 +16,8 @@ class SpriteTestView(DigiView):
         super().__init__(fade_in=1, back=back)
         self.sprite: AdobeSprite
         self.anims: Iterator[str]
-        self.anim_label: arcade.Text
-        self.data_label: arcade.Text
+        self.anim_label: Text
+        self.data_label: Text
         self.fps: int
         self.paused: bool
         self.gum_wrapper: GumWrapper
@@ -32,8 +33,8 @@ class SpriteTestView(DigiView):
         self.sprite.left = 0
         self.sprite.set_animation(SPRITE_ANIM)
         self.anims = cycle(self.sprite.animations)
-        self.anim_label = arcade.Text(SPRITE_ANIM, self.window.width // 2, self.window.height, font_size = 24, color = arcade.color.BLACK, anchor_x="center", anchor_y="top")
-        self.data_label = arcade.Text("", self.window.width, 0, font_size = 24, color = arcade.color.BLACK, anchor_x="right", anchor_y="bottom", multiline=True, width=self.window.width, align="right")
+        self.anim_label = Text(SPRITE_ANIM, self.window.width // 2, self.window.height, font_size = 24, color = colors.BLACK, anchor_x="center", anchor_y="top")
+        self.data_label = Text("", self.window.width, 0, font_size = 24, color = colors.BLACK, anchor_x="right", anchor_y="bottom", multiline=True, width=self.window.width, align="right")
 
         self.fps = self.sprite.fps
         self.paused = False

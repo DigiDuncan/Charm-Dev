@@ -1,9 +1,8 @@
-import importlib.resources as pkg_resources
+from importlib.resources import files, as_file
 import math
 
-from arcade import Sprite, SpriteList
-from arcade.text import Text
-import arcade.color
+import arcade
+from arcade import Sprite, SpriteList, Text, color as colors
 from pyglet.graphics import Batch
 
 import charm.data.images
@@ -20,8 +19,8 @@ class SongLabelWrapper:
         self.metadata = metadata
         self.texts: dict[str, Text] = {}
         self._enabled = True
-        self.texts["main"] = Text(self.metadata.title, 50, 0, arcade.color.BLACK, 16, align = "right", anchor_x = "right", anchor_y = "baseline", font_name = "bananaslip plus", batch = batch)
-        self.texts["second"] = Text(self.metadata.artist, 50, self.texts["main"].bottom, arcade.color.BLACK, 12, align = "right", anchor_x = "right", anchor_y = "top", font_name = "bananaslip plus", batch = batch)
+        self.texts["main"] = Text(self.metadata.title, 50, 0, colors.BLACK, 16, align = "right", anchor_x = "right", anchor_y = "baseline", font_name = "bananaslip plus", batch = batch)
+        self.texts["second"] = Text(self.metadata.artist, 50, self.texts["main"].bottom, colors.BLACK, 12, align = "right", anchor_x = "right", anchor_y = "top", font_name = "bananaslip plus", batch = batch)
 
     @property
     def enabled(self) -> bool:
@@ -53,9 +52,9 @@ class SongMenu:
 
         self.window = arcade.get_window()
 
-        self.spritelist = SpriteList()
-        for i in range(21):
-            with pkg_resources.path(charm.data.images, "menu_card.png") as p:
+        self.spritelist = SpriteList[Sprite]()
+        for _ in range(21):
+            with as_file(files(charm.data.images) / "menu_card.png") as p:
                 self.spritelist.append(Sprite(p, 0.5))
 
         self.buffer = 5
@@ -103,6 +102,6 @@ class SongMenu:
 
     def draw(self):
         self.spritelist.draw()
-        arcade.draw_line(0, self.window.center_y, self.window.width, self.window.center_y, arcade.color.BLUE, 5)
-        arcade.draw_line_strip(self.points, arcade.color.RED, 5)
+        arcade.draw_line(0, self.window.center_y, self.window.width, self.window.center_y, colors.BLUE, 5)
+        arcade.draw_line_strip(self.points, colors.RED, 5)
         batch.draw()

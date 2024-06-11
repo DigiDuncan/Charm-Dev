@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from hashlib import sha1
 from io import StringIO
 import itertools
@@ -11,6 +13,7 @@ from simfile.notes.group import group_notes, NoteWithTail
 from simfile.timing import TimingData, BeatValue
 from simfile.timing.engine import TimingEngine
 
+from charm.lib.errors import NoChartsError
 from charm.lib.gamemodes.four_key import FourKeyChart, FourKeyEngine, FourKeyNote, FourKeySong, NoteType
 from charm.lib.generic.song import BPMChangeEvent, Metadata
 
@@ -27,14 +30,16 @@ class SMSong(FourKeySong):
         self.timing_engine: TimingEngine = None
 
     @classmethod
-    def parse(cls, folder: Path) -> "FourKeySong":
+    def parse(cls, path: Path) -> SMSong:
         # OK, figure out what chart file to use.
-        files = itertools.chain(folder.glob("*.ssc"), folder.glob("*.sm"))
-        sm_file = next(files)
-        with open(sm_file, "r") as f:
+        try:
+            sm_file = next(itertools.chain(path.glob("*.ssc"), path.glob("*.sm")))
+        except StopIteration as err:
+            raise NoChartsError(path.stem) from err
+        with sm_file.open("r") as f:
             sm = simfile.load(f)
 
-        song = FourKeySong(folder)
+        song = SMSong(path)
 
         charts: dict[str, FourKeyChart] = {}
 
@@ -82,7 +87,7 @@ class SMSong(FourKeySong):
         return song
 
     @classmethod
-    def get_metadata(self, folder: Path) -> Metadata:
+    def get_metadata(cls, folder: Path) -> Metadata:
         # OK, figure out what chart file to use.
         files = itertools.chain(folder.glob("*.ssc"), folder.glob("*.sm"))
         sm_file = next(files)

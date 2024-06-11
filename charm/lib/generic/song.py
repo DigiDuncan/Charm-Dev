@@ -1,43 +1,48 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import dataclasses
 from functools import cache, total_ordering
 from pathlib import Path
-from typing import Optional
+from typing import Self
 
 from charm.lib.types import Seconds
 from charm.objects.lyric_animator import LyricEvent
 
 
-@dataclass
 class Metadata:
     """For menu sorting/display."""
-    title: str
-    artist: str = None
-    album: str = None
-    length: Seconds = None
-    genre: str = None
-    year: int = None
-    difficulty: int = None
-    charter: str = None
-    preview_start: Seconds = None
-    preview_end: Seconds = None
-    source: str = None
-    hash: str = None
-    path: Path = None
-    gamemode: str = None
-
-    def get(self, key, default=None):
-        """Basically a duplicate of dict.get()"""
-        fields = [f.name for f in dataclasses.fields(self)]
-        if key not in fields:
-            return default
-        val = getattr(self, key)
-        if val is None:
-            return default
-        else:
-            return val
+    def __init__(
+        self,
+        *,
+        path: Path,
+        title: str,
+        artist: str | None = None,
+        album: str | None = None,
+        length: Seconds | None = None,
+        genre: str | None = None,
+        year: int | None = None,
+        difficulty: int | None = None,
+        charter: str | None = None,
+        preview_start: Seconds | None = None,
+        preview_end: Seconds | None = None,
+        source: str | None = None,
+        hash: str | None = None,
+        gamemode: str | None = None
+    ):
+        self.title = title
+        self.artist = artist
+        self.album = album
+        self.length = length
+        self.genre = genre
+        self.year = year
+        self.difficulty = difficulty
+        self.charter = charter
+        self.preview_start = preview_start
+        self.preview_end = preview_end
+        self.source = source
+        self.hash = hash
+        self.path = path
+        self.gamemode = gamemode
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {self.hash} ({self.title}:{self.artist}:{self.album})>"
@@ -72,7 +77,7 @@ class Note:
 
     hit: bool = False
     missed: bool = False
-    hit_time: Optional[Seconds] = None
+    hit_time: Seconds | None = None
 
     extra_data: tuple = None
 
@@ -151,7 +156,7 @@ class BPMChangeEvent(Event):
 
 class Chart:
     """A collection of notes and events, with helpful metadata."""
-    def __init__(self, song: 'Song', gamemode: str, difficulty: str, instrument: str, lanes: int, hash: str) -> None:
+    def __init__(self, song: 'Song', gamemode: str, difficulty: str, instrument: str, lanes: int, hash: str | None) -> None:
         self.song: Song = song
         self.gamemode = gamemode
         self.difficulty = difficulty
@@ -164,11 +169,11 @@ class Chart:
         self.bpm: float = None
 
 
-class Song[C: Chart]:
+class  Song[C: Chart]:
     """A list of charts and global events, with some helpful metadata."""
     def __init__(self, path: Path):
         self.path: Path = path
-        self.metadata = Metadata(path.stem, "Unknown Artist", "Unknown Album")
+        self.metadata = Metadata(path=path, title=path.stem)
         self.charts: list[C] = []
         self.events: list[Event] = []
         self.lyrics: list[LyricEvent] = []
@@ -186,5 +191,5 @@ class Song[C: Chart]:
         return [e for e in self.events if isinstance(e, t)]
 
     @classmethod
-    def parse(cls, folder: Path):
+    def parse(cls, path: Path) -> Self:
         raise NotImplementedError

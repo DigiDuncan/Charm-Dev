@@ -1,5 +1,5 @@
 from pathlib import Path
-import PIL
+import PIL.Image
 from arcade import Texture, TextureAnimationSprite, TextureAnimation, TextureKeyframe
 from arcade.resources import resolve
 
@@ -30,6 +30,6 @@ class GIF(TextureAnimationSprite):
             texture.file_path = file_name
             texture_list.append(texture)
 
-        anim = TextureAnimation([TextureKeyframe(t, (1 / fps) * 1000) for t in texture_list])
+        anim = TextureAnimation([TextureKeyframe(t, int((1 / fps) * 1000)) for t in texture_list])
 
         super().__init__(center_x = center_x, center_y = center_y, animation = anim)

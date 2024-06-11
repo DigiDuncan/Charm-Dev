@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from copy import copy
 from pathlib import Path
-from typing import Any, Optional, TypeVar, cast
+from typing import Any, TypeVar, cast
 
 from arcade import Sprite, Texture
 from addict import Addict
@@ -16,7 +16,7 @@ Color = tuple[int, int, int, int]
 T = TypeVar('T')
 
 class SkinItem:
-    def __init__(self, key: str, default: T, value: Optional[T] = None):
+    def __init__(self, key: str, default: T, value: T | None = None):
         self.key = key
         self.default = default
 
@@ -32,10 +32,10 @@ class SkinItem:
 
 
 class SkinBool(SkinItem):
-    def __init__(self, key: str, default: bool, value: Optional[bool]):
+    def __init__(self, key: str, default: bool, value: bool | None):
         super().__init__(key, default, value)
         self.default = cast(default, bool)
-        self._value = cast(value, Optional[bool])
+        self._value = cast(value, bool | None)
 
     @property
     def value(self) -> bool:
@@ -47,10 +47,10 @@ class SkinBool(SkinItem):
 
 
 class SkinInt(SkinItem):
-    def __init__(self, key: str, default: int, value: Optional[int]):
+    def __init__(self, key: str, default: int, value: int | None):
         super().__init__(key, default, value)
         self.default = cast(default, int)
-        self._value = cast(value, Optional[int])
+        self._value = cast(value, int | None)
 
     @property
     def value(self) -> int:
@@ -62,10 +62,10 @@ class SkinInt(SkinItem):
 
 
 class SkinFloat(SkinItem):
-    def __init__(self, key: str, default: float, value: Optional[float]):
+    def __init__(self, key: str, default: float, value: float | None):
         super().__init__(key, default, value)
         self.default = cast(default, float)
-        self._value = cast(value, Optional[float])
+        self._value = cast(value, float | None)
 
     @property
     def value(self) -> float:
@@ -77,10 +77,10 @@ class SkinFloat(SkinItem):
 
 
 class SkinAbsolutePoint(SkinItem):
-    def __init__(self, key: str, default: AbsolutePoint, value: Optional[AbsolutePoint]):
+    def __init__(self, key: str, default: AbsolutePoint, value: AbsolutePoint | None):
         super().__init__(key, default, value)
         self.default = cast(default, AbsolutePoint)
-        self._value = cast(value, Optional[AbsolutePoint])
+        self._value = cast(value, AbsolutePoint | None)
 
     @property
     def value(self) -> AbsolutePoint:
@@ -108,10 +108,10 @@ class SkinAbsolutePoint(SkinItem):
 
 
 class SkinRelativePoint(SkinItem):
-    def __init__(self, key: str, default: RelativePoint, value: Optional[RelativePoint]):
+    def __init__(self, key: str, default: RelativePoint, value: RelativePoint | None):
         super().__init__(key, default, value)
         self.default = cast(default, RelativePoint)
-        self._value = cast(value, Optional[RelativePoint])
+        self._value = cast(value, RelativePoint | None)
 
     @property
     def value(self) -> RelativePoint:
@@ -142,10 +142,10 @@ class SkinRelativePoint(SkinItem):
 
 
 class SkinColor(SkinItem):
-    def __init__(self, key: str, default: Color, value: Optional[Color]):
+    def __init__(self, key: str, default: Color, value: Color | None):
         super().__init__(key, default, value)
         self.default = cast(default, Color)
-        self._value = cast(value, Optional[Color])
+        self._value = cast(value, Color | None)
 
     @property
     def value(self) -> Color:
@@ -189,10 +189,10 @@ class SkinColor(SkinItem):
 
 
 class SkinSprite(SkinItem):
-    def __init__(self, key: str, default: str, value: Optional[str]):
+    def __init__(self, key: str, default: str, value: str | None):
         super().__init__(key, default, value)
         self.default = cast(default, str)
-        self._value = cast(value, Optional[str])
+        self._value = cast(value, str | None)
 
     @property
     def value(self) -> str:

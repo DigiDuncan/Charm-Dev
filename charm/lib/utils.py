@@ -1,15 +1,21 @@
 from __future__ import annotations
-from functools import cache
-from pathlib import Path
-from typing import Any, Iterator, Protocol, TypeAlias, TypeVar
-from collections.abc import Iterable
-import importlib.resources as pkg_resources
+from typing import TYPE_CHECKING, Any, Protocol, TypeVar
+if TYPE_CHECKING:
+    from pathlib import Path
+    from collections.abc import Iterator
+    from charm.lib.generic.song import Metadata
+    from charm.lib.types import RGB, RGBA
 
-import pyglet
+
+from functools import cache
+from collections.abc import Iterable
+from importlib.resources import files
+
+from arcade import Texture
 import pyglet.image
 import PIL.Image
 
-from charm.lib.types import RGB, RGBA
+import charm.data.images
 
 
 def int_or_str(i: Any) -> int | str:
@@ -32,35 +38,27 @@ class SupportsDunderGT(Protocol[_T_contra]):
         ...
 
 
-SupportsRichComparison: TypeAlias = SupportsDunderLT[Any] | SupportsDunderGT[Any]
+type SupportsRichComparison = SupportsDunderLT[Any] | SupportsDunderGT[Any]
 
 
 TT = TypeVar("TT", bound=SupportsRichComparison)
 
 
-def clamp(minVal: TT, val: TT, maxVal: TT) -> TT:
+def clamp(min_val: TT, val: TT, mav_val: TT) -> TT:
     """Clamp a `val` to be no lower than `minVal`, and no higher than `maxVal`."""
-    return max(minVal, min(maxVal, val))
+    return max(min_val, min(mav_val, val))
 
 
 @cache
-def img_from_resource(package: pkg_resources.Package, resource: pkg_resources.Resource) -> PIL.Image.Image:
-    with pkg_resources.open_binary(package, resource) as f:
-        image = PIL.Image.open(f)
-        image.load()
-    return image
-
-
-@cache
-def pyglet_img_from_resource(package: pkg_resources.Package, resource: pkg_resources.Resource) -> pyglet.image.AbstractImage:
-    with pkg_resources.open_binary(package, resource) as f:
+def pyglet_img_from_path(path: Path) -> pyglet.image.AbstractImage:
+    with path.open("rb") as f:
         image = pyglet.image.load("unknown.png", file=f)
     return image
 
 
 @cache
 def img_from_path(path: Path) -> PIL.Image.Image:
-    with open(path, 'b') as f:
+    with path.open('rb') as f:
         image = PIL.Image.open(f)
         image.load()
     return image
@@ -79,16 +77,15 @@ def map_range(x: float, n1: float, m1: float, n2: float = -1, m2: float = 1) -> 
     ans = new_pos + n2
     return ans
 
-def flatten(x: Iterable[Any] | Any) -> list[Any]:
-    if isinstance(x, Iterable):
-        return [a for i in x for a in flatten(i)]
-    else:
-        return [x]
+type Flatable[T] = T | Iterable[Flatable[T]]
+
+def flatten[T: Any](item: Flatable[T]) -> list[T]:
+    if not isinstance(item, Iterable):
+        return [item]
+    return [newitem for subitem in item for newitem in flatten(subitem)]
 
 
-T = TypeVar("T")
-
-def findone(iterator: Iterator[T]) -> T | None:
+def next_or_none[T](iterator: Iterator[T]) -> T | None:
     try:
         val = next(iterator)
     except StopIteration:
@@ -96,11 +93,8 @@ def findone(iterator: Iterator[T]) -> T | None:
     return val
 
 
-def color_with_alpha(color: RGB | RGBA, alpha: int):
-    if len(color) == 3:
-        return color + (alpha,)
-    else:
-        return color[:3] + (alpha,)
+def color_with_alpha(color: RGB | RGBA, alpha: int) -> RGBA:
+    return color[:3] + (alpha,)
 
 
 def nuke_smart_quotes(s: str) -> str:
@@ -123,3 +117,37 @@ def typewriter(s: str, cps: float, now: float, begin: float = 0) -> str:
     seconds = now - begin
     chars = int(max(0, (seconds * cps)))
     return s[:chars]
+
+
+def get_album_art(metadata: Metadata, size: int = 200) -> Texture:
+    """Get an album art Texture from a song metadata."""
+    # Iterate through frankly too many possible paths for the album art location.
+    art_path = None
+    # Clone Hero-style (also probably the recommended format.)
+    art_paths = [
+        metadata.path / "album.jpg",
+        metadata.path / "album.png",
+        metadata.path / "album.gif"
+    ]
+    # Stepmania-style
+    art_paths.extend(metadata.path.glob("*jacket.png"))
+    art_paths.extend(metadata.path.glob("*jacket.gif"))
+    art_paths.extend(metadata.path.glob("*jacket.jpg"))
+    for p in art_paths:
+        if p.is_file():
+            art_path = p
+            break
+
+    if art_path is not None:
+        album_art_img = PIL.Image.open(art_path)
+    else:
+        # We *still* didn't find one? Fine.
+        album_art_img = img_from_path(files(charm.data.images) / "no_image_found.png")
+
+    # Resize to requested size
+    album_art_img = album_art_img.convert("RGBA")
+    if (album_art_img.width != size or album_art_img.height != size):
+        album_art_img = album_art_img.resize((size, size))
+
+    album_art = Texture(album_art_img)
+    return album_art

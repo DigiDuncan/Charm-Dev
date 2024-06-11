@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+from importlib.resources import files
 from collections import defaultdict
 from functools import cache
-from types import ModuleType
 from typing import cast, TypedDict
 from dataclasses import dataclass
 from pathlib import Path
@@ -15,20 +15,24 @@ import re
 from nindex import Index
 import PIL.Image
 import arcade
+from arcade import Sprite, Texture, SpriteList, color as colors
+from arcade.types import Color
+from arcade.camera import PerspectiveProjector
+from arcade.camera.data_types import duplicate_camera_data
 
 from charm.lib.anim import ease_linear, perc
 from charm.lib.charm import load_missing_texture
 from charm.lib.errors import ChartParseError, ChartPostReadParseError, NoChartsError, NoMetadataError, MetadataParseError
-from charm.lib.generic.engine import DigitalKeyEvent, Engine, Judgement
+from charm.lib.generic.engine import DigitalKeyEvent, Engine, Judgement, KeyStates
 from charm.lib.generic.highway import Highway
 from charm.lib.generic.song import Chart, Event, Metadata, Note, Seconds, Song
 from charm.lib.keymap import keymap
 from charm.lib.spritebucket import SpriteBucketCollection
-from charm.lib.utils import img_from_resource, nuke_smart_quotes
+from charm.lib.utils import img_from_path, nuke_smart_quotes
 from charm.objects.lyric_animator import LyricEvent
 
 from charm.objects.line_renderer import LongNoteRenderer, NoteStruckState
-import charm.data.images.skins.hero as heroskin
+import charm.data.images.skins as skins
 
 logger = logging.getLogger("charm")
 
@@ -71,7 +75,7 @@ class IndexDict(TypedDict):
 class TickEvent(Event):
     tick: int
 
-    def __lt__(self, other: "TickEvent") -> bool:
+    def __lt__(self, other: TickEvent) -> bool:
         return self.tick < other.tick
 
 
@@ -132,7 +136,7 @@ class RawBPMEvent:
 # ---
 
 
-def tick_to_seconds(current_tick: Ticks, sync_track: list[BPMChangeTickEvent], resolution: int = 192, offset = 0) -> Seconds:
+def tick_to_seconds(current_tick: Ticks, sync_track: list[BPMChangeTickEvent], resolution: int = 192, offset: float = 0) -> Seconds:
     """Takes a tick (and an associated sync_track,) and returns its position in seconds as a float."""
     current_tick = int(current_tick)  # you should really just be passing ints in here anyway but eh
     if current_tick == 0:
@@ -147,15 +151,15 @@ def tick_to_seconds(current_tick: Ticks, sync_track: list[BPMChangeTickEvent], r
 
 
 class NoteColor:
-    GREEN = arcade.color.LIME_GREEN
-    RED = arcade.color.RED
-    YELLOW = arcade.color.YELLOW
-    BLUE = arcade.color.BLUE
-    ORANGE = arcade.color.ORANGE
-    PURPLE = arcade.color.PURPLE
+    GREEN = colors.LIME_GREEN
+    RED = colors.RED
+    YELLOW = colors.YELLOW
+    BLUE = colors.BLUE
+    ORANGE = colors.ORANGE
+    PURPLE = colors.PURPLE
 
     @classmethod
-    def from_note(cls, note: "HeroNote"):
+    def from_note(cls, note: HeroNote) -> Color:
         match note.lane:
             case 0:
                 return cls.GREEN
@@ -170,7 +174,7 @@ class NoteColor:
             case 7:
                 return cls.PURPLE
             case _:
-                return arcade.color.BLACK
+                return colors.BLACK
 
 
 @dataclass
@@ -227,7 +231,7 @@ class HeroChord:
         return self.notes[0].type
 
     @type.setter
-    def type(self, v):
+    def type(self, v: str) -> None:
         for n in self.notes:
             n.type = v
 
@@ -236,7 +240,7 @@ class HeroChord:
         return self.notes[0].hit
 
     @hit.setter
-    def hit(self, v):
+    def hit(self, v: bool) -> None:
         for n in self.notes:
             n.hit = v
 
@@ -245,7 +249,7 @@ class HeroChord:
         return self.notes[0].hit_time
 
     @hit_time.setter
-    def hit_time(self, v):
+    def hit_time(self, v: Seconds) -> None:
         for n in self.notes:
             n.hit_time = v
 
@@ -254,7 +258,7 @@ class HeroChord:
         return self.notes[0].missed
 
     @missed.setter
-    def missed(self, v):
+    def missed(self, v) -> None:
         for n in self.notes:
             n.missed = v
 
@@ -264,17 +268,16 @@ class HeroChord:
             return [[False] * 5]
         if len(self.frets) > 1:
             return [[n in self.frets for n in range(5)]]
-        else:
-            b = [False, True]
-            max_fret = max(self.frets)
-            valid_shape_list = [list(v) for v in itertools.product(b, repeat = max_fret)]
-            append_part = [True] + ([False] * (4 - max_fret))
-            final_list = [v + append_part for v in valid_shape_list]
-            return final_list
+        b = [False, True]
+        max_fret = max(self.frets)
+        valid_shape_list = [list(v) for v in itertools.product(b, repeat = max_fret)]
+        append_part = [True] + ([False] * (4 - max_fret))
+        final_list = [v + append_part for v in valid_shape_list]
+        return final_list
 
 
 class HeroChart(Chart):
-    def __init__(self, song: 'Song', difficulty: str, instrument: str, lanes: int, hash: str) -> None:
+    def __init__(self, song: Song, difficulty: str, instrument: str, lanes: int, hash: str | None) -> None:
         super().__init__(song, "hero", difficulty, instrument, lanes, hash)
         self.song: HeroSong = self.song
         self.chords: list[HeroChord] = None
@@ -282,7 +285,7 @@ class HeroChart(Chart):
         self.indexes_by_tick: IndexDict = {}
         self.indexes_by_time: IndexDict = {}
 
-    def finalize(self):
+    def finalize(self) -> None:
         """Do some last-pass parsing steps."""
         self.create_chords()
         self.calculate_note_flags()
@@ -290,7 +293,7 @@ class HeroChart(Chart):
         self.parse_text_events()
         self.index()
 
-    def create_chords(self):
+    def create_chords(self) -> None:
         """Turn lists of notes (in `self.notes`) into `HeroChord`s (in `self.chords`)
         A chord is defined as all notes occuring at the same tick."""
         c = defaultdict(list)
@@ -302,7 +305,7 @@ class HeroChart(Chart):
             chords.append(HeroChord(cl))
         self.chords = chords
 
-    def calculate_note_flags(self):
+    def calculate_note_flags(self) -> None:
         """Turn notes that aren't really notes but flags into properties on the notes."""
         for c in self.chords:
             forced = False
@@ -320,7 +323,7 @@ class HeroChart(Chart):
                     n.type = "forced"
             c = HeroChord([n for n in c.notes if n.lane not in [5, 6]])
 
-    def calculate_hopos(self):
+    def calculate_hopos(self) -> None:
         # This is basically ripped from Charm-Legacy.
         # https://github.com/DigiDuncan/Charm-Legacy/blob/3187a8f2fa8c8876c2706b731bff6913dc0bad60/charm/song.py#L179
         for last_chord, current_chord in zip(self.chords[:-1], self.chords[1:]):  # python zip pattern, wee
@@ -353,7 +356,7 @@ class HeroChart(Chart):
                 if current_chord.type == "forced":
                     current_chord.type = "hopo"
 
-    def parse_text_events(self):
+    def parse_text_events(self) -> None:
         self.events = cast(list[TickEvent], self.events)
         parsed: list[TextEvent] = []
         new_events: list[SoloEvent] = []
@@ -365,11 +368,10 @@ class HeroChart(Chart):
             elif e.text == "soloend":
                 if current_solo is None:
                     raise ChartPostReadParseError("`solo_end` without `solo` event!")
-                else:
-                    tick_length = e.tick - current_solo.tick
-                    length = e.time - current_solo.time
-                    new_events.append(SoloEvent(current_solo.time, current_solo.tick, tick_length, length))
-                    current_solo = None
+                tick_length = e.tick - current_solo.tick
+                length = e.time - current_solo.time
+                new_events.append(SoloEvent(current_solo.time, current_solo.tick, tick_length, length))
+                current_solo = None
                 parsed.append(e)
         for e in parsed:
             self.events.remove(e)
@@ -377,7 +379,7 @@ class HeroChart(Chart):
             self.events.append(e)
         self.events.sort()
 
-    def index(self):
+    def index(self) -> None:
         self.indexes_by_tick["note"] = Index(self.notes, "tick")
         self.indexes_by_tick["chord"] = Index(self.chords, "tick")
 
@@ -391,25 +393,27 @@ class HeroSong(Song[HeroChart]):
         self.indexes_by_tick: IndexDict = {}
         self.indexes_by_time: IndexDict = {}
         self.resolution: int = 192  # ticks/beat
-        self.metadata = Metadata("Unknown Title")
+        self.metadata = Metadata(path=path, title="Unknown Title")
 
-    def get_metadata(self, folder: Path):
+    def get_metadata(self, folder: Path) -> Metadata:
         if not (folder / "song.ini").exists():
             raise NoMetadataError(folder.stem)
-        parser = configparser.ConfigParser(str((folder / "song.ini").absolute()))
+        parser = configparser.ConfigParser()
+        parser.read((folder / "song.ini").absolute())
         if "song" not in parser:
             raise MetadataParseError("Song header not found in metadata!")
         song = parser["song"]
-        title = song["name"]
-        artist = song["artist"]
-        album = song["album"]
-        length = song.getfloat("song_length") / 1000
-        genre = song["genre"]
-        year = song.getint("year")
-        charter = song["charter"]
-        return Metadata(title, artist, album,
-                        length = length, genre = genre, year = year, charter = charter, path = folder,
-                        gamemode = "hero")
+        return Metadata(
+            path=folder,
+            title=song["name"],
+            artist=song["artist"],
+            album=song["album"],
+            length=song.getfloat("song_length") / 1000,
+            genre=song["genre"],
+            year=song.getint("year"),
+            charter=song["charter"],
+            gamemode="hero"
+        )
 
     @classmethod
     def parse(cls, path: Path) -> HeroSong:
@@ -420,7 +424,7 @@ class HeroSong(Song[HeroChart]):
 
         resolution: Ticks = 192
         offset: Seconds = 0
-        metadata = Metadata("Unknown Title", path = path)
+        metadata = Metadata(path=path, title="Unknown Title")
         charts: dict[str, HeroChart] = {}
         events: list[Event] = []
 
@@ -648,11 +652,11 @@ class HeroSong(Song[HeroChart]):
 
 # SKIN
 @cache
-def load_note_texture(note_type, note_lane, height):
+def load_note_texture(note_type, note_lane, height) -> Texture:
     image_name = f"{note_type}-{note_lane + 1}"
     open_height = int(height / (128 / 48))
     try:
-        image = img_from_resource(cast(ModuleType, heroskin), image_name + ".png")
+        image = img_from_path(files(skins) / "hero" / f"{image_name}.png")
         if image.height != height and note_lane != 7:
             width = int((height / image.height) * image.width)
             image = image.resize((width, height), PIL.Image.LANCZOS)
@@ -662,20 +666,20 @@ def load_note_texture(note_type, note_lane, height):
     except Exception as e:
         logger.error(f"Unable to load texture: {image_name} | {e}")
         return load_missing_texture(height, height)
-    return arcade.Texture(image)
+    return Texture(image)
 
 
-class HeroNoteSprite(arcade.Sprite):
-    def __init__(self, note: HeroNote, highway: "HeroHighway", height = 128, *args, **kwargs):
+class HeroNoteSprite(Sprite):
+    def __init__(self, note: HeroNote, highway: HeroHighway, height = 128, *args, **kwargs):
         self.note: HeroNote = note
         self.highway: HeroHighway = highway
         tex = load_note_texture(note.type, note.lane, height)
         super().__init__(tex, *args, **kwargs)
 
-    def __lt__(self, other: "HeroNoteSprite"):
+    def __lt__(self, other: HeroNoteSprite):
         return self.note.time < other.note.time
 
-    def update_animation(self, delta_time: float):
+    def update_animation(self, delta_time: float) -> None:
         if self.highway.auto:
             if self.highway.song_time >= self.note.time:
                 self.note.hit = True
@@ -704,7 +708,7 @@ class HeroLongNoteSprites(LongNoteRenderer):
 
         self.note = note
 
-    def update_animation(self, delta_time: float):
+    def update_animation(self, delta_time: float) -> None:
         raise NotImplementedError("Currently Long Notes don't support animations")
 
 
@@ -716,7 +720,7 @@ class HeroHighway(Highway):
 
         super().__init__(chart, pos, size, gap, downscroll = True)
 
-        self.perp_static = arcade.camera.PerspectiveProjector()
+        self.perp_static = PerspectiveProjector()
 
         self.view_angle = 70.0
         self.view_dist = 400.0
@@ -733,8 +737,8 @@ class HeroHighway(Highway):
         data.position = (self.window.center_x, self.perp_y_pos, self.perp_z_pos)
         data.up, data.forward = arcade.camera.grips.rotate_around_right(data, -self.view_angle)
 
-        self.perp_moving = arcade.camera.PerspectiveProjector(
-            view=arcade.camera.data_types.duplicate_camera_data(data),
+        self.perp_moving = PerspectiveProjector(
+            view=duplicate_camera_data(data),
             projection=self.perp_static.projection
         )
 
@@ -771,7 +775,7 @@ class HeroHighway(Highway):
                     for trail_sprite in trail.get_sprites():
                         self.sprite_buckets.append(trail_sprite, note.time, note.length)
 
-        self.strikeline = arcade.SpriteList()
+        self.strikeline = SpriteList()
         self.strikeline.program = self.strikeline.ctx.sprite_list_program_no_cull
         # TODO: Is this dumb?
         for i in range(5):
@@ -792,7 +796,7 @@ class HeroHighway(Highway):
         self.last_update_time = 0
         self._pixel_offset = 0
 
-    def update(self, song_time: float):
+    def update(self, song_time: float) -> None:
         super().update(song_time)
         self.sprite_buckets.update_animation(song_time)
         # TODO: Replace with better pixel_offset calculation
@@ -832,7 +836,7 @@ class HeroHighway(Highway):
         return self._pos
 
     @pos.setter
-    def pos(self, p: tuple[int, int]):
+    def pos(self, p: tuple[int, int]) -> None:
         old_pos = self._pos
         diff_x = p[0] - old_pos[0]
         diff_y = p[1] - old_pos[1]
@@ -843,11 +847,11 @@ class HeroHighway(Highway):
         self.strikeline.move(diff_x, diff_y)
 
     @property
-    def pixel_offset(self):
+    def pixel_offset(self) -> int:
         # TODO: Replace with better pixel_offset calculation
         return self._pixel_offset
 
-    def draw(self):
+    def draw(self) -> None:
         with self.perp_static.activate():
             arcade.draw_lrbt_rectangle_filled(self.x, self.x + self.w,
                                               self.y, self.y + self.h,
@@ -856,7 +860,7 @@ class HeroHighway(Highway):
             last_beat_idx = self.chart.song.indexes_by_time["beat"].lteq_index(self.song_time + self.viewport)
             for beat in self.chart.song.events_by_type(BeatEvent)[current_beat_idx:last_beat_idx + 1]:
                 px = self.note_y(beat.time) - (self.note_size / 2)
-                arcade.draw_line(self.x, px, self.x + self.w, px, arcade.color.DARK_GRAY, 3 if beat.major else 1)
+                arcade.draw_line(self.x, px, self.x + self.w, px, colors.DARK_GRAY, 3 if beat.major else 1)
 
             self.strikeline.draw()
 
@@ -869,7 +873,7 @@ class HeroHighway(Highway):
             #             note.draw_trail()
             self.sprite_buckets.draw(self.song_time)
 
-    def lane_x(self, lane_num):
+    def lane_x(self, lane_num: int) -> int:
         if lane_num == 7:  # tap note override
             return self.x
         return (self.note_size + self.gap) * lane_num + self.x
@@ -879,7 +883,7 @@ class HeroHighway(Highway):
         return self._show_flags
 
     @show_flags.setter
-    def show_flags(self, v: bool):
+    def show_flags(self, v: bool) -> None:
         self._show_flags = v
         if self._show_flags:
             for sprite in self.sprite_buckets.sprites:
@@ -929,11 +933,10 @@ class HeroEngine(Engine):
         base = min(((self.combo // 10) + 1), 4)
         return base * 2 if self.star_power else base
 
-    def process_keystate(self):
+    def process_keystate(self, key_states: KeyStates) -> None:  # noqa: F821
         last_state = self.key_state
-        key_states = keymap.hero.state
         # ignore spam during front/back porch
-        if (self.chart_time < self.chart.notes[0].time - self.hit_window \
+        if (self.chart_time < self.chart.notes[0].time - self.hit_window
            or self.chart_time > self.chart.notes[-1].time + self.hit_window):
             return
         for n in range(len(key_states)):
@@ -959,7 +962,7 @@ class HeroEngine(Engine):
                     self.tap_available = True
         self.key_state = key_states
 
-    def calculate_score(self):
+    def calculate_score(self) -> None:
         buttons = keymap.hero  # noqa: F841
 
         # CURRENTLY MISSING:
@@ -991,7 +994,7 @@ class HeroEngine(Engine):
             for o in overstrums:
                 self.strum_events.remove(o)
 
-    def process_strum(self, chord: HeroChord, strum_events: list[StrumEvent]):
+    def process_strum(self, chord: HeroChord, strum_events: list[StrumEvent]) -> None:
         for event in strum_events:
             if event.shape in chord.valid_shapes:
                 chord.hit = True
@@ -1000,7 +1003,7 @@ class HeroEngine(Engine):
                 self.current_chords.remove(chord)
                 self.strum_events.remove(event)
 
-    def process_tap(self, chord: HeroChord, strum_events: list[StrumEvent]):
+    def process_tap(self, chord: HeroChord, strum_events: list[StrumEvent]) -> None:
         if self.current_holds in chord.valid_shapes and self.tap_available:
             chord.hit = True
             chord.hit_time = self.chart_time
@@ -1010,13 +1013,13 @@ class HeroEngine(Engine):
         else:
             self.process_strum(chord, strum_events)
 
-    def process_missed(self, chord: HeroChord):
+    def process_missed(self, chord: HeroChord) -> None:
         chord.missed = True
         chord.hit_time = math.inf
         self.score_chord(chord)
         self.current_chords.remove(chord)
 
-    def score_chord(self, chord: HeroChord):
+    def score_chord(self, chord: HeroChord) -> None:
         if chord.hit:
             self.score += 50 * self.multiplier
             self.combo += 1

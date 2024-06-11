@@ -1,14 +1,17 @@
-from typing import Optional, Tuple, Iterator, TYPE_CHECKING
-from contextlib import contextmanager
-
-from math import tan, radians
-from pyglet.math import Mat4, Vec3, Vec4
-
-from arcade.camera.data_types import Projector, CameraData, PerspectiveProjectionData
-
-from arcade.window_commands import get_window
+from __future__ import annotations
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
+    from collections.abc import Iterator
     from arcade import Window
+    from arcade.camera.data_types import Projector
+
+from contextlib import contextmanager
+from math import tan, radians
+
+from pyglet.math import Mat4
+import arcade
+from arcade import Vec3, Vec4
+from arcade.camera.data_types import CameraData, PerspectiveProjectionData
 
 
 __all__ = ("PerspectiveProjector",)
@@ -40,10 +43,10 @@ class PerspectiveProjector:
     """
 
     def __init__(self, *,
-                 window: Optional["Window"] = None,
-                 view: Optional[CameraData] = None,
-                 projection: Optional[PerspectiveProjectionData] = None):
-        self._window: "Window" = window or get_window()
+                 window: Window | None = None,
+                 view: CameraData | None = None,
+                 projection: PerspectiveProjectionData | None = None):
+        self._window: Window = window or arcade.get_window()
 
         self._view = view or CameraData(  # Viewport
             (self._window.width / 2, self._window.height / 2, 0),  # Position
@@ -132,9 +135,9 @@ class PerspectiveProjector:
 
     def map_screen_to_world_coordinate(
             self,
-            screen_coordinate: Tuple[float, float],
-            depth: Optional[float] = None
-    ) -> Tuple[float, float, float]:
+            screen_coordinate: tuple[float, float],
+            depth: float | None = None
+    ) -> tuple[float, float, float]:
         """
         Take in a pixel coordinate from within
         the range of the window size and returns

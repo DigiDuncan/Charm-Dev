@@ -1,4 +1,5 @@
 import arcade
+from arcade import color as colors, MOUSE_BUTTON_LEFT
 
 from charm.lib.anim import ease_quartout, perc
 from charm.lib.charm import GumWrapper
@@ -13,10 +14,10 @@ from charm.views.fourkeysongmenu import FourKeySongMenuView
 from charm.views.herotest import HeroTestView
 from charm.views.newmenu import NewMenuView
 from charm.views.parallaxtest import ParallaxTestView
+from charm.views.perspectivetest import PerspectiveTestView
 from charm.views.spritetest import SpriteTestView
 from charm.views.taikosongtest import TaikoSongTestView
 from charm.views.visualizer import VisualizerView
-from charm.views.perspectivetest import PerspectiveTestView
 
 
 class MainMenuView(DigiView):
@@ -76,7 +77,7 @@ class MainMenuView(DigiView):
     @shows_errors
     @ignore_imgui
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int) -> None:
-        if button == arcade.MOUSE_BUTTON_LEFT:
+        if button == MOUSE_BUTTON_LEFT:
             clicked_item = self.menu.get_item_at(x, y)
             if clicked_item is not None:
                 clicked_item.go()
@@ -85,7 +86,7 @@ class MainMenuView(DigiView):
 
     @shows_errors
     def on_resize(self, width: int, height: int) -> None:
-        # self.menu.recreate()
+        self.menu.recreate()
         super().on_resize(width, height)
 
     @shows_errors
@@ -108,6 +109,6 @@ class MainMenuView(DigiView):
         # Charm BG
         self.gum_wrapper.draw()
         left = ease_quartout(self.size[0], 0, perc(0.5, 1.5, self.local_time))
-        arcade.draw_lrbt_rectangle_filled(left, self.size[0], self.size[1] // 4, (self.size[1] // 4) * 3, arcade.color.WHITE[:3] + (127,))
+        arcade.draw_lrbt_rectangle_filled(left, self.size[0], self.size[1] // 4, (self.size[1] // 4) * 3, colors.WHITE[:3] + (127,))
         self.menu.draw()
         super().postdraw()

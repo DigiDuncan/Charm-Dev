@@ -1,9 +1,10 @@
-import importlib.resources as pkg_resources
+from importlib.resources import files, as_file
 import logging
 
 from math import cos, sin, radians
 
 import arcade
+from arcade import Sprite, SpriteList
 
 from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView, shows_errors, ignore_imgui
@@ -22,10 +23,10 @@ class PerspectiveTestView(DigiView):
     def __init__(self, back: DigiView):
         super().__init__(fade_in=1, back=back)
 
-        with pkg_resources.path(charm.data.images, "no_image_found.png") as p:
-            self.bingo = arcade.Sprite(p, center_y=250)
+        with as_file(files(charm.data.images) / "no_image_found.png") as p:
+            self.bingo = Sprite(p, center_y=250)
         self.bingo.bottom = 0.0
-        self.asdsa = arcade.SpriteList()
+        self.asdsa = SpriteList()
         self.asdsa.append(self.bingo)
 
         self.proj = PerspectiveProjector()

@@ -1,14 +1,16 @@
+from __future__ import annotations
+
+from importlib.resources import files
 from dataclasses import dataclass
 from enum import Enum
 from functools import cache
 from pathlib import Path
 import logging
-from types import ModuleType
 from typing import cast
 
 import PIL
 import arcade
-from arcade import Sprite
+from arcade import Sprite, SpriteList, Texture, color as colors
 
 from charm.lib.charm import load_missing_texture
 from charm.lib.gamemodes.osu import OsuHitCircle, OsuSlider, OsuSpinner, RawOsuChart
@@ -16,9 +18,9 @@ from charm.lib.generic.engine import Engine
 from charm.lib.generic.highway import Highway
 from charm.lib.generic.song import Chart, Metadata, Note, Song
 from charm.lib.spritebucket import SpriteBucketCollection
-from charm.lib.utils import clamp, img_from_resource
+from charm.lib.utils import clamp, img_from_path
 
-import charm.data.images.skins.taiko as taikoskin
+import charm.data.images.skins as skins
 from charm.objects.line_renderer import TaikoNoteTrail
 
 logger = logging.getLogger("charm")
@@ -37,7 +39,7 @@ class TaikoNote(Note):
 
 
 class TaikoChart(Chart):
-    def __init__(self, song: 'Song', difficulty: str, hash: str) -> None:
+    def __init__(self, song: 'Song', difficulty: str, hash: str | None) -> None:
         super().__init__(song, "taiko", difficulty, "taiko", 1, hash)
         self.song: TaikoSong = song
 
@@ -47,10 +49,10 @@ class TaikoSong(Song[TaikoChart]):
         super().__init__(path)
 
     @classmethod
-    def parse(self, folder: Path) -> "TaikoSong":
-        song = TaikoSong(folder)
+    def parse(cls, path: Path) -> TaikoSong:
+        song = TaikoSong(path)
 
-        chart_files = folder.glob("*.osu")
+        chart_files = path.glob("*.osu")
 
         added_bpm_events = False
 
@@ -71,7 +73,7 @@ class TaikoSong(Song[TaikoChart]):
                 elif isinstance(hit_object, OsuSpinner):
                     chart.notes.append(TaikoNote(chart, hit_object.time, 0, hit_object.length, NoteType.DENDEN, large = hit_object.taiko_large))
             song.charts.append(chart)
-
+        # TODO: Handle no charts
         return song
 
     @classmethod
@@ -97,14 +99,14 @@ class TaikoEngine(Engine):
 def load_note_texture(note_type: str, height: int):
     image_name = f"{note_type}"
     try:
-        image = img_from_resource(cast(ModuleType, taikoskin), image_name + ".png")
+        image = img_from_path(files(skins) / "taiko" / f"{image_name}.png")
         if image.height != height:
             width = int((height / image.height) * image.width)
             image = image.resize((width, height), PIL.Image.LANCZOS)
     except Exception as e:
         logger.error(f"Unable to load texture: {image_name} | {e}")
         return load_missing_texture(height, height)
-    return arcade.Texture(image)
+    return Texture(image)
 
 
 class TaikoNoteSprite(Sprite):
@@ -124,7 +126,7 @@ class TaikoLongNoteSprite(TaikoNoteSprite):
     def __init__(self, note: TaikoNote, highway: "TaikoHighway", height = 128, *args, **kwargs) -> None:
         super().__init__(note, highway, *args, **kwargs)
 
-        color = arcade.color.YELLOW if note.type == NoteType.DRUMROLL else arcade.color.MAGENTA
+        color = colors.YELLOW if note.type == NoteType.DRUMROLL else colors.MAGENTA
         self.trail = TaikoNoteTrail(self.position, self.note.length, self.highway.note_size, self.highway.px_per_s,
                                     color, color[:3] + (60,))
 
@@ -165,7 +167,7 @@ class TaikoHighway(Highway):
             self.sprite_buckets.append(sprite, note.time, note.length)
             self.note_sprites.append(sprite)
 
-        self.strikeline = arcade.SpriteList()
+        self.strikeline = SpriteList()
 
         for spritelist in self.sprite_buckets.buckets:
             spritelist.reverse()
@@ -252,18 +254,18 @@ class TaikoHighway(Highway):
             # The 6 there is really hardcoded and this function is probably very slow because it does a ton of arcade.draw* calls
             if self.last_note_type == NoteType.DON:
                 if self.last_note_big:
-                    arcade.draw_circle_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size * 0.75, arcade.color.DEBIAN_RED)
+                    arcade.draw_circle_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size * 0.75, colors.DEBIAN_RED)
                 elif self.last_side_right:
-                    arcade.draw_arc_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2 * 0.75, self.note_size * 2 * 0.75, arcade.color.DEBIAN_RED, -90, 90)
+                    arcade.draw_arc_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2 * 0.75, self.note_size * 2 * 0.75, colors.DEBIAN_RED, -90, 90)
                 else:
-                    arcade.draw_arc_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2 * 0.75, self.note_size * 2 * 0.75, arcade.color.DEBIAN_RED, 90, 270)
+                    arcade.draw_arc_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2 * 0.75, self.note_size * 2 * 0.75, colors.DEBIAN_RED, 90, 270)
             elif self.last_note_type == NoteType.KAT:
                 if self.last_note_big:
-                    arcade.draw_circle_outline(self.strikeline_y, self.y + (self.h / 2), self.note_size, arcade.color.BRIGHT_CERULEAN, 10)
+                    arcade.draw_circle_outline(self.strikeline_y, self.y + (self.h / 2), self.note_size, colors.BRIGHT_CERULEAN, 10)
                 elif self.last_side_right:
-                    arcade.draw_arc_outline(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2, self.note_size * 2, arcade.color.BRIGHT_CERULEAN, -90, 90, 20)
+                    arcade.draw_arc_outline(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2, self.note_size * 2, colors.BRIGHT_CERULEAN, -90, 90, 20)
                 else:
-                    arcade.draw_arc_outline(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2, self.note_size * 2, arcade.color.BRIGHT_CERULEAN, 90, 270, 20)
+                    arcade.draw_arc_outline(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2, self.note_size * 2, colors.BRIGHT_CERULEAN, 90, 270, 20)
             self.frames_visible += 1
 
         self.strikeline.draw()

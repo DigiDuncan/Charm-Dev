@@ -2,14 +2,15 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import Literal, cast, get_args
 
-import arcade.key
-from arcade.key import \
-    A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z, \
-    GRAVE, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_0, MINUS, EQUAL, \
-    F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, \
-    F13, F14, F15, F16, F17, F18, F19, F20, F21, F22, F23, F24, \
-    RETURN, ENTER, ESCAPE, BACKSPACE, SPACE, UP, DOWN, LEFT, RIGHT, \
+import arcade
+from arcade.key import (
+    A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
+    GRAVE, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_0, MINUS, EQUAL,
+    F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12,
+    F13, F14, F15, F16, F17, F18, F19, F20, F21, F22, F23, F24,
+    RETURN, ENTER, ESCAPE, BACKSPACE, SPACE, UP, DOWN, LEFT, RIGHT,
     MOD_SHIFT, RSHIFT, MOD_CAPSLOCK, MOD_NUMLOCK, MOD_SCROLLLOCK
+)
 
 import charm.lib.data
 

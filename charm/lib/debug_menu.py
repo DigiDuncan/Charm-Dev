@@ -1,7 +1,9 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Self, TypedDict
-from types import TracebackType
 if TYPE_CHECKING:
+    from types import TracebackType
+    from arcade.types import RGBANormalized
+    from imgui_bundle.python_backends.pyglet_backend import PygletProgrammablePipelineRenderer
     from charm.lib.digiwindow import DigiWindow
 
 import logging
@@ -10,12 +12,13 @@ from pathlib import Path
 import statistics
 import re
 
+import pyglet
+from arcade import Camera2D, Vec2, color as colors
+
 import arrow
 import numpy as np
-from imgui_bundle.python_backends.pyglet_backend import create_renderer, PygletProgrammablePipelineRenderer # type: ignore
+from imgui_bundle.python_backends.pyglet_backend import create_renderer
 from imgui_bundle import imgui, ImVec2
-import arcade
-import pyglet
 
 
 class Filter:
@@ -72,24 +75,24 @@ class DebugMessage:
         self.time = arrow.now().format("HH:mm:ss")
 
     @property
-    def color(self):
+    def color(self) -> RGBANormalized:
         match self.level:
             case logging.COMMENT: # type: ignore
-                return arcade.color.LIGHT_GRAY.normalized
+                return colors.LIGHT_GRAY.normalized
             case logging.COMMAND: # type: ignore
-                return arcade.color.PASTEL_YELLOW.normalized
+                return colors.PASTEL_YELLOW.normalized
             case logging.DEBUG:
-                return arcade.color.BABY_BLUE.normalized
+                return colors.BABY_BLUE.normalized
             case logging.INFO:
-                return arcade.color.WHITE.normalized
-            case logging.WARN:
-                return arcade.color.YELLOW.normalized
+                return colors.WHITE.normalized
+            case logging.WARNING:
+                return colors.YELLOW.normalized
             case logging.ERROR:
-                return arcade.color.RED.normalized
+                return colors.RED.normalized
             case logging.FATAL:
-                return arcade.color.MAGENTA.normalized
+                return colors.MAGENTA.normalized
             case _:
-                return arcade.color.GREEN.normalized
+                return colors.GREEN.normalized
 
     @property
     def prefix(self):
@@ -113,7 +116,7 @@ class DebugMessage:
 
     def render(self) -> None:
         if self.level not in [logging.COMMAND, logging.COMMENT]: # type: ignore
-            imgui.push_style_color(imgui.Col_.text.value, imgui.ImVec4(*arcade.color.PURPLE.normalized))
+            imgui.push_style_color(imgui.Col_.text.value, imgui.ImVec4(*colors.PURPLE.normalized))
             imgui.text_unformatted(self.time + " | ")
             imgui.pop_style_color()
             imgui.same_line()
@@ -530,7 +533,7 @@ class FPSCounter:
         # FPS Counter
         if self.frames % 30 == 0:
             average = statistics.mean(self.fps_averages)
-            self.fps_label.color = arcade.color.BLACK if average >= 120 else arcade.color.RED
+            self.fps_label.color = colors.BLACK if average >= 120 else colors.RED
             self.fps_label.text = self.fps_shadow_label.text = f"{average:.1f} FPS"
             self.fps_averages.clear()
         else:
@@ -547,7 +550,7 @@ class FPSCounter:
         self.fps_label.draw()
 
 
-class OverlayCamera(arcade.camera.Camera2D):
+class OverlayCamera(Camera2D):
     def on_resize(self, width: int, height: int) -> None:
         self.match_screen(and_projection=True)
-        self.position = arcade.Vec2(width // 2, height // 2)
+        self.position = Vec2(width // 2, height // 2)

@@ -1,6 +1,7 @@
 import logging
 
 import arcade
+from arcade import color as colors
 import arrow
 import pyglet
 
@@ -16,17 +17,17 @@ class DebugMessage:
     def color(self):
         match self.level:
             case logging.DEBUG:
-                return arcade.color.BABY_BLUE
+                return colors.BABY_BLUE
             case logging.INFO:
-                return arcade.color.WHITE
+                return colors.WHITE
             case logging.WARN:
-                return arcade.color.YELLOW
+                return colors.YELLOW
             case logging.ERROR:
-                return arcade.color.RED
+                return colors.RED
             case logging.FATAL:
-                return arcade.color.MAGENTA
+                return colors.MAGENTA
             case _:
-                return arcade.color.GREEN
+                return colors.GREEN
 
     @property
     def prefix(self):

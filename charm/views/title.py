@@ -1,6 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, cast
-from types import ModuleType
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from charm.lib.digiwindow import DigiWindow
 
@@ -9,7 +8,8 @@ from importlib.resources import files
 import random
 
 import arcade
-import pyglet
+from arcade import Text, Sprite, Texture, MOUSE_BUTTON_LEFT, color
+from pyglet.text import Label
 
 import charm.data.audio
 import charm.data.images
@@ -17,7 +17,7 @@ from charm.lib.anim import ease_linear, ease_quadinout, perc
 from charm.lib.charm import CharmColors, GumWrapper
 from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.keymap import keymap
-from charm.lib.utils import img_from_resource, typewriter
+from charm.lib.utils import img_from_path, typewriter
 from charm.views.mainmenu import MainMenuView
 
 FADE_DELAY = 1
@@ -76,7 +76,7 @@ class TitleView(DigiView):
     @shows_errors
     @ignore_imgui
     def on_mouse_press(self, x: int, y: int, button: int, modifiers: int) -> None:
-        if button == arcade.MOUSE_BUTTON_LEFT:
+        if button == MOUSE_BUTTON_LEFT:
             self.start()
 
     @shows_errors
@@ -104,7 +104,7 @@ class TitleView(DigiView):
         self.goto(MainMenuView(back=self))
 
 
-class ClownLogo(arcade.Text):
+class ClownLogo(Text):
     def __init__(self, x: int, y: int):
         super().__init__(
             "CLOWN KILLS YOU",
@@ -112,7 +112,7 @@ class ClownLogo(arcade.Text):
             font_size=48,
             x=x, y=y,
             anchor_x='center', anchor_y='top',
-            color=arcade.color.RED
+            color=color.RED
         )
 
     def next_splash(self) -> None:
@@ -134,7 +134,7 @@ class ClownLogo(arcade.Text):
         self.position = (height // 2, width // 2, 0)
 
 
-class SplashLogo(pyglet.text.Label):
+class SplashLogo(Label):
     def __init__(self, view: DigiView, splashes: list[str], x: int, y: int):
         self.view = view
         self.splashes = splashes
@@ -169,7 +169,7 @@ class SplashLogo(pyglet.text.Label):
         self.position = (height // 2, width // 2, 0)
 
 
-class SongLabel(pyglet.text.Label):
+class SongLabel(Label):
     def __init__(self, view: DigiView):
         self.view = view
         width = 540
@@ -199,7 +199,7 @@ class SongLabel(pyglet.text.Label):
                 self.x = ease_quadinout(x_1, x_2, p)
 
 
-class PressLabel(pyglet.text.Label):
+class PressLabel(Label):
     def __init__(self, view: DigiView, x: int, y: int):
         self.view = view
         super().__init__(
@@ -228,7 +228,7 @@ class PressLabel(pyglet.text.Label):
         self.position = (width / 2, height / 2 / 2, 0)
 
 
-class WelcomeLabel(arcade.Text):
+class WelcomeLabel(Text):
     def __init__(self, x: int, y: int):
         super().__init__(
             f"welcome, {getpass.getuser()}!",
@@ -236,7 +236,7 @@ class WelcomeLabel(arcade.Text):
             font_size=14,
             x=x, y=y,
             anchor_x='center', anchor_y='bottom',
-            color=arcade.color.BLACK
+            color=color.BLACK
         )
 
     def draw(self) -> None:
@@ -253,11 +253,11 @@ class WelcomeLabel(arcade.Text):
         self.position = (width // 2, 6, 0)
 
 
-class LogoSprite(arcade.Sprite):
+class LogoSprite(Sprite):
     def __init__(self, window: DigiWindow):
         self.window = window
-        logo_img = img_from_resource(cast(ModuleType, charm.data.images), "logo.png")
-        logo_texture = arcade.Texture(logo_img)
+        logo_img = img_from_path(files(charm.data.images) / "logo.png")
+        logo_texture = Texture(logo_img)
         super().__init__(logo_texture, scale=0.3)
 
     def on_resize(self, width: int, height: int) -> None:

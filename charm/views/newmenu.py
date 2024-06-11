@@ -1,6 +1,7 @@
 import logging
 
 import arcade
+from arcade import color as colors
 
 from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView
@@ -83,5 +84,5 @@ class NewMenuView(DigiView):
         self.menu.draw()
 
         arcade.draw_text(f"{self.menu.min_factor=}\n{self.menu.max_factor=}\n{self.menu.offset=}\n{self.menu.in_sin=}\n{self.menu.out_sin=}\n{self.menu.shift=}\n{self.menu.move_forward=}",
-                         self.window.width, self.window.height, arcade.color.BLACK, width = self.window.width, align = "right", anchor_x = "right", anchor_y = "top", multiline = True, font_size = 16)
+                         self.window.width, self.window.height, colors.BLACK, width = self.window.width, align = "right", anchor_x = "right", anchor_y = "top", multiline = True, font_size = 16)
         super().postdraw()

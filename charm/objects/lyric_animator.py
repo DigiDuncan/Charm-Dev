@@ -1,6 +1,7 @@
 from copy import copy
 
 import arcade
+
 import pyglet
 from pyglet import gl
 
@@ -18,7 +19,7 @@ class LyricEvent:
         self.text = text
         self.karaoke = karaoke
 
-        self._labels: list[arcade.Text] = []
+        self._labels: list[EmojiLabel] = []
         self._batch = pyglet.graphics.Batch()
 
     @property
@@ -26,7 +27,7 @@ class LyricEvent:
         return self.time + self.length
 
     @end_time.setter
-    def end_time(self, v: Seconds):
+    def end_time(self, v: Seconds) -> None:
         self.length = v - self.time
 
     def get_labels(self, x: float, y: float, font_size: int) -> list[EmojiLabel]:
@@ -41,20 +42,24 @@ class LyricEvent:
                 self._labels.append(label_over)
         return self._labels
 
-    def draw(self):
+    def draw(self) -> None:
         if not self._labels:
-            self.get_labels()
+            self.get_labels(x, y, font_size) # TODO: What goes in these arguments???
         self._batch.draw()
 
 
 class LyricAnimator:
-    def __init__(self, x: float, y: float, events: list[LyricEvent] = None, width: int = None) -> None:
+    def __init__(self, x: float, y: float, events: list[LyricEvent] | None = None, width: int | None = None) -> None:
         self.x = x
         self.y = y
-        self.width = int(arcade.get_window().width * 0.9) if width is None else width
+        if width is None:
+            width = int(arcade.get_window().width * 0.9)
+        self.width = width
         self.max_font_size = 24
 
-        self.events: list[LyricEvent] = [] if events is None else events
+        if events is None:
+            events = []
+        self.events = events
         self.active_subtitles = [copy(e) for e in self.events]
         self.current_subtitles: list[LyricEvent] = []
 
@@ -62,9 +67,9 @@ class LyricAnimator:
 
         self.show_box = True
 
-        self._string_sizes = {}
+        self._string_sizes: dict[str, int] = {}
 
-    def update(self, song_time: Seconds):
+    def update(self, song_time: Seconds) -> None:
         self.song_time = song_time
         for subtitle in self.current_subtitles:
             if subtitle.end_time < self.song_time:
@@ -84,11 +89,11 @@ class LyricAnimator:
         self._string_sizes[s] = font_size
         return font_size
 
-    def prerender(self):
+    def prerender(self) -> None:
         for s in self.active_subtitles:
             fs = self.get_font_size(s.text)
             s.get_labels(self.x, self.y, fs)
 
-    def draw(self):
+    def draw(self) -> None:
         if self.current_subtitles:
             self.current_subtitles[-1].draw()

@@ -1,8 +1,7 @@
 from bisect import insort
-from pyglet.math import Vec2
-import arcade
 
-from arcade import camera, BasicSprite, SpriteList, SpriteCircle
+import arcade
+from arcade import BasicSprite, SpriteList, SpriteCircle, Camera2D, Vec2, color as colors
 
 from charm.lib.keymap import keymap
 from charm.lib.digiview import DigiView
@@ -11,7 +10,7 @@ from charm.lib.digiview import DigiView
 class SpriteLayer[T: BasicSprite]:
     def __init__(self, *, z: float = 1.0) -> None:
         self.sprites = SpriteList[T]()
-        self.camera = camera.Camera2D()
+        self.camera = Camera2D()
         self.z = z
 
     @property
@@ -93,17 +92,17 @@ class SpriteLayerList[T: BasicSprite]:
             layer.draw()
 
 
-colors = [
-    arcade.color.WHITE,
-    arcade.color.RED,
-    arcade.color.ORANGE,
-    arcade.color.YELLOW,
-    arcade.color.GREEN,
-    arcade.color.CYAN,
-    arcade.color.BLUE,
-    arcade.color.INDIGO,
-    arcade.color.VIOLET,
-    arcade.color.MAGENTA
+charm_colors = [
+    colors.WHITE,
+    colors.RED,
+    colors.ORANGE,
+    colors.YELLOW,
+    colors.GREEN,
+    colors.CYAN,
+    colors.BLUE,
+    colors.INDIGO,
+    colors.VIOLET,
+    colors.MAGENTA
 ]
 
 DEPTH = 20
@@ -119,12 +118,12 @@ class ParallaxTestView(DigiView):
 
     def setup(self) -> None:
         super().presetup()
-        arcade.set_background_color(arcade.color.BLACK)
+        arcade.set_background_color(colors.BLACK)
 
         self.parallax = SpriteLayerList[SpriteCircle]()
         for i in range(1, DEPTH + 1):
             sprite_layer = SpriteLayer[SpriteCircle](z = i * 0.25)
-            color = colors[i % len(colors)]
+            color = charm_colors[i % len(charm_colors)]
             for x in range(-(WIDTH * STEP) // 2, ((WIDTH * STEP) // 2) + 1, STEP):
                 for y in range(-(HEIGHT * STEP) // 2, ((HEIGHT * STEP) // 2) + 1, STEP):
                     sprite = SpriteCircle(25, color, soft=True)

@@ -1,8 +1,11 @@
-from typing import Hashable
+from collections.abc import Hashable
 from enum import IntEnum
+from typing import cast
 
 import arcade
+from arcade import Camera2D, Sprite, SpriteList, Texture
 from arcade.types import Color
+
 
 from charm.lib.types import Point, TuplePoint
 from charm.objects.lyric_animator import Seconds
@@ -18,14 +21,14 @@ class NoteStruckState(IntEnum):
 class LongNoteRenderer:
 
     def __init__(self,
-                 cap_texture: arcade.Texture, body_texture: arcade.Texture, tail_texture: arcade.Texture,
+                 cap_texture: Texture, body_texture: Texture, tail_texture: Texture,
                  width: float, length: float, x: float, y: float,
-                 cap_missed: arcade.Texture = None, body_missed: arcade.Texture = None, tail_missed: arcade.Texture = None,
-                 cap_hit: arcade.Texture = None, body_hit: arcade.Texture = None, tail_hit: arcade.Texture = None
+                 cap_missed: Texture = None, body_missed: Texture = None, tail_missed: Texture = None,
+                 cap_hit: Texture = None, body_hit: Texture = None, tail_hit: Texture = None
     ):
-        self._cap_textures: tuple[arcade.Texture, ...] = (cap_texture, cap_hit or cap_texture, cap_missed or cap_texture)
-        self._body_textures: tuple[arcade.Texture, ...] = (body_texture, body_hit or body_texture, body_missed or body_texture)
-        self._tail_textures: tuple[arcade.Texture, ...] = (tail_texture, tail_hit or tail_texture, tail_missed or tail_texture)
+        self._cap_textures: tuple[Texture, ...] = (cap_texture, cap_hit or cap_texture, cap_missed or cap_texture)
+        self._body_textures: tuple[Texture, ...] = (body_texture, body_hit or body_texture, body_missed or body_texture)
+        self._tail_textures: tuple[Texture, ...] = (tail_texture, tail_hit or tail_texture, tail_missed or tail_texture)
 
         self._note_state: NoteStruckState = NoteStruckState.UNTOUCHED
 
@@ -40,11 +43,11 @@ class LongNoteRenderer:
         if body_height < 0.0:
             raise InvalidNoteLengthError(length, body_height)
 
-        self._cap = arcade.Sprite(self._cap_textures[self._note_state], center_x=x, center_y=y + body_height + (tail_height + cap_height)/2.0)
+        self._cap = Sprite(self._cap_textures[self._note_state], center_x=x, center_y=y + body_height + (tail_height + cap_height)/2.0)
         self._cap.width, self._cap.height = cap_width, cap_height
-        self._body = arcade.Sprite(self._body_textures[self._note_state], center_x=x, center_y=y + (tail_height + body_height)/2.0)
+        self._body = Sprite(self._body_textures[self._note_state], center_x=x, center_y=y + (tail_height + body_height)/2.0)
         self._body.width, self._body.height = body_width, body_height
-        self._tail = arcade.Sprite(self._tail_textures[self._note_state], center_x=x, center_y=y)
+        self._tail = Sprite(self._tail_textures[self._note_state], center_x=x, center_y=y)
         self._tail.width, self._tail.height = tail_width, tail_height
 
     def get_sprites(self):
@@ -167,13 +170,13 @@ class NoteTrail(MultiLineRenderer):
         self.texture = None
         self.sprite = None
         if self.curve:
-            self.texture = arcade.Texture.create_empty(f"_line_renderer_{self.color}_{self.fill_color}_{self.width}_{self.point_depth}", (self.width, self.point_depth))
+            self.texture = Texture.create_empty(f"_line_renderer_{self.color}_{self.fill_color}_{self.width}_{self.point_depth}", (self.width, self.point_depth))
             if self.upscroll:
                 self.texture = self.texture.flip_vertically()
-            self.sprite = arcade.Sprite(self.texture)
+            self.sprite = Sprite(self.texture)
             offset = -self.point_depth / 2 if self.upscroll else self.point_depth / 2
             self.sprite.position = (self.note_center[0], self._trail_end + offset)
-            self.curve_cap = arcade.SpriteList()
+            self.curve_cap = SpriteList()
             self.curve_cap.program = self.curve_cap.ctx.sprite_list_program_no_cull
             self.curve_cap.append(self.sprite)
         self.generate_fill()
@@ -199,8 +202,8 @@ class NoteTrail(MultiLineRenderer):
             ctx = window.ctx
             ctx.blend_func = ctx.BLEND_ADDITIVE
             with self.curve_cap.atlas.render_into(self.texture) as fbo:
-                l, b, w, h = fbo.viewport
-                temp_cam = arcade.camera.Camera2D(
+                l, b, w, h = cast(tuple[int, int, int, int], fbo.viewport)
+                temp_cam = Camera2D(
                     viewport=(l, b, w, h),
                     projection=(0, w, h, 0),
                     position=(0.0, 0.0),
@@ -264,11 +267,11 @@ class TaikoNoteTrail:
         self.line_renderers.append(line_renderer2)
 
         self.sprite = None
-        self.texture = arcade.Texture.create_empty(f"_taikonotetrail_{self.color}_{self.fill_color}_{self.width}", (self.width // 2, self.width))
-        self.sprite = arcade.Sprite(self.texture)
+        self.texture = Texture.create_empty(f"_taikonotetrail_{self.color}_{self.fill_color}_{self.width}", (self.width // 2, self.width))
+        self.sprite = Sprite(self.texture)
         offset = self.width / 4
         self.sprite.position = (self._right + offset - 1, self.note_center[0])
-        self.curve_cap = arcade.SpriteList()
+        self.curve_cap = SpriteList()
         self.curve_cap.append(self.sprite)
 
         self.generate_fill()

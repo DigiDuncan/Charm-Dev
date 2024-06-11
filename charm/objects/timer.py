@@ -1,6 +1,7 @@
-from arcade.color import Color, WHITE, BLACK
-from arcade.draw_commands import draw_rect_filled, draw_rect_outline, draw_lrbt_rectangle_filled
-from arcade.text import Text
+import arcade
+from arcade.types import Color
+from arcade import color as colors
+from arcade import Text
 
 from charm.lib.anim import ease_linear, LerpData, perc
 from charm.lib.charm import CharmColors
@@ -9,8 +10,8 @@ from charm.lib.utils import px_to_pt
 
 class Timer:
     def __init__(self, width: int, total_time: float, start_time: float = 0, paused = False,
-                 bar_bg_color: Color = WHITE, bar_fill_color: Color = CharmColors.FADED_PURPLE, bar_border_color: Color = BLACK,
-                 height: int = 33, text_color: Color = BLACK, text_font: str = "bananaslip plus",
+                 bar_bg_color: Color = colors.WHITE, bar_fill_color: Color = CharmColors.FADED_PURPLE, bar_border_color: Color = colors.BLACK,
+                 height: int = 33, text_color: Color = colors.BLACK, text_font: str = "bananaslip plus",
                  x: int = 0, y: int = 0):
         self.width = width
         self.start_time = start_time
@@ -117,7 +118,7 @@ class Timer:
             self.total_time_offset = ease_linear(lerp.minimum, lerp.maximum, perc(lerp.start_time, lerp.end_time, self._clock))
 
     def draw(self):
-        draw_rect_filled(self.center_x, self.center_y, self.width, self.height, self.bar_bg_color)
-        draw_lrbt_rectangle_filled(self.x, self.x + self.fill_px, self.y, self.y + self.height, self.bar_fill_color)
-        draw_rect_outline(self.center_x, self.center_y, self.width, self.height, self.bar_border_color, 1)
+        arcade.draw_rect_filled(self.center_x, self.center_y, self.width, self.height, self.bar_bg_color)
+        arcade.draw_lrbt_rectangle_filled(self.x, self.x + self.fill_px, self.y, self.y + self.height, self.bar_fill_color)
+        arcade.draw_rect_outline(self.center_x, self.center_y, self.width, self.height, self.bar_border_color, 1)
         self._label.draw()

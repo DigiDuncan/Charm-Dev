@@ -1,10 +1,11 @@
 from __future__ import annotations
-import time
 from typing import TYPE_CHECKING, Concatenate
-from collections.abc import Callable
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from charm.lib.digiwindow import DigiWindow
+    from arcade import Rect
 
+import time
 from dataclasses import dataclass
 import functools
 import logging
@@ -12,12 +13,12 @@ import traceback
 
 import arcade
 from imgui_bundle import imgui
-from arcade import LBWH, LRBT, Rect, View
+from arcade import LBWH, LRBT, View
 
 from charm.lib.charm import CharmColors
 from charm.lib.component_manager import ComponentManager
 from charm.lib.anim import ease_linear, perc
-from charm.lib.errors import CharmException, GenericError
+from charm.lib.errors import CharmError, GenericError
 from charm.lib.keymap import keymap
 from charm.lib.sfxmanager import SfxManager
 
@@ -25,13 +26,13 @@ logger = logging.getLogger("charm")
 
 
 def shows_errors[S: DigiView, **P](fn: Callable[Concatenate[S, P], None]) -> Callable[Concatenate[S, P], None]:
-    return fn
+    return fn # TODO: TEMPORARILY DISABLED FOR TESTING
     @functools.wraps(fn)
     def wrapper(self: S, *args: P.args, **kwargs: P.kwargs) -> None:
         try:
             fn(self, *args, **kwargs)
         except Exception as e:  # noqa: BLE001
-            if not isinstance(e, CharmException):
+            if not isinstance(e, CharmError):
                 e = GenericError(e)
             if not self.shown and self.back is not None:
                 self = self.back
@@ -57,7 +58,7 @@ def ignore_imgui[**P](fn: Callable[P, None]) -> Callable[P, None]:
 
 @dataclass
 class ErrorPopup:
-    error: CharmException
+    error: CharmError
     expiry: float
 
 
@@ -90,7 +91,7 @@ class DigiView(View):
     def local_time(self) -> float:
         return self.window.time - self.local_start
 
-    def on_error(self, error: CharmException) -> None:
+    def on_error(self, error: CharmError) -> None:
         offset = len(self._errors) * 4
         error.sprite.center_x += offset
         error.sprite.center_y += offset
