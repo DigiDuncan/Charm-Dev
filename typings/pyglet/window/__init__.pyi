@@ -12,6 +12,7 @@ from pyglet.math import Mat4
 from pyglet.event import EventDispatcher
 from pyglet.window import event, key
 from pyglet.graphics import shader
+from pyglet.image import AbstractImage
 
 """Windowing and user-interface events.
 
@@ -813,7 +814,7 @@ class BaseWindow(EventDispatcher, metaclass=_WindowMetaclass):
         """
         ...
     
-    def set_icon(self, *images): # -> None:
+    def set_icon(self, *images: AbstractImage) -> None: # -> None:
         """Set the window icon.
 
         If multiple images are provided, one with an appropriate size

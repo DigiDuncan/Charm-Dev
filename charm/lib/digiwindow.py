@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 if TYPE_CHECKING:
     from charm.lib.digiview import DigiView
 
@@ -57,5 +57,5 @@ class DigiWindow(Window):
     def save_atlas(self) -> None:
         self.ctx.default_atlas.save("atlas.png")
 
-    def current_view(self) -> DigiView | None: # type: ignore
-        return super().current_view # type: ignore
+    def current_view(self) -> DigiView | None: # pyright: ignore [reportIncompatibleMethodOverride]
+        return cast(DigiView | None, super().current_view)

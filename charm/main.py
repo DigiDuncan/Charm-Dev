@@ -1,6 +1,3 @@
-from types import ModuleType
-from typing import cast
-
 from importlib.resources import files, as_file
 
 import pyglet
