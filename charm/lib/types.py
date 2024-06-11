@@ -21,7 +21,7 @@ class Point:
         return self._point[0]
 
     @x.setter
-    def x(self, val: float):
+    def x(self, val: float) -> None:
         self._point = (val, self._point[1])
 
     @property
@@ -29,10 +29,10 @@ class Point:
         return self._point[1]
 
     @y.setter
-    def y(self, val: float):
+    def y(self, val: float) -> None:
         self._point = (self._point[0], val)
 
-    def move(self, x: float, y: float):
+    def move(self, x: float, y: float) -> None:
         self._point = (self._point[0] + x, self._point[1] + y)
 
     def __str__(self) -> str:

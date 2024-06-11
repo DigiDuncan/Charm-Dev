@@ -16,7 +16,7 @@ from imgui_bundle import imgui
 from arcade import LBWH, LRBT, View
 
 from charm.lib.charm import CharmColors
-from charm.lib.component_manager import ComponentManager
+from charm.lib.components import ComponentManager
 from charm.lib.anim import ease_linear, perc
 from charm.lib.errors import CharmError, GenericError
 from charm.lib.keymap import keymap

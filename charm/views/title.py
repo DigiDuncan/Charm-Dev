@@ -1,5 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+
+from charm.lib.components import Component
 if TYPE_CHECKING:
     from charm.lib.digiwindow import DigiWindow
 
@@ -104,7 +106,7 @@ class TitleView(DigiView):
         self.goto(MainMenuView(back=self))
 
 
-class ClownLogo(Text):
+class ClownLogo(Text, Component):
     def __init__(self, x: int, y: int):
         super().__init__(
             "CLOWN KILLS YOU",
@@ -130,11 +132,11 @@ class ClownLogo(Text):
     def on_update(self, delta_time: float) -> None:
         self.jiggle()
 
-    def on_resize(self, width: float, height: float) -> None:
-        self.position = (height // 2, width // 2, 0)
+    def on_resize(self, width: int, height: int) -> None:
+        self.position = (height / 2, width / 2, 0)
 
 
-class SplashLogo(Label):
+class SplashLogo(Label, Component):
     def __init__(self, view: DigiView, splashes: list[str], x: int, y: int):
         self.view = view
         self.splashes = splashes
@@ -165,11 +167,11 @@ class SplashLogo(Label):
         # Splash text typewriter effect
         self.text = typewriter(self.splash_text, 20, self.view.local_time, 3)
 
-    def on_resize(self, height: float, width: float) -> None:
-        self.position = (height // 2, width // 2, 0)
+    def on_resize(self, width: int, height: int) -> None:
+        self.position = (height / 2, width / 2, 0)
 
 
-class SongLabel(Label):
+class SongLabel(Label, Component):
     def __init__(self, view: DigiView):
         self.view = view
         width = 540
@@ -199,7 +201,7 @@ class SongLabel(Label):
                 self.x = ease_quadinout(x_1, x_2, p)
 
 
-class PressLabel(Label):
+class PressLabel(Label, Component):
     def __init__(self, view: DigiView, x: int, y: int):
         self.view = view
         super().__init__(
@@ -228,7 +230,7 @@ class PressLabel(Label):
         self.position = (width / 2, height / 2 / 2, 0)
 
 
-class WelcomeLabel(Text):
+class WelcomeLabel(Text, Component):
     def __init__(self, x: int, y: int):
         super().__init__(
             f"welcome, {getpass.getuser()}!",
@@ -249,11 +251,11 @@ class WelcomeLabel(Text):
         ], CharmColors.FADED_PURPLE)
         super().draw()
 
-    def on_resize(self, height: int, width: int) -> None:
+    def on_resize(self, width: int, height: int) -> None:
         self.position = (width // 2, 6, 0)
 
 
-class LogoSprite(Sprite):
+class LogoSprite(Sprite, Component):
     def __init__(self, window: DigiWindow):
         self.window = window
         logo_img = img_from_path(files(charm.data.images) / "logo.png")
