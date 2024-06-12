@@ -1,11 +1,10 @@
-from typing import Protocol, runtime_checkable
-
-@runtime_checkable
-class Component(Protocol):
+class Component:
     def on_update(self, delta_time: float) -> None:
         return
+
     def on_resize(self, width: int, height: int) -> None:
         return
+
     def draw(self) -> None:
         return
 
@@ -17,8 +16,6 @@ class ComponentManager:
         self.components = []
 
     def register[T: Component](self, component: T) -> T:
-        if not isinstance(component, Component):
-            raise KeyError
         self.components.append(component)
         return component
 
