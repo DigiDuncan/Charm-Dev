@@ -62,15 +62,6 @@ VALID_HEADERS = list(DIFF_INST_MAP.keys()) + SPECIAL_HEADERS
 Ticks = int
 
 
-class IndexDict(TypedDict):
-    bpm: Index
-    time_sig: Index
-    section: Index
-    beat: Index
-    note: Index
-    chord: Index
-
-
 @dataclass
 class TickEvent(Event):
     tick: int
@@ -138,7 +129,6 @@ class RawBPMEvent:
 
 def tick_to_seconds(current_tick: Ticks, sync_track: list[BPMChangeTickEvent], resolution: int = 192, offset: float = 0) -> Seconds:
     """Takes a tick (and an associated sync_track,) and returns its position in seconds as a float."""
-    current_tick = int(current_tick)  # you should really just be passing ints in here anyway but eh
     if current_tick == 0:
         return 0
     bpm_events = [b for b in sync_track if b.tick <= current_tick]
@@ -187,7 +177,7 @@ class HeroNote(Note):
         return super().icon
 
     def __str__(self) -> str:
-        return f"<HeroNote T:{self.tick}{'+' + self.tick_length if self.tick_length else ''} ({round(self.time, 3)}) lane={self.lane} type={self.type} length={round(self.length)}>"
+        return f"<HeroNote T:{self.tick}{'+' + str(self.tick_length) if self.tick_length else ''} ({round(self.time, 3)}) lane={self.lane} type={self.type} length={round(self.length)}>"
 
     def __repr__(self) -> str:
         return self.__str__()
@@ -276,14 +266,23 @@ class HeroChord:
         return final_list
 
 
+class IndexDict[T](TypedDict):
+    bpm: Index[T, BPMChangeTickEvent]
+    time_sig: Index[T, TSEvent]
+    section: Index[T, SectionEvent]
+    beat: Index[T, BeatEvent]
+    note: Index[T, Note]
+    chord: Index[T, HeroChord]
+
+
 class HeroChart(Chart):
-    def __init__(self, song: Song, difficulty: str, instrument: str, lanes: int, hash: str | None) -> None:
+    def __init__(self, song: Song[HeroChart], difficulty: str, instrument: str, lanes: int, hash: str | None) -> None:
         super().__init__(song, "hero", difficulty, instrument, lanes, hash)
         self.song: HeroSong = self.song
         self.chords: list[HeroChord] = None
 
-        self.indexes_by_tick: IndexDict = {}
-        self.indexes_by_time: IndexDict = {}
+        self.indexes_by_tick: IndexDict[Ticks] = {}
+        self.indexes_by_time: IndexDict[Seconds] = {}
 
     def finalize(self) -> None:
         """Do some last-pass parsing steps."""
@@ -380,11 +379,11 @@ class HeroChart(Chart):
         self.events.sort()
 
     def index(self) -> None:
-        self.indexes_by_tick["note"] = Index(self.notes, "tick")
-        self.indexes_by_tick["chord"] = Index(self.chords, "tick")
+        self.indexes_by_tick["note"] = Index[Ticks, Note](self.notes, "tick")
+        self.indexes_by_tick["chord"] = Index[Ticks, HeroChord](self.chords, "tick")
 
-        self.indexes_by_time["note"] = Index(self.notes, "time")
-        self.indexes_by_time["chord"] = Index(self.chords, "time")
+        self.indexes_by_time["note"] = Index[Seconds, Note](self.notes, "time")
+        self.indexes_by_time["chord"] = Index[Seconds, HeroChord](self.chords, "time")
 
 
 class HeroSong(Song[HeroChart]):
@@ -641,14 +640,14 @@ class HeroSong(Song[HeroChart]):
 
     def index(self):
         """Save indexes of important look-up events. THIS IS SLOW."""
-        self.indexes_by_tick["bpm"] = Index(self.events_by_type(BPMChangeTickEvent), "tick")
-        self.indexes_by_tick["time_sig"] = Index(self.events_by_type(TSEvent), "tick")
-        self.indexes_by_tick["section"] = Index(self.events_by_type(SectionEvent), "tick")
+        self.indexes_by_tick["bpm"] = Index[Ticks, BPMChangeTickEvent](self.events_by_type(BPMChangeTickEvent), "tick")
+        self.indexes_by_tick["time_sig"] = Index[Ticks, TSEvent](self.events_by_type(TSEvent), "tick")
+        self.indexes_by_tick["section"] = Index[Ticks, SectionEvent](self.events_by_type(SectionEvent), "tick")
 
-        self.indexes_by_time["bpm"] = Index(self.events_by_type(BPMChangeTickEvent), "time")
-        self.indexes_by_time["time_sig"] = Index(self.events_by_type(TSEvent), "time")
-        self.indexes_by_time["section"] = Index(self.events_by_type(SectionEvent), "time")
-        self.indexes_by_time["beat"] = Index(self.events_by_type(BeatEvent), "time")
+        self.indexes_by_time["bpm"] = Index[Seconds, BPMChangeTickEvent](self.events_by_type(BPMChangeTickEvent), "time")
+        self.indexes_by_time["time_sig"] = Index[Seconds, TSEvent](self.events_by_type(TSEvent), "time")
+        self.indexes_by_time["section"] = Index[Seconds, SectionEvent](self.events_by_type(SectionEvent), "time")
+        self.indexes_by_time["beat"] = Index[Seconds, BeatEvent](self.events_by_type(BeatEvent), "time")
 
 # SKIN
 @cache

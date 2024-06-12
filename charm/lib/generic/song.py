@@ -156,8 +156,8 @@ class BPMChangeEvent(Event):
 
 class Chart:
     """A collection of notes and events, with helpful metadata."""
-    def __init__(self, song: 'Song', gamemode: str, difficulty: str, instrument: str, lanes: int, hash: str | None) -> None:
-        self.song: Song = song
+    def __init__(self, song: Song[Self], gamemode: str, difficulty: str, instrument: str, lanes: int, hash: str | None) -> None:
+        self.song = song
         self.gamemode = gamemode
         self.difficulty = difficulty
         self.instrument = instrument
@@ -169,7 +169,7 @@ class Chart:
         self.bpm: float = None
 
 
-class  Song[C: Chart]:
+class Song[C: Chart]:
     """A list of charts and global events, with some helpful metadata."""
     def __init__(self, path: Path):
         self.path: Path = path
@@ -187,7 +187,7 @@ class  Song[C: Chart]:
             and (instrument is None or instrument == c.instrument))
         return next(charts, None)
 
-    def events_by_type(self, t: type):
+    def events_by_type[T: Event](self, t: type[T]) -> list[T]:
         return [e for e in self.events if isinstance(e, t)]
 
     @classmethod
