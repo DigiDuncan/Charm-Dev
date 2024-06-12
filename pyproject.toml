@@ -90,5 +90,5 @@ select = [
     "RUF",      # Ruff-specific rules
 
 ]
-ignore = ["E501", "COM812", "PIE790", "RET504", "RUF001", "RUF013", "ANN101", "ANN102", "ANN204", "FBT003", "N817"]
+ignore = ["E501", "COM812", "PIE790", "RET504", "RUF001", "RUF013", "ANN101", "ANN102", "ANN204", "FBT003", "N817", "B019"]
 

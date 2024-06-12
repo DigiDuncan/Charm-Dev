@@ -6,7 +6,7 @@ import sys
 import weakref
 from pyglet.display.base import Canvas, Display, Screen, ScreenMode
 from pyglet import compat_platform, options
-__all__ = ("Screen",)
+__all__ = ("Screen", "Display", "ScreenMode")
 """Display and screen management.
 
 Rendering is performed on the content area of a :class:`pyglet.window.Window`,

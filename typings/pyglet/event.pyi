@@ -120,6 +120,10 @@ the particular class documentation.
         dispatcher.push_handlers(my_handler_instance)
 
 """
+from collections.abc import Callable
+from typing import Any, overload
+
+
 EVENT_HANDLED = ...
 EVENT_UNHANDLED = ...
 class EventException(Exception):
@@ -248,26 +252,14 @@ class EventDispatcher:
 
         """
         ...
-    
-    def event(self, *args): # -> Callable[..., Any] | FunctionType | MethodType | BuiltinFunctionType | WrapperDescriptorType | MethodDescriptorType | ClassMethodDescriptorType | None:
-        """Function decorator for an event handler.
 
-        Usage::
+    @overload
+    def event[**P, T](self, arg1: Callable[P, T]) -> Callable[P, T]: ...
+    @overload
+    def event[**P, T](self, arg1: None = None) -> Callable[[Callable[P, T]], Callable[P, T]]: ...
+    @overload
+    def event[**P, T](self, arg1: str) -> Callable[[Callable[P, T]], Callable[P, T]]: ...
+    def event[**P, T](self, arg1: Callable[P, T] | str | None = None) -> Callable[P, T]: ...
 
-            win = window.Window()
-
-            @win.event
-            def on_resize(self, width, height):
-                # ...
-
-        or::
-
-            @win.event('on_resize')
-            def foo(self, width, height):
-                # ...
-
-        """
-        ...
-    
 
 

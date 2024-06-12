@@ -79,7 +79,7 @@ def copy_sig[**P, T](fn_to_copy: Callable[P, T]) -> Callable[[Callable[..., Any]
 
 class EmojiLabel(Label):
     @copy_sig(Label.__init__)
-    def __init__(self, text: str, *args: Any, **kwargs: Any):
+    def __init__(self, text: str, *args: Any, **kwargs: Any): # noqa: ANN401
         super().__init__(text, *args, **kwargs)
         old_text = text
         new_text, inserts = emoji_picker.get_clean_string(self.text)
@@ -92,7 +92,7 @@ class EmojiLabel(Label):
 
         self.document = doc
         logger.debug(f"Created label for string {old_text}!")
-        x = [(e.position, e.image) for e in cast(list[ImageElement], self.document._elements)]
+        x = [(e.position, e.image) for e in cast(list[ImageElement], self.document._elements)]  # noqa: SLF001
         logger.debug(x)
 
 
@@ -101,9 +101,10 @@ def main() -> None:
     label = EmojiLabel("wow :smile: I can smile", color = (255, 255, 255, 255), x = 320, y = 240, font_size = 48)
 
     @window.event
-    def on_draw():
+    def on_draw() -> None: # pyright: ignore reportUnusedFunction
         window.clear()
         label.draw()
+
 
     pyglet.app.run()
 
