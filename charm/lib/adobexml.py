@@ -7,7 +7,7 @@ from os import PathLike
 from pathlib import Path
 from importlib.resources import files, as_file
 import re
-from typing import Literal, NotRequired, Self, TypedDict, cast, overload
+from typing import Literal, NotRequired, Self, TypedDict, cast
 import xml.etree.ElementTree as ET
 
 import PIL.Image
@@ -26,23 +26,6 @@ OffsetsDict = dict[str, tuple[int, int]]
 Anchor = Literal["left", "right", "bottom", "top", "center_x", "center_y"]
 
 re_subtexture_name = re.compile(r"(.+?)(\d+)$")
-
-@overload
-def strint(i: int) -> int: ...
-
-@overload
-def strint(i: str) -> int: ...
-
-@overload
-def strint(i: None) -> None: ...
-
-def strint(i: int | str | None) -> int | None:
-    """Convert a str to an int, or return an existing int or None."""
-    if isinstance(i, str):
-        return int(i)
-    if isinstance(i, int | None):
-        return i
-    raise ValueError(f"{i} is not a int or str.")
 
 
 class SubtextureJson(TypedDict):
