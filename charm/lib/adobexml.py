@@ -139,7 +139,7 @@ class AdobeTextureAtlas:
         root = tree.getroot()
         image_path: str = root.attrib["imagePath"]
         subtextures = [
-            Subtexture.parse(cast(SubtextureJson, subtexture.attrib), offsets)
+            Subtexture.parse(cast("SubtextureJson", subtexture.attrib), offsets)
             for subtexture in root.iter("SubTexture")
         ]
         return cls(image_path, subtextures)

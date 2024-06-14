@@ -356,7 +356,7 @@ class HeroChart(Chart):
                     current_chord.type = "hopo"
 
     def parse_text_events(self) -> None:
-        self.events = cast(list[TickEvent], self.events)
+        self.events = cast("list[TickEvent]", self.events)
         parsed: list[TextEvent] = []
         new_events: list[SoloEvent] = []
         current_solo = None
@@ -605,7 +605,7 @@ class HeroSong(Song[HeroChart]):
         current_full_string = ""
         unprocessed_lyrics: list[LyricEvent] = []
         processsed_lyrics: list[LyricEvent] = []
-        self.events = cast(list[TickEvent], self.events)
+        self.events = cast("list[TickEvent]", self.events)
         for e in self.events:
             if isinstance(e, TextEvent):
                 if e.text == "phrase_start" or "phrase_end":

@@ -280,7 +280,7 @@ class KeyMap:
         charm.lib.data.save("keymap.json", self.to_json())
 
     def load(self) -> None:
-        self.set_from_json(cast(KeyMapJson, charm.lib.data.load("keymap.json")))
+        self.set_from_json(cast("KeyMapJson", charm.lib.data.load("keymap.json")))
 
     def get_actions(self, key: KeyMod | Key, context: Context | None = ALL) -> set[Action]:
         """Get all Actions mapped to a particular key"""

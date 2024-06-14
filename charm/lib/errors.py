@@ -37,7 +37,7 @@ class CharmError(Exception):
         sprite = Sprite(_tex)
 
         with default_atlas.render_into(_tex) as fbo:
-            l, b, w, h = cast(tuple[int, int, int, int], fbo.viewport)
+            l, b, w, h = cast("tuple[int, int, int, int]", fbo.viewport)
             temp_cam = Camera2D(
                 viewport=LBWH(l, b, w, h),
                 projection=LRBT(0, w, h, 0),

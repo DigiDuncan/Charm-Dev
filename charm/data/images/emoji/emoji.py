@@ -74,7 +74,7 @@ logger.debug("Loaded emoji picker...")
 
 def copy_sig[**P, T](fn_to_copy: Callable[P, T]) -> Callable[[Callable[..., Any]], Callable[P, T]]:
     def copier(fn: Callable[..., Any]) -> Callable[P, T]:
-        return cast(Callable[P, T], fn)
+        return cast("Callable[P, T]", fn)
     return copier
 
 class EmojiLabel(Label):
@@ -92,7 +92,7 @@ class EmojiLabel(Label):
 
         self.document = doc
         logger.debug(f"Created label for string {old_text}!")
-        x = [(e.position, e.image) for e in cast(list[ImageElement], self.document._elements)]  # noqa: SLF001
+        x = [(e.position, e.image) for e in cast("list[ImageElement]", self.document._elements)]  # noqa: SLF001
         logger.debug(x)
 
 

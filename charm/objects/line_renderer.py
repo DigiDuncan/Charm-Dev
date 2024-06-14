@@ -202,7 +202,7 @@ class NoteTrail(MultiLineRenderer):
             ctx = window.ctx
             ctx.blend_func = ctx.BLEND_ADDITIVE
             with self.curve_cap.atlas.render_into(self.texture) as fbo:
-                l, b, w, h = cast(tuple[int, int, int, int], fbo.viewport)
+                l, b, w, h = cast("tuple[int, int, int, int]", fbo.viewport)
                 temp_cam = Camera2D(
                     viewport=(l, b, w, h),
                     projection=(0, w, h, 0),

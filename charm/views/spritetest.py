@@ -90,7 +90,7 @@ class SpriteTestView(DigiView):
     def on_update(self, delta_time: float) -> None:
         super().on_update(delta_time)
         self.sprite.update_animation(delta_time)
-        st = cast(Subtexture, self.sprite._current_animation_sts[self.sprite._current_animation_index])
+        st = cast("Subtexture", self.sprite._current_animation_sts[self.sprite._current_animation_index])
         self.data_label.text = f"""
         Sprite FPS: {self.fps}
         Sprite F#: {self.sprite._current_animation_index}

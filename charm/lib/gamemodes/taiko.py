@@ -157,7 +157,7 @@ class TaikoHighway(Highway):
         self.note_sprites: list[TaikoNoteSprite] = []
         self.sprite_buckets = SpriteBucketCollection()
         for note in self.notes:
-            note = cast(TaikoNote, note)
+            note = cast("TaikoNote", note)
             sprite = TaikoNoteSprite(note, self, self.note_size) if note.length == 0 else TaikoLongNoteSprite(note, self, self.note_size)
             sprite.center_x = -self.note_y(note.time)
             sprite.center_y = self.y + (self.h / 2)

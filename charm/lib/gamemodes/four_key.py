@@ -228,7 +228,7 @@ class FourKeyHighway(Highway):
         self.text_objects: list[Text] = []
         # DO NOT LET THIS SHIP PLEASE.
         for sprite in self.sprite_buckets.sprites:
-            sprite = cast(FourKeyLongNoteSprite, sprite)
+            sprite = cast("FourKeyLongNoteSprite", sprite)
             value_string = "" if sprite.note.value == 0 else str(sprite.note.value)
             self.text_objects.append(Text(value_string, sprite.center_x, sprite.center_y,
                                                  font_size = 24, align = "center", font_name = "bananaslip plus",
