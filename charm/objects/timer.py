@@ -1,6 +1,6 @@
 import arcade
 from arcade.types import Color
-from arcade import color as colors
+from arcade import LRBT, XYWH, color as colors
 from arcade import Text
 
 from charm.lib.anim import ease_linear, LerpData, perc
@@ -118,7 +118,7 @@ class Timer:
             self.total_time_offset = ease_linear(lerp.minimum, lerp.maximum, perc(lerp.start_time, lerp.end_time, self._clock))
 
     def draw(self):
-        arcade.draw_rect_filled(self.center_x, self.center_y, self.width, self.height, self.bar_bg_color)
-        arcade.draw_lrbt_rectangle_filled(self.x, self.x + self.fill_px, self.y, self.y + self.height, self.bar_fill_color)
-        arcade.draw_rect_outline(self.center_x, self.center_y, self.width, self.height, self.bar_border_color, 1)
+        arcade.draw_rect_filled(XYWH(self.center_x, self.center_y, self.width, self.height), self.bar_bg_color)
+        arcade.draw_rect_filled(LRBT(self.x, self.x + self.fill_px, self.y, self.y + self.height), self.bar_fill_color)
+        arcade.draw_rect_outline(XYWH(self.center_x, self.center_y, self.width, self.height), self.bar_border_color, 1)
         self._label.draw()

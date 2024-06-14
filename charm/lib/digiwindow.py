@@ -1,7 +1,5 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, cast
-if TYPE_CHECKING:
-    from charm.lib.digiview import DigiView
 
 import logging
 
@@ -10,6 +8,7 @@ from arcade import Window, Camera2D
 
 from charm.lib.sfxmanager import SfxManager
 from charm.lib.debug_menu import DebugMenu
+from charm.lib.digiview import DigiView
 from charm.lib.presencemanager import PresenceManager
 from charm.lib.themesong import ThemeSong
 from charm.views.title import TitleView

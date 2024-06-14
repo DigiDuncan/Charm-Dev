@@ -154,7 +154,7 @@ class DigiView(View):
         self.postdraw()
 
     def postdraw(self) -> None:
-        self.components.on_draw()
+        self.components.draw()
         for popup in self._errors:
             popup.error.sprite.draw()
         self.window.debug.draw()

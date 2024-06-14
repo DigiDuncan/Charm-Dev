@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
 from statistics import mean
+from typing import cast
 
 import arcade
 from arcade import Sprite, SpriteList, Texture, Text, color as colors
