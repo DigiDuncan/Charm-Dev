@@ -129,7 +129,7 @@ class FNFSongMenuView(DigiView):
         elif keymap.back.pressed:
             self.go_back()
         elif keymap.dump_textures.pressed:
-            self.window.ctx.default_atlas.save("hmmmmm.png")
+            self.window.save_atlas("hmmmmm.png")
 
     @shows_errors
     @ignore_imgui

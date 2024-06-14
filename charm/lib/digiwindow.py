@@ -1,5 +1,7 @@
 from __future__ import annotations
+from pathlib import Path
 from typing import TYPE_CHECKING, cast
+
 if TYPE_CHECKING:
     from charm.lib.digiview import DigiView
 
@@ -54,8 +56,10 @@ class DigiWindow(Window):
         super().on_resize(width, height)
         self.debug.on_resize(width, height)
 
-    def save_atlas(self) -> None:
-        self.ctx.default_atlas.save("atlas.png")
+    def save_atlas(self, name: str = "atlas.png") -> None:
+        atlas_path = Path("debug") / name
+        atlas_path.parent.mkdir(parents=True, exist_ok=True)
+        self.ctx.default_atlas.save(atlas_path)
 
     def current_view(self) -> DigiView | None: # pyright: ignore [reportIncompatibleMethodOverride]
         return cast("DigiView | None", super().current_view)
