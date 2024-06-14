@@ -40,7 +40,6 @@ class SubtextureJson(TypedDict):
     frame_height: NotRequired[str]
 
 
-
 class Subtexture:
     def __init__(
         self,

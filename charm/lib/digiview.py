@@ -1,3 +1,5 @@
+
+# pyright: reportMissingTypeStubs=true
 from __future__ import annotations
 from typing import TYPE_CHECKING, Concatenate
 if TYPE_CHECKING:
@@ -23,7 +25,6 @@ from charm.lib.keymap import keymap
 from charm.lib.sfxmanager import SfxManager
 
 logger = logging.getLogger("charm")
-
 
 def shows_errors[S: DigiView, **P](fn: Callable[Concatenate[S, P], None]) -> Callable[Concatenate[S, P], None]:
     return fn # TODO: TEMPORARILY DISABLED FOR TESTING
@@ -154,7 +155,7 @@ class DigiView(View):
         self.postdraw()
 
     def postdraw(self) -> None:
-        self.components.on_draw()
+        self.components.draw()
         for popup in self._errors:
             popup.error.sprite.draw()
         self.window.debug.draw()
