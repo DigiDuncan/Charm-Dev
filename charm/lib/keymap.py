@@ -9,7 +9,8 @@ from arcade.key import (
     F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12,
     F13, F14, F15, F16, F17, F18, F19, F20, F21, F22, F23, F24,
     RETURN, ENTER, ESCAPE, BACKSPACE, SPACE, UP, DOWN, LEFT, RIGHT,
-    MOD_SHIFT, RSHIFT, MOD_CAPSLOCK, MOD_NUMLOCK, MOD_SCROLLLOCK
+    MOD_SHIFT, RSHIFT, MOD_CAPSLOCK, MOD_NUMLOCK, MOD_SCROLLLOCK,
+    SEMICOLON, BRACKETLEFT, APOSTROPHE, BRACKETRIGHT, BACKSLASH, COMMA, PERIOD
 )
 
 import charm.lib.data
@@ -39,7 +40,7 @@ REQUIRED = 1
 SINGLEBIND = 2
 
 # CONTEXTS
-Context = Literal["global", "hero", "fourkey", "menu", "parallax"]
+Context = Literal["global", "hero", "fourkey", "menu", "parallax", "songmenu"]
 ALL = None
 
 ActionJson = tuple[KeyMod, ...]
@@ -187,6 +188,20 @@ class Action:
         return f"{self.id}: {[get_keyname(k) for k in self.keys]}"
 
 
+class KeyMapMetaAlias(type):
+    actions: tuple[Action, ...]
+
+    @property
+    def state(cls) -> list[bool]:
+        return [a.pressed for a in cls.actions]
+
+class SubKeyMap:
+    def __init__(self, *actions: Action):
+        self.actions = actions
+    def state(self) -> list[bool]:
+        return [a.pressed for a in self.actions]
+
+
 class KeyMap:
     def __init__(self):
         """Access and set mappings for inputs to actions. Key binding."""
@@ -221,29 +236,59 @@ class KeyMap:
         self.debug_f24 =               Action(self, 'debug_f24',               [F24]          )
         self.toggle_show_text =        Action(self, 'toggle_show_text',        [T]            )
 
-        self.parallax_up =       Action(self, 'parallax_up',       [W],  REQUIRED,              context="parallax")
-        self.parallax_down =     Action(self, 'parallax_down',     [S],  REQUIRED,              context="parallax")
-        self.parallax_left =     Action(self, 'parallax_left',     [A],  REQUIRED,              context="parallax")
-        self.parallax_right =    Action(self, 'parallax_right',    [D],  REQUIRED,              context="parallax")
-        self.parallax_zoom_in =  Action(self, 'parallax_zoom_in',  [R],  REQUIRED,              context="parallax")
-        self.parallax_zoom_out = Action(self, 'parallax_zoom_out', [F],  REQUIRED,              context="parallax")
+        class ParallaxMap(SubKeyMap):
+            def __init__(self, keymap: KeyMap):
+                self.up =       Action(keymap, 'parallax_up',       [W], REQUIRED, context="parallax")
+                self.down =     Action(keymap, 'parallax_down',     [S], REQUIRED, context="parallax")
+                self.left =     Action(keymap, 'parallax_left',     [A], REQUIRED, context="parallax")
+                self.right =    Action(keymap, 'parallax_right',    [D], REQUIRED, context="parallax")
+                self.zoom_in =  Action(keymap, 'parallax_zoom_in',  [R], REQUIRED, context="parallax")
+                self.zoom_out = Action(keymap, 'parallax_zoom_out', [F], REQUIRED, context="parallax")
+                super().__init__()
+        self.parallax = ParallaxMap(self)
 
-        self.fourkey_1 =       Action(self, 'fourkey_1',       [D],      REQUIRED | SINGLEBIND, context="fourkey")
-        self.fourkey_2 =       Action(self, 'fourkey_2',       [F],      REQUIRED | SINGLEBIND, context="fourkey")
-        self.fourkey_3 =       Action(self, 'fourkey_3',       [J],      REQUIRED | SINGLEBIND, context="fourkey")
-        self.fourkey_4 =       Action(self, 'fourkey_4',       [K],      REQUIRED | SINGLEBIND, context="fourkey")
+        class FourKeyMap(SubKeyMap):
+            def __init__(self, keymap: KeyMap):
+                self.key1 = Action(keymap, 'fourkey_1', [D], REQUIRED | SINGLEBIND, context="fourkey")
+                self.key2 = Action(keymap, 'fourkey_2', [F], REQUIRED | SINGLEBIND, context="fourkey")
+                self.key3 = Action(keymap, 'fourkey_3', [J], REQUIRED | SINGLEBIND, context="fourkey")
+                self.key4 = Action(keymap, 'fourkey_4', [K], REQUIRED | SINGLEBIND, context="fourkey")
+                super().__init__(self.key1, self.key2, self.key3, self.key4)
+        self.fourkey = FourKeyMap(self)
 
-        self.hero_1 =          Action(self, 'hero_1',          [KEY_1],  REQUIRED | SINGLEBIND, context="hero")
-        self.hero_2 =          Action(self, 'hero_2',          [KEY_2],  REQUIRED | SINGLEBIND, context="hero")
-        self.hero_3 =          Action(self, 'hero_3',          [KEY_3],  REQUIRED | SINGLEBIND, context="hero")
-        self.hero_4 =          Action(self, 'hero_4',          [KEY_4],  REQUIRED | SINGLEBIND, context="hero")
-        self.hero_5 =          Action(self, 'hero_5',          [KEY_5],  REQUIRED | SINGLEBIND, context="hero")
-        self.hero_strum_up =   Action(self, 'hero_strum_up',   [UP],     REQUIRED | SINGLEBIND, context="hero")
-        self.hero_strum_down = Action(self, 'hero_strum_down', [DOWN],   REQUIRED | SINGLEBIND, context="hero")
-        self.hero_power =      Action(self, 'hero_power',      [RSHIFT], REQUIRED | SINGLEBIND, context="hero")
+        class HeroMap(SubKeyMap):
+            def __init__(self, keymap: KeyMap):
+                self.green =     Action(keymap, 'hero_1',          [KEY_1],  REQUIRED | SINGLEBIND, context="hero")
+                self.red =       Action(keymap, 'hero_2',          [KEY_2],  REQUIRED | SINGLEBIND, context="hero")
+                self.yellow =    Action(keymap, 'hero_3',          [KEY_3],  REQUIRED | SINGLEBIND, context="hero")
+                self.blue =      Action(keymap, 'hero_4',          [KEY_4],  REQUIRED | SINGLEBIND, context="hero")
+                self.orange =    Action(keymap, 'hero_5',          [KEY_5],  REQUIRED | SINGLEBIND, context="hero")
+                self.strumup =   Action(keymap, 'hero_strum_up',   [UP],     REQUIRED | SINGLEBIND, context="hero")
+                self.strumdown = Action(keymap, 'hero_strum_down', [DOWN],   REQUIRED | SINGLEBIND, context="hero")
+                self.power =     Action(keymap, 'hero_power',      [RSHIFT], REQUIRED | SINGLEBIND, context="hero")
+                super().__init__(self.green, self.red, self.yellow, self.blue, self.orange, self.strumup, self.strumdown, self.power)
+        self.hero = HeroMap(self)
 
-        self.fourkey: FourKeyAliasMap = FourKeyAliasMap(self)
-        self.hero: HeroAliasMap = HeroAliasMap(self)
+        class SongMenuMap(SubKeyMap):
+            def __init__(self, keymap: KeyMap):
+                self.min_factor_up =     Action(keymap, 'min_factor_up',     [Y],            REQUIRED, context="songmenu")
+                self.min_factor_down =   Action(keymap, 'min_factor_down',   [H],            REQUIRED, context="songmenu")
+                self.max_factor_up =     Action(keymap, 'max_factor_up',     [U],            REQUIRED, context="songmenu")
+                self.max_factor_down =   Action(keymap, 'max_factor_down',   [J],            REQUIRED, context="songmenu")
+                self.offset_up =         Action(keymap, 'offset_up',         [I],            REQUIRED, context="songmenu")
+                self.offset_down =       Action(keymap, 'offset_down',       [K],            REQUIRED, context="songmenu")
+                self.in_sin_up =         Action(keymap, 'in_sin_up',         [O],            REQUIRED, context="songmenu")
+                self.in_sin_down =       Action(keymap, 'in_sin_down',       [L],            REQUIRED, context="songmenu")
+                self.out_sin_up =        Action(keymap, 'out_sin_up',        [P],            REQUIRED, context="songmenu")
+                self.out_sin_down =      Action(keymap, 'out_sin_down',      [SEMICOLON],    REQUIRED, context="songmenu")
+                self.shift_up =          Action(keymap, 'shift_up',          [BRACKETLEFT],  REQUIRED, context="songmenu")
+                self.shift_down =        Action(keymap, 'shift_down',        [APOSTROPHE],   REQUIRED, context="songmenu")
+                self.move_forward_up =   Action(keymap, 'move_forward_up',   [BRACKETRIGHT], REQUIRED, context="songmenu")
+                self.move_forward_down = Action(keymap, 'move_forward_down', [BACKSLASH],    REQUIRED, context="songmenu")
+                self.y_shift_up =        Action(keymap, 'y_shift_up',        [COMMA],        REQUIRED, context="songmenu")
+                self.y_shift_down =      Action(keymap, 'y_shift_down',      [PERIOD],       REQUIRED, context="songmenu")
+                super().__init__()
+        self.songmenu = SongMenuMap(self)
 
         self.set_defaults()
 
@@ -312,43 +357,5 @@ class KeyMap:
             self.keys[ctx][key].discard(action)
             if len(self.keys[ctx][key]) == 0:
                 del self.keys[ctx][key]
-
-
-class FourKeyAliasMap:
-    def __init__(self, keymap: KeyMap):
-        self.key1 = keymap.fourkey_1
-        self.key2 = keymap.fourkey_2
-        self.key3 = keymap.fourkey_3
-        self.key4 = keymap.fourkey_4
-
-    @property
-    def state(self) -> list[bool]:
-        return [self.key1.pressed, self.key2.pressed, self.key3.pressed, self.key4.pressed]
-
-
-class HeroAliasMap:
-    def __init__(self, keymap: KeyMap):
-        self.green = keymap.hero_1
-        self.red = keymap.hero_2
-        self.yellow = keymap.hero_3
-        self.blue = keymap.hero_4
-        self.orange = keymap.hero_5
-        self.strumup = keymap.hero_strum_up
-        self.strumdown = keymap.hero_strum_down
-        self.power = keymap.hero_power
-
-    @property
-    def state(self) -> list[bool]:
-        return [
-            self.green.pressed,
-            self.red.pressed,
-            self.yellow.pressed,
-            self.blue.pressed,
-            self.orange.pressed,
-            self.strumup.pressed,
-            self.strumdown.pressed,
-            self.power.pressed
-        ]
-
 
 keymap = KeyMap()

@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+import typing
 if TYPE_CHECKING:
     from charm.views.fourkeysong import FourKeySongView
     from charm.lib.generic.song import Seconds

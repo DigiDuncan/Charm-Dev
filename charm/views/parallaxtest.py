@@ -139,18 +139,18 @@ class ParallaxTestView(DigiView):
 
     def on_update(self, delta_time: float) -> None:
         PX_PER_S = 100
-        if keymap.parallax_up.held:
+        if keymap.parallax.up.held:
             self.parallax.y += delta_time * PX_PER_S
-        if keymap.parallax_down.held:
+        if keymap.parallax.down.held:
             self.parallax.y -= delta_time * PX_PER_S
-        if keymap.parallax_left.held:
+        if keymap.parallax.left.held:
             self.parallax.x -= delta_time * PX_PER_S
-        if keymap.parallax_right.held:
+        if keymap.parallax.right.held:
             self.parallax.x += delta_time * PX_PER_S
-        if keymap.parallax_zoom_in.held:
+        if keymap.parallax.zoom_in.held:
             for layer in self.parallax.sprite_layers:
                 layer.z *= 1 + delta_time
-        if keymap.parallax_zoom_out.held:
+        if keymap.parallax.zoom_out.held:
             for layer in self.parallax.sprite_layers:
                 layer.z /= 1 + delta_time
         return super().on_update(delta_time)

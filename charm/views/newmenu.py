@@ -35,40 +35,39 @@ class NewMenuView(DigiView):
         if keymap.back.pressed:
             self.go_back()
 
-
-    def on_update(self, delta_time) -> None:
+    def on_update(self, delta_time: float) -> None:
         super().on_update(delta_time)
-        if self.window.keyboard[arcade.key.Y]:
+        if keymap.songmenu.min_factor_up.held:
             self.menu.min_factor += delta_time
-        if self.window.keyboard[arcade.key.H]:
+        if keymap.songmenu.min_factor_down.held:
             self.menu.min_factor -= delta_time
-        if self.window.keyboard[arcade.key.U]:
+        if keymap.songmenu.max_factor_up.held:
             self.menu.max_factor += delta_time
-        if self.window.keyboard[arcade.key.J]:
+        if keymap.songmenu.max_factor_down.held:
             self.menu.max_factor -= delta_time
-        if self.window.keyboard[arcade.key.I]:
+        if keymap.songmenu.offset_up.held:
             self.menu.offset += delta_time
-        if self.window.keyboard[arcade.key.K]:
+        if keymap.songmenu.offset_down.held:
             self.menu.offset -= delta_time
-        if self.window.keyboard[arcade.key.O]:
+        if keymap.songmenu.in_sin_up.held:
             self.menu.in_sin += delta_time
-        if self.window.keyboard[arcade.key.L]:
+        if keymap.songmenu.in_sin_down.held:
             self.menu.in_sin -= delta_time
-        if self.window.keyboard[arcade.key.P]:
+        if keymap.songmenu.out_sin_up.held:
             self.menu.out_sin += delta_time
-        if self.window.keyboard[arcade.key.SEMICOLON]:
+        if keymap.songmenu.out_sin_down.held:
             self.menu.out_sin -= delta_time
-        if self.window.keyboard[arcade.key.BRACKETLEFT]:
+        if keymap.songmenu.shift_up.held:
             self.menu.shift += delta_time
-        if self.window.keyboard[arcade.key.APOSTROPHE]:
+        if keymap.songmenu.shift_down.held:
             self.menu.shift -= delta_time
-        if self.window.keyboard[arcade.key.BRACKETRIGHT]:
+        if keymap.songmenu.move_forward_up.held:
             self.menu.move_forward += delta_time
-        if self.window.keyboard[arcade.key.BACKSLASH]:
+        if keymap.songmenu.move_forward_down.held:
             self.menu.move_forward -= delta_time
-        if self.window.keyboard[arcade.key.COMMA]:
+        if keymap.songmenu.y_shift_up.held:
             self.menu.y_shift += delta_time * 100
-        if self.window.keyboard[arcade.key.PERIOD]:
+        if keymap.songmenu.y_shift_down.held:
             self.menu.y_shift -= delta_time * 100
 
         self.menu.update(delta_time)
