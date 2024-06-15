@@ -1,7 +1,6 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Self, TypedDict
+from typing import TYPE_CHECKING, TypedDict
 if TYPE_CHECKING:
-    from types import TracebackType
     from arcade.types import RGBANormalized
     from imgui_bundle.python_backends.pyglet_backend import PygletProgrammablePipelineRenderer
     from charm.lib.digiwindow import DigiWindow
@@ -24,30 +23,30 @@ from imgui_bundle import imgui, ImVec2, imgui_ctx
 class Filter:
     input_text_str = "Filter"
     input_text_size = 400
-    regex_special_chars = {"^", "$", ".", "|", "?", "!", "\\", "*", "+", "-", "=", "[", "]", "(", ")", ":", "#", "<", ">"}
+    regex_special_chars = frozenset(["^", "$", ".", "|", "?", "!", "\\", "*", "+", "-", "=", "[", "]", "(", ")", ":", "#", "<", ">"])
 
     def __init__(self):
         self._filter_str: str = ""
         self._reg_ex: re.Pattern[str] | None = None
 
-    def draw(self):
-        imgui.push_item_width(Filter.input_text_size)
-        changed, filter_str = imgui.input_text_with_hint(Filter.input_text_str, "+incl, -excl, or regex", self._filter_str)
+    def draw(self) -> None:
+        imgui.push_item_width(self.input_text_size)
+        changed, filter_str = imgui.input_text_with_hint(self.input_text_str, "+incl, -excl, or regex", self._filter_str)
         if changed:
             s = filter_str
             if s.startswith("+"):
                 # This crazy method means that if any regex characters are used
                 # in the query they are treated like normal characters
-                s = "".join(""f"\\{char}" if char in Filter.regex_special_chars else char for char in s[1:])
+                s = "".join(""f"\\{char}" if char in self.regex_special_chars else char for char in s[1:])
                 s = r"^.*"+s
             elif s.startswith("-"):
                 # This crazy method means that if any regex characters are used
                 # in the query they are treated like normal characters
-                s = "".join(""f"\\{char}" if char in Filter.regex_special_chars else char for char in s[1:])
+                s = "".join(""f"\\{char}" if char in self.regex_special_chars else char for char in s[1:])
                 s = r"^((?!.*" + s + ".*).)*$"
             self.set_filter(s, filter_str)
 
-    def set_filter(self, regex_str: str, raw_str: str):
+    def set_filter(self, regex_str: str, raw_str: str) -> None:
         self._filter_str = raw_str
         try:
             _reg_ex = re.compile(regex_str)
@@ -69,7 +68,7 @@ class Filter:
 
 
 class DebugMessage:
-    def __init__(self, message: str, level: int = logging.INFO) -> None:
+    def __init__(self, message: str, level: int) -> None:
         self.message = message
         self.level = level
         self.time = arrow.now().format("HH:mm:ss")
@@ -95,7 +94,7 @@ class DebugMessage:
                 return colors.GREEN.normalized
 
     @property
-    def prefix(self):
+    def prefix(self) -> str:
         match self.level:
             case logging.COMMAND: # type: ignore
                 return "$"
@@ -105,7 +104,7 @@ class DebugMessage:
                 return "DBG"
             case logging.INFO:
                 return "INF"
-            case logging.WARN:
+            case logging.WARNING:
                 return "WRN"
             case logging.ERROR:
                 return "ERR"
@@ -150,10 +149,8 @@ class Console:
     def clear_log(self) -> None:
         self._items.clear()
 
-    def add_log(self, item: DebugMessage | str) -> None:
-        if isinstance(item, str):
-            item = DebugMessage(item)
-        self._items.append(item)
+    def add_log(self, msg: str, level: int = logging.INFO) -> None:
+        self._items.append(DebugMessage(msg, level))
 
     def draw(self) -> None:
         # Standard console text (not strictly necessary)
@@ -167,7 +164,7 @@ class Console:
             self.add_log("display a very important message here!")
         imgui.same_line()
         if imgui.small_button("Test Error"):
-            self.add_log(DebugMessage("Something went wrong!", logging.ERROR))
+            self.add_log("Something went wrong!", logging.ERROR)
         imgui.same_line()
         if imgui.small_button("Clear"):
             self.clear_log()
@@ -189,16 +186,44 @@ class Console:
 
         imgui.separator()
 
+        self.draw_scrolling_region(copy_to_clipboard)
+
+        imgui.separator()
+
+        # Final stretch! this is the console input
+        reclaim_focus = False
+        # TODO: There is a missing flag? maybe make pr?
+        # Also some of these flags are used to do stuff to the text (in particular the CALLBACK ones)
+        input_text_flags = imgui.InputTextFlags_.enter_returns_true.value | imgui.InputTextFlags_.callback_completion.value | imgui.InputTextFlags_.callback_history.value
+        imgui.push_item_width(Filter.input_text_size)
+        changed, self._input_string = imgui.input_text("Input", self._input_string, flags=input_text_flags)
+        imgui.pop_item_width()
+        if changed:
+            s: str = self._input_string
+            s = s.strip()
+            if len(s):
+                self.execute_command(s)
+            reclaim_focus = True
+            self._input_string = ""
+
+        imgui.set_item_default_focus()
+        if reclaim_focus:
+            imgui.set_keyboard_focus_here(-1)
+
+    def draw_scrolling_region(self, copy_to_clipboard: bool) -> None:
         # Save space for a seperator and a text input field
         footer_height_to_reserve = imgui.get_style().item_spacing.y + imgui.get_frame_height_with_spacing()
-        if imgui.begin_child("ScrollingRegion", ImVec2(0, -footer_height_to_reserve), imgui.ChildFlags_.none.value, imgui.WindowFlags_.horizontal_scrollbar.value):
+
+        with imgui_ctx.begin_child("ScrollingRegion", ImVec2(0, -footer_height_to_reserve), imgui.ChildFlags_.none.value, imgui.WindowFlags_.horizontal_scrollbar.value) as child:
+            if not child:
+                return
             if imgui.begin_popup_context_window():
-                if imgui.selectable("Clear"):
+                if imgui.selectable("Clear", False):
                     self.clear_log()
                 imgui.end_popup()
 
             # Tighten spacing
-            imgui.push_style_var(imgui.StyleVar_.item_spacing, (4, 1))
+            imgui.push_style_var(imgui.StyleVar_.item_spacing.value, ImVec2(4, 1))
 
             if copy_to_clipboard:
                 # Start logging all the printing that gets done.
@@ -226,32 +251,9 @@ class Console:
             self.scroll_to_bottom = False
 
             imgui.pop_style_var()
-        imgui.end_child()
-
-        imgui.separator()
-
-        # Final stretch! this is the console input
-        reclaim_focus = False
-        # TODO: There is a missing flag? maybe make pr?
-        # Also some of these flags are used to do stuff to the text (in particular the CALLBACK ones)
-        input_text_flags = imgui.InputTextFlags_.enter_returns_true.value | imgui.InputTextFlags_.callback_completion.value | imgui.InputTextFlags_.callback_history.value
-        imgui.push_item_width(Filter.input_text_size)
-        changed, self._input_string = imgui.input_text("Input", self._input_string, flags=input_text_flags)
-        imgui.pop_item_width()
-        if changed:
-            s: str = self._input_string
-            s = s.strip()
-            if len(s):
-                self.execute_command(s)
-            reclaim_focus = True
-            self._input_string = ""
-
-        imgui.set_item_default_focus()
-        if reclaim_focus:
-            imgui.set_keyboard_focus_here(-1)
 
     def draw_floating(self) -> None:
-        imgui.set_next_window_size(520, 600, imgui.FIRST_USE_EVER)
+        imgui.set_next_window_size(ImVec2(520, 600), imgui.Cond_.first_use_ever.value)
         if not imgui.begin("Console", True):
             imgui.end()
             return
@@ -259,7 +261,7 @@ class Console:
         imgui.end()
 
     def execute_command(self, command_line: str) -> None:
-        self.add_log(DebugMessage(f"{command_line}", logging.COMMAND)) # type: ignore
+        self.add_log(f"{command_line}", logging.COMMAND) # type: ignore
 
         self.history.append(command_line.upper())
 
@@ -273,7 +275,7 @@ class Console:
             case "HISTORY":
                 self.add_log("Command History:")
                 for command in self.history[-10:]:
-                    self.add_log(DebugMessage(f"| {command}", logging.COMMAND)) # type: ignore
+                    self.add_log(f"| {command}", logging.COMMAND) # type: ignore
             case "SAVE":
                 with Path("console_log.txt").open("a") as file:
                     file.write(f"Appending to log @ {arrow.now().isoformat()}\n")
@@ -282,7 +284,7 @@ class Console:
                     file.write(f"Completed appending to log @ {arrow.now().isoformat()}\n\n")
                 self.add_log(f"Finished saving to console_log.txt @ {arrow.now().isoformat()}")
             case _:
-                self.add_log(DebugMessage(f"? Unrecognized command:\n\t{command_line}", logging.COMMENT)) # type: ignore
+                self.add_log(f"? Unrecognized command:\n\t{command_line}", logging.COMMENT) # type: ignore
 
         self.scroll_to_bottom = True
 
@@ -305,8 +307,7 @@ class ImGuiHandler(logging.Handler):
         message = record.getMessage()
         if self.showsource:
             message = f"{record.name}: {message}"
-        debug_message = DebugMessage(message, record.levelno)
-        debug_log.add_log(debug_message)
+        debug_log.add_log(message, record.levelno)
 
 
 class DebugSettings(TypedDict):
