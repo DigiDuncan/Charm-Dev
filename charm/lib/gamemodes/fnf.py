@@ -20,6 +20,7 @@ from charm.lib.types import Seconds, Milliseconds
 from charm.lib.utils import clamp
 import charm.data.images.skins as skins
 from charm.objects.lyric_animator import LyricEvent
+from charm.lib.keymap import keymap
 
 logger = logging.getLogger("charm")
 
@@ -360,13 +361,14 @@ class FNFEngine(FourKeyEngine):
             else:
                 if note.type == "sustain":
                     # Sustain notes just require the right key is held down, and don't "use" an event.
-                    if self.key_state[note.lane]:
+                    if self.keystate[note.lane]:
                         note.hit = True
                         note.hit_time = note.time
                         self.score_note(note)
                         self.current_notes.remove(note)
                 # Check non-used events to see if one matches our note
-                for event in [e for e in self.current_events if e.new_state == "down"]:
+                down_events = (e for e in self.current_events if e.new_state == "down")
+                for event in down_events:
                     # We've determined the note was hit
                     if event.key == note.lane and abs(event.time - note.time) <= self.hit_window:
                         note.hit = True
@@ -391,7 +393,7 @@ class FNFEngine(FourKeyEngine):
 
         # Sustains use different scoring
         if note.type == "sustain":
-            self.last_p1_note = note.lane
+            self.last_p1_action = keymap.fourkey.actions[note.lane]
             if note.hit:
                 self.hp += 0.02
                 self.last_note_missed = False
@@ -436,7 +438,7 @@ class FNFEngine(FourKeyEngine):
         self.all_judgements.append((self.latest_judgement_time, rt, self.latest_judgement))
 
         # Animation and hit/miss tracking
-        self.last_p1_note = note.lane
+        self.last_p1_action = keymap.fourkey.actions[note.lane]
         if note.hit:
             self.hits += 1
             self.streak += 1

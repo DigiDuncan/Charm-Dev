@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from functools import cache, total_ordering
 from pathlib import Path
-from typing import Self
+from typing import Any, Self
 
 from charm.lib.types import Seconds
 from charm.objects.lyric_animator import LyricEvent
@@ -79,7 +79,7 @@ class Note:
     missed: bool = False
     hit_time: Seconds | None = None
 
-    extra_data: tuple = None
+    extra_data: tuple[Any, ...] | None = None
 
     @property
     def end(self) -> Seconds:

@@ -117,7 +117,7 @@ class SMEngine(FourKeyEngine):
             return
 
         for sustain in self.active_sustains:
-            if self.key_state[sustain.lane]:
+            if self.keystate[sustain.lane]:
                 self.hp += int(self.judgements[0].hp_change / 4) * sixteenths  # TODO: Does this feel right?
                 self.score += int(self.judgements[0].score / 4) * sixteenths
             else:

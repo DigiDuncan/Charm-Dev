@@ -26,7 +26,7 @@ from charm.lib.errors import ChartParseError, ChartPostReadParseError, NoChartsE
 from charm.lib.generic.engine import DigitalKeyEvent, Engine, Judgement, KeyStates
 from charm.lib.generic.highway import Highway
 from charm.lib.generic.song import Chart, Event, Metadata, Note, Seconds, Song
-from charm.lib.keymap import keymap
+from charm.lib.keymap import Action, keymap
 from charm.lib.spritebucket import SpriteBucketCollection
 from charm.lib.utils import img_from_path, nuke_smart_quotes
 from charm.objects.lyric_animator import LyricEvent
@@ -896,74 +896,80 @@ class HeroHighway(Highway):
 
 @dataclass
 class StrumEvent(Event):
-    direction: str
+    action: Action
     shape: list[bool]
 
     def __str__(self) -> str:
-        return f"<StrumEvent {self.direction} @ {round(self.time, 3)}: {[n for n, v in enumerate(self.shape) if v is True]}>"
+        strum_name = {
+            keymap.hero.strumup: "up",
+            keymap.hero.strumup: "down"
+        }
+        return f"<StrumEvent {strum_name[self.action]} @ {round(self.time, 3)}: {[n for n, v in enumerate(self.shape) if v is True]}>"
 
+
+FRET_ACTIONS = (keymap.hero.green, keymap.hero.red, keymap.hero.yellow, keymap.hero.blue, keymap.hero.orange)
+STRUM_ACTIONS = (keymap.hero.strumup, keymap.hero.strumdown)
+POWER_ACTIONS = (keymap.hero.power,)
 
 class HeroEngine(Engine):
     def __init__(self, chart: Chart, offset: Seconds = 0):
-        hero_keys = keymap.hero
-        mapping = [hero_keys.green, hero_keys.red, hero_keys.yellow, hero_keys.blue, hero_keys.orange, hero_keys.strumup, hero_keys.strumdown]
         hit_window = 0.050  # 50ms +/-
         judgements = [Judgement("pass", 50, 100, 1, 1), Judgement("miss", math.inf, 0, 0, -1)]
 
-        super().__init__(chart, mapping, hit_window, judgements, offset)
+        super().__init__(chart, hit_window, judgements, offset)
 
         self.current_chords: list[HeroChord] = self.chart.chords.copy()
         self.current_events: list[DigitalKeyEvent] = []
-
-        self.key_state = (False, False, False, False, False, False, False, False)
 
         self.combo = 0
         self.star_power = False
         self.strum_events: list[StrumEvent] = []
 
-        # TODO: this is a stop-gap until I remove mapping entirely.
-        self.mapping = [hero_keys.green, hero_keys.red, hero_keys.yellow, hero_keys.blue, hero_keys.orange, hero_keys.strumup, hero_keys.strumdown, hero_keys.power]
-
-        self.current_holds: list[bool] = [False, False, False, False, False]
         self.tap_available = True
+
+    @property
+    def current_holds(self) -> list[bool]:
+        return keymap.hero.state
 
     @property
     def multiplier(self) -> int:
         base = min(((self.combo // 10) + 1), 4)
         return base * 2 if self.star_power else base
 
-    def process_keystate(self, key_states: KeyStates) -> None:  # noqa: F821
-        last_state = self.key_state
+    def on_key_press(self, symbol: int, modifiers: int) -> None:
         # ignore spam during front/back porch
         if (self.chart_time < self.chart.notes[0].time - self.hit_window
            or self.chart_time > self.chart.notes[-1].time + self.hit_window):
             return
-        for n in range(len(key_states)):
-            if key_states[n] is True and last_state[n] is False:
-                e = DigitalKeyEvent(self.chart_time, self.mapping[n], "down")
-                self.current_events.append(e)
-                if n < 5:  # fret button
-                    self.current_holds[n] = True
-                    self.tap_available = True
-                elif n in [5, 6]:  # strum buttons
-                    # Create strum events tagged with the current held keystate
-                    # FIXME: It's likely this becomes a problem in the future!
-                    # Technically, I think strums should be processed indepenently from frets all together?
-                    # :OmegaAAA:
-                    strum_event = StrumEvent(self.chart_time, "up" if n == 5 else "down", self.current_holds)
-                    self.strum_events.append(strum_event)
-                    print(strum_event)
-            elif key_states[n] is False and last_state[n] is True:
-                e = DigitalKeyEvent(self.chart_time, self.mapping[n], "up")
-                self.current_events.append(e)
-                if n < 5:  # fret button
-                    self.current_holds[n] = False
-                    self.tap_available = True
-        self.key_state = key_states
+        action = keymap.hero.pressed_action
+        if action is None:
+            return
+        # pressed
+        self.current_events.append(DigitalKeyEvent(self.chart_time, action, "down"))
+        if action in FRET_ACTIONS:
+            # fret button
+            self.tap_available = True
+        elif action in STRUM_ACTIONS:
+            # strum button
+            self.strum_events.append(StrumEvent(self.chart_time, action, self.current_holds))
+        elif action in POWER_ACTIONS:
+            # power button
+            pass
+
+    def on_key_release(self, symbol: int, modifiers: int) -> None:
+        # ignore spam during front/back porch
+        if (self.chart_time < self.chart.notes[0].time - self.hit_window
+           or self.chart_time > self.chart.notes[-1].time + self.hit_window):
+            return
+        action = keymap.hero.released_action
+        if action is None:
+            return
+        self.current_events.append(DigitalKeyEvent(self.chart_time, action, "up"))
+        if action in FRET_ACTIONS:
+            # fret button
+            self.tap_available = True
 
     def calculate_score(self) -> None:
-        buttons = keymap.hero  # noqa: F841
-
         # CURRENTLY MISSING:
         # Sutains
         # Sustain drops

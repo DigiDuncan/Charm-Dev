@@ -3,11 +3,10 @@ from __future__ import annotations
 from importlib.resources import files, as_file
 import logging
 import math
-from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
 from statistics import mean
-from typing import cast
+from typing import Literal, cast
 
 import arcade
 from arcade import Sprite, SpriteList, Texture, Text, color as colors
@@ -20,11 +19,11 @@ import PIL.ImageEnhance
 
 import charm.data.images.skins as skins
 from charm.lib.charm import load_missing_texture
-from charm.lib.generic.engine import DigitalKeyEvent, Engine, Judgement, KeyStates
+from charm.lib.generic.engine import DigitalKeyEvent, Engine, Judgement
 from charm.lib.generic.highway import Highway
 from charm.lib.generic.results import Results
 from charm.lib.generic.song import Note, Chart, Seconds, Song
-from charm.lib.keymap import keymap
+from charm.lib.keymap import keymap, Action
 from charm.lib.spritebucket import SpriteBucketCollection
 from charm.lib.utils import img_from_path, clamp
 from charm.objects.line_renderer import NoteTrail
@@ -129,12 +128,14 @@ def load_note_texture(note_type: str, note_lane: int, height: int, value: int = 
     return Texture(image)
 
 
-@dataclass(repr = False)
 class FourKeyNote(Note):
-    parent: FourKeyNote = None
-    sprite: FourKeyNoteSprite | FourKeyLongNoteSprite = None
+    def __init__(self, chart: Chart, time: Seconds, lane: Literal[0,1,2,3], length: Seconds = 0, type: str = "normal", value: int = 0, hit: bool = False, missed: bool = False, hit_time: Seconds | None = None, extra_data: tuple[Any, ...] | None = None, parent: FourKeyNote | None = None, sprite: FourKeyNoteSprite | FourKeyLongNoteSprite | None = None):
+        super().__init__(chart, time, lane, length, type, value, hit, missed, hit_time, extra_data)
+        self.parent = parent
+        self.sprite = sprite
+        self.lane: Literal[0,1,2,3]
 
-    def __lt__(self, other):
+    def __lt__(self, other: FourKeyNote):
         return (self.time, self.lane, self.type) < (other.time, other.lane, other.type)
 
 
@@ -175,6 +176,28 @@ class FourKeyNoteSprite(Sprite):
         #     self.alpha = 0
         if self.note.hit:
             self.alpha = 0
+
+
+class FourKeyStrikelineSprite(FourKeyNoteSprite):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._active = False
+
+    @property
+    def active(self) -> bool:
+        return self._active
+
+    @active.setter
+    def active(self, new_active: bool) -> None:
+        if new_active == self._active:
+            return
+        self._active = new_active
+        if new_active:
+            self.alpha = 255
+            self.texture = load_note_texture("normal", self.note.lane, self.texture.height)
+        else:
+            self.alpha = 64
+            self.texture = load_note_texture("strikeline", self.note.lane, self.texture.height)
 
 
 class FourKeyLongNoteSprite(FourKeyNoteSprite):
@@ -238,9 +261,9 @@ class FourKeyHighway(Highway):
 
         logger.debug(f"Sustains: {len([s for s in self.sprite_buckets.sprites if isinstance(s, FourKeyLongNoteSprite)])}")
 
-        self.strikeline = SpriteList()
+        self.strikeline = SpriteList[FourKeyStrikelineSprite]()
         for i in [0, 1, 2, 3]:
-            sprite = FourKeyNoteSprite(FourKeyNote(self.chart, 0, i, 0, "strikeline"), self, self.note_size)
+            sprite = FourKeyStrikelineSprite(FourKeyNote(self.chart, 0, i, 0, "strikeline"), self, self.note_size)
             sprite.top = self.strikeline_y
             sprite.left = self.lane_x(sprite.note.lane)
             sprite.alpha = 64
@@ -255,6 +278,7 @@ class FourKeyHighway(Highway):
         # TODO: Replace with better pixel_offset calculation
         self.last_update_time = 0
         self._pixel_offset = 0
+        self.keystate = keymap.fourkey.state
 
     def update(self, song_time: float):
         super().update(song_time)
@@ -265,6 +289,17 @@ class FourKeyHighway(Highway):
         self.last_update_time = self.song_time
 
         self.highway_camera.position = (self.window.center_x, self.window.center_y - self.pixel_offset)
+        self.update_strikeline()
+
+    def update_strikeline(self) -> None:
+        if self.auto:
+            return
+        if self.keystate == self.engine.keystate:
+            return
+        self.keystate = self.engine.keystate
+        for strikeline, active in zip(self.strikeline, self.keystate, strict=True):
+            strikeline.active = active
+
 
     @property
     def pixel_offset(self):
@@ -312,7 +347,7 @@ class FourKeyHighway(Highway):
             for note in bucket.sprite_list:
                 if isinstance(note, FourKeyLongNoteSprite) and note.note.time < self.song_time + self.viewport:
                     # Clip the rendering to the strikeline if the key is being held.
-                    if self.engine.key_state[note.note.lane] or self.auto:
+                    if self.engine.keystate[note.note.lane] or self.auto:
                         window.ctx.scissor = (0, 0, window.width, self.hit_window_mid)
                     else:
                         window.ctx.scissor = None
@@ -335,8 +370,6 @@ class FourKeyJudgement(Judgement):
 class FourKeyEngine(Engine):
     def __init__(self, chart: FourKeyChart, offset: Seconds = -0.025):  # TODO: Set this dynamically
         hit_window: Seconds = 0.075
-        fk = keymap.fourkey
-        mapping = [fk.key1, fk.key2, fk.key3, fk.key4]
         judgements = [
             #               ("name",           "key"             ms, score, acc, hp=0)
             FourKeyJudgement("Super Charming", "supercharming",  10, 1000, 1.0, 0.04),
@@ -347,7 +380,7 @@ class FourKeyEngine(Engine):
             FourKeyJudgement("OK",             "ok",             75, 200,  0.5),
             FourKeyJudgement("Miss",           "miss",     math.inf,   0,    0, -0.1)
         ]
-        super().__init__(chart, mapping, hit_window, judgements, offset)
+        super().__init__(chart, hit_window, judgements, offset)
 
         self.min_hp = 0
         self.hp = 1
@@ -363,31 +396,38 @@ class FourKeyEngine(Engine):
         self.current_notes: list[FourKeyNote] = self.chart.notes.copy()
         self.current_events: list[DigitalKeyEvent] = []
 
-        self.last_p1_note = None
+        self.last_p1_action: Action | None = None
         self.last_note_missed = False
         self.streak = 0
         self.max_streak = 0
 
         self.active_sustains: list[FourKeyNote] = []
         self.last_sustain_tick = 0
+        self.keystate: tuple[bool, bool, bool, bool] = (False, False, False, False)
 
-    def process_keystate(self, key_states: KeyStates) -> None:
-        last_state = self.key_state
-        if self.last_p1_note in (0, 1, 2, 3) and key_states[self.last_p1_note] is False:
-            self.last_p1_note = None
+    def on_key_press(self, symbol: int, modifiers: int) -> None:
+        self.keystate = keymap.fourkey.state
         # ignore spam during front/back porch
         if (self.chart_time < self.chart.notes[0].time - self.hit_window \
            or self.chart_time > self.chart.notes[-1].time + self.hit_window):
             return
-        for n in range(len(key_states)):
-            curr, last = key_states[n], last_state[n]
-            if curr is True and last is False:
-                e = DigitalKeyEvent(self.chart_time, n, "down")
-                self.current_events.append(e)
-            elif curr is False and last is True:
-                e = DigitalKeyEvent(self.chart_time, n, "up")
-                self.current_events.append(e)
-        self.key_state = key_states
+        action = keymap.fourkey.pressed_action
+        if action is None:
+            return
+        self.current_events.append(DigitalKeyEvent(self.chart_time, action, "down"))
+
+    def on_key_release(self, symbol: int, modifiers: int) -> None:
+        self.keystate = keymap.fourkey.state
+        if self.last_p1_action is not None and not self.last_p1_action.held:
+            self.last_p1_action = None
+        # ignore spam during front/back porch
+        if (self.chart_time < self.chart.notes[0].time - self.hit_window \
+           or self.chart_time > self.chart.notes[-1].time + self.hit_window):
+            return
+        action = keymap.fourkey.released_action
+        if action is None:
+            return
+        self.current_events.append(DigitalKeyEvent(self.chart_time, action, "up"))
 
     @property
     def average_acc(self) -> float:
@@ -458,7 +498,7 @@ class FourKeyEngine(Engine):
         self.all_judgements.append((self.latest_judgement_time, rt, self.latest_judgement))
 
         # Animation and hit/miss tracking
-        self.last_p1_note = note.lane
+        self.last_p1_action = keymap.fourkey.actions[note.lane]
         if note.hit:
             self.hits += 1
             self.streak += 1

@@ -178,18 +178,6 @@ class FNFSongView(DigiView):
         super().on_show_view()
 
     @shows_errors
-    def on_key_something(self, symbol: int, modifiers: int, press: bool) -> None:
-        # AWFUL HACK: CRIME
-        # (Why is this not being detected and handled by the keymapper??)
-        if symbol in self.engine.mapping:
-            i = self.engine.mapping.index(symbol)
-            if not self.chroma_key:
-                self.highway_1.strikeline[i].alpha = 255 if press else 64
-            self.highway_1.strikeline[i].texture = load_note_texture("normal" if press else "strikeline", i, self.highway_1.note_size)
-            if self.tracks.playing:
-                self.engine.process_keystate(keymap.fourkey.state)
-
-    @shows_errors
     @ignore_imgui
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         super().on_key_press(symbol, modifiers)
@@ -213,12 +201,15 @@ class FNFSongView(DigiView):
             self.highway_1.show_hit_window = not self.highway_1.show_hit_window
         elif self.window.debug.enabled and keymap.debug_show_results.pressed:
             self.show_results()
-        self.on_key_something(symbol, modifiers, True)
+        if self.tracks.playing:
+            self.engine.on_key_press(symbol, modifiers)
 
     @shows_errors
     def on_key_release(self, symbol: int, modifiers: int) -> None:
         super().on_key_release(symbol, modifiers)
-        self.on_key_something(symbol, modifiers, False)
+        if self.tracks.playing:
+            self.engine.on_key_release(symbol, modifiers)
+
 
     def go_back(self) -> None:
         self.tracks.close()

@@ -188,12 +188,27 @@ class Action:
         return f"{self.id}: {[get_keyname(k) for k in self.keys]}"
 
 
-class SubKeyMap:
+class SubKeyMap[T]:
     def __init__(self, *actions: Action):
         self.actions = actions
+
     @property
-    def state(self) -> list[bool]:
-        return [a.held for a in self.actions]
+    def state(self) -> T:
+        return cast(T, tuple(a.held for a in self.actions))
+
+    @property
+    def pressed_action(self) -> Action | None:
+        for a in self.actions:
+            if a.pressed:
+                return a
+        return None
+
+    @property
+    def released_action(self) -> Action | None:
+        for a in self.actions:
+            if a.released:
+                return a
+        return None
 
 
 class KeyMap:
@@ -230,7 +245,7 @@ class KeyMap:
         self.debug_f24 =               Action(self, 'debug_f24',               [F24]          )
         self.toggle_show_text =        Action(self, 'toggle_show_text',        [T]            )
 
-        class ParallaxMap(SubKeyMap):
+        class ParallaxMap(SubKeyMap[tuple[()]]):
             def __init__(self, keymap: KeyMap):
                 self.up =       Action(keymap, 'parallax_up',       [W], REQUIRED, context="parallax")
                 self.down =     Action(keymap, 'parallax_down',     [S], REQUIRED, context="parallax")
@@ -241,7 +256,7 @@ class KeyMap:
                 super().__init__()
         self.parallax = ParallaxMap(self)
 
-        class FourKeyMap(SubKeyMap):
+        class FourKeyMap(SubKeyMap[tuple[bool, bool, bool, bool]]):
             def __init__(self, keymap: KeyMap):
                 self.key1 = Action(keymap, 'fourkey_1', [D], REQUIRED | SINGLEBIND, context="fourkey")
                 self.key2 = Action(keymap, 'fourkey_2', [F], REQUIRED | SINGLEBIND, context="fourkey")
@@ -250,7 +265,7 @@ class KeyMap:
                 super().__init__(self.key1, self.key2, self.key3, self.key4)
         self.fourkey = FourKeyMap(self)
 
-        class HeroMap(SubKeyMap):
+        class HeroMap(SubKeyMap[tuple[bool, bool, bool, bool, bool, bool, bool, bool]]):
             def __init__(self, keymap: KeyMap):
                 self.green =     Action(keymap, 'hero_1',          [KEY_1],  REQUIRED | SINGLEBIND, context="hero")
                 self.red =       Action(keymap, 'hero_2',          [KEY_2],  REQUIRED | SINGLEBIND, context="hero")
@@ -263,7 +278,7 @@ class KeyMap:
                 super().__init__(self.green, self.red, self.yellow, self.blue, self.orange, self.strumup, self.strumdown, self.power)
         self.hero = HeroMap(self)
 
-        class SongMenuMap(SubKeyMap):
+        class SongMenuMap(SubKeyMap[tuple[()]]):
             def __init__(self, keymap: KeyMap):
                 self.min_factor_up =     Action(keymap, 'min_factor_up',     [Y],            REQUIRED, context="songmenu")
                 self.min_factor_down =   Action(keymap, 'min_factor_down',   [H],            REQUIRED, context="songmenu")

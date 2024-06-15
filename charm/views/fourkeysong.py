@@ -98,15 +98,6 @@ class FourKeySongView(DigiView):
         self.countdown = 4
         super().on_show_view()
 
-    @shows_errors
-    def on_key_something(self, symbol: int, modifiers: int, press: bool) -> None:
-        if symbol in self.engine.mapping:
-            i = self.engine.mapping.index(symbol)
-            self.highway.strikeline[i].alpha = 255 if press else 64
-            self.highway.strikeline[i].texture = load_note_texture("normal" if press else "strikeline", i, self.highway.note_size)
-            if self.tracks.playing:
-                self.engine.process_keystate(keymap.fourkey.state)
-
     def generate_data_string(self) -> str:
         return (f"Time: {int(self.tracks.time // 60)}:{int(self.tracks.time % 60):02}\n"
                 f"Score: {self.engine.score}\n"
@@ -135,12 +126,14 @@ class FourKeySongView(DigiView):
         elif self.window.debug.enabled and keymap.debug_show_results.pressed:
             self.show_results()
 
-        self.on_key_something(symbol, modifiers, True)
+        if self.tracks.playing:
+            self.engine.on_key_press(symbol, modifiers)
 
     @shows_errors
     def on_key_release(self, symbol: int, modifiers: int) -> None:
         super().on_key_release(symbol, modifiers)
-        self.on_key_something(symbol, modifiers, False)
+        if self.tracks.playing:
+            self.engine.on_key_release(symbol, modifiers)
 
     def go_back(self) -> None:
         self.tracks.close()

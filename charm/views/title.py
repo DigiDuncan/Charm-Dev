@@ -21,6 +21,7 @@ from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.keymap import keymap
 from charm.lib.utils import img_from_path, typewriter
 from charm.views.mainmenu import MainMenuView
+import charm.lib.egg as egg
 
 FADE_DELAY = 1
 SWITCH_DELAY = 0.5 + FADE_DELAY
@@ -55,8 +56,7 @@ class TitleView(DigiView):
         super().postsetup()
 
     def generate_splash(self) -> ClownLogo | SplashLogo:
-        show_clown: bool = random.randint(0, 999) == 0
-        if show_clown:
+        if egg.state == egg.TRICKY:
             splash_label = ClownLogo(x=int(self.window.center_x + 100), y=int(self.window.center_y))
         else:
             splashes = (files(charm.data) / "splashes.txt").read_text().splitlines()

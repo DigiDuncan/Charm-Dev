@@ -74,7 +74,7 @@ class HeroTestView(DigiView):
             self.highway.show_flags = not self.highway.show_flags
 
 
-        self.engine.process_keystate(keymap.hero.state)
+        self.engine.on_key_press(symbol, modifiers)
         if keymap.back.pressed or keymap.pause.pressed:
             self.song.pause() if self.song.playing else self.song.play()
         if self.window.debug.enabled:
@@ -91,7 +91,7 @@ class HeroTestView(DigiView):
     @shows_errors
     def on_key_release(self, symbol: int, modifiers: int) -> None:
         super().on_key_release(symbol, modifiers)
-        self.engine.process_keystate(keymap.hero.state)
+        self.engine.on_key_release(symbol, modifiers)
 
     def go_back(self) -> None:
         self.song.delete()
