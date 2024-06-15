@@ -6,7 +6,7 @@ import math
 from functools import cache
 from pathlib import Path
 from statistics import mean
-from typing import Literal, cast
+from typing import Literal, cast, Any
 
 import arcade
 from arcade import Sprite, SpriteList, Texture, Text, color as colors
