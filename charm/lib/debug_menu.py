@@ -18,7 +18,7 @@ from arcade import Camera2D, Vec2, color as colors
 import arrow
 import numpy as np
 from imgui_bundle.python_backends.pyglet_backend import create_renderer
-from imgui_bundle import imgui, ImVec2
+from imgui_bundle import imgui, ImVec2, imgui_ctx
 
 
 class Filter:
@@ -191,15 +191,14 @@ class Console:
 
         # Save space for a seperator and a text input field
         footer_height_to_reserve = imgui.get_style().item_spacing.y + imgui.get_frame_height_with_spacing()
-        if imgui.begin_child("ScrollingRegion", 0, -footer_height_to_reserve, imgui.NONE, imgui.WINDOW_HORIZONTAL_SCROLLING_BAR):
-
+        if imgui.begin_child("ScrollingRegion", ImVec2(0, -footer_height_to_reserve), imgui.ChildFlags_.none.value, imgui.WindowFlags_.horizontal_scrollbar.value):
             if imgui.begin_popup_context_window():
                 if imgui.selectable("Clear"):
                     self.clear_log()
                 imgui.end_popup()
 
             # Tighten spacing
-            imgui.push_style_var(imgui.STYLE_ITEM_SPACING, (4, 1))
+            imgui.push_style_var(imgui.StyleVar_.item_spacing, (4, 1))
 
             if copy_to_clipboard:
                 # Start logging all the printing that gets done.
@@ -235,7 +234,7 @@ class Console:
         reclaim_focus = False
         # TODO: There is a missing flag? maybe make pr?
         # Also some of these flags are used to do stuff to the text (in particular the CALLBACK ones)
-        input_text_flags = imgui.INPUT_TEXT_ENTER_RETURNS_TRUE | imgui.INPUT_TEXT_CALLBACK_COMPLETION | imgui.INPUT_TEXT_CALLBACK_HISTORY
+        input_text_flags = imgui.InputTextFlags_.enter_returns_true.value | imgui.InputTextFlags_.callback_completion.value | imgui.InputTextFlags_.callback_history.value
         imgui.push_item_width(Filter.input_text_size)
         changed, self._input_string = imgui.input_text("Input", self._input_string, flags=input_text_flags)
         imgui.pop_item_width()
@@ -314,35 +313,6 @@ class DebugSettings(TypedDict):
     show_fps: bool
 
 
-class imgui_tab_bar:  # noqa: N801
-    def __init__(self, str_id: str, flags: imgui.TabBarFlags = 0):
-        self._str_id = str_id
-        self._flags = flags
-        self.opened: bool
-
-    def __enter__(self) -> Self:
-        self.opened = imgui.begin_tab_bar(self._str_id, self._flags)
-        return self
-
-    def __exit__(self, typ: type[BaseException] | None, exc: BaseException | None, tb: TracebackType | None) -> None:
-        imgui.end_tab_bar()
-
-
-class imgui_tab_item:  # noqa: N801
-    def __init__(self, str_id: str, p_open: bool | None = None, flags: imgui.TabItemFlags = 0):
-        self._str_id = str_id
-        self._p_open = p_open
-        self._flags = flags
-        self.selected: bool
-
-    def __enter__(self) -> Self:
-        self.selected, _ = imgui.begin_tab_item(self._str_id, self._p_open, self._flags)
-        return self
-
-    def __exit__(self, typ: type[BaseException] | None, exc: BaseException | None, tb: TracebackType | None) -> None:
-        imgui.end_tab_item()
-
-
 class DebugMenu:
     def __init__(self, window: DigiWindow) -> None:
         self.camera = OverlayCamera()
@@ -408,8 +378,8 @@ class DebugMenu:
             self.impl.render(imgui.get_draw_data())
 
     def draw_tab_bar(self) -> None:
-        with imgui_tab_bar("Options") as tab_bar:
-            if not tab_bar.opened:
+        with imgui_ctx.begin_tab_bar("Options") as tab_bar:
+            if not tab_bar:
                 return
             self.settings_tab.draw()
             self.info_tab.draw()
@@ -425,8 +395,8 @@ class DebugSettingsTab:
         pass
 
     def draw(self) -> None:
-        with imgui_tab_item("Settings") as settings:
-            if not settings.selected:
+        with imgui_ctx.begin_tab_item("Settings") as settings:
+            if not settings:
                 return
             imgui.text("Settings")
             # Settings
@@ -465,8 +435,8 @@ class DebugInfoTab:
         self.localtime = cv.local_time if cv is not None else 0.0
 
     def draw(self) -> None:
-        with imgui_tab_item("Info") as info:
-            if not info.selected:
+        with imgui_ctx.begin_tab_item("Info") as info:
+            if not info:
                 return
             imgui.text("Info")
             imgui.text(f"Current Resolution: {self.window.size}")
@@ -475,7 +445,7 @@ class DebugInfoTab:
             # Beat Graph
             imgui.plot_lines( # type: ignore
                 label="Beat",
-                values=np.array(self.beat_list),
+                values=np.array(self.beat_list, np.float32),
                 scale_min = 0,
                 scale_max = 1,
             )
@@ -484,7 +454,7 @@ class DebugInfoTab:
             # FPS Graph
             imgui.plot_lines( # type: ignore
                 label="FPS",
-                values=np.array(self.fps_list),
+                values=np.array(self.fps_list, np.float32),
                 scale_min = 120,
                 scale_max = 240,
             )
@@ -501,8 +471,8 @@ class DebugLogTab:
         pass
 
     def draw(self) -> None:
-        with imgui_tab_item("Log") as log:
-            if not log.selected:
+        with imgui_ctx.begin_tab_item("Log") as log:
+            if not log:
                 return
             cons.draw()
 
