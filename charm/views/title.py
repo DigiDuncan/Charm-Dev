@@ -60,7 +60,7 @@ class TitleView(DigiView):
             splash_label = ClownLogo(x=int(self.window.center_x + 100), y=int(self.window.center_y))
         else:
             splashes = (files(charm.data) / "splashes.txt").read_text().splitlines()
-            splash_label = SplashLogo(self, splashes, x=int(self.window.center_x), y=int(self.window.center_y))
+            splash_label = SplashLogo(self, splashes)
         return splash_label
 
     @shows_errors
@@ -137,15 +137,13 @@ class ClownLogo(Text, Component):
 
 
 class SplashLogo(Label, Component):
-    def __init__(self, view: DigiView, splashes: list[str], x: int, y: int):
+    def __init__(self, view: DigiView, splashes: list[str]):
         self.view = view
         self.splashes = splashes
         self.splash_index = 0
         super().__init__(
             font_name='bananaslip plus',
             font_size=24,
-            x=x,
-            y=y,
             anchor_x='left', anchor_y='top',
             color=CharmColors.PURPLE
         )
@@ -168,7 +166,7 @@ class SplashLogo(Label, Component):
         self.text = typewriter(self.splash_text, 20, self.view.local_time, 3)
 
     def on_resize(self, width: int, height: int) -> None:
-        self.position = (height / 2, width / 2, 0)
+        self.position = (width // 2, height // 2, 0)
 
 
 class SongLabel(Label, Component):

@@ -188,18 +188,12 @@ class Action:
         return f"{self.id}: {[get_keyname(k) for k in self.keys]}"
 
 
-class KeyMapMetaAlias(type):
-    actions: tuple[Action, ...]
-
-    @property
-    def state(cls) -> list[bool]:
-        return [a.pressed for a in cls.actions]
-
 class SubKeyMap:
     def __init__(self, *actions: Action):
         self.actions = actions
+    @property
     def state(self) -> list[bool]:
-        return [a.pressed for a in self.actions]
+        return [a.held for a in self.actions]
 
 
 class KeyMap:
