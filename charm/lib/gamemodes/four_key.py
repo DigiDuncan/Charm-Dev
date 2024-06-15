@@ -280,7 +280,7 @@ class FourKeyHighway(Highway):
         self._pixel_offset = 0
         self.keystate = keymap.fourkey.state
 
-    def update(self, song_time: float):
+    def update(self, song_time: float) -> None:
         super().update(song_time)
         self.sprite_buckets.update_animation(song_time)
         # TODO: Replace with better pixel_offset calculation
@@ -394,7 +394,7 @@ class FourKeyEngine(Engine):
         self.all_judgements: list[tuple[Seconds, Seconds, Judgement]] = []
 
         self.current_notes: list[FourKeyNote] = self.chart.notes.copy()
-        self.current_events: list[DigitalKeyEvent] = []
+        self.current_events: list[DigitalKeyEvent[Literal[0,1,2,3]]] = []
 
         self.last_p1_action: Action | None = None
         self.last_note_missed = False
@@ -414,7 +414,8 @@ class FourKeyEngine(Engine):
         action = keymap.fourkey.pressed_action
         if action is None:
             return
-        self.current_events.append(DigitalKeyEvent(self.chart_time, action, "down"))
+        key = cast(Literal[0,1,2,3], keymap.fourkey.actions.index(action))
+        self.current_events.append(DigitalKeyEvent(self.chart_time, key, "down"))
 
     def on_key_release(self, symbol: int, modifiers: int) -> None:
         self.keystate = keymap.fourkey.state
@@ -427,14 +428,15 @@ class FourKeyEngine(Engine):
         action = keymap.fourkey.released_action
         if action is None:
             return
-        self.current_events.append(DigitalKeyEvent(self.chart_time, action, "up"))
+        key = cast(Literal[0,1,2,3], keymap.fourkey.actions.index(action))
+        self.current_events.append(DigitalKeyEvent(self.chart_time, key, "up"))
 
     @property
     def average_acc(self) -> float:
         j = [j[1] for j in self.all_judgements if j[1] is not math.inf]
         return mean(j) if j else 0
 
-    def calculate_score(self):
+    def calculate_score(self) -> None:
         # Get all non-scored notes within the current window
         for note in [n for n in self.current_notes if n.time <= self.chart_time + self.hit_window]:
             # Get sustains in the window and add them to the active sustains list
@@ -475,7 +477,7 @@ class FourKeyEngine(Engine):
 
         self.last_score_check = self.chart_time
 
-    def score_note(self, note: FourKeyNote):
+    def score_note(self, note: FourKeyNote) -> None:
         # Ignore notes we haven't done anything with yet
         if not (note.hit or note.missed):
             return
@@ -509,7 +511,7 @@ class FourKeyEngine(Engine):
             self.streak = 0
             self.last_note_missed = True
 
-    def score_sustains(self):
+    def score_sustains(self) -> None:
         raise NotImplementedError
 
     def generate_results(self) -> Results:

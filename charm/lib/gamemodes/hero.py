@@ -3,7 +3,7 @@ from __future__ import annotations
 from importlib.resources import files
 from collections import defaultdict
 from functools import cache
-from typing import cast, TypedDict
+from typing import Literal, cast, TypedDict
 from dataclasses import dataclass
 from pathlib import Path
 import configparser
@@ -23,7 +23,7 @@ from arcade.camera.data_types import duplicate_camera_data
 from charm.lib.anim import ease_linear, perc
 from charm.lib.charm import load_missing_texture
 from charm.lib.errors import ChartParseError, ChartPostReadParseError, NoChartsError, NoMetadataError, MetadataParseError
-from charm.lib.generic.engine import DigitalKeyEvent, Engine, Judgement, KeyStates
+from charm.lib.generic.engine import DigitalKeyEvent, Engine, Judgement
 from charm.lib.generic.highway import Highway
 from charm.lib.generic.song import Chart, Event, Metadata, Note, Seconds, Song
 from charm.lib.keymap import Action, keymap
@@ -919,7 +919,7 @@ class HeroEngine(Engine):
         super().__init__(chart, hit_window, judgements, offset)
 
         self.current_chords: list[HeroChord] = self.chart.chords.copy()
-        self.current_events: list[DigitalKeyEvent] = []
+        self.current_events: list[DigitalKeyEvent[Literal[0,1,2,3,4,5,6,7]]] = []
 
         self.combo = 0
         self.star_power = False
@@ -945,7 +945,8 @@ class HeroEngine(Engine):
         if action is None:
             return
         # pressed
-        self.current_events.append(DigitalKeyEvent(self.chart_time, action, "down"))
+        key = cast(Literal[0,1,2,3,4,5,6,7], keymap.hero.actions.index(action))
+        self.current_events.append(DigitalKeyEvent(self.chart_time, key, "down"))
         if action in FRET_ACTIONS:
             # fret button
             self.tap_available = True
@@ -964,7 +965,8 @@ class HeroEngine(Engine):
         action = keymap.hero.released_action
         if action is None:
             return
-        self.current_events.append(DigitalKeyEvent(self.chart_time, action, "up"))
+        key = cast(Literal[0,1,2,3,4,5,6,7], keymap.hero.actions.index(action))
+        self.current_events.append(DigitalKeyEvent(self.chart_time, key, "up"))
         if action in FRET_ACTIONS:
             # fret button
             self.tap_available = True

@@ -49,9 +49,9 @@ class EngineEvent:
         return self.__repr__()
 
 
-class DigitalKeyEvent(EngineEvent):
+class DigitalKeyEvent[K](EngineEvent):
     """Any input event with a binary state."""
-    def __init__(self, time: float, key: Action, new_state: Literal["up", "down"]):
+    def __init__(self, time: float, key: K, new_state: Literal["up", "down"]):
         super().__init__(time)
         self.key = key
         self.new_state = new_state
@@ -60,7 +60,7 @@ class DigitalKeyEvent(EngineEvent):
     def down(self) -> bool:
         return self.new_state == "down"
 
-    def __lt__(self, other: DigitalKeyEvent):
+    def __lt__(self, other: DigitalKeyEvent[K]):
         return (self.time, self.key) < (other.time, other.key)
 
     def __repr__(self) -> str:
