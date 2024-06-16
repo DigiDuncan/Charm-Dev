@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 
-from imgui_bundle import imgui
+from imgui_bundle import imgui, imgui_ctx
 
 
 def filter_to_regex(filter_str: str) -> str:
@@ -22,10 +22,10 @@ class Filter:
         self._filter_pattern: re.Pattern[str] | None = None
 
     def draw(self) -> None:
-        imgui.push_item_width(self.input_text_size)
-        changed, filter_str = imgui.input_text_with_hint("Filter", "+incl, -excl, or regex", self._filter_str)
-        if changed:
-            self.filter = filter_str
+        with imgui_ctx.push_item_width(self.input_text_size):
+            changed, filter_str = imgui.input_text_with_hint("Filter", "+incl, -excl, or regex", self._filter_str)
+            if changed:
+                self.filter = filter_str
 
     @property
     def filter(self) -> str:

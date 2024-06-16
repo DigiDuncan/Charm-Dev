@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 from arcade import color as colors
 
 import arrow
-from imgui_bundle import imgui
+from imgui_bundle import imgui, imgui_ctx
 from charm.lib import logging
 
 
@@ -46,18 +46,15 @@ class DebugMessage:
 
     def draw(self) -> None:
         if self.level not in [logging.COMMAND, logging.COMMENT]:
-            imgui.push_style_color(imgui.Col_.text.value, imgui.ImVec4(*colors.PURPLE.normalized))
-            imgui.text_unformatted(self.time + " | ")
-            imgui.pop_style_color()
+            with imgui_ctx.push_style_color(imgui.Col_.text.value, imgui.ImVec4(*colors.PURPLE.normalized)):
+                imgui.text_unformatted(self.time + " | ")
 
             imgui.same_line()
 
-        imgui.push_style_color(imgui.Col_.text.value, imgui.ImVec4(*self.color))
-        imgui.text_unformatted(self.prefix + " ")
-        imgui.pop_style_color()
+        with imgui_ctx.push_style_color(imgui.Col_.text.value, imgui.ImVec4(*self.color)):
+            imgui.text_unformatted(self.prefix + " ")
 
         imgui.same_line()
 
-        imgui.push_style_color(imgui.Col_.text.value, imgui.ImVec4(*self.color))
-        imgui.text_unformatted(self.message)
-        imgui.pop_style_color()
+        with imgui_ctx.push_style_color(imgui.Col_.text.value, imgui.ImVec4(*self.color)):
+            imgui.text_unformatted(self.message)

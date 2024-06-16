@@ -72,11 +72,9 @@ class DebugMenu:
             imgui.new_frame()
             imgui.set_next_window_size(ImVec2(550, 350), imgui.Cond_.first_use_ever.value)
 
-            imgui.begin("Charm Debug Menu", False)
+            with imgui_ctx.begin("Charm Debug Menu", False) as window:
+                self.draw_tab_bar()
 
-            self.draw_tab_bar()
-
-            imgui.end()
             imgui.render()
             self.impl.render(imgui.get_draw_data())
 

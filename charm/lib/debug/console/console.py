@@ -54,9 +54,9 @@ class Console:
         imgui.separator()
 
         # Options menu
-        if imgui.begin_popup("Options"):
-            _, self.auto_scroll = imgui.checkbox("Auto-Scroll", self.auto_scroll)
-            imgui.end_popup()
+        with imgui_ctx.begin_popup("Options") as popup:
+            if popup:
+                _, self.auto_scroll = imgui.checkbox("Auto-Scroll", self.auto_scroll)
 
         # Options, Filter
         if imgui.button("Options"):
@@ -75,9 +75,8 @@ class Console:
         # TODO: There is a missing flag? maybe make pr?
         # Also some of these flags are used to do stuff to the text (in particular the CALLBACK ones)
         input_text_flags = imgui.InputTextFlags_.enter_returns_true.value | imgui.InputTextFlags_.callback_completion.value | imgui.InputTextFlags_.callback_history.value
-        imgui.push_item_width(Filter.input_text_size)
-        changed, self._input_string = imgui.input_text("Input", self._input_string, flags=input_text_flags)
-        imgui.pop_item_width()
+        with imgui_ctx.push_item_width(Filter.input_text_size):
+            changed, self._input_string = imgui.input_text("Input", self._input_string, flags=input_text_flags)
         if changed:
             s: str = self._input_string
             s = s.strip()
@@ -100,37 +99,33 @@ class Console:
             if imgui.begin_popup_context_window():
                 if imgui.selectable("Clear", False):
                     self.clear_log()
-                imgui.end_popup()
 
             # Tighten spacing
-            imgui.push_style_var(imgui.StyleVar_.item_spacing.value, ImVec2(4, 1))
+            with imgui_ctx.push_style_var(imgui.StyleVar_.item_spacing.value, ImVec2(4, 1)):
+                if copy_to_clipboard:
+                    # Start logging all the printing that gets done.
+                    # The method used by imgui seems to be missing,
+                    # so we are going to have to make out own
+                    pass
 
-            if copy_to_clipboard:
-                # Start logging all the printing that gets done.
-                # The method used by imgui seems to be missing,
-                # so we are going to have to make out own
-                pass
+                # Every line is created individually for colouring, and styling.
+                # To do multiple colours on a single line requires using `imgui.same_line()`
+                # so it's a difficult ask for dynamic scenarios, but could be used to change
+                # the colour of the message type, or the time-stamp
 
-            # Every line is created individually for colouring, and styling.
-            # To do multiple colours on a single line requires using `imgui.same_line()`
-            # so it's a difficult ask for dynamic scenarios, but could be used to change
-            # the colour of the message type, or the time-stamp
+                for item in self._items:
+                    if self.text_filter.is_shown(item.prefix + item.message):
+                        item.draw()
 
-            for item in self._items:
-                if self.text_filter.is_shown(item.prefix + item.message):
-                    item.draw()
+                if copy_to_clipboard:
+                    # Finishing logging all the printing
+                    # This is where the copying actually gets done.
+                    pass
 
-            if copy_to_clipboard:
-                # Finishing logging all the printing
-                # This is where the copying actually gets done.
-                pass
-
-            # Scroll to the bottom automatically. set_scroll_here_y uses a proportion so 1.0 is max.
-            if self.scroll_to_bottom or (self.auto_scroll and imgui.get_scroll_y() >= imgui.get_scroll_max_y()):
-                imgui.set_scroll_here_y(1.0)
-            self.scroll_to_bottom = False
-
-            imgui.pop_style_var()
+                # Scroll to the bottom automatically. set_scroll_here_y uses a proportion so 1.0 is max.
+                if self.scroll_to_bottom or (self.auto_scroll and imgui.get_scroll_y() >= imgui.get_scroll_max_y()):
+                    imgui.set_scroll_here_y(1.0)
+                self.scroll_to_bottom = False
 
     def draw_floating(self) -> None:
         imgui.set_next_window_size(ImVec2(520, 600), imgui.Cond_.first_use_ever.value)
