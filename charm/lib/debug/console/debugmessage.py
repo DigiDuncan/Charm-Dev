@@ -61,7 +61,7 @@ class DebugMessage:
 
     @property
     def text(self) -> str:
-        return f"{self.prefix}{self.message}"
+        return f"{self.prefix} {self.message}"
 
     def __str__(self):
         return self.text
