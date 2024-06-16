@@ -11,9 +11,9 @@ from arcade import Sprite, Text, Sound, color as colors
 
 from charm.lib.anim import perc, ease_circout, lerp
 from charm.lib.charm import CharmColors, GumWrapper
-from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
+from charm.lib.digiview import DigiView, disable_when_focus_lost, shows_errors
 from charm.lib.gamemodes.fnf import CameraFocusEvent, FNFEngine, FNFSong
-from charm.lib.gamemodes.four_key import FourKeyHighway, load_note_texture
+from charm.lib.gamemodes.four_key import FourKeyHighway
 from charm.lib.keymap import keymap
 from charm.lib.logsection import LogSection
 from charm.lib.oggsound import OGGSound
@@ -178,7 +178,7 @@ class FNFSongView(DigiView):
         super().on_show_view()
 
     @shows_errors
-    @ignore_imgui
+    @disable_when_focus_lost(keyboard=True)
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         super().on_key_press(symbol, modifiers)
         if keymap.back.pressed:

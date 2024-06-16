@@ -48,12 +48,18 @@ def shows_errors[S: DigiView, **P](fn: Callable[Concatenate[S, P], None]) -> Cal
     return wrapper
 
 
-def ignore_imgui[**P](fn: Callable[P, None]) -> Callable[P, None]:
-    @functools.wraps(fn)
-    def wrapper(*args: P.args, **kwargs: P.kwargs) -> None:
-        if imgui.is_window_hovered(imgui.HoveredFlags_.any_window.value):
-            return
-        fn(*args, **kwargs)
+def disable_when_focus_lost[**P](*, keyboard: bool = False, mouse: bool = False) -> Callable[[Callable[P, None]], Callable[P, None]]:
+    def wrapper(fn: Callable[P, None]) -> Callable[P, None]:
+        @functools.wraps(fn)
+        def wrapped(*args: P.args, **kwargs: P.kwargs) -> None:
+            if mouse and imgui.get_io().want_capture_mouse:
+                logger.info("mouse disabled")
+                return
+            if keyboard and imgui.get_io().want_capture_keyboard:
+                logger.info("keyboard disabled")
+                return
+            fn(*args, **kwargs)
+        return wrapped
     return wrapper
 
 

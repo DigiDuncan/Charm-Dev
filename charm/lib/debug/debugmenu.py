@@ -15,11 +15,14 @@ from .tabs.debuginfotab import DebugInfoTab
 from .tabs.debuglogtab import DebugLogTab
 from .fpscounter import FPSCounter
 
+import logging
+logger = logging.getLogger("charm")
+
 
 class DebugMenu:
     def __init__(self, window: DigiWindow) -> None:
         self.camera = OverlayCamera()
-        self.enabled = False
+        self._enabled = False
         imgui.create_context()
         imgui.get_io().display_size = imgui.ImVec2(100, 100)
         imgui.font_atlas_get_tex_data_as_rgba32(imgui.get_io().fonts) # type: ignore
@@ -48,6 +51,19 @@ class DebugMenu:
     def show_fps(self) -> bool:
         return self.settings_tab.show_fps or self.enabled
 
+    @property
+    def enabled(self) -> bool:
+        return self._enabled
+
+    @enabled.setter
+    def enabled(self, value: bool) -> None:
+        self._enabled = value
+        # I shouldn't have to set these manually, but imgui only updates them during a imgui.new_frame().
+        # So when we stop calling imgui.new_frame(), imgui locks all input.
+        if not self._enabled:
+            imgui.get_io().want_capture_keyboard = False
+            imgui.get_io().want_capture_mouse = False
+
     def on_update(self, delta_time: float) -> None:
         self.settings_tab.on_update(delta_time)
         self.info_tab.on_update(delta_time)
@@ -72,7 +88,9 @@ class DebugMenu:
             imgui.new_frame()
             imgui.set_next_window_size(ImVec2(550, 350), imgui.Cond_.first_use_ever.value)
 
-            with imgui_ctx.begin("Charm Debug Menu", False):
+            with imgui_ctx.begin("Charm Debug Menu", True) as window:
+                if not window.opened:
+                    self.enabled = False
                 self.draw_tab_bar()
 
             imgui.render()

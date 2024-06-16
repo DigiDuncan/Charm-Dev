@@ -17,7 +17,7 @@ import charm.data.audio
 import charm.data.images
 from charm.lib.anim import ease_linear, ease_quadinout, perc
 from charm.lib.charm import CharmColors, GumWrapper
-from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
+from charm.lib.digiview import DigiView, disable_when_focus_lost, shows_errors
 from charm.lib.keymap import keymap
 from charm.lib.utils import img_from_path, typewriter
 from charm.views.mainmenu import MainMenuView
@@ -64,7 +64,7 @@ class TitleView(DigiView):
         return splash_label
 
     @shows_errors
-    @ignore_imgui
+    @disable_when_focus_lost(keyboard=True)
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         super().on_key_press(symbol, modifiers)
         if keymap.start.pressed:
@@ -76,7 +76,7 @@ class TitleView(DigiView):
             self.setup()
 
     @shows_errors
-    @ignore_imgui
+    @disable_when_focus_lost(mouse=True)
     def on_mouse_press(self, x: int, y: int, button: int, modifiers: int) -> None:
         if button == MOUSE_BUTTON_LEFT:
             self.start()

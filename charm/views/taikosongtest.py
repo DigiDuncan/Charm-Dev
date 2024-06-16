@@ -6,7 +6,7 @@ from arcade import Text, Sound, color as colors
 from charm.lib import paths
 
 from charm.lib.charm import GumWrapper
-from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
+from charm.lib.digiview import DigiView, disable_when_focus_lost, shows_errors
 from charm.lib.errors import NoChartsError
 from charm.lib.gamemodes.four_key import FourKeyEngine
 from charm.lib.gamemodes.taiko import TaikoHighway, TaikoSong
@@ -78,7 +78,7 @@ class TaikoSongTestView(DigiView):
         return (f"Time: {int(self.tracks.time // 60)}:{int(self.tracks.time % 60):02}")
 
     @shows_errors
-    @ignore_imgui
+    @disable_when_focus_lost(keyboard=True)
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         super().on_key_press(symbol, modifiers)
         if keymap.back.pressed:

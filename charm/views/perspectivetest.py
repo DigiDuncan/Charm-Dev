@@ -7,7 +7,7 @@ import arcade
 from arcade import Sprite, SpriteList
 
 from charm.lib.charm import GumWrapper
-from charm.lib.digiview import DigiView, shows_errors, ignore_imgui
+from charm.lib.digiview import DigiView, shows_errors, disable_when_focus_lost
 from charm.lib.keymap import keymap
 
 from charm.lib.perp_cam import PerspectiveProjector
@@ -56,7 +56,7 @@ class PerspectiveTestView(DigiView):
         self.window.theme_song.volume = 0
 
     @shows_errors
-    @ignore_imgui
+    @disable_when_focus_lost(keyboard=True)
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         super().on_key_press(symbol, modifiers)
         if keymap.back.pressed:
@@ -64,7 +64,7 @@ class PerspectiveTestView(DigiView):
 
 
     @shows_errors
-    @ignore_imgui
+    @disable_when_focus_lost(keyboard=True)
     def on_key_release(self, symbol: int, modifiers: int) -> None:
         super().on_key_release(symbol, modifiers)
         match symbol:
