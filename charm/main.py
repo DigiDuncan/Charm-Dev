@@ -6,7 +6,7 @@ import arcade
 
 import charm.data.fonts
 import charm.data.images
-from charm.lib.logging import setup_logging
+from charm.lib import logging
 from charm.lib.settings import settings
 from charm.lib.utils import pyglet_img_from_path
 from charm.lib.digiwindow import DigiWindow
@@ -30,7 +30,7 @@ class CharmGame(DigiWindow):
 
 
 def main() -> None:
-    setup_logging()
+    logging.setup()
     window = CharmGame()
     window.setup()
     arcade.run()
