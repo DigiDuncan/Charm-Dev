@@ -41,6 +41,7 @@ class Results:
             "max_streak": self.max_streak
         }
 
+
 class Heatmap(Sprite):
     def __init__(self, judgements: list[Judgement], all_judgements: list[tuple[Seconds, Seconds, Judgement]], height: int = 75):
         """A visual display of a users accuracy relative to perfect (0)."""
@@ -54,7 +55,6 @@ class Heatmap(Sprite):
         self._tex = Texture.create_empty("_heatmap", (width, height))
         super().__init__(self._tex)
         self._sprite_list = SpriteList()
-        self._sprite_list.append(self)
 
         with self._sprite_list.atlas.render_into(self._tex) as fbo:
             fbo.clear()
