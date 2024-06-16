@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import arrow
+import pyperclip
 from imgui_bundle import imgui, ImVec2, imgui_ctx
 
 from charm.lib import logging
@@ -101,31 +102,25 @@ class Console:
                     self.clear_log()
 
             # Tighten spacing
-            with imgui_ctx.push_style_var(imgui.StyleVar_.item_spacing.value, ImVec2(4, 1)):
-                if copy_to_clipboard:
-                    # Start logging all the printing that gets done.
-                    # The method used by imgui seems to be missing,
-                    # so we are going to have to make out own
-                    pass
+            log_lines: list[str] = []
 
+            with imgui_ctx.push_style_var(imgui.StyleVar_.item_spacing.value, ImVec2(4, 1)):
                 # Every line is created individually for colouring, and styling.
                 # To do multiple colours on a single line requires using `imgui.same_line()`
                 # so it's a difficult ask for dynamic scenarios, but could be used to change
                 # the colour of the message type, or the time-stamp
-
                 for item in self._items:
-                    if self.text_filter.is_shown(item.prefix + item.message):
+                    if self.text_filter.is_shown(item.text):
                         item.draw()
+                        log_lines.append(item.text)
 
-                if copy_to_clipboard:
-                    # Finishing logging all the printing
-                    # This is where the copying actually gets done.
-                    pass
+            if copy_to_clipboard and log_lines:
+                pyperclip.copy("\n".join(log_lines))
 
-                # Scroll to the bottom automatically. set_scroll_here_y uses a proportion so 1.0 is max.
-                if self.scroll_to_bottom or (self.auto_scroll and imgui.get_scroll_y() >= imgui.get_scroll_max_y()):
-                    imgui.set_scroll_here_y(1.0)
-                self.scroll_to_bottom = False
+            # Scroll to the bottom automatically. set_scroll_here_y uses a proportion so 1.0 is max.
+            if self.scroll_to_bottom or (self.auto_scroll and imgui.get_scroll_y() >= imgui.get_scroll_max_y()):
+                imgui.set_scroll_here_y(1.0)
+            self.scroll_to_bottom = False
 
     def draw_floating(self) -> None:
         imgui.set_next_window_size(ImVec2(520, 600), imgui.Cond_.first_use_ever.value)

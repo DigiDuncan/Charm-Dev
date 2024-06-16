@@ -58,3 +58,10 @@ class DebugMessage:
 
         with imgui_ctx.push_style_color(imgui.Col_.text.value, imgui.ImVec4(*self.color)):
             imgui.text_unformatted(self.message)
+
+    @property
+    def text(self) -> str:
+        return f"{self.prefix}{self.message}"
+
+    def __str__(self):
+        return self.text
