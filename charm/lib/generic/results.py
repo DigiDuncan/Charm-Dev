@@ -55,6 +55,7 @@ class Heatmap(Sprite):
         self._tex = Texture.create_empty("_heatmap", (width, height))
         super().__init__(self._tex)
         self._sprite_list = SpriteList()
+        self._sprite_list.append(self)
 
         with self._sprite_list.atlas.render_into(self._tex) as fbo:
             fbo.clear()
@@ -87,3 +88,5 @@ class Heatmap(Sprite):
             right = (avg_ms_pos + e, height * 0.95)
             arcade.draw_polygon_filled((left, right, tip), colors.WHITE)
             arcade.draw_polygon_outline((left, right, tip), colors.BLACK)
+
+        self._sprite_list.remove(self)
