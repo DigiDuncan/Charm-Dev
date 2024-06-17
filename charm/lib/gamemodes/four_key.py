@@ -6,11 +6,11 @@ import math
 from functools import cache
 from pathlib import Path
 from statistics import mean
-from typing import Literal, cast, Any
+from typing import Literal, cast, Any, NamedTuple
 
 import arcade
 from arcade import Sprite, SpriteList, Texture, Text, color as colors
-from arcade.types import Color
+from arcade.types import Color, Point2
 import pyglet
 import PIL
 import PIL.ImageFilter
@@ -26,6 +26,7 @@ from charm.lib.generic.song import Note, Chart, Seconds, Song
 from charm.lib.keymap import keymap, Action
 from charm.lib.spritebucket import SpriteBucketCollection
 from charm.lib.utils import img_from_path, clamp
+from charm.lib.pool import Pool
 from charm.objects.line_renderer import NoteTrail
 
 logger = logging.getLogger("charm")
@@ -38,6 +39,7 @@ class NoteType:
     HEAL = "heal"
     CAUTION = "caution"
     STRIKELINE = "strikeline"
+
 
 # SKIN
 class NoteColor:
@@ -71,6 +73,7 @@ class NoteColor:
             return cls.CAUTION
         return colors.BLACK
 
+
 # SKIN
 def get_note_color_by_beat(beat: int) -> tuple[int, int, int]:
     beat_color = {
@@ -89,6 +92,7 @@ def get_note_color_by_beat(beat: int) -> tuple[int, int, int]:
     }
     default_color = (0x00, 0x22, 0x22)
     return beat_color.get(beat, default_color)
+
 
 # SKIN
 @cache
@@ -223,6 +227,93 @@ class FourKeyLongNoteSprite(FourKeyNoteSprite):
         self.dead_trail.draw() if self.dead else self.trail.draw()
 
 
+class SustainTextureSet(NamedTuple):
+    tail_primary: Texture
+    body_primary: Texture
+    cap_primary: Texture
+    tail_miss: Texture = None
+    body_miss: Texture = None
+    cap_miss: Texture = None
+    tail_hit: Texture = None
+    body_hit: Texture = None
+    cap_hit: Texture = None
+
+
+class SustainNote:
+
+    def __init__(self, size):
+        self.size = size
+
+        self._cap: Sprite = Sprite(center_x=-1000)
+        self._body: Sprite = Sprite(center_x=-1000)
+        self._tail: Sprite = Sprite(center_x=-1000)
+
+        self._body_offset: float = 0.0
+        self._tail_offset: float = 0.0
+
+        self.note: Note = None
+        self._textures: SustainTextureSet = None
+
+        self.hide()
+
+    def get_sprites(self):
+        return self._cap, self._body, self._tail
+
+    def place(self, note: Note, x, y, length, textures):
+        self.note = note
+        self._textures = textures
+        self.update_texture()
+
+        length = max(length, self.size)
+
+        body_size = length - self.size
+        self._body_offset = body_size / 2.0
+        self._tail_offset = length - self.size / 2.0
+
+        self._tail.position = x, y
+        self._body.position = x, y - self._body_offset
+        self._body.height = body_size
+        self._cap.position = x, y - self._tail_offset
+
+        self.show()
+        if self._body_offset <= 0.0 or body_size <= 0.0:
+            self._body.visible = False
+
+    def set_y(self, y):
+        self._tail.center_y = y
+        self._body.center_y = y - self._body_offset
+        self._cap.center_y = y - self._tail_offset
+
+    def show(self):
+        self._cap.visible = True
+        self._body.visible = True
+        self._tail.visible = True
+
+    def hide(self):
+        self._cap.visible = False
+        self._body.visible = False
+        self._tail.visible = False
+
+    def update_texture(self):
+        if not self.note or not self._textures:
+            return
+
+        t = self._textures
+
+        if self.note.missed:
+            self._tail.texture = t.tail_miss or t.tail_primary
+            self._body.texture = t.body_miss or t.body_primary
+            self._cap.texture = t.cap_miss or t.cap_primary
+        elif self.note.hit:
+            self._tail.texture = t.tail_hit or t.tail_primary
+            self._body.texture = t.body_hit or t.body_primary
+            self._cap.texture = t.cap_hit or t.cap_primary
+        else:
+            self._tail.texture = t.tail_primary
+            self._body.texture = t.body_primary
+            self._cap.texture = t.cap_primary
+
+
 class FourKeyHighway(Highway):
     def __init__(self, chart: FourKeyChart, engine: FourKeyEngine, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5, auto=False):
         if size is None:
@@ -232,7 +323,41 @@ class FourKeyHighway(Highway):
         super().__init__(chart, pos, size, gap)
         self.engine = engine
 
-        self.viewport = 0.5  # TODO: BPM scaling?
+        self.viewport = 1.0  # TODO: BPM scaling?
+
+        # Temporary integration of a note pool
+        self._note_generator = (note for note in self.notes if note.type != 'sustain')
+        self._note_pool: Pool[Sprite] = Pool(
+            list(Sprite(center_x=-1000.0, center_y=-1000.0) for _ in range(1000))
+        )
+        self._note_sprites = SpriteList()
+        self._note_sprites.extend(self._note_pool.source)
+
+        self._lane_textures = {
+            0: load_note_texture(NoteType.NORMAL, 0, self.note_size),
+            1: load_note_texture(NoteType.NORMAL, 1, self.note_size),
+            2: load_note_texture(NoteType.NORMAL, 2, self.note_size),
+            3: load_note_texture(NoteType.NORMAL, 3, self.note_size)
+        }
+
+        self._next_note = next(self._note_generator, None)
+
+        self._sustain_generator = (note for note in self.notes if note.length)
+        self._sustain_pool: Pool[SustainNote] = Pool(
+            list(SustainNote(self.note_size) for _ in range(100))
+        )
+        self._sustain_sprites = SpriteList()
+        for sustain in self._sustain_pool.source:
+            self._sustain_sprites.extend(sustain.get_sprites())
+
+        self._sustain_textures = {
+            0: SustainTextureSet(load_note_texture('tail', 0, self.note_size), load_note_texture('body', 0, self.note_size), load_note_texture('cap', 0, self.note_size)),
+            1: SustainTextureSet(load_note_texture('tail', 1, self.note_size), load_note_texture('body', 1, self.note_size), load_note_texture('cap', 1, self.note_size)),
+            2: SustainTextureSet(load_note_texture('tail', 2, self.note_size), load_note_texture('body', 2, self.note_size), load_note_texture('cap', 2, self.note_size)),
+            3: SustainTextureSet(load_note_texture('tail', 3, self.note_size), load_note_texture('body', 3, self.note_size), load_note_texture('cap', 3, self.note_size))
+        }
+
+        self._next_sustain = next(self._sustain_generator, None)
 
         self.auto = auto
 
@@ -282,6 +407,43 @@ class FourKeyHighway(Highway):
 
     def update(self, song_time: float) -> None:
         super().update(song_time)
+
+        while self._next_note is not None and self._next_note.time <= (song_time + self.viewport) and self._note_pool.has_free_slot():
+            sprite = self._note_pool.get()
+            sprite.texture = self._lane_textures[self._next_note.lane]
+            sprite.note = self._next_note
+            sprite.position = self.lane_x(self._next_note.lane) + sprite.width/2.0, self.strikeline_y - sprite.height/2.0
+            sprite.visible = True
+            sprite.alpha = 100 if self._next_note.type == 'sustain' else 255
+
+            self._next_note = next(self._note_generator, None)
+
+        while self._next_sustain is not None and self._next_sustain.time <= (song_time + self.viewport) and self._sustain_pool.has_free_slot():
+            sustain = self._sustain_pool.get()
+            sustain.place(
+                self._next_sustain,
+                self.lane_x(self._next_sustain.lane) + sustain.size/2.0,
+                self.strikeline_y - sustain.size/2.0,
+                self._next_sustain.length * self.px_per_s,
+                self._sustain_textures[self._next_sustain.lane]
+            )
+
+            self._next_sustain = next(self._sustain_generator, None)
+
+        for sprite in self._note_pool.given_items:
+            sprite.center_y = self.strikeline_y - sprite.height/2.0 - (sprite.note.time - song_time) * self.px_per_s
+            if sprite.note.hit or sprite.note.time <= (song_time - 0.1):
+                sprite.visible = False
+                self._note_pool.give(sprite)
+                continue
+
+        for sustain in self._sustain_pool.given_items:
+            sustain.update_texture()
+            sustain.set_y(self.strikeline_y - sustain.size/2.0 - (sustain.note.time - song_time) * self.px_per_s)
+            if sustain.note.end <= (song_time - 0.1):
+                sustain.hide()
+                self._sustain_pool.give(sustain)
+
         self.sprite_buckets.update_animation(song_time)
         # TODO: Replace with better pixel_offset calculation
         delta_draw_time = self.song_time - self.last_update_time
@@ -299,7 +461,6 @@ class FourKeyHighway(Highway):
         self.keystate = self.engine.keystate
         for strikeline, active in zip(self.strikeline, self.keystate, strict=True):
             strikeline.active = active
-
 
     @property
     def pixel_offset(self):
@@ -338,24 +499,28 @@ class FourKeyHighway(Highway):
                                               self.hit_window_bottom, self.hit_window_top,
                                               (255, 0, 0, 128))
         self.strikeline.draw()
+
+        self._sustain_sprites.draw(pixelated=True)
+        self._note_sprites.draw(pixelated=True)
+
         self.highway_camera.use()
-        # Draw sustains.
-        # TODO: This might be slow, don't loop over things.
-        b = self.sprite_buckets.calc_bucket(self.song_time)
-        window = arcade.get_window()
-        for bucket in self.sprite_buckets.buckets[b:b+2] + [self.sprite_buckets.overbucket]:  # noqa:E226
-            for note in bucket.sprite_list:
-                if isinstance(note, FourKeyLongNoteSprite) and note.note.time < self.song_time + self.viewport:
-                    # Clip the rendering to the strikeline if the key is being held.
-                    if self.engine.keystate[note.note.lane] or self.auto:
-                        window.ctx.scissor = (0, 0, window.width, self.hit_window_mid)
-                    else:
-                        window.ctx.scissor = None
-                    note.draw_trail()
-        window.ctx.scissor = None
-        self.sprite_buckets.draw(self.song_time)
-        if self.draw_text:
-            self.text_batch.draw()
+        # # Draw sustains.
+        # # TODO: This might be slow, don't loop over things.
+        # b = self.sprite_buckets.calc_bucket(self.song_time)
+        # window = arcade.get_window()
+        # for bucket in self.sprite_buckets.buckets[b:b+2] + [self.sprite_buckets.overbucket]:  # noqa:E226
+        #     for note in bucket.sprite_list:
+        #         if isinstance(note, FourKeyLongNoteSprite) and note.note.time < self.song_time + self.viewport:
+        #             # Clip the rendering to the strikeline if the key is being held.
+        #             if self.engine.keystate[note.note.lane] or self.auto:
+        #                 window.ctx.scissor = (0, 0, window.width, self.hit_window_mid)
+        #             else:
+        #                 window.ctx.scissor = None
+        #             note.draw_trail()
+        # window.ctx.scissor = None
+        # self.sprite_buckets.draw(self.song_time)
+        # if self.draw_text:
+        #     self.text_batch.draw()
         _cam.use()
 
 
@@ -394,7 +559,7 @@ class FourKeyEngine(Engine):
         self.all_judgements: list[tuple[Seconds, Seconds, Judgement]] = []
 
         self.current_notes: list[FourKeyNote] = self.chart.notes.copy()
-        self.current_events: list[DigitalKeyEvent[Literal[0,1,2,3]]] = []
+        self.current_events: list[DigitalKeyEvent[Literal[0, 1, 2, 3]]] = []
 
         self.last_p1_action: Action | None = None
         self.last_note_missed = False
@@ -414,7 +579,7 @@ class FourKeyEngine(Engine):
         action = keymap.fourkey.pressed_action
         if action is None:
             return
-        key = cast(Literal[0,1,2,3], keymap.fourkey.actions.index(action))
+        key = cast(Literal[0, 1, 2, 3], keymap.fourkey.actions.index(action))
         self.current_events.append(DigitalKeyEvent(self.chart_time, key, "down"))
 
     def on_key_release(self, symbol: int, modifiers: int) -> None:

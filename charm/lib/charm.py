@@ -11,8 +11,10 @@ import itertools
 
 import PIL.Image
 import PIL.ImageDraw
-from arcade import Sprite, SpriteList, Texture, color as colors
+from arcade import get_window, Sprite, SpriteList, Texture, color as colors, gl
 from arcade.types import Color
+
+from charm.data import get_shader_raw_str
 
 import charm.data.images
 from charm.lib.utils import img_from_path
@@ -73,6 +75,63 @@ class GumWrapper(Component):
     def draw(self) -> None:
         self.logos_forward.draw()
         self.logos_backward.draw()
+
+
+class GumWrapperNew(Component):
+
+    def __init__(self):
+        """
+        Draw the 4 charm words into a texture and repeat the texture over the entire screen.
+
+        Plus do a cool effect where the gum wrapper looks like it is positions based on the window's
+        position on screen
+        """
+        self._win = win = get_window()
+        self._screen_size = win.size
+        self._screen_origin = win.get_location()
+        self._logo_texture = Texture(img_from_path(files(charm.data.images) / "small-logo.png"))
+        self._logo_buffer = 20, 16
+        self._logo_size = self._logo_texture.width + self._logo_buffer[0], self._logo_texture.height + self._logo_buffer[1]
+
+        self._wrapper_sprites: SpriteList = SpriteList()
+        self._wrapper_sprites.alpha = 128
+        self._wrapper_sprites.extend(
+            (
+                Sprite(self._logo_texture, center_x=self._logo_size[0] * 0.5, center_y=self._logo_size[1] * 0.5),
+                Sprite(self._logo_texture, center_x=self._logo_size[0] * 1.5, center_y=self._logo_size[1] * 0.5),
+                Sprite(self._logo_texture, center_x=self._logo_size[0] * 0.5, center_y=self._logo_size[1] * 1.5),
+                Sprite(self._logo_texture, center_x=self._logo_size[0] * 1.5, center_y=self._logo_size[1] * 1.5),
+            )
+        )
+
+        self._wrapper_texture: gl.Texture2D = win.ctx.texture(
+            size=(self._logo_size[0], self._logo_size[1]*2),
+            wrap_x=gl.REPEAT, wrap_y=gl.REPEAT,
+            filter=(gl.LINEAR, gl.LINEAR)
+        )
+        self._wrapper_shader: gl.Program = win.ctx.program(
+            vertex_shader=get_shader_raw_str('gum_wrapper_vs'),
+            fragment_shader=get_shader_raw_str('gum_wrapper_fs'),
+        )
+        self._wrapper_target: gl.Framebuffer = win.ctx.framebuffer(color_attachments=[self._wrapper_texture])
+
+        self._final_render_geometry: gl.Geometry = gl.geometry.quad_2d_fs()
+
+    def on_resize(self, width: int, height: int) -> None:
+        pass
+
+    def on_update(self, delta_time: float) -> None:
+        pass
+
+    def draw(self) -> None:
+        with self._wrapper_target.activate() as fbo:
+            fbo.clear()
+            self._win.default_camera.use()
+            self._wrapper_sprites.draw()
+        with self._win.ctx.enabled(self._win.ctx.BLEND):
+            self._win.default_camera.use()
+            self._wrapper_texture.use()
+            self._final_render_geometry.render(self._wrapper_shader)
 
 
 class SlidingSpriteList[T: BasicSprite](SpriteList[T]):

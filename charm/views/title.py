@@ -16,8 +16,8 @@ from pyglet.text import Label
 import charm.data.audio
 import charm.data.images
 from charm.lib.anim import ease_linear, ease_quadinout, perc
-from charm.lib.charm import CharmColors, GumWrapper
-from charm.lib.digiview import DigiView, disable_when_focus_lost, shows_errors
+from charm.lib.charm import CharmColors, GumWrapper, GumWrapperNew
+from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
 from charm.lib.keymap import keymap
 from charm.lib.utils import img_from_path, typewriter
 from charm.views.mainmenu import MainMenuView
@@ -35,7 +35,8 @@ class TitleView(DigiView):
         self.goto_fade_time: float | None
         self.goto_switch_time: float | None
         self.fade_volume: float | None
-        self.components.register(GumWrapper(self.size))
+        self.components.register(GumWrapperNew())
+        self.components.register(GumWrapper(size=self.size))
         # Set up main logo
         self.components.register(LogoSprite(self.window))
         self.splash_label = self.components.register(self.generate_splash())
