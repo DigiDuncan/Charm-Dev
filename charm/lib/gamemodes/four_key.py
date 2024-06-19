@@ -333,11 +333,8 @@ class FourKeyHighway(Highway):
         self._note_sprites = SpriteList()
         self._note_sprites.extend(self._note_pool.source)
 
-        self._lane_textures = {
-            0: load_note_texture(NoteType.NORMAL, 0, self.note_size),
-            1: load_note_texture(NoteType.NORMAL, 1, self.note_size),
-            2: load_note_texture(NoteType.NORMAL, 2, self.note_size),
-            3: load_note_texture(NoteType.NORMAL, 3, self.note_size)
+        self._note_textures = {
+            t: {l: load_note_texture(t, l, self.note_size) for l in range(4)} for t in (NoteType.NORMAL, NoteType.BOMB, NoteType.DEATH, NoteType.HEAL, NoteType.CAUTION)
         }
 
         self._next_note = next(self._note_generator, None)
@@ -444,7 +441,7 @@ class FourKeyHighway(Highway):
 
         while self._next_note is not None and self._next_note.time <= (song_time + self.viewport) and self._note_pool.has_free_slot():
             sprite = self._note_pool.get()
-            sprite.texture = self._lane_textures[self._next_note.lane]
+            sprite.texture = self._note_textures[self._next_note.type][self._next_note.lane]
             sprite.note = self._next_note
             sprite.position = self.lane_x(self._next_note.lane) + sprite.width/2.0, self.strikeline_y - sprite.height/2.0
             sprite.visible = True

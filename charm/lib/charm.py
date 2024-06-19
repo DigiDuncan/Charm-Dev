@@ -117,13 +117,6 @@ class GumWrapperNew(Component):
         self._wrapper_target: gl.Framebuffer = win.ctx.framebuffer(color_attachments=[self._wrapper_texture])
 
         self._final_render_geometry: gl.Geometry = gl.geometry.quad_2d_fs()
-        with self._wrapper_target.activate() as fbo:
-            fbo.clear()
-            self._win.default_camera.use()
-            self._wrapper_sprites.draw()
-        from PIL.Image import frombytes
-        img = frombytes('RGBA', (self._logo_size[0], self._logo_size[1]*2), data=self._wrapper_texture.read())
-        img.save('debug/test.png')
 
     def on_resize(self, width: int, height: int) -> None:
         pass
