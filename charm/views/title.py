@@ -16,8 +16,8 @@ from pyglet.text import Label
 import charm.data.audio
 import charm.data.images
 from charm.lib.anim import ease_linear, ease_quadinout, perc
-from charm.lib.charm import CharmColors, GumWrapper, GumWrapperNew
-from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
+from charm.lib.charm import CharmColors, GumWrapperNew
+from charm.lib.digiview import DigiView, disable_when_focus_lost, shows_errors
 from charm.lib.keymap import keymap
 from charm.lib.utils import img_from_path, typewriter
 from charm.views.mainmenu import MainMenuView

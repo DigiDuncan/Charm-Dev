@@ -323,7 +323,7 @@ class FourKeyHighway(Highway):
         super().__init__(chart, pos, size, gap)
         self.engine = engine
 
-        self.viewport = 1.0  # TODO: BPM scaling?
+        self.viewport = 0.5  # TODO: BPM scaling?
 
         # Temporary integration of a note pool
         self._note_generator = (note for note in self.notes if note.type != 'sustain')
