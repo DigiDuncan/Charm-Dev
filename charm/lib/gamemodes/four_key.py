@@ -249,7 +249,7 @@ class SustainNote:
         self._tail: Sprite = Sprite(center_x=-1000)
 
         self._body_offset: float = 0.0
-        self._tail_offset: float = 0.0
+        self._cap_offset: float = 0.0
 
         self.note: Note = None
         self._textures: SustainTextureSet = None
@@ -264,16 +264,14 @@ class SustainNote:
         self._textures = textures
         self.update_texture()
 
-        length = max(length, self.size)
-
-        body_size = length - self.size
+        body_size = length - textures.cap_primary.height
         self._body_offset = body_size / 2.0
-        self._tail_offset = length - self.size / 2.0
+        self._cap_offset = length - textures.cap_primary.height / 2.0
 
         self._tail.position = x, y
         self._body.position = x, y - self._body_offset
         self._body.height = body_size
-        self._cap.position = x, y - self._tail_offset
+        self._cap.position = x, y - self._cap_offset
 
         self.show()
         if self._body_offset <= 0.0 or body_size <= 0.0:
@@ -282,7 +280,7 @@ class SustainNote:
     def set_y(self, y):
         self._tail.center_y = y
         self._body.center_y = y - self._body_offset
-        self._cap.center_y = y - self._tail_offset
+        self._cap.center_y = y - self._cap_offset
 
     def show(self):
         self._cap.visible = True
@@ -347,13 +345,6 @@ class FourKeyHighway(Highway):
         for sustain in self._sustain_pool.source:
             self._sustain_sprites.extend(sustain.get_sprites())
 
-        self._sustain_textures = {
-            0: SustainTextureSet(load_note_texture('tail', 0, self.note_size), load_note_texture('body', 0, self.note_size), load_note_texture('cap', 0, self.note_size)),
-            1: SustainTextureSet(load_note_texture('tail', 1, self.note_size), load_note_texture('body', 1, self.note_size), load_note_texture('cap', 1, self.note_size)),
-            2: SustainTextureSet(load_note_texture('tail', 2, self.note_size), load_note_texture('body', 2, self.note_size), load_note_texture('cap', 2, self.note_size)),
-            3: SustainTextureSet(load_note_texture('tail', 3, self.note_size), load_note_texture('body', 3, self.note_size), load_note_texture('cap', 3, self.note_size))
-        }
-
         self._next_sustain = next(self._sustain_generator, None)
 
         # Temporary integration of a note pool
@@ -382,10 +373,10 @@ class FourKeyHighway(Highway):
             self._sustain_sprites.extend(sustain.get_sprites())
 
         self._sustain_textures = {
-            0: SustainTextureSet(load_note_texture('tail', 0, self.note_size), load_note_texture('body', 0, self.note_size), load_note_texture('cap', 0, self.note_size)),
-            1: SustainTextureSet(load_note_texture('tail', 1, self.note_size), load_note_texture('body', 1, self.note_size), load_note_texture('cap', 1, self.note_size)),
-            2: SustainTextureSet(load_note_texture('tail', 2, self.note_size), load_note_texture('body', 2, self.note_size), load_note_texture('cap', 2, self.note_size)),
-            3: SustainTextureSet(load_note_texture('tail', 3, self.note_size), load_note_texture('body', 3, self.note_size), load_note_texture('cap', 3, self.note_size))
+            0: SustainTextureSet(load_note_texture('tail', 0, self.note_size), load_note_texture('body', 0, self.note_size), load_note_texture('cap', 0, self.note_size // 2)),
+            1: SustainTextureSet(load_note_texture('tail', 1, self.note_size), load_note_texture('body', 1, self.note_size), load_note_texture('cap', 1, self.note_size // 2)),
+            2: SustainTextureSet(load_note_texture('tail', 2, self.note_size), load_note_texture('body', 2, self.note_size), load_note_texture('cap', 2, self.note_size // 2)),
+            3: SustainTextureSet(load_note_texture('tail', 3, self.note_size), load_note_texture('body', 3, self.note_size), load_note_texture('cap', 3, self.note_size // 2))
         }
 
         self._next_sustain = next(self._sustain_generator, None)
