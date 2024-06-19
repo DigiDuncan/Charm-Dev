@@ -19,7 +19,6 @@ class NoteStruckState(IntEnum):
 
 
 class LongNoteRenderer:
-
     def __init__(self,
                  cap_texture: Texture, body_texture: Texture, tail_texture: Texture,
                  width: float, length: float, x: float, y: float,

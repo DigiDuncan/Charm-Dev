@@ -11,7 +11,7 @@ import charm.data.audio
 import charm.data.images
 from charm.lib.anim import ease_quartout, perc
 from charm.lib.charm import GumWrapper
-from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
+from charm.lib.digiview import DigiView, disable_when_focus_lost, shows_errors
 from charm.lib.errors import NoSongsFoundError
 from charm.lib.gamemodes.sm import SMSong
 from charm.lib.generic.song import Metadata
@@ -103,7 +103,7 @@ class FourKeySongMenuView(DigiView):
             self.static.update_animation(delta_time)
 
     @shows_errors
-    @ignore_imgui
+    @disable_when_focus_lost(keyboard=True)
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         super().on_key_press(symbol, modifiers)
         if keymap.navup.pressed:
@@ -133,14 +133,14 @@ class FourKeySongMenuView(DigiView):
             self.album_art.texture = self.menu.selected.album_art
 
     @shows_errors
-    @ignore_imgui
+    @disable_when_focus_lost(mouse=True)
     def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int) -> None:
         if self.menu is not None:
             self.menu.selected_id += int(scroll_y)
             self.sfx.select.play()
 
     @shows_errors
-    @ignore_imgui
+    @disable_when_focus_lost(mouse=True)
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int) -> None:
         if self.menu is not None:
             self.sfx.valid.play()

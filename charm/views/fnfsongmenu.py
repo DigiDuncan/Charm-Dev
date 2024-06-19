@@ -12,7 +12,7 @@ from arcade import Sprite, Text, color as colors
 import charm.data.images
 from charm.lib.anim import ease_quartout, perc
 from charm.lib.charm import GumWrapper
-from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
+from charm.lib.digiview import DigiView, disable_when_focus_lost, shows_errors
 from charm.lib.errors import NoSongsFoundError
 from charm.lib.keymap import keymap
 from charm.objects.gif import GIF
@@ -117,7 +117,7 @@ class FNFSongMenuView(DigiView):
             self.static.update_animation(delta_time)
 
     @shows_errors
-    @ignore_imgui
+    @disable_when_focus_lost(keyboard=True)
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         super().on_key_press(symbol, modifiers)
         if keymap.navup.pressed:
@@ -132,12 +132,12 @@ class FNFSongMenuView(DigiView):
             self.window.save_atlas("hmmmmm.png")
 
     @shows_errors
-    @ignore_imgui
+    @disable_when_focus_lost(mouse=True)
     def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int) -> None:
         self.nav(scroll_y)
 
     @shows_errors
-    @ignore_imgui
+    @disable_when_focus_lost(mouse=True)
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int) -> None:
         self.start()
 
