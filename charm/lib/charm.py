@@ -92,13 +92,14 @@ class GumWrapperNew(Component):
         self._logo_texture = Texture(img_from_path(files(charm.data.images) / "small-logo.png"))
         self._logo_buffer = 20, 16
         self._logo_size = self._logo_texture.width + self._logo_buffer[0], self._logo_texture.height + self._logo_buffer[1]
+        self._loops_per_sec = 0.25
 
         self._wrapper_sprites: SpriteList = SpriteList()
         self._wrapper_sprites.alpha = 128
         self._wrapper_sprites.extend(
             (
                 Sprite(self._logo_texture, center_x=self._logo_size[0] * 0.5, center_y=self._logo_size[1] * 0.5),
-                Sprite(self._logo_texture, center_x=self._logo_size[0] * 1.5, center_y=self._logo_size[1] * 0.5),
+                Sprite(self._logo_texture, center_x=self._logo_size[0] * -0.5, center_y=self._logo_size[1] * 0.5),
                 Sprite(self._logo_texture, center_x=self._logo_size[0] * 0.5, center_y=self._logo_size[1] * 1.5),
                 Sprite(self._logo_texture, center_x=self._logo_size[0] * 1.5, center_y=self._logo_size[1] * 1.5),
             )
@@ -116,12 +117,24 @@ class GumWrapperNew(Component):
         self._wrapper_target: gl.Framebuffer = win.ctx.framebuffer(color_attachments=[self._wrapper_texture])
 
         self._final_render_geometry: gl.Geometry = gl.geometry.quad_2d_fs()
+        with self._wrapper_target.activate() as fbo:
+            fbo.clear()
+            self._win.default_camera.use()
+            self._wrapper_sprites.draw()
+        from PIL.Image import frombytes
+        img = frombytes('RGBA', (self._logo_size[0], self._logo_size[1]*2), data=self._wrapper_texture.read())
+        img.save('debug/test.png')
 
     def on_resize(self, width: int, height: int) -> None:
         pass
 
     def on_update(self, delta_time: float) -> None:
-        pass
+        v = delta_time * self._logo_size[0] * self._loops_per_sec
+        a, b, c, d = self._wrapper_sprites
+        a.center_x = (a.center_x + v - self._logo_size[0]/2.0) % self._logo_size[0] + self._logo_size[0]/2.0
+        b.center_x = a.center_x - self._logo_size[0]
+        c.center_x = (c.center_x - v + self._logo_size[0]/2.0) % self._logo_size[0] - self._logo_size[0]/2.0
+        d.center_x = (c.center_x + self._logo_size[0])
 
     def draw(self) -> None:
         with self._wrapper_target.activate() as fbo:
@@ -129,6 +142,9 @@ class GumWrapperNew(Component):
             self._win.default_camera.use()
             self._wrapper_sprites.draw()
         with self._win.ctx.enabled(self._win.ctx.BLEND):
+            s_pos = self._win.get_location()
+            self._wrapper_shader['offset'] = s_pos[0] - self._screen_origin[0], self._screen_origin[1] - s_pos[1]
+            self._win.ctx.blend_func = self._win.ctx.BLEND_PREMULTIPLIED_ALPHA  # TODO: this is a rough patch correct it
             self._win.default_camera.use()
             self._wrapper_texture.use()
             self._final_render_geometry.render(self._wrapper_shader)
