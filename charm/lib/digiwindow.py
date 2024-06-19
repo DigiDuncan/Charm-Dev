@@ -18,6 +18,7 @@ from charm.views.title import TitleView
 
 logger = logging.getLogger("charm")
 
+
 class DigiWindow(Window):
     def __init__(self, size: tuple[int, int], title: str, fps_cap: int):
         super().__init__(*size, title, update_rate=1 / fps_cap, enable_polling=True, resizable=True)
@@ -63,3 +64,6 @@ class DigiWindow(Window):
 
     def current_view(self) -> DigiView | None: # pyright: ignore [reportIncompatibleMethodOverride]
         return cast("DigiView | None", super().current_view)
+
+    def on_move(self, x, y):
+        self.draw(0.0)

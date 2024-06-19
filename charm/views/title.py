@@ -36,7 +36,7 @@ class TitleView(DigiView):
         self.goto_switch_time: float | None
         self.fade_volume: float | None
         self.components.register(GumWrapperNew())
-        self.components.register(GumWrapper(size=self.size))
+        # self.components.register(GumWrapper(size=self.size))  # Old GumWrapper
         # Set up main logo
         self.components.register(LogoSprite(self.window))
         self.splash_label = self.components.register(self.generate_splash())
@@ -243,8 +243,8 @@ class WelcomeLabel(Text, Component):
     def draw(self) -> None:
         content_left = self.x - self.content_width // 2
         arcade.draw_polygon_filled([
-            (content_left -  0,                      self.content_height + 10),
-            (content_left + self.content_width -  0, self.content_height + 10),
+            (content_left - 0,                      self.content_height + 10),
+            (content_left + self.content_width - 0, self.content_height + 10),
             (content_left + self.content_width + 20, 0),
             (content_left - 20,                      0)
         ], CharmColors.FADED_PURPLE)
