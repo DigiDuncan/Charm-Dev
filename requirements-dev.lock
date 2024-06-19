@@ -14,7 +14,7 @@ addict==2.4.0
 appdirs==1.4.4
     # via charm
     # via fs
-arcade @ git+https://github.com/pythonarcade/arcade@204e4f6c52edfd44f35150a0afa1df750d1e4f5e
+arcade @ git+https://github.com/pythonarcade/arcade@58bde7e2f7880bf8bc0d799b928ce9b1c8a8b900
     # via charm
 arcade-accelerate==1.0.1
     # via charm
@@ -84,6 +84,8 @@ pyogg==0.6.14a1
     # via charm
 pyopengl==3.1.7
     # via imgui-bundle
+pyperclip==1.8.2
+    # via charm
 pypresence==4.2.1
     # via charm
 pysubs2==1.6.0

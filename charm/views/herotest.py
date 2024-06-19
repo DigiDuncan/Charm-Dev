@@ -5,7 +5,7 @@ from arcade import Text, color as colors
 from pyglet.graphics import Batch
 
 from charm.lib.charm import GumWrapper
-from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
+from charm.lib.digiview import DigiView, disable_when_focus_lost, shows_errors
 from charm.lib.gamemodes.hero import HeroEngine, HeroHighway, HeroSong, SectionEvent
 from charm.lib.keymap import keymap
 from charm.lib.oggsound import OGGSound
@@ -57,7 +57,7 @@ class HeroTestView(DigiView):
         self.song = arcade.play_sound(self._song, 0.25, loop=False)
 
     @shows_errors
-    @ignore_imgui
+    @disable_when_focus_lost(keyboard=True)
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         super().on_key_press(symbol, modifiers)
         if keymap.back.pressed:

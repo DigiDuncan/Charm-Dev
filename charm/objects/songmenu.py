@@ -98,7 +98,6 @@ class SongMenuItem(Sprite):
                     )
 
 
-
 class SongMenu:
     def __init__(self, songs: Iterable[Metadata] = (), radius: int = 4, buffer: int = 5, move_speed: float = 0.2) -> None:
         self.items = [SongMenuItem(song) for song in songs]

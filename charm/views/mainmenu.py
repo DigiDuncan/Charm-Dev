@@ -3,7 +3,7 @@ from arcade import color as colors, MOUSE_BUTTON_LEFT
 
 from charm.lib.anim import ease_quartout, perc
 from charm.lib.charm import GumWrapper
-from charm.lib.digiview import DigiView, ignore_imgui, shows_errors
+from charm.lib.digiview import DigiView, disable_when_focus_lost, shows_errors
 from charm.lib.errors import TestError
 from charm.lib.keymap import keymap
 from charm.objects.menu import MainMenu, MainMenuItem
@@ -48,7 +48,7 @@ class MainMenuView(DigiView):
         super().postsetup()
 
     @shows_errors
-    @ignore_imgui
+    @disable_when_focus_lost(keyboard=True)
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         super().on_key_press(symbol, modifiers)
         if keymap.navright.pressed:
@@ -69,13 +69,13 @@ class MainMenuView(DigiView):
             raise TestError("F24, let's go!")
 
     @shows_errors
-    @ignore_imgui
+    @disable_when_focus_lost(mouse=True)
     def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int) -> None:
         self.menu.selected_id += int(scroll_y)
         self.sfx.select.play()
 
     @shows_errors
-    @ignore_imgui
+    @disable_when_focus_lost(mouse=True)
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int) -> None:
         if button == MOUSE_BUTTON_LEFT:
             clicked_item = self.menu.get_item_at(x, y)

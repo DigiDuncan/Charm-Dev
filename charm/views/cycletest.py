@@ -10,7 +10,7 @@ from pyglet.graphics import Batch
 import charm.data.images
 from charm.lib.anim import EasingFunction, ease_linear, ease_quadinout
 from charm.lib.charm import GumWrapper
-from charm.lib.digiview import DigiView, shows_errors, ignore_imgui
+from charm.lib.digiview import DigiView, shows_errors, disable_when_focus_lost
 from charm.lib.types import Seconds
 from charm.lib.utils import clamp
 from charm.lib.keymap import keymap
@@ -337,7 +337,7 @@ class CycleTestView(DigiView):
         self.window.theme_song.volume = 0
 
     @shows_errors
-    @ignore_imgui
+    @disable_when_focus_lost(keyboard=True)
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         super().on_key_press(symbol, modifiers)
         if keymap.back.pressed:
@@ -348,7 +348,7 @@ class CycleTestView(DigiView):
             self.navdown()
 
     @shows_errors
-    @ignore_imgui
+    @disable_when_focus_lost(keyboard=True)
     def on_key_release(self, symbol: int, modifiers: int) -> None:
         super().on_key_release(symbol, modifiers)
         if keymap.navup.released:
@@ -361,7 +361,7 @@ class CycleTestView(DigiView):
         self.cycler.on_resize(width, height)
 
     @shows_errors
-    @ignore_imgui
+    @disable_when_focus_lost(mouse=True)
     def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int) -> None:
         # the scroll_y is negative because we are going from top down.
         self.cycler.speed_scroll(-scroll_y)

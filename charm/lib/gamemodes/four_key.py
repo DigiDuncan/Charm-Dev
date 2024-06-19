@@ -359,6 +359,40 @@ class FourKeyHighway(Highway):
 
         self._next_sustain = next(self._sustain_generator, None)
 
+        # Temporary integration of a note pool
+        self._note_generator = (note for note in self.notes if note.type != 'sustain')
+        self._note_pool: Pool[Sprite] = Pool(
+            list(Sprite(center_x=-1000.0, center_y=-1000.0) for _ in range(1000))
+        )
+        self._note_sprites = SpriteList()
+        self._note_sprites.extend(self._note_pool.source)
+
+        self._lane_textures = {
+            0: load_note_texture(NoteType.NORMAL, 0, self.note_size),
+            1: load_note_texture(NoteType.NORMAL, 1, self.note_size),
+            2: load_note_texture(NoteType.NORMAL, 2, self.note_size),
+            3: load_note_texture(NoteType.NORMAL, 3, self.note_size)
+        }
+
+        self._next_note = next(self._note_generator, None)
+
+        self._sustain_generator = (note for note in self.notes if note.length)
+        self._sustain_pool: Pool[SustainNote] = Pool(
+            list(SustainNote(self.note_size) for _ in range(100))
+        )
+        self._sustain_sprites = SpriteList()
+        for sustain in self._sustain_pool.source:
+            self._sustain_sprites.extend(sustain.get_sprites())
+
+        self._sustain_textures = {
+            0: SustainTextureSet(load_note_texture('tail', 0, self.note_size), load_note_texture('body', 0, self.note_size), load_note_texture('cap', 0, self.note_size)),
+            1: SustainTextureSet(load_note_texture('tail', 1, self.note_size), load_note_texture('body', 1, self.note_size), load_note_texture('cap', 1, self.note_size)),
+            2: SustainTextureSet(load_note_texture('tail', 2, self.note_size), load_note_texture('body', 2, self.note_size), load_note_texture('cap', 2, self.note_size)),
+            3: SustainTextureSet(load_note_texture('tail', 3, self.note_size), load_note_texture('body', 3, self.note_size), load_note_texture('cap', 3, self.note_size))
+        }
+
+        self._next_sustain = next(self._sustain_generator, None)
+
         self.auto = auto
 
         self.bg_color = (0, 0, 0, 128)  # SKIN

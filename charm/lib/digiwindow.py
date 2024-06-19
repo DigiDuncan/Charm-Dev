@@ -11,7 +11,7 @@ import arcade
 from arcade import Window, Camera2D
 
 from charm.lib.sfxmanager import SfxManager
-from charm.lib.debug_menu import DebugMenu
+from charm.lib.debug import DebugMenu
 from charm.lib.presencemanager import PresenceManager
 from charm.lib.themesong import ThemeSong
 from charm.views.title import TitleView
