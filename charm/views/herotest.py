@@ -45,7 +45,7 @@ class HeroTestView(DigiView):
         self.multiplier_text = Text("x1", self.window.width - 5, 95, colors.BLACK, 16, anchor_x = "right", font_name = "bananaslip plus", width=self.window.width, batch = self.text_batch)
 
         self.lyric_animator = None
-        if self.hero_song.lyrics:
+        if self.hero_song.lyrics and False:
             self.lyric_animator = LyricAnimator(self.window.center_x, self.window.height - 100, self.hero_song.lyrics)
             self.lyric_animator.prerender()
 

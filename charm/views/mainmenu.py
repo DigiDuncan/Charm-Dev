@@ -14,7 +14,6 @@ from charm.views.fourkeysongmenu import FourKeySongMenuView
 from charm.views.herotest import HeroTestView
 from charm.views.newmenu import NewMenuView
 from charm.views.parallaxtest import ParallaxTestView
-from charm.views.perspectivetest import PerspectiveTestView
 from charm.views.spritetest import SpriteTestView
 from charm.views.taikosongtest import TaikoSongTestView
 from charm.views.visualizer import VisualizerView
@@ -36,7 +35,6 @@ class MainMenuView(DigiView):
             MainMenuItem("Sprite Test", "test", SpriteTestView(back=self)),
             MainMenuItem("Parallax Test", "test", ParallaxTestView(back=self)),
             MainMenuItem("Hero Test", "test", HeroTestView(back=self)),
-            MainMenuItem("Perspective Test", "test", PerspectiveTestView(back=self)),
             MainMenuItem("Taiko Test", "test", TaikoSongTestView(back=self)),
             MainMenuItem("Scott Test", "test", VisualizerView(back=self))
         ])

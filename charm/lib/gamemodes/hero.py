@@ -3,7 +3,7 @@ from __future__ import annotations
 from importlib.resources import files
 from collections import defaultdict
 from functools import cache
-from typing import Literal, cast, TypedDict
+from typing import Literal, cast, TypedDict, Generator, Any, NamedTuple
 from dataclasses import dataclass
 from pathlib import Path
 import configparser
@@ -30,6 +30,7 @@ from charm.lib.keymap import Action, keymap
 from charm.lib.spritebucket import SpriteBucketCollection
 from charm.lib.utils import img_from_path, nuke_smart_quotes
 from charm.objects.lyric_animator import LyricEvent
+from charm.lib.pool import Pool
 
 from charm.objects.line_renderer import LongNoteRenderer, NoteStruckState
 import charm.data.images.skins as skins
@@ -686,6 +687,8 @@ class HeroNoteSprite(Sprite):
             self.alpha = 0
 
 
+# TODO: Remove redundant LongNoteRenderer code as it has been depreciated
+
 class HeroLongNoteSprites(LongNoteRenderer):
     def __init__(self, note: HeroNote, highway: "HeroHighway", height=128, *args, **kwargs):
         cap_texture = load_note_texture('cap', note.lane, 64)
@@ -709,6 +712,104 @@ class HeroLongNoteSprites(LongNoteRenderer):
 
     def update_animation(self, delta_time: float) -> None:
         raise NotImplementedError("Currently Long Notes don't support animations")
+
+
+# TODO: Merge this with the nearly identical code in four_key.py
+
+class NoteSprite(Sprite):
+
+    def __init__(self, x: float, y: float):
+        super().__init__(center_x=x, center_y=y)
+        self.note = None
+
+
+class SustainTextureSet(NamedTuple):
+    tail_primary: Texture
+    body_primary: Texture
+    cap_primary: Texture
+    tail_miss: Texture = None
+    body_miss: Texture = None
+    cap_miss: Texture = None
+    tail_hit: Texture = None
+    body_hit: Texture = None
+    cap_hit: Texture = None
+
+
+class SustainNote:
+
+    def __init__(self, size, tail_spacing: float = 0.0, down_scrolling: bool = False):
+        self.size = size
+        self.down_scrolling: bool = down_scrolling
+
+        self._cap: Sprite = Sprite(center_x=-1000)
+        self._body: Sprite = Sprite(center_x=-1000)
+        self._tail: Sprite = Sprite(center_x=-1000)
+
+        self._tail_spacing: float = tail_spacing
+        self._body_offset: float = 0.0
+        self._cap_offset: float = 0.0
+
+        self.note: Note = None
+        self._textures: SustainTextureSet = None
+
+        self.hide()
+
+    def get_sprites(self):
+        return self._cap, self._body, self._tail
+
+    def place(self, note: Note, x, y, length, textures):
+        self.note = note
+        self._textures = textures
+        self.update_texture()
+
+        body_size = length - textures.cap_primary.height - self._tail_spacing
+        self._body_offset = body_size / 2.0 + self._tail_spacing
+        self._cap_offset = length - textures.cap_primary.height / 2.0
+
+        if self.down_scrolling:
+            self._body_offset *= -1
+            self._cap_offset *= -1
+
+        self._tail.position = x, y
+        self._body.position = x, y - self._body_offset
+        self._body.height = body_size
+        self._cap.position = x, y - self._cap_offset
+
+        self.show()
+
+    def set_y(self, y):
+        self._tail.center_y = y
+        self._body.center_y = y - self._body_offset
+        self._cap.center_y = y - self._cap_offset
+
+    def show(self):
+        self._cap.visible = True
+        self._body.visible = True
+        self._tail.visible = True
+
+    def hide(self):
+        self._cap.visible = False
+        self._body.visible = False
+        self._tail.visible = False
+
+    def update_texture(self):
+        if not self.note or not self._textures:
+            return
+
+        t = self._textures
+
+        if self.note.missed:
+            self._tail.texture = t.tail_miss or t.tail_primary
+            self._body.texture = t.body_miss or t.body_primary
+            self._cap.texture = t.cap_miss or t.cap_primary
+        elif self.note.hit:
+            self._tail.texture = t.tail_hit or t.tail_primary
+            self._body.texture = t.body_hit or t.body_primary
+            self._cap.texture = t.cap_hit or t.cap_primary
+        else:
+            self._tail.texture = t.tail_primary
+            self._body.texture = t.body_primary
+            self._cap.texture = t.cap_primary
 
 
 class HeroHighway(Highway):
@@ -745,34 +846,69 @@ class HeroHighway(Highway):
 
         self.viewport = 0.75  # TODO: Set dynamically.
 
+        # NOTE POOL DEFINITION AND CONSTRUCTION
+
+        # Generators are great for ease, but it means we can't really 'scrub' backwards through the song
+        # So this is a patch job at best.
+        self._note_generator: Generator[Note, Any, None] = (note for note in self.notes)
+
+        self._note_pool: Pool[NoteSprite] = Pool(
+            list(NoteSprite(x=-1000.0, y=-1000.0) for _ in range(1000))
+        )
+        self._note_sprites: SpriteList[NoteSprite] = SpriteList(capacity=1024)
+        self._note_sprites.program = self.window.ctx.sprite_list_program_no_cull  # avoid orthographic culling
+        self._note_sprites.extend(self._note_pool.source)
+
+        self._next_note: HeroNote = next(self._note_generator, None)
+
+        # SUSTAIN POOL DEFINITION AND CONSTRUCTION
+
+        # Generators are great for ease, but it means we can't really 'scrub' backwards through the song
+        # So this is a patch job at best.
+        self._sustain_generator: Generator[Note, Any, None] = (note for note in self.notes if note.length)
+
+        self._sustain_pool: Pool[SustainNote] = Pool(
+            list(SustainNote(self.note_size, self.note_size/2.0, True) for _ in range(100))
+        )
+        self._sustain_sprites: SpriteList[Sprite] = SpriteList()
+        self._sustain_sprites.program = self.window.ctx.sprite_list_program_no_cull  # avoid orthographic culling
+        for sustain in self._sustain_pool.source:
+            self._sustain_sprites.extend(sustain.get_sprites())
+
+        _missed_tail = load_note_texture('tail', 5, self.note_size)
+        _missed_body = load_note_texture('body', 5, self.note_size)
+        _missed_cap = load_note_texture('cap', 5, self.note_size // 2)
+
+        self._sustain_textures = {
+            0: SustainTextureSet(load_note_texture('tail', 0, self.note_size),
+                                 load_note_texture('body', 0, self.note_size),
+                                 load_note_texture('cap', 0, self.note_size // 2),
+                                 _missed_tail, _missed_body, _missed_cap),
+            1: SustainTextureSet(load_note_texture('tail', 1, self.note_size),
+                                 load_note_texture('body', 1, self.note_size),
+                                 load_note_texture('cap', 1, self.note_size // 2),
+                                 _missed_tail, _missed_body, _missed_cap),
+            2: SustainTextureSet(load_note_texture('tail', 2, self.note_size),
+                                 load_note_texture('body', 2, self.note_size),
+                                 load_note_texture('cap', 2, self.note_size // 2),
+                                 _missed_tail, _missed_body, _missed_cap),
+            3: SustainTextureSet(load_note_texture('tail', 3, self.note_size),
+                                 load_note_texture('body', 3, self.note_size),
+                                 load_note_texture('cap', 3, self.note_size // 2),
+                                 _missed_tail, _missed_body, _missed_cap),
+            4: SustainTextureSet(load_note_texture('tail', 4, self.note_size),
+                                 load_note_texture('body', 4, self.note_size),
+                                 load_note_texture('cap', 4, self.note_size // 2),
+                                 _missed_tail, _missed_body, _missed_cap)
+        }
+
+        self._next_sustain = next(self._sustain_generator, None)
+
         self.auto = auto
 
         self._show_flags = show_flags
 
         self.color = (0, 0, 0, 128)  # TODO: eventually this will be a scrolling image.
-
-        self.note_sprites: list[HeroNoteSprite] = []
-        self.sprite_buckets = SpriteBucketCollection()
-        self.long_notes: list[HeroLongNoteSprites] = []
-        for note in self.notes:
-                sprite = HeroNoteSprite(note, self, self.note_size)
-                sprite.top = self.note_y(note.time)
-                sprite.left = self.lane_x(note.lane)
-                if note.lane in [5, 6]:  # flags
-                    sprite.left = self.lane_x(5)
-                    if self._show_flags is False:
-                        sprite.alpha = 0
-                elif note.lane == 7:  # open
-                    sprite.center_x = self.w / 2
-                note.sprite = sprite
-                self.sprite_buckets.append(sprite, note.time, note.length)
-                self.note_sprites.append(sprite)
-                # Add a trail
-                trail = None if note.length == 0 else HeroLongNoteSprites(note, self, self.px_per_s * note.length)
-                if trail is not None:
-                    self.long_notes.append(trail)
-                    for trail_sprite in trail.get_sprites():
-                        self.sprite_buckets.append(trail_sprite, note.time, note.length)
 
         self.strikeline = SpriteList()
         self.strikeline.program = self.strikeline.ctx.sprite_list_program_no_cull
@@ -786,49 +922,73 @@ class HeroHighway(Highway):
 
         self._last_strikeline_note: list[HeroNote] = [None] * 5
 
-        for spritelist in self.sprite_buckets.buckets:
-            spritelist.reverse()
-
         logger.debug(f"Generated highway for chart {chart.instrument}.")
 
-        # TODO: Replace with better pixel_offset calculation
+        # TODO: Replace with better pixel_offset calculation or remove entirely
         self.last_update_time = 0
         self._pixel_offset = 0
 
     def update(self, song_time: float) -> None:
         super().update(song_time)
-        self.sprite_buckets.update_animation(song_time)
-        # TODO: Replace with better pixel_offset calculation
-        delta_draw_time = self.song_time - self.last_update_time
-        self._pixel_offset += (self.px_per_s * delta_draw_time)
-        self.last_update_time = self.song_time
 
-        self.highway_camera.position = (self.window.center_x, self.window.center_y + self.pixel_offset)
-        self.perp_moving.view.position = (self.window.center_x, self.perp_y_pos + self.pixel_offset, self.perp_z_pos)
+        while self._next_note is not None and self._next_note.time <= (self.song_time + self.viewport) and self._note_pool.has_free_slot():
+            note = self._next_note
+            sprite = self._note_pool.get()
+            sprite.texture = load_note_texture(note.type, note.lane, self.note_size)
+            sprite.position = self.lane_x(note.lane) + sprite.width/2, self.note_y(note.time) - sprite.height/2.0
+            sprite.visible = True
+            sprite.note = note
 
-        if self.auto:
-            # while self.note_sprites[self.note_index].note.time < self.song_time - 0.050:
-            #     self.note_index += 1
-            # Fancy strikeline
-            i = self.chart.indexes_by_time["note"].lteq_index(self.song_time - 0.050) or 0
-            while True:
-                note_sprite = self.note_sprites[i]
-                if note_sprite.note.time > self.song_time + 0.050:
-                    break
-                if note_sprite.note.lane < 5:
-                    self._last_strikeline_note[note_sprite.note.lane] = note_sprite.note
-                if self.song_time > note_sprite.note.time:
-                    note_sprite.alpha = 0
-                i += 1
-            for n, note in enumerate(self._last_strikeline_note):
-                if note is None:
-                    self.strikeline[n].alpha = 64
-                else:
-                    self.strikeline[n].alpha = ease_linear(255, 64, perc(note.end, note.end + 0.25, self.song_time))
+            self._next_note = next(self._note_generator, None)
 
-        for long_note in self.long_notes:
-            if long_note.note.missed and long_note._note_state is not NoteStruckState.MISSED:
-                long_note.miss()
+        while self._next_sustain is not None and self._next_sustain.time <= (self.song_time + self.viewport) and self._sustain_pool.has_free_slot():
+            note = self._next_sustain
+            sustain = self._sustain_pool.get()
+            sustain.place(
+                note,
+                self.lane_x(self._next_sustain.lane) + sustain.size/2.0,
+                self.note_y(note.time) - sustain.size/2.0,
+                note.length * self.px_per_s,
+                self._sustain_textures[note.lane]
+            )
+
+            self._next_sustain = next(self._sustain_generator, None)
+
+        for sprite in self._note_pool.given_items:
+            sprite.center_y = self.note_y(sprite.note.time) - sprite.height/2.0
+            if sprite.note.hit or sprite.note.time <= (song_time - 0.1):
+                sprite.visible = False
+                self._note_pool.give(sprite)
+
+        for sustain in self._sustain_pool.given_items:
+            sustain.set_y(self.note_y(sustain.note.time) - sustain.size/2.0)
+            sustain.update_texture()
+            if sustain.note.end <= (song_time - 0.1):
+                sustain.hide()
+                self._sustain_pool.give(sustain)
+
+        # TODO: Remove auto features from Highway and Engine and use an auto-input instead
+
+        # if self.auto:
+        #     # while self.note_sprites[self.note_index].note.time < self.song_time - 0.050:
+        #     #     self.note_index += 1
+        #     # Fancy strikeline
+        #     i = self.chart.indexes_by_time["note"].lteq_index(self.song_time - 0.050) or 0
+        #     while True:
+        #         note_sprite = self.note_sprites[i]
+        #         if note_sprite.note.time > self.song_time + 0.050:
+        #             break
+        #         if note_sprite.note.lane < 5:
+        #             self._last_strikeline_note[note_sprite.note.lane] = note_sprite.note
+        #         if self.song_time > note_sprite.note.time:
+        #             note_sprite.alpha = 0
+        #         i += 1
+        #     for n, note in enumerate(self._last_strikeline_note):
+        #         if note is None:
+        #             self.strikeline[n].alpha = 64
+        #         else:
+        #             self.strikeline[n].alpha = ease_linear(255, 64, perc(note.end, note.end + 0.25, self.song_time))
+
 
     @property
     def pos(self) -> tuple[int, int]:
@@ -840,9 +1000,6 @@ class HeroHighway(Highway):
         diff_x = p[0] - old_pos[0]
         diff_y = p[1] - old_pos[1]
         self._pos = p
-        for bucket in self.sprite_buckets.buckets:
-            bucket.move(diff_x, diff_y)
-        self.sprite_buckets.overbucket.move(diff_x, diff_y)
         self.strikeline.move(diff_x, diff_y)
 
     @property
@@ -851,6 +1008,7 @@ class HeroHighway(Highway):
         return self._pixel_offset
 
     def draw(self) -> None:
+        self.window.ctx.blend_func = self.window.ctx.BLEND_DEFAULT
         with self.perp_static.activate():
             arcade.draw_lrbt_rectangle_filled(self.x, self.x + self.w,
                                               self.y, self.y + self.h,
@@ -863,14 +1021,8 @@ class HeroHighway(Highway):
 
             self.strikeline.draw()
 
-        with self.perp_moving.activate():
-            b = self.sprite_buckets.calc_bucket(self.song_time)
-            # TODO: unused, maybe unnecessary?
-            # for bucket in self.sprite_buckets.buckets[b:b + 2] + [self.sprite_buckets.overbucket]:
-            #     for note in bucket.sprite_list:
-            #         if isinstance(note, HeroLongNoteSprite):
-            #             note.draw_trail()
-            self.sprite_buckets.draw(self.song_time)
+            self._sustain_sprites.draw()
+            self._note_sprites.draw()
 
     def lane_x(self, lane_num: int) -> int:
         if lane_num == 7:  # tap note override
@@ -884,14 +1036,15 @@ class HeroHighway(Highway):
     @show_flags.setter
     def show_flags(self, v: bool) -> None:
         self._show_flags = v
-        if self._show_flags:
-            for sprite in self.sprite_buckets.sprites:
-                if sprite.note.lane in [5, 6]:
-                    sprite.alpha = 255
-        else:
-            for sprite in self.sprite_buckets.sprites:
-                if sprite.note.lane in [5, 6]:
-                    sprite.alpha = 0
+        # TODO: Remove? Unsure what this did
+        # if self._show_flags:
+        #     for sprite in self.sprite_buckets.sprites:
+        #         if sprite.note.lane in [5, 6]:
+        #             sprite.alpha = 255
+        # else:
+        #     for sprite in self.sprite_buckets.sprites:
+        #         if sprite.note.lane in [5, 6]:
+        #             sprite.alpha = 0
 
 
 @dataclass
@@ -910,7 +1063,6 @@ class StrumEvent(Event):
 FRET_ACTIONS = (keymap.hero.green, keymap.hero.red, keymap.hero.yellow, keymap.hero.blue, keymap.hero.orange)
 STRUM_ACTIONS = (keymap.hero.strumup, keymap.hero.strumdown)
 POWER_ACTIONS = (keymap.hero.power,)
-
 
 class HeroEngine(Engine):
     def __init__(self, chart: Chart, offset: Seconds = 0):
