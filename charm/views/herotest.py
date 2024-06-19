@@ -49,7 +49,7 @@ class HeroTestView(DigiView):
             self.lyric_animator = LyricAnimator(self.window.center_x, self.window.height - 100, self.hero_song.lyrics)
             self.lyric_animator.prerender()
 
-        self.gum_wrapper = GumWrapper(self.size)
+        self.gum_wrapper = GumWrapper()
         super().postsetup()
 
     def on_show_view(self) -> None:

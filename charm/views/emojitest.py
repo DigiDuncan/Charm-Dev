@@ -25,7 +25,7 @@ class EmojiTestView(DigiView):
             color = colors.BLACK,
             font_size = 48
         )
-        self.gum_wrapper = GumWrapper(self.size)
+        self.gum_wrapper = GumWrapper()
         super().postsetup()
 
     def on_show_view(self) -> None:

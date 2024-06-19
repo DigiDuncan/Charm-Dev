@@ -62,7 +62,7 @@ class DigiWindow(Window):
         atlas_path.parent.mkdir(parents=True, exist_ok=True)
         self.ctx.default_atlas.save(atlas_path)
 
-    def current_view(self) -> DigiView | None: # pyright: ignore [reportIncompatibleMethodOverride]
+    def current_view(self) -> DigiView | None:  # pyright: ignore [reportIncompatibleMethodOverride]
         return cast("DigiView | None", super().current_view)
 
     def on_move(self, x, y):

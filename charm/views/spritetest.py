@@ -39,7 +39,7 @@ class SpriteTestView(DigiView):
         self.fps = self.sprite.fps
         self.paused = False
 
-        self.gum_wrapper = GumWrapper(self.size)
+        self.gum_wrapper = GumWrapper()
         super().postsetup()
 
     def on_key_press(self, symbol: int, modifiers: int) -> None:

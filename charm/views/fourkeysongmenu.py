@@ -37,7 +37,7 @@ class FourKeySongMenuView(DigiView):
     @shows_errors
     def setup(self) -> None:
         super().presetup()
-        self.gum_wrapper = GumWrapper(self.size)
+        self.gum_wrapper = GumWrapper()
         self.songs = []
         rootdir = Path(songspath / "4k")
         dir_list = [d for d in rootdir.glob('**/*') if d.is_dir()]

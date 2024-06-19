@@ -911,6 +911,7 @@ FRET_ACTIONS = (keymap.hero.green, keymap.hero.red, keymap.hero.yellow, keymap.h
 STRUM_ACTIONS = (keymap.hero.strumup, keymap.hero.strumdown)
 POWER_ACTIONS = (keymap.hero.power,)
 
+
 class HeroEngine(Engine):
     def __init__(self, chart: Chart, offset: Seconds = 0):
         hit_window = 0.050  # 50ms +/-

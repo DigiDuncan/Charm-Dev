@@ -39,7 +39,7 @@ class FNFSongMenuView(DigiView):
         super().presetup()
 
         # Generate "gum wrapper" background
-        self.gum_wrapper = GumWrapper(self.size)
+        self.gum_wrapper = GumWrapper()
 
         self.setup_menu()
 

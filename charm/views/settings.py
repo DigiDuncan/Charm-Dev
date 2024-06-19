@@ -14,7 +14,7 @@ class SettingsView(DigiView):
     @shows_errors
     def setup(self) -> None:
         super().presetup()
-        self.gum_wrapper = GumWrapper(self.size)
+        self.gum_wrapper = GumWrapper()
         super().postsetup()
 
     def on_show_view(self) -> None:

@@ -60,7 +60,7 @@ class ResultsView(DigiView):
         # Save score
         ScoreDB(paths.scorespath).add_score(self.results.chart.hash, self.results)
 
-        self.gum_wrapper = GumWrapper(self.size)
+        self.gum_wrapper = GumWrapper()
         self.success = True
         super().postsetup()
 

@@ -330,7 +330,7 @@ class CycleTestView(DigiView):
             sprite_scale=0.4,
         )
         # Generate "gum wrapper" background
-        self.gum_wrapper = GumWrapper(self.size)
+        self.gum_wrapper = GumWrapper()
         super().postsetup()
 
     def on_show_view(self) -> None:

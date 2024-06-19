@@ -45,7 +45,7 @@ def load_missing_texture(height: int, width: int) -> Texture:
     return Texture(image)
 
 
-class GumWrapper(Component):
+class GumWrapperOld(Component):
     def __init__(self, size: tuple[int, int]):
         """Generate two SpriteLists that makes a gum wrapper-style background."""
         screen_w, screen_h = size
@@ -77,7 +77,7 @@ class GumWrapper(Component):
         self.logos_backward.draw()
 
 
-class GumWrapperNew(Component):
+class GumWrapper(Component):
 
     def __init__(self):
         """

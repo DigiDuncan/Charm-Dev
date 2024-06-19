@@ -24,7 +24,7 @@ class MainMenuView(DigiView):
     def __init__(self, back: DigiView):
         super().__init__(fade_in=1, back=back)
         # Generate "gum wrapper" background
-        self.gum_wrapper = GumWrapper(self.size)
+        self.gum_wrapper = GumWrapper()
         self.menu = MainMenu([
             MainMenuItem("Playlists", "playlists", None),
             MainMenuItem("FNF Songs", "songs", FNFSongMenuView(back=self)),

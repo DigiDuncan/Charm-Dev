@@ -84,7 +84,7 @@ class FourKeySongView(DigiView):
             self.modchart_processor = None
 
         # Generate "gum wrapper" background
-        self.gum_wrapper = GumWrapper(self.size)  # noqa: F821
+        self.gum_wrapper = GumWrapper()  # noqa: F821
 
         self.success = True
 

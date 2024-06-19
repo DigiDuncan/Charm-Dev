@@ -48,7 +48,7 @@ class PerspectiveTestView(DigiView):
         super().presetup()
 
         # Generate "gum wrapper" background
-        self.gum_wrapper = GumWrapper(self.size)
+        self.gum_wrapper = GumWrapper()
 
         super().postsetup()
 

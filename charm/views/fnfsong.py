@@ -107,7 +107,7 @@ class FNFSongView(DigiView):
 
         with LogSection(logger, "loading gum wrapper"):
             # Generate "gum wrapper" background
-            self.gum_wrapper = GumWrapper(self.size)
+            self.gum_wrapper = GumWrapper()
 
         with LogSection(logger, "loading judgements"):
             judgement_textures: list[Texture] = [j.get_texture() for j in self.engine.judgements]
