@@ -397,12 +397,10 @@ class FNFEngine(FourKeyEngine):
             if note.hit:
                 self.hp += 0.02
                 self.last_note_missed = False
-                note.parent.sprite.dead = False
             elif note.missed:
                 self.hp -= 0.05
                 logger.debug(f"HP lost (note missed, {note}), new HP {self.hp}")
                 self.last_note_missed = True
-                note.parent.sprite.dead = True
             return
 
         # Death notes set HP to minimum when hit

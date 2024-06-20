@@ -24,7 +24,6 @@ from charm.lib.generic.highway import Highway
 from charm.lib.generic.results import Results
 from charm.lib.generic.song import Note, Chart, Seconds, Song
 from charm.lib.keymap import keymap, Action
-from charm.lib.spritebucket import SpriteBucketCollection
 from charm.lib.utils import img_from_path, clamp
 from charm.lib.pool import Pool
 from charm.objects.line_renderer import NoteTrail
@@ -150,13 +149,7 @@ class FourKeyChart(Chart):
 
 
 class FourKeySong(Song[FourKeyChart]):
-    def __init__(self, path: Path):
-        """A generic four-key song. Don't use this raw, use a subclass instead."""
-        super().__init__(path)
-
-    @classmethod
-    def parse(cls, path: Path) -> FourKeySong:
-        raise NotImplementedError
+    pass
 
 
 class FourKeyNoteSprite(Sprite):
