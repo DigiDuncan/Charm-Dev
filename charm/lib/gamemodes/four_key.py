@@ -420,7 +420,7 @@ class FourKeyHighway(Highway):
 
         for sprite in self._note_pool.given_items:
             sprite.center_y = self.note_y(sprite.note.time) - sprite.height/2.0
-            if sprite.note.hit or sprite.note.time <= (song_time - 0.1):
+            if sprite.note.hit or sprite.note.end <= (song_time - 0.1):
                 sprite.visible = False
                 self._note_pool.give(sprite)
 
