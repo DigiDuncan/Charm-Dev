@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 import logging
 
 import arcade
-from arcade import Sprite, Text, Sound, color as colors
+from arcade import Sprite, SpriteList, Text, Sound, color as colors
 
 from charm.lib.anim import perc, ease_circout, lerp
 from charm.lib.charm import CharmColors, GumWrapper
@@ -34,6 +34,7 @@ class FNFSongView(DigiView):
         self.highway_1: FourKeyHighway = None
         self.highway_2: FourKeyHighway = None
         self.songdata: FNFSong = None
+        self.judgement_sprite_list: SpriteList = None # TODO: Once a `draw_sprite` method is released
         self.tracks: TrackCollection = None
         self.song_time_text: Text = None
         self.score_text: Text = None
@@ -110,15 +111,16 @@ class FNFSongView(DigiView):
             self.gum_wrapper = GumWrapper()
 
         with LogSection(logger, "loading judgements"):
+            self.judgement_sprite_list = SpriteList(capacity=1)
             judgement_textures: list[Texture] = [j.get_texture() for j in self.engine.judgements]
-            self.judgement_sprite = Sprite(judgement_textures[0])
-            self.judgement_sprite.textures = judgement_textures
-            self.judgement_sprite.scale = (self.highway_1.w * 0.8) / self.judgement_sprite.width
-            self.judgement_sprite.center_x = self.window.width / 2
-            self.judgement_sprite.center_y = self.window.height / 4
-            self.judgement_jump_pos = self.judgement_sprite.center_y + 25
-            self.judgement_land_pos = self.judgement_sprite.center_y
-            self.judgement_sprite.alpha = 0
+            self.judgement_sprite_list.append(Sprite(judgement_textures[0]))
+            self.judgement_sprite_list[0].textures = judgement_textures
+            self.judgement_sprite_list[0].scale = (self.highway_1.w * 0.8) / self.judgement_sprite_list[0].width
+            self.judgement_sprite_list[0].center_x = self.window.width / 2
+            self.judgement_sprite_list[0].center_y = self.window.height / 4
+            self.judgement_jump_pos = self.judgement_sprite_list[0].center_y + 25
+            self.judgement_land_pos = self.judgement_sprite_list[0].center_y
+            self.judgement_sprite_list[0].alpha = 0
 
         with LogSection(logger, "creating lyric animations"):
             if self.songdata.lyrics:
@@ -166,8 +168,8 @@ class FNFSongView(DigiView):
         self.grade_text.x = (self.window.center_x)
         self.pause_text.x = (self.window.center_x)
         self.dead_text.x = (self.window.center_x)
-        self.judgement_sprite.center_x = self.window.center_x
-        self.judgement_sprite.center_y = self.window.height / 4
+        self.judgement_sprite_list[0].center_x = self.window.center_x
+        self.judgement_sprite_list[0].center_y = self.window.height / 4
 
     def on_show_view(self) -> None:
         if not self.success:
@@ -209,7 +211,6 @@ class FNFSongView(DigiView):
         super().on_key_release(symbol, modifiers)
         if self.tracks.playing:
             self.engine.on_key_release(symbol, modifiers)
-
 
     def go_back(self) -> None:
         self.tracks.close()
@@ -257,9 +258,9 @@ class FNFSongView(DigiView):
         judgement_index = self.engine.judgements.index(self.engine.latest_judgement) if self.engine.latest_judgement else 0
         judgement_time = self.engine.latest_judgement_time
         if judgement_time:
-            self.judgement_sprite.center_y = ease_circout(self.judgement_jump_pos, self.judgement_land_pos, perc(judgement_time, judgement_time + 0.25, self.tracks.time))
-            self.judgement_sprite.alpha = int(ease_circout(255, 0, perc(judgement_time + 0.5, judgement_time + 1, self.tracks.time)))
-            self.judgement_sprite.set_texture(judgement_index)
+            self.judgement_sprite_list[0].center_y = ease_circout(self.judgement_jump_pos, self.judgement_land_pos, perc(judgement_time, judgement_time + 0.25, self.tracks.time))
+            self.judgement_sprite_list[0].alpha = int(ease_circout(255, 0, perc(judgement_time + 0.5, judgement_time + 1, self.tracks.time)))
+            self.judgement_sprite_list[0].set_texture(judgement_index)
 
         # FC type, etc.
         if self.engine.accuracy is not None:
@@ -342,7 +343,7 @@ class FNFSongView(DigiView):
             self.spotlight_draw()
 
         if not self.chroma_key:
-            self.judgement_sprite.draw()
+            self.judgement_sprite_list.draw()
 
         if self.lyric_animator and not self.chroma_key:
             self.lyric_animator.draw()

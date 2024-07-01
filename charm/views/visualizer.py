@@ -216,9 +216,11 @@ class VisualizerView(DigiView):
         # Camera zoom
         star_zoom = ease_quartout(1, 0.95, perc(self.last_beat, self.last_beat + self.beat_time, self.song.time))
         cam_zoom = ease_quartout(1.05, 1, perc(self.last_beat, self.last_beat + self.beat_time, self.song.time))
-        self.star_camera.scale = (star_zoom, star_zoom)
-        self.window.camera.scale = (1 / cam_zoom, 1 / cam_zoom)
+        self.star_camera.zoom = star_zoom
+        self.window.camera.zoom = cam_zoom
         # self.highway.highway_camera.scale = 1 / cam_zoom, 1 / cam_zoom
+
+        self.window.camera.use()  # TODO: Create Camera2D inside this view don't use the window's
 
         # Gradient
         self.gradient.draw()
@@ -257,4 +259,7 @@ class VisualizerView(DigiView):
         if self.chart_available:
             self.sprite_list.draw()
             self.highway.draw()
+
+        self.window.camera.zoom = 1.0
+        self.window.camera.use()
         super().postdraw()

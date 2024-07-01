@@ -375,8 +375,8 @@ class CycleTestView(DigiView):
     @shows_errors
     def on_draw(self) -> None:
         super().predraw()
-        self.cycler.draw()
         self.gum_wrapper.draw()
+        self.cycler.draw()
         super().postdraw()
 
     def navup(self) -> None:

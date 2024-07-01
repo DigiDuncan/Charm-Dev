@@ -1,13 +1,9 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from arcade import TextureAnimationSprite
-
 from importlib.resources import files, as_file
 import math
 
 import arcade
-from arcade import Sprite, Text, color as colors
+from arcade import Sprite, SpriteList, Text, color as colors
 
 import charm.data.images
 from charm.lib.anim import ease_quartout, perc
@@ -28,7 +24,8 @@ class FNFSongMenuView(DigiView):
         self.album_art_buffer = self.window.width // 20
         self.static_time = 0.25
         self.album_art: Sprite | None = None
-        self.static: TextureAnimationSprite | None = None
+        self.static: GIF | None = None
+        self.album_art_list: SpriteList | None = None
         self.score_text: Text | None = None
         self.nothing_text: Text | None = None
         self.menu: SongMenu | None = None
@@ -59,6 +56,8 @@ class FNFSongMenuView(DigiView):
         self.menu = menu
         self.selection_changed = 0
 
+        self.album_art_list = SpriteList(capacity=2)
+
         album_art = Sprite(menu.selected.album_art)
         album_art.right = self.size[0] - self.album_art_buffer
         album_art.original_bottom = self.size[1] // 2
@@ -71,6 +70,8 @@ class FNFSongMenuView(DigiView):
         static.original_bottom = self.size[1] // 2
         static.bottom = self.size[1] // 2
         self.static = static
+
+        self.album_art_list.extend((self.album_art, self.static))
 
         self.score_text = Text(
             "N/A",
@@ -177,9 +178,11 @@ class FNFSongMenuView(DigiView):
 
             self.menu.draw()
             if self.local_time < self.selection_changed + self.static_time:
-                self.static.draw()
+                self.static.visible = True
             else:
-                self.album_art.draw()
+                self.static.visible = False
+
+            self.album_art_list.draw()
             self.score_text.draw()
         elif self.nothing_text is not None:
             self.nothing_text.draw()

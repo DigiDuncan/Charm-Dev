@@ -940,6 +940,9 @@ class HeroHighway(Highway):
             sprite.note = note
 
             self._next_note = next(self._note_generator, None)
+            # Filters out the flags if they aren't supposed to be shown
+            while self._next_note and (self._next_note.lane in {5, 6}) and not self._show_flags:
+                self._next_note = next(self._note_generator, None)
 
         while self._next_sustain is not None and self._next_sustain.time <= (self.song_time + self.viewport) and self._sustain_pool.has_free_slot():
             note = self._next_sustain

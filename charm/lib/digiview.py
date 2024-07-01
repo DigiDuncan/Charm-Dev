@@ -153,7 +153,7 @@ class DigiView(View):
 
     def predraw(self) -> None:
         self.debug_timer.draw_start()
-        self.window.camera.use()
+        self.window.default_camera.use()
         self.clear()
 
     def on_draw(self) -> None:

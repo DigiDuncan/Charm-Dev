@@ -10,7 +10,7 @@ from importlib.resources import files
 import random
 
 import arcade
-from arcade import Text, Sprite, Texture, MOUSE_BUTTON_LEFT, color
+from arcade import Text, Sprite, SpriteList, Texture, MOUSE_BUTTON_LEFT, color
 from pyglet.text import Label
 
 import charm.data.audio
@@ -254,12 +254,15 @@ class WelcomeLabel(Text, Component):
         self.position = (width // 2, 6, 0)
 
 
+# TODO: make a sprite component
 class LogoSprite(Sprite, Component):
     def __init__(self, window: DigiWindow):
         self.window = window
         logo_img = img_from_path(files(charm.data.images) / "logo.png")
         logo_texture = Texture(logo_img)
         super().__init__(logo_texture, scale=0.3)
+        self.internal_sprite_list: SpriteList = SpriteList()
+        self.internal_sprite_list.append(self)
 
     def on_resize(self, width: int, height: int) -> None:
         self.center_x = width // 2
@@ -267,3 +270,9 @@ class LogoSprite(Sprite, Component):
 
     def on_update(self, delta_time: float = 1 / 60) -> None:
         self.scale = 0.3 + (self.window.theme_song.beat_factor * 0.025)
+
+    def draw(self):
+        self.internal_sprite_list.draw()
+
+
+

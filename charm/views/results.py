@@ -2,7 +2,7 @@ from importlib.resources import files, as_file
 import logging
 
 import arcade
-from arcade import Sprite, Text, Sound, color as colors
+from arcade import Sprite, SpriteList, Text, Sound, color as colors
 from pyglet.media import Player
 
 from charm.lib.charm import GumWrapper
@@ -23,6 +23,16 @@ class ResultsView(DigiView):
         super().__init__(fade_in=1, back=back)
         self.song: Player
         self.results = results
+
+        self.song_sound: Sound = None
+        self.grade_sprite: Sprite = None
+        self.score_text: Text = None
+        self.data_text: Text = None
+        self.judgements_text: Text = None
+        self.heatmap: Heatmap = None
+        self.gum_wrapper: GumWrapper = None
+        self.sprite_list: SpriteList = None
+        self.success: bool = False
 
     @shows_errors
     def setup(self) -> None:
@@ -60,6 +70,9 @@ class ResultsView(DigiView):
         # Save score
         ScoreDB(paths.scorespath).add_score(self.results.chart.hash, self.results)
 
+        self.sprite_list = SpriteList()
+        self.sprite_list.extend((self.grade_sprite, self.heatmap))
+
         self.gum_wrapper = GumWrapper()
         self.success = True
         super().postsetup()
@@ -90,10 +103,10 @@ class ResultsView(DigiView):
     @shows_errors
     def on_draw(self) -> None:
         super().predraw()
-        self.gum_wrapper.draw()
-        self.grade_sprite.draw()
-        self.score_text.draw()
-        self.data_text.draw()
-        self.judgements_text.draw()
-        self.heatmap.draw()
+        if self.success:
+            self.gum_wrapper.draw()
+            self.score_text.draw()
+            self.data_text.draw()
+            self.judgements_text.draw()
+            self.sprite_list.draw()
         super().postdraw()

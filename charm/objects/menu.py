@@ -130,7 +130,6 @@ class MainMenu:
     def on_update(self, delta_time: float) -> None:
         current = self.selected
         current.center_x = ease_circout(self.old_pos[current][0], self.window.width // 2, perc(self.move_start, self.move_end, self.local_time))
-        print(self.old_pos[current][1])
         current.scale = ease_circout(self.old_pos[current][1], Vec2(1.0, 1.0), perc(self.move_start, self.move_end, self.local_time))
         current.alpha = int(ease_circout(self.old_pos[current][2], 255, perc(self.move_start, self.move_end, self.local_time)))
         current.label.x = current.center_x
