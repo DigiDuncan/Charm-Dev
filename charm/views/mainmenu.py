@@ -17,6 +17,7 @@ from charm.views.parallaxtest import ParallaxTestView
 from charm.views.spritetest import SpriteTestView
 from charm.views.taikosongtest import TaikoSongTestView
 from charm.views.visualizer import VisualizerView
+from charm.views.uitest import UiView
 
 
 class MainMenuView(DigiView):
@@ -32,11 +33,12 @@ class MainMenuView(DigiView):
             MainMenuItem("Emoji Test", "test", EmojiTestView(back=self)),
             MainMenuItem("Menu Test", "test", NewMenuView(back=self)),
             MainMenuItem("Cycler Test", "test", CycleTestView(back=self)),
+            MainMenuItem("Ui Test", "test", UiView(back=self)),
             MainMenuItem("Sprite Test", "test", SpriteTestView(back=self)),
             MainMenuItem("Parallax Test", "test", ParallaxTestView(back=self)),
             MainMenuItem("Hero Test", "test", HeroTestView(back=self)),
             MainMenuItem("Taiko Test", "test", TaikoSongTestView(back=self)),
-            MainMenuItem("Scott Test", "test", VisualizerView(back=self))
+            MainMenuItem("Scott Test", "test", VisualizerView(back=self)),
         ])
 
     def setup(self) -> None:
