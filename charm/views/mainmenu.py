@@ -45,6 +45,14 @@ class MainMenuView(DigiView):
         self.load_countdown = None
         super().postsetup()
 
+    def on_hide_view(self) -> None:
+        if self.menu is not None:
+            self.menu.loading = False
+
+    def on_show_view(self) -> None:
+        if self.menu is not None:
+            self.menu.loading = False
+
     @shows_errors
     @disable_when_focus_lost(keyboard=True)
     def on_key_press(self, symbol: int, modifiers: int) -> None:
@@ -92,7 +100,6 @@ class MainMenuView(DigiView):
         super().on_update(delta_time)
         self.gum_wrapper.on_update(delta_time)
         self.menu.on_update(delta_time)
-        self.countdown()
 
     def countdown(self) -> None:
         if self.load_countdown is not None:
@@ -108,5 +115,7 @@ class MainMenuView(DigiView):
         self.gum_wrapper.draw()
         left = ease_quartout(self.size[0], 0, perc(0.5, 1.5, self.local_time))
         arcade.draw_lrbt_rectangle_filled(left, self.size[0], self.size[1] // 4, (self.size[1] // 4) * 3, colors.WHITE[:3] + (127,))
+
+        self.countdown()
         self.menu.draw()
         super().postdraw()

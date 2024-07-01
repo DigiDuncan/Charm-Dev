@@ -3,7 +3,7 @@ from collections.abc import Iterator
 
 from itertools import cycle
 
-from arcade import Text, color as colors
+from arcade import SpriteList, Text, color as colors
 
 from charm.lib.adobexml import Subtexture, sprite_from_adobe, AdobeSprite
 from charm.lib.charm import GumWrapper
@@ -14,13 +14,14 @@ from charm.lib.keymap import keymap
 class SpriteTestView(DigiView):
     def __init__(self, back: DigiView):
         super().__init__(fade_in=1, back=back)
-        self.sprite: AdobeSprite
-        self.anims: Iterator[str]
-        self.anim_label: Text
-        self.data_label: Text
+        self.sprite: AdobeSprite = None
+        self.anims: Iterator[str] = None
+        self.anim_label: Text = None
+        self.data_label: Text = None
         self.fps: int
         self.paused: bool
         self.gum_wrapper: GumWrapper
+        self.sprite_list: SpriteList = None
 
     def setup(self) -> None:
         super().presetup()
@@ -28,6 +29,8 @@ class SpriteTestView(DigiView):
         SPRITE_ANIM = "idle"
 
         self.sprite = sprite_from_adobe(SPRITE_NAME, ("bottom", "left"))
+        self.sprite_list = SpriteList()
+        self.sprite_list.append(self.sprite)
         self.sprite.fps = 24
         self.sprite.bottom = 0
         self.sprite.left = 0
@@ -101,7 +104,8 @@ class SpriteTestView(DigiView):
     def on_draw(self) -> None:
         super().predraw()
         self.gum_wrapper.draw()
-        self.sprite.draw()
-        self.anim_label.draw()
-        self.data_label.draw()
+        if self.sprite_list:
+            self.sprite_list.draw()
+            self.anim_label.draw()
+            self.data_label.draw()
         super().postdraw()

@@ -14,7 +14,7 @@ import PIL.Image
 import PIL.ImageDraw
 
 import arcade
-from arcade import Sprite, Texture, color as colors
+from arcade import Sprite, Texture, SpriteSheet, color as colors
 from arcade.hitbox import HitBox
 
 import charm.data.images.spritesheets
@@ -85,8 +85,8 @@ class Subtexture:
         frame_height = int(data["frameHeight"]) if "frameHeight" in data else None
         return cls(name, x, y, width, height, frame_x, frame_y, frame_width, frame_height, *offsets.get(name, (None, None)))
 
-    def load_texture(self, image_path: Path, *, debug: bool = False) -> Texture:
-        tx = arcade.load_texture(image_path, x = self.x, y = self.y, width = self.width, height = self.height)
+    def load_texture(self, sprite_sheet: SpriteSheet, *, debug: bool = False) -> Texture:
+        tx = sprite_sheet.get_texture(x=self.x, y=self.y, width=self.width, height=self.height)
         if self.frame_width is not None and self.frame_height is not None and self.frame_x is not None and self.frame_y is not None:
             # FIXME: I'm essentially abusing .load_texture() here.
             # I should probably be doing the cropping and caching myself,
@@ -161,8 +161,9 @@ class AdobeSprite(Sprite):
         super().__init__(image_width=ata.width, image_height=ata.height, hit_box_algorithm=None)
 
         self.texture_map = {st: n for n, st in enumerate(ata.subtextures)}
+        sprite_sheet = SpriteSheet(image_path)
         for st in ata.subtextures:
-            self.append_texture(st.load_texture(image_path, debug=debug))
+            self.append_texture(st.load_texture(sprite_sheet, debug=debug))
         self.set_texture(0)
 
         self.animations = {st.name for st in self.texture_map}

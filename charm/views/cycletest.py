@@ -268,8 +268,7 @@ class ListCycle:
 
             self.total_offset = self.easing_func(
                 self.start_offset, self.target_offset,
-                0.0, self.duration,
-                new_progress
+                new_progress / self.duration
             )
             self.trigger_layout()
 
@@ -376,8 +375,8 @@ class CycleTestView(DigiView):
     @shows_errors
     def on_draw(self) -> None:
         super().predraw()
-        self.cycler.draw()
         self.gum_wrapper.draw()
+        self.cycler.draw()
         super().postdraw()
 
     def navup(self) -> None:

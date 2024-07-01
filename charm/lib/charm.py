@@ -134,6 +134,8 @@ class GumWrapper(Component):
             fbo.clear()
             self._win.default_camera.use()
             self._wrapper_sprites.draw()
+
+        old_blend_function = self._win.ctx.blend_func
         with self._win.ctx.enabled(self._win.ctx.BLEND):
             s_pos = self._win.get_location()
             self._wrapper_shader['offset'] = s_pos[0] - self._screen_origin[0], self._screen_origin[1] - s_pos[1]
@@ -141,6 +143,7 @@ class GumWrapper(Component):
             self._win.default_camera.use()
             self._wrapper_texture.use()
             self._final_render_geometry.render(self._wrapper_shader)
+        self._win.ctx.blend_func = old_blend_function
 
 
 class SlidingSpriteList[T: BasicSprite](SpriteList[T]):

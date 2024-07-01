@@ -243,38 +243,36 @@ class TaikoHighway(Highway):
         return self._pixel_offset
 
     def draw(self):
-        _cam = arcade.get_window().current_camera
-        self.static_camera.use()
-        arcade.draw_lrbt_rectangle_filled(self.x, self.x + self.w,
-                                          self.y, self.y + self.h,
-                                          self.color)
-        arcade.draw_circle_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size, self.color)
+        with self.static_camera.activate():
+            arcade.draw_lrbt_rectangle_filled(self.x, self.x + self.w,
+                                              self.y, self.y + self.h,
+                                              self.color)
+            arcade.draw_circle_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size, self.color)
 
-        if self.auto and self.last_note_type and self.frames_visible <= 6:
-            # The 6 there is really hardcoded and this function is probably very slow because it does a ton of arcade.draw* calls
-            if self.last_note_type == NoteType.DON:
-                if self.last_note_big:
-                    arcade.draw_circle_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size * 0.75, colors.DEBIAN_RED)
-                elif self.last_side_right:
-                    arcade.draw_arc_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2 * 0.75, self.note_size * 2 * 0.75, colors.DEBIAN_RED, -90, 90)
-                else:
-                    arcade.draw_arc_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2 * 0.75, self.note_size * 2 * 0.75, colors.DEBIAN_RED, 90, 270)
-            elif self.last_note_type == NoteType.KAT:
-                if self.last_note_big:
-                    arcade.draw_circle_outline(self.strikeline_y, self.y + (self.h / 2), self.note_size, colors.BRIGHT_CERULEAN, 10)
-                elif self.last_side_right:
-                    arcade.draw_arc_outline(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2, self.note_size * 2, colors.BRIGHT_CERULEAN, -90, 90, 20)
-                else:
-                    arcade.draw_arc_outline(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2, self.note_size * 2, colors.BRIGHT_CERULEAN, 90, 270, 20)
-            self.frames_visible += 1
+            if self.auto and self.last_note_type and self.frames_visible <= 6:
+                # The 6 there is really hardcoded and this function is probably very slow because it does a ton of arcade.draw* calls
+                if self.last_note_type == NoteType.DON:
+                    if self.last_note_big:
+                        arcade.draw_circle_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size * 0.75, colors.DEBIAN_RED)
+                    elif self.last_side_right:
+                        arcade.draw_arc_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2 * 0.75, self.note_size * 2 * 0.75, colors.DEBIAN_RED, -90, 90)
+                    else:
+                        arcade.draw_arc_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2 * 0.75, self.note_size * 2 * 0.75, colors.DEBIAN_RED, 90, 270)
+                elif self.last_note_type == NoteType.KAT:
+                    if self.last_note_big:
+                        arcade.draw_circle_outline(self.strikeline_y, self.y + (self.h / 2), self.note_size, colors.BRIGHT_CERULEAN, 10)
+                    elif self.last_side_right:
+                        arcade.draw_arc_outline(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2, self.note_size * 2, colors.BRIGHT_CERULEAN, -90, 90, 20)
+                    else:
+                        arcade.draw_arc_outline(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2, self.note_size * 2, colors.BRIGHT_CERULEAN, 90, 270, 20)
+                self.frames_visible += 1
 
-        self.strikeline.draw()
+            self.strikeline.draw()
 
-        self.highway_camera.use()
-        b = self.sprite_buckets.calc_bucket(self.song_time)
-        for bucket in self.sprite_buckets.buckets[b:b + 2] + [self.sprite_buckets.overbucket]:
-            for note in bucket.sprite_list:
-                if isinstance(note, TaikoLongNoteSprite) and note.note.time < self.song_time + self.viewport and note.note.end > self.song_time:
-                    note.draw_trail()
-        self.sprite_buckets.draw(self.song_time)
-        _cam.use()
+            self.highway_camera.use()
+            b = self.sprite_buckets.calc_bucket(self.song_time)
+            for bucket in self.sprite_buckets.buckets[b:b + 2] + [self.sprite_buckets.overbucket]:
+                for note in bucket.sprite_list:
+                    if isinstance(note, TaikoLongNoteSprite) and note.note.time < self.song_time + self.viewport and note.note.end > self.song_time:
+                        note.draw_trail()
+            self.sprite_buckets.draw(self.song_time)

@@ -51,7 +51,7 @@ class CharmError(Exception):
                 arcade.draw_lrbt_rectangle_filled(0, 500, 150, 200, colors.BRANDEIS_BLUE)
                 arcade.draw_text(self.title, 50, 165, font_size=24, bold=True, font_name="bananaslip plus")
                 arcade.draw_text(self.message, 5, 146, font_size=16, anchor_y="top", multiline=True, width=492, color=colors.BLACK, font_name="bananaslip plus")
-                arcade.draw_texture_rectangle(25, 175, 32, 32, _icon_tex)
+                arcade.draw_texture_rect(_icon_tex, arcade.LBWH(25, 175, 32, 32))
 
         return sprite
 
