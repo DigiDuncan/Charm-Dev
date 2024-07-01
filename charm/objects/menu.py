@@ -11,7 +11,7 @@ import math
 import PIL.Image
 import PIL.ImageOps
 import arcade
-from arcade import Sprite, SpriteList, Texture, Text, color as colors
+from arcade import Vec2, Sprite, SpriteList, Texture, Text, color as colors
 
 import charm.data.icons
 from charm.lib.anim import ease_circout, perc
@@ -130,7 +130,8 @@ class MainMenu:
     def on_update(self, delta_time: float) -> None:
         current = self.selected
         current.center_x = ease_circout(self.old_pos[current][0], self.window.width // 2, perc(self.move_start, self.move_end, self.local_time))
-        current.scale = ease_circout(self.old_pos[current][1], 1, perc(self.move_start, self.move_end, self.local_time))
+        print(self.old_pos[current][1])
+        current.scale = ease_circout(self.old_pos[current][1], Vec2(1.0, 1.0), perc(self.move_start, self.move_end, self.local_time))
         current.alpha = int(ease_circout(self.old_pos[current][2], 255, perc(self.move_start, self.move_end, self.local_time)))
         current.label.x = current.center_x
         current.label.y = current.bottom
@@ -144,7 +145,7 @@ class MainMenu:
                 continue
             rel_id = n - self.selected_id
             item.center_x = ease_circout(self.old_pos[item][0], current.center_x + (x_bumper * rel_id), perc(self.move_start, self.move_end, self.local_time))
-            item.scale = ease_circout(self.old_pos[item][1], 0.5, perc(self.move_start, self.move_end, self.local_time))
+            item.scale = ease_circout(self.old_pos[item][1], Vec2(0.5, 0.5), perc(self.move_start, self.move_end, self.local_time))
             item.alpha = int(ease_circout(self.old_pos[item][2], 127, perc(self.move_start, self.move_end, self.local_time)))
             item.label.x = item.center_x
             item.label.y = item.bottom

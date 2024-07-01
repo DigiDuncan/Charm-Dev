@@ -6,7 +6,7 @@ from random import randint
 import wave
 
 import arcade
-from arcade import XYWH, SpriteCircle, SpriteList, Text, TextureAtlas, Camera2D, Sound, color as colors
+from arcade import XYWH, SpriteCircle, SpriteList, Text, DefaultTextureAtlas, Camera2D, Sound, color as colors
 
 import numpy as np
 import nindex
@@ -116,7 +116,7 @@ class VisualizerView(DigiView):
             )
 
         with LogSection(logger, "loading sprites"):
-            self.scott_atlas = TextureAtlas((8192, 8192))
+            self.scott_atlas = DefaultTextureAtlas((8192, 8192))
             self.sprite_list = SpriteList(atlas = self.scott_atlas)
             self.sprite = sprite_from_adobe("scott", ("bottom", "left"))
             self.boyfriend = sprite_from_adobe("bfScott", ("bottom", "right"))
