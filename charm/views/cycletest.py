@@ -268,8 +268,7 @@ class ListCycle:
 
             self.total_offset = self.easing_func(
                 self.start_offset, self.target_offset,
-                0.0, self.duration,
-                new_progress
+                new_progress / self.duration
             )
             self.trigger_layout()
 
