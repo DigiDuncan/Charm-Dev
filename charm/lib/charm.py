@@ -88,13 +88,13 @@ class GumWrapper(Component):
         """
         self._win = win = get_window()
         self._screen_size = win.size
-        self._screen_origin = win.get_location()
         self._logo_texture = Texture(img_from_path(files(charm.data.images) / "small-logo.png"))
         self._logo_buffer = 20, 16
         self._logo_size = self._logo_texture.width + self._logo_buffer[0], self._logo_texture.height + self._logo_buffer[1]
         self._loops_per_sec = 0.25
 
         self._wrapper_sprites: SpriteList = SpriteList()
+        self._wrapper_sprites.blend = False
         self._wrapper_sprites.alpha = 128
         self._wrapper_sprites.extend(
             (
@@ -138,8 +138,8 @@ class GumWrapper(Component):
         old_blend_function = self._win.ctx.blend_func
         with self._win.ctx.enabled(self._win.ctx.BLEND):
             s_pos = self._win.get_location()
-            self._wrapper_shader['offset'] = s_pos[0] - self._screen_origin[0], self._screen_origin[1] - s_pos[1]
-            self._win.ctx.blend_func = self._win.ctx.BLEND_PREMULTIPLIED_ALPHA  # TODO: this is a rough patch correct it
+            self._wrapper_shader['offset'] = s_pos[0], -s_pos[1]-self._win.height
+            self._win.ctx.blend_func = self._win.ctx.BLEND_DEFAULT
             self._win.default_camera.use()
             self._wrapper_texture.use()
             self._final_render_geometry.render(self._wrapper_shader)
