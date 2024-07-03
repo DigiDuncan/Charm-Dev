@@ -182,7 +182,9 @@ class TaikoHighway(Highway):
         self.last_note_type = None
         self.last_note_big = False
         self.last_side_right = False
-        self.frames_visible = 0
+        self.last_hit_time = 0.0
+
+        self.visible_time = 0.1
 
     @property
     def strikeline_y(self):
@@ -220,7 +222,7 @@ class TaikoHighway(Highway):
                         self.last_note_type = note_sprite.note.type
                         self.last_note_big = note_sprite.note.large
                         self.last_side_right = not self.last_side_right
-                        self.frames_visible = 0
+                        self.last_hit_time = song_time
 
     @property
     def pos(self) -> tuple[int, int]:
@@ -249,7 +251,7 @@ class TaikoHighway(Highway):
                                               self.color)
             arcade.draw_circle_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size, self.color)
 
-            if self.auto and self.last_note_type and self.frames_visible <= 6:
+            if self.auto and self.last_note_type and self.song_time - self.last_hit_time <= self.visible_time:
                 # The 6 there is really hardcoded and this function is probably very slow because it does a ton of arcade.draw* calls
                 if self.last_note_type == NoteType.DON:
                     if self.last_note_big:
@@ -265,7 +267,6 @@ class TaikoHighway(Highway):
                         arcade.draw_arc_outline(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2, self.note_size * 2, colors.BRIGHT_CERULEAN, -90, 90, 20)
                     else:
                         arcade.draw_arc_outline(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2, self.note_size * 2, colors.BRIGHT_CERULEAN, 90, 270, 20)
-                self.frames_visible += 1
 
             self.strikeline.draw()
 
