@@ -32,8 +32,8 @@ class DigiWindow(Window):
 
         # Discord RP
         self.presence = PresenceManager()
-        self.presence.connect("1056710104348639305")
-        self.presence.set(":jiggycat:")
+        # self.presence.connect("1056710104348639305")
+        # self.presence.set(":jiggycat:")
 
         arcade.draw_text(" ", 0, 0)  # force font init (fixes lag on first text draw)
 
@@ -60,7 +60,7 @@ class DigiWindow(Window):
     def save_atlas(self, name: str = "atlas.png") -> None:
         atlas_path = Path("debug") / name
         atlas_path.parent.mkdir(parents=True, exist_ok=True)
-        self.ctx.default_atlas.save(atlas_path)
+        self.ctx.default_atlas.save(atlas_path, draw_borders=True, )
 
     def current_view(self) -> DigiView | None:  # pyright: ignore [reportIncompatibleMethodOverride]
         return cast("DigiView | None", super().current_view)

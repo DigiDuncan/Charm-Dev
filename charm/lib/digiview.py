@@ -15,7 +15,7 @@ import traceback
 
 import arcade
 from imgui_bundle import imgui
-from arcade import LBWH, LRBT, View
+from arcade import LBWH, LRBT, View, SpriteList
 
 from charm.lib.charm import CharmColors
 from charm.lib.components import ComponentManager
@@ -26,8 +26,9 @@ from charm.lib.sfxmanager import SfxManager
 
 logger = logging.getLogger("charm")
 
+
 def shows_errors[S: DigiView, **P](fn: Callable[Concatenate[S, P], None]) -> Callable[Concatenate[S, P], None]:
-    return fn # TODO: TEMPORARILY DISABLED FOR TESTING
+    # return fn # TODO: TEMPORARILY DISABLED FOR TESTING
     @functools.wraps(fn)
     def wrapper(self: S, *args: P.args, **kwargs: P.kwargs) -> None:
         try:
@@ -81,6 +82,7 @@ class DigiView(View):
         self.back = back
         self.shown = False
         self._errors: list[ErrorPopup] = []  # [error, seconds to show]
+        self._error_list: SpriteList = SpriteList()
         self.local_start: float = 0
         self.fader = Fader(self, fade_in)
         self.components = ComponentManager()
@@ -103,6 +105,7 @@ class DigiView(View):
         error.sprite.center_x += offset
         error.sprite.center_y += offset
         self._errors.append(ErrorPopup(error, self.local_time + 3))
+        self._error_list.append(error.sprite)
         self.sfx.error.play()
 
     def presetup(self) -> None:
@@ -147,7 +150,10 @@ class DigiView(View):
         super().on_key_release(symbol, modifiers)
 
     def on_update(self, delta_time: float) -> None:
-        self._errors = [popup for popup in self._errors if popup.expiry < self.local_time]
+        for popup in self._errors[:]:
+            if popup.expiry < self.local_time:
+                self._errors.remove(popup)
+                self._error_list.remove(popup.error.sprite)
         self.fader.on_update(delta_time)
         self.components.on_update(delta_time)
 
@@ -162,8 +168,7 @@ class DigiView(View):
 
     def postdraw(self) -> None:
         self.components.draw()
-        for popup in self._errors:
-            popup.error.sprite.draw()
+        self._error_list.draw()
         self.window.debug.draw()
         self.fader.on_draw()
         self.debug_timer.draw_end()
