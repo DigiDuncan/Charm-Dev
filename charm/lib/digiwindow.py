@@ -25,15 +25,14 @@ class DigiWindow(Window):
         self.sfx = SfxManager()
         self.fps_cap = fps_cap
         self.initial_view: DigiView = TitleView()
-        self.time = 0.0
 
         # Play music
         self.theme_song: ThemeSong = ThemeSong()
 
         # Discord RP
         self.presence = PresenceManager()
-        self.presence.connect("1056710104348639305")
-        self.presence.set(":jiggycat:")
+        # self.presence.connect("1056710104348639305")
+        # self.presence.set(":jiggycat:")
 
         arcade.draw_text(" ", 0, 0)  # force font init (fixes lag on first text draw)
 
@@ -48,7 +47,6 @@ class DigiWindow(Window):
         self.show_view(self.initial_view)
 
     def on_update(self, delta_time: float) -> None:
-        self.time += delta_time
         self.presence.on_update(delta_time)
         self.debug.on_update(delta_time)
         self.theme_song.on_update(delta_time)
