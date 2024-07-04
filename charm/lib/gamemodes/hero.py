@@ -721,7 +721,7 @@ class HeroHighway(Highway):
         # So this is a patch job at best.
         self._sustain_generator: Generator[Note, Any, None] = (note for note in self.notes if note.length)
 
-        self._sustain_pool: Pool[SustainSprites] = Pool([SustainSprites(self.note_size, self.note_size/2.0, True) for _ in range(100)])
+        self._sustain_pool: Pool[SustainSprites] = Pool([SustainSprites(self.note_size, self.note_size/2.0, downscroll=True) for _ in range(100)])
         self._sustain_sprites: SpriteList[Sprite] = SpriteList()
         self._sustain_sprites.program = self.window.ctx.sprite_list_program_no_cull  # avoid orthographic culling
         for sustain in self._sustain_pool.source:
@@ -856,6 +856,7 @@ class HeroHighway(Highway):
     def show_flags(self, v: bool) -> None:
         self._show_flags = v
 
+
 @dataclass
 class StrumEvent(Event):
     action: Action
@@ -872,6 +873,7 @@ class StrumEvent(Event):
 FRET_ACTIONS = (keymap.hero.green, keymap.hero.red, keymap.hero.yellow, keymap.hero.blue, keymap.hero.orange)
 STRUM_ACTIONS = (keymap.hero.strumup, keymap.hero.strumdown)
 POWER_ACTIONS = (keymap.hero.power,)
+
 
 class HeroEngine(Engine):
     def __init__(self, chart: Chart, offset: Seconds = 0):
