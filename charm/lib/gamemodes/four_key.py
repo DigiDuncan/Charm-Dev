@@ -225,6 +225,7 @@ class NoteSprite(Sprite):
         self.note = None
 
 
+# TODO make this a dict of str -> three tuple (named)
 class SustainTextureSet(NamedTuple):
     tail_primary: Texture
     body_primary: Texture
@@ -258,6 +259,7 @@ class SustainNote:
         return self._cap, self._body, self._tail
 
     def place(self, note: Note, x, y, length, textures):
+        # TODO: test assumption about texture sizes
         self.note = note
         self._textures = textures
         self.update_texture()
@@ -291,6 +293,7 @@ class SustainNote:
         self._tail.visible = False
 
     def update_texture(self):
+        # TODO: Update to work better with dictionaries / be overridden by game modes
         if not self.note or not self._textures:
             return
 
@@ -327,7 +330,7 @@ class FourKeyHighway(Highway):
         # So this is a patch job at best.
         self._note_generator = (note for note in self.notes if note.type != 'sustain')
 
-        self._note_pool: Pool[Sprite] = Pool(
+        self._note_pool: Pool[NoteSprite] = Pool(
             list(NoteSprite(x=-1000.0, y=-1000.0) for _ in range(1000))
         )
         self._note_sprites = SpriteList(capacity=1024)
@@ -348,7 +351,7 @@ class FourKeyHighway(Highway):
         self._sustain_pool: Pool[SustainNote] = Pool(
             list(SustainNote(self.note_size) for _ in range(100))
         )
-        self._sustain_sprites = SpriteList()
+        self._sustain_sprites = SpriteList(capacity=512)
         for sustain in self._sustain_pool.source:
             self._sustain_sprites.extend(sustain.get_sprites())
 
@@ -410,7 +413,9 @@ class FourKeyHighway(Highway):
             self._next_sustain = next(self._sustain_generator, None)
 
         for sprite in self._note_pool.given_items:
+            # TODO note_y and lane_x need to work of center not top left
             sprite.center_y = self.note_y(sprite.note.time) - sprite.height/2.0
+            sprite.center_x = self.lane_x(sprite.note.lane) + sprite.width/2.0
             if self.auto and sprite.note.time <= self.song_time:
                 sprite.note.hit = True
 
@@ -420,7 +425,7 @@ class FourKeyHighway(Highway):
 
         for sustain in self._sustain_pool.given_items:
             sustain.update_texture()
-            sustain.set_y(self.strikeline_y - sustain.size/2.0 - (sustain.note.time - song_time) * self.px_per_s)
+            sustain.set_y(self.note_y(sustain.note.time) - sustain.size/2.0)
             if sustain.note.end <= (song_time - 0.1):
                 sustain.hide()
                 self._sustain_pool.give(sustain)
