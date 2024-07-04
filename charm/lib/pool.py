@@ -16,7 +16,7 @@ the slowest part is getting the item's index, so we could speed it up with some 
 that adds complexity and memory that probably isn't worth it. Also using the idx methods exclude that step
 so if you need the speed that is the way to use the Pool.
 """
-from typing import Callable
+from collections.abc import Callable
 
 
 class Pool[T]:

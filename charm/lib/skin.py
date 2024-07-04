@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from copy import copy
 from pathlib import Path
-from typing import Any, TypeVar, cast
+from typing import Any, TypeVar
 
 from arcade import Sprite, Texture
 from addict import Addict

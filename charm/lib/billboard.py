@@ -3,7 +3,7 @@ Provides a Spritelist and Sprite subclass specifically for drawing the sprite's 
 the screen. The new Billboard works with any sprite type but the billboard sprite provides helper methods.
 """
 from typing import Optional
-from arcade import Sprite, SpriteList, get_window, TextureAtlas
+from arcade import Sprite, SpriteList, TextureAtlas
 
 
 class Billboard(Sprite):

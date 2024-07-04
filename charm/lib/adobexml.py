@@ -13,7 +13,6 @@ import xml.etree.ElementTree as ET
 import PIL.Image
 import PIL.ImageDraw
 
-import arcade
 from arcade import Sprite, Texture, SpriteSheet, color as colors
 from arcade.hitbox import HitBox
 

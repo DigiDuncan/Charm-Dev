@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 import arcade.key
 from arcade import Vec2, LRBT, color

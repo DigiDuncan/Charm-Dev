@@ -1,10 +1,8 @@
-from typing import cast
-
 from importlib.resources import files
 
 import PIL, PIL.Image, PIL.ImageDraw  # noqa: E401
 import arcade
-from arcade import LBWH, LRBT, Sprite, Texture, Camera2D, color as colors
+from arcade import Sprite, Texture, color as colors
 
 import charm.data.images.errors
 from charm.lib.utils import img_from_path
