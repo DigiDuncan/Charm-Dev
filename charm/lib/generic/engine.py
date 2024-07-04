@@ -1,5 +1,8 @@
 from __future__ import annotations
+import math
 from typing import TYPE_CHECKING, Literal
+
+from charm.lib.generic.song import Chart, Seconds
 if TYPE_CHECKING:
     from charm.lib.generic.results import Results
     from charm.lib.generic.song import Chart, Note, Seconds
@@ -78,16 +81,22 @@ class Engine:
         self.judgements = judgements or []
 
         self.chart_time: Seconds = 0
-        self.active_notes = self.chart.notes.copy()
+        self.current_notes = self.chart.notes.copy()
 
         # Scoring
         self.score: int = 0
         self.hits: int = 0
         self.misses: int = 0
 
+        # Streak
+        self.streak: int = 0
+        self.max_streak: int = 0
+
         # Accuracy
         self.max_notes = len(self.chart.notes)
         self.weighted_hit_notes: int = 0
+
+        self.keystate = (False,) * self.chart.lanes
 
     @property
     def accuracy(self) -> float | None:
@@ -136,6 +145,9 @@ class Engine:
     def on_key_release(self, symbol: int, modifiers: int) -> None:
         raise NotImplementedError
 
+    def calculate_score(self) -> None:
+        raise NotImplementedError
+
     def get_note_judgement(self, note: Note) -> Judgement:
         rt = abs(note.hit_time - note.time)
         # NOTE: This might not be the fast way to get the right judgement,
@@ -147,3 +159,43 @@ class Engine:
 
     def generate_results(self) -> Results:
         raise NotImplementedError
+
+
+class AutoEngine(Engine):
+    def __init__(self, chart: Chart, hit_window: Seconds, offset: float = 0):
+        super().__init__(chart, hit_window,
+                         [Judgement("Auto", "auto", chart.notes[-1].end, 0, 0),
+                          Judgement("Miss", "miss", float('inf'), 0, 0)],
+                         offset)
+
+    def calculate_score(self) -> None:
+        # Get all non-scored notes within the current window
+        for note in [n for n in self.current_notes if n.time <= self.chart_time + self.hit_window]:
+            # Missed notes (current time is higher than max allowed time for note)
+            # But Digi, that would never happen, this is the auto engine!
+            # Trueee, except of course if the game is lagging or there is a skip in the song or something.
+            # I think it's worth tracking that.
+            if self.chart_time > note.time + self.hit_window:
+                note.missed = True
+                note.hit_time = math.inf
+                self.score_note(note)
+                self.current_notes.remove(note)
+            # Hit every note
+            elif self.chart_time >= note.time:
+                note.hit = True
+                note.hit_time = note.time
+                self.score_note(note)
+                self.current_notes.remove(note)
+
+    def score_note(self, note: Note) -> None:
+        # Ignore notes we haven't done anything with yet
+        if not (note.hit or note.missed):
+            return
+
+        if note.hit:
+            self.hits += 1
+            self.streak += 1
+            self.max_streak = max(self.streak, self.max_streak)
+        elif note.missed:
+            self.misses += 1
+            self.streak = 0

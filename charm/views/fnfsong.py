@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from pathlib import Path
     from arcade import Texture
@@ -14,6 +15,7 @@ from charm.lib.charm import CharmColors, GumWrapper
 from charm.lib.digiview import DigiView, disable_when_focus_lost, shows_errors
 from charm.lib.gamemodes.fnf import CameraFocusEvent, FNFEngine, FNFSong
 from charm.lib.gamemodes.four_key import FourKeyHighway
+from charm.lib.generic.engine import AutoEngine
 from charm.lib.keymap import keymap
 from charm.lib.logsection import LogSection
 from charm.lib.oggsound import OGGSound
@@ -68,10 +70,11 @@ class FNFSongView(DigiView):
 
         with LogSection(logger, "loading engine"):
             self.engine = FNFEngine(self.songdata.charts[0])
+            self.player_2_engine = AutoEngine(self.songdata.charts[1], 0.166)
 
         with LogSection(logger, "loading highways"):
             self.highway_1 = FourKeyHighway(self.songdata.charts[0], self.engine, (self.window.width / 3 * 2, 0))
-            self.highway_2 = FourKeyHighway(self.songdata.charts[1], self.engine, (0, 0), auto = True)
+            self.highway_2 = FourKeyHighway(self.songdata.charts[1], self.player_2_engine, (0, 0))
 
             self.highway_1.bg_color = (0, 0, 0, 0)
             self.highway_2.bg_color = (0, 0, 0, 0)
@@ -246,8 +249,15 @@ class FNFSongView(DigiView):
 
         self.get_spotlight_position(self.tracks.time)
 
+        # Real player engine
         self.engine.update(self.tracks.time)
         self.engine.calculate_score()
+
+        # Fake player engine
+        self.player_2_engine.update(self.tracks.time)
+        self.player_2_engine.calculate_score()
+
+        # Update highways
         self.highway_1.update(self.tracks.time)
         self.highway_2.update(self.tracks.time)
 

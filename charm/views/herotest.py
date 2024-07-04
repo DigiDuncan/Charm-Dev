@@ -32,7 +32,7 @@ class HeroTestView(DigiView):
         self.hero_song = HeroSong.parse(songspath / "ch" / name)
         self.chart = self.hero_song.get_chart("Expert", "Single")
         self.engine = HeroEngine(self.chart)
-        self.highway = HeroHighway(self.chart, (0, 0), auto = False)
+        self.highway = HeroHighway(self.chart, (0, 0))
         self.highway.x += self.window.center_x - self.highway.w // 2
 
         self.text_batch = Batch()

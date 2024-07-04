@@ -171,8 +171,7 @@ class SustainTextureSet(NamedTuple):
 
 
 class FourKeyHighway(Highway):
-    def __init__(self, chart: FourKeyChart, engine: FourKeyEngine, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5,
-                 *, auto: bool = False):
+    def __init__(self, chart: FourKeyChart, engine: FourKeyEngine, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5):
         if size is None:
             self.window = arcade.get_window()
             size = int(self.window.width / (1280 / 400)), self.window.height
@@ -180,7 +179,7 @@ class FourKeyHighway(Highway):
         super().__init__(chart, pos, size, gap)
         self.engine = engine
 
-        self.viewport = 1.0  # TODO: BPM scaling?
+        self.viewport = 0.5  # TODO: BPM scaling?
 
         # NOTE POOL DEFINITION AND CONSTRUCTION
 
@@ -214,8 +213,6 @@ class FourKeyHighway(Highway):
         for i in range(4)}
 
         self._next_sustain = next(self._sustain_generator, None)
-
-        self.auto = auto
 
         self.bg_color = (0, 0, 0, 128)  # SKIN
         self.show_hit_window = False
@@ -270,8 +267,6 @@ class FourKeyHighway(Highway):
             # TODO note_y and lane_x need to work of center not top left
             sprite.center_y = self.note_y(sprite.note.time) - sprite.height/2.0
             sprite.center_x = self.lane_x(sprite.note.lane) + sprite.width/2.0
-            if self.auto and sprite.note.time <= self.song_time:
-                sprite.note.hit = True
 
             if sprite.note.hit or sprite.note.end <= (song_time - 0.1):
                 sprite.visible = False
@@ -292,8 +287,6 @@ class FourKeyHighway(Highway):
         self.update_strikeline()
 
     def update_strikeline(self) -> None:
-        if self.auto:
-            return
         if self.keystate == self.engine.keystate:
             return
         self.keystate = self.engine.keystate

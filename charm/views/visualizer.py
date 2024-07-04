@@ -12,13 +12,14 @@ import numpy as np
 import nindex
 
 import charm.data.audio
+from charm.lib.generic.engine import AutoEngine
 from charm.lib.keymap import keymap
 from charm.lib.adobexml import sprite_from_adobe
 from charm.lib.anim import ease_linear, ease_quartout, perc
 from charm.lib.digiview import DigiView, disable_when_focus_lost, shows_errors
 from charm.lib.logsection import LogSection
 from charm.lib.gamemodes.four_key import FourKeyHighway
-from charm.lib.gamemodes.fnf import FNFEngine, FNFNote, FNFSong
+from charm.lib.gamemodes.fnf import FNFNote, FNFSong
 from charm.lib.paths import songspath
 
 logger = logging.getLogger("charm")
@@ -83,8 +84,8 @@ class VisualizerView(DigiView):
                 enemy_chart = self.songdata.get_chart(2, self.songdata.charts[0].difficulty)
                 self.enemy_chart = nindex.Index(enemy_chart.notes, "time")
             with LogSection(logger, "generating highway"):
-                self.engine = FNFEngine(self.songdata.charts[0])
-                self.highway = FourKeyHighway(self.songdata.charts[0], self.engine, (((self.window.width // 3) * 2), 0), auto = True)
+                self.engine = AutoEngine(self.songdata.charts[0], 0.166)
+                self.highway = FourKeyHighway(self.songdata.charts[0], self.engine, (((self.window.width // 3) * 2), 0))
                 self.highway.bg_color = (0, 0, 0, 0)
 
         # Create background stars
@@ -96,7 +97,7 @@ class VisualizerView(DigiView):
             star_height = self.window.height + int(self._song.source.duration * self.scroll_speed)
             star_amount = int(stars_per_screen * (star_height / self.window.height))
             logger.info(f"Generating {star_amount} stars...")
-            for i in range(star_amount):
+            for _ in range(star_amount):
                 sprite = SpriteCircle(5, colors.WHITE, True)
                 sprite.center_x = randint(0, self.window.width)
                 sprite.center_y = randint(-(star_height - self.window.height), self.window.height)
@@ -188,6 +189,7 @@ class VisualizerView(DigiView):
 
         self.sprite.update_animation(delta_time)
         self.boyfriend.update_animation(delta_time)
+        self.engine.update(self.song.time)
         self.highway.update(self.song.time)
 
     @shows_errors
