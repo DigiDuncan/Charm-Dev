@@ -336,7 +336,7 @@ class FNFSong(Song[FNFChart]):
 
 
 class FNFEngine(FourKeyEngine):
-    def __init__(self, chart: FNFChart, offset: Seconds = -0.075):  # FNF defaults to a 75ms input offset. >:(
+    def __init__(self, chart: FNFChart, offset: Seconds = 0):
         hit_window = 0.166
         judgements = [
             #           ("name",  "key"    ms,       score, acc,   hp=0)

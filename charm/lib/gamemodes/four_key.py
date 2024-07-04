@@ -339,7 +339,7 @@ class FourKeyJudgement(Judgement):
 
 
 class FourKeyEngine(Engine):
-    def __init__(self, chart: FourKeyChart, offset: Seconds = -0.025):  # TODO: Set this dynamically
+    def __init__(self, chart: FourKeyChart, offset: Seconds = 0):  # TODO: Set this dynamically
         hit_window: Seconds = 0.075
         judgements = [
             #               ("name",           "key"             ms, score, acc, hp=0)
