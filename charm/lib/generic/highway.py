@@ -1,11 +1,12 @@
 import arcade
 from arcade import Camera2D
 
-from charm.lib.generic.song import Chart
+from charm.lib.generic.song import Chart, Note
+from charm.lib.types import Seconds
 
 
 class Highway:
-    def __init__(self, chart: Chart, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5, downscroll = False):
+    def __init__(self, chart: Chart, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5, *, downscroll: bool = False):
         """A time-based display of current and upcoming notes to be hit by the player."""
         self.chart = chart
         self.notes = self.chart.notes
@@ -26,11 +27,11 @@ class Highway:
         return self._pos
 
     @pos.setter
-    def pos(self, p: tuple[int, int]):
+    def pos(self, p: tuple[int, int]) -> None:
         self._pos = p
 
     @property
-    def px_per_s(self):
+    def px_per_s(self) -> float:
         return self.h / self.viewport
 
     @property
@@ -38,7 +39,7 @@ class Highway:
         return self.pos[0]
 
     @x.setter
-    def x(self, i: int):
+    def x(self, i: int) -> None:
         self.pos = (i, self.pos[1])
 
     @property
@@ -46,7 +47,7 @@ class Highway:
         return self.pos[1]
 
     @y.setter
-    def y(self, i: int):
+    def y(self, i: int) -> None:
         self.pos = (self.pos[0], i)
 
     @property
@@ -54,7 +55,7 @@ class Highway:
         return self.size[0]
 
     @w.setter
-    def w(self, i: int):
+    def w(self, i: int) -> None:
         self.size = (i, self.size[1])
 
     @property
@@ -62,7 +63,7 @@ class Highway:
         return self.size[1]
 
     @h.setter
-    def h(self, i: int):
+    def h(self, i: int) -> None:
         self.size = (self.size[0], i)
 
     @property
@@ -70,29 +71,29 @@ class Highway:
         return (self.w // self.chart.lanes) - self.gap
 
     @property
-    def strikeline_y(self):
+    def strikeline_y(self) -> int:
         if self.downscroll:
             return 89  # 64 + 25
         return self.h - 25
 
     @property
-    def visible_notes(self):
+    def visible_notes(self) -> list[Note]:
         return [n for n in self.notes if self.song_time - self.viewport < n.time <= self.song_time + self.viewport]
 
     def apos(self, rpos: tuple[int, int]) -> tuple[int, int]:
         return (rpos[0] + self.pos[0], rpos[1] + self.pos[1])
 
-    def lane_x(self, lane_num):
+    def lane_x(self, lane_num: int) -> float:
         return (self.note_size + self.gap) * lane_num + self.x
 
-    def note_y(self, at: float):
+    def note_y(self, at: float) -> float:
         rt = at - self.song_time
         if self.downscroll:
             return (self.px_per_s * rt) + self.strikeline_y
         return (-self.px_per_s * rt) + self.strikeline_y + self.y
 
-    def update(self, song_time):
+    def update(self, song_time: Seconds) -> None:
         self.song_time = song_time
 
-    def draw(self):
+    def draw(self) -> None:
         raise NotImplementedError
