@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Literal
 
 import arcade
-from arcade import Sprite, Text, color as colors
+from arcade import Sprite, SpriteList, Text, color as colors
 
 import charm.data.audio
 import charm.data.images
@@ -33,6 +33,7 @@ class FourKeySongMenuView(DigiView):
 
         self.songs: list[Metadata] = []
         self.menu: SongMenu | None = None
+        self.album_art_list: SpriteList | None = None
 
     @shows_errors
     def setup(self) -> None:
@@ -71,6 +72,9 @@ class FourKeySongMenuView(DigiView):
             self.static = GIF(p, 2, 5, 10, 30)
         self.static.right = self.size[0] - self.album_art_buffer
         self.static.original_bottom = self.album_art.bottom = self.size[1] // 2
+
+        self.album_art_list = SpriteList()
+        self.album_art_list.extend((self.album_art, self.static))
 
     def setup_no_menu(self) -> None:
         self.nothing_text = Text(
@@ -159,9 +163,11 @@ class FourKeySongMenuView(DigiView):
 
             self.menu.draw()
             if self.local_time < self.selection_changed + self.static_time:
-                self.static.draw()
+                self.static.visible = True
             else:
-                self.album_art.draw()
+                self.static.visible = False
+
+            self.album_art_list.draw()
         else:
             self.nothing_text.draw()
         super().postdraw()

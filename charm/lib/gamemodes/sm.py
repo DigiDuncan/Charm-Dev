@@ -99,7 +99,7 @@ class SMSong(FourKeySong):
         length = sm.get("musiclength", 0)
         genre = sm.genre
         charter = sm.credit
-        return Metadata(title, artist, album,
+        return Metadata(title = title, artist = artist, album = album,
                         length = length, genre = genre, charter = charter, path = folder,
                         gamemode = "4k")
 

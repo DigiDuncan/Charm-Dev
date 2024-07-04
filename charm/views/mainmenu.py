@@ -18,6 +18,7 @@ from charm.views.spritetest import SpriteTestView
 from charm.views.taikosongtest import TaikoSongTestView
 from charm.views.visualizer import VisualizerView
 from charm.views.uitest import UiView
+from charm.views.options import OptionsView
 
 
 class MainMenuView(DigiView):
@@ -29,7 +30,7 @@ class MainMenuView(DigiView):
             MainMenuItem("Playlists", "playlists", None),
             MainMenuItem("FNF Songs", "songs", FNFSongMenuView(back=self)),
             MainMenuItem("4K Songs", "songs", FourKeySongMenuView(back=self)),
-            MainMenuItem("Options", "options", None),
+            MainMenuItem("Options", "options", OptionsView(back=self)),
             MainMenuItem("Emoji Test", "test", EmojiTestView(back=self)),
             MainMenuItem("Menu Test", "test", NewMenuView(back=self)),
             MainMenuItem("Cycler Test", "test", CycleTestView(back=self)),

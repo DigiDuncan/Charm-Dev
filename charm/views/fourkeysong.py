@@ -2,6 +2,7 @@ import logging
 from math import ceil
 from pathlib import Path
 
+import arcade
 from arcade import Sprite, Texture, Text, Sound, color as colors
 
 import ndjson
@@ -206,7 +207,7 @@ class FourKeySongView(DigiView):
         self.gum_wrapper.draw()
 
         self.highway.draw()
-        self.judgement_sprite.draw()
+        arcade.draw_sprite(self.judgement_sprite)
 
         self.text.draw()
 
