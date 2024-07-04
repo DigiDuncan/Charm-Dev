@@ -6,7 +6,7 @@ from random import randint
 import wave
 
 import arcade
-from arcade import XYWH, SpriteCircle, SpriteList, Text, DefaultTextureAtlas, Camera2D, Sound, color as colors
+from arcade import LBWH, SpriteCircle, SpriteList, Text, DefaultTextureAtlas, Camera2D, Sound, color as colors
 
 import numpy as np
 import nindex
@@ -240,14 +240,14 @@ class VisualizerView(DigiView):
                 player_time = player_note.time
                 player_opacity = ease_linear(32, 0, perc(player_time, player_time + self.beat_time, self.song.time))
                 player_color = player_color[:3] + (int(player_opacity),)
-                arcade.draw_rect_filled(XYWH(self.window.width / 2, 0, self.window.width / 2, self.window.height), player_color)
+                arcade.draw_rect_filled(LBWH(self.window.width / 2, 0, self.window.width / 2, self.window.height), player_color)
             enemy_note = self.enemy_chart.lt(self.song.time)
             if enemy_note:
                 enemy_color = colormap[enemy_note.lane]
                 enemy_time = enemy_note.time
                 enemy_opacity = ease_linear(32, 0, perc(enemy_time, enemy_time + self.beat_time, self.song.time))
                 enemy_color = enemy_color[:3] + (int(enemy_opacity),)
-                arcade.draw_rect_filled(XYWH(0, 0, self.window.width / 2, self.window.height), enemy_color)
+                arcade.draw_rect_filled(LBWH(0, 0, self.window.width / 2, self.window.height), enemy_color)
 
         # Text
         if self.show_text:

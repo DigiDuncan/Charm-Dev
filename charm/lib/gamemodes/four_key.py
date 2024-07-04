@@ -179,7 +179,7 @@ class FourKeyHighway(Highway):
         super().__init__(chart, pos, size, gap)
         self.engine = engine
 
-        self.viewport = 0.5  # TODO: BPM scaling?
+        self.viewport = 0.75  # TODO: BPM scaling?
 
         # NOTE POOL DEFINITION AND CONSTRUCTION
 
