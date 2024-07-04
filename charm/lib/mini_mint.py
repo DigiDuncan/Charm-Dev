@@ -58,6 +58,7 @@ class Element:
         children = self.children[:]
         self.children = []
         for child in children:
+            child.parent = None
             child.invalidate_layout()
         self.invalidate_layout()
 
@@ -185,6 +186,7 @@ class VerticalElementList(Element):
 
     def insert_child(self, child: Element, idx: int = -1):
         self.children.insert(idx, child)
+        child.parent = self
         self.invalidate_layout()
         child.invalidate_layout()
 
