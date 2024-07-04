@@ -239,10 +239,10 @@ class FNFSongView(DigiView):
         self.gum_wrapper.on_update(delta_time)
 
         time = f"{int(self.tracks.time // 60)}:{int(self.tracks.time % 60):02}"
-        if self.song_time_text._label.text != time:
-            self.song_time_text._label.text = time
-        if self.score_text._label.text != str(self.engine.score):
-            self.score_text._label.text = str(self.engine.score)
+        if self.song_time_text.text != time:
+            self.song_time_text.text = time
+        if self.score_text.text != str(self.engine.score):
+            self.score_text.text = str(self.engine.score)
 
         self.get_spotlight_position(self.tracks.time)
 
@@ -264,8 +264,8 @@ class FNFSongView(DigiView):
 
         # FC type, etc.
         if self.engine.accuracy is not None:
-            if self.grade_text._label.text != f"{self.engine.fc_type} | {round(self.engine.accuracy * 100, 2)}% ({self.engine.grade})":
-                self.grade_text._label.text = f"{self.engine.fc_type} | {round(self.engine.accuracy * 100, 2)}% ({self.engine.grade})"
+            if self.grade_text.text != f"{self.engine.fc_type} | {round(self.engine.accuracy * 100, 2)}% ({self.engine.grade})":
+                self.grade_text.text = f"{self.engine.fc_type} | {round(self.engine.accuracy * 100, 2)}% ({self.engine.grade})"
 
         if self.engine.has_died and not self.window.debug.enabled:
             self.tracks.close()
