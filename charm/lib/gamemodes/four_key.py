@@ -8,7 +8,7 @@ from statistics import mean
 from typing import Literal, cast, Any, NamedTuple
 
 import arcade
-from arcade import Sprite, SpriteList, Texture, color as colors
+from arcade import SpriteList, Texture, color as colors
 from arcade.types import Color
 import PIL
 import PIL.ImageFilter
@@ -21,10 +21,10 @@ from charm.lib.generic.engine import DigitalKeyEvent, Engine, Judgement
 from charm.lib.generic.highway import Highway
 from charm.lib.generic.results import Results
 from charm.lib.generic.song import Note, Chart, Seconds, Song
+from charm.lib.generic.sprite import NoteSprite, SustainSprites, StrikelineSprite, SustainTextureDict, SustainTextures
 from charm.lib.keymap import keymap, Action
 from charm.lib.utils import img_from_path, clamp
 from charm.lib.pool import Pool
-from charm.objects.line_renderer import NoteTrail
 
 logger = logging.getLogger("charm")
 
@@ -149,43 +149,6 @@ class FourKeySong(Song[FourKeyChart]):
     pass
 
 
-class NoteSprite(Sprite):
-
-    def __init__(self, x: float, y: float):
-        super().__init__(center_x=x, center_y=y)
-        self.note = None
-
-
-class StrikelineSprite(Sprite):
-
-    def __init__(self, x: float, y: float, active_texture: Texture, inactive_texture: Texture, active_alpha: float = 255.0, inactive_alpha: float = 64.0):
-        super().__init__(path_or_texture=inactive_texture, center_x=x, center_y=y)
-        self._active: bool = False
-
-        self._active_texture: Texture = active_texture
-        self._inactive_texture: Texture = inactive_texture
-
-        self._active_alpha: float = active_alpha
-        self._inactive_alpha: float = inactive_alpha
-
-        self.alpha = inactive_alpha
-
-    @property
-    def active(self):
-        return self._active
-
-    @active.setter
-    def active(self, is_now_active: bool):
-        if is_now_active:
-            self._active = is_now_active
-            self.texture = self._active_texture
-            self.alpha = self._active_alpha
-        else:
-            self._active = False
-            self.texture = self._inactive_texture
-            self.alpha = self._inactive_alpha
-
-
 # TODO make this a dict of str -> three tuple (named)
 class SustainTextureSet(NamedTuple):
     tail_primary: Texture
@@ -197,81 +160,6 @@ class SustainTextureSet(NamedTuple):
     tail_hit: Texture = None
     body_hit: Texture = None
     cap_hit: Texture = None
-
-
-class SustainNote:
-
-    def __init__(self, size):
-        self.size = size
-
-        self._cap: Sprite = Sprite(center_x=-1000)
-        self._body: Sprite = Sprite(center_x=-1000)
-        self._tail: Sprite = Sprite(center_x=-1000)
-
-        self._body_offset: float = 0.0
-        self._cap_offset: float = 0.0
-
-        self.note: Note = None
-        self._textures: SustainTextureSet = None
-
-        self.hide()
-
-    def get_sprites(self):
-        return self._cap, self._body, self._tail
-
-    def place(self, note: Note, x, y, length, textures):
-        # TODO: test assumption about texture sizes
-        self.note = note
-        self._textures = textures
-        self.update_texture()
-
-        body_size = length - textures.cap_primary.height
-        self._body_offset = body_size / 2.0
-        self._cap_offset = length - textures.cap_primary.height / 2.0
-
-        self._tail.position = x, y
-        self._body.position = x, y - self._body_offset
-        self._body.height = body_size
-        self._cap.position = x, y - self._cap_offset
-
-        self.show()
-        if self._body_offset <= 0.0 or body_size <= 0.0:
-            self._body.visible = False
-
-    def set_y(self, y):
-        self._tail.center_y = y
-        self._body.center_y = y - self._body_offset
-        self._cap.center_y = y - self._cap_offset
-
-    def show(self):
-        self._cap.visible = True
-        self._body.visible = True
-        self._tail.visible = True
-
-    def hide(self):
-        self._cap.visible = False
-        self._body.visible = False
-        self._tail.visible = False
-
-    def update_texture(self):
-        # TODO: Update to work better with dictionaries / be overridden by game modes
-        if not self.note or not self._textures:
-            return
-
-        t = self._textures
-
-        if self.note.missed:
-            self._tail.texture = t.tail_miss or t.tail_primary
-            self._body.texture = t.body_miss or t.body_primary
-            self._cap.texture = t.cap_miss or t.cap_primary
-        elif self.note.hit:
-            self._tail.texture = t.tail_hit or t.tail_primary
-            self._body.texture = t.body_hit or t.body_primary
-            self._cap.texture = t.cap_hit or t.cap_primary
-        else:
-            self._tail.texture = t.tail_primary
-            self._body.texture = t.body_primary
-            self._cap.texture = t.cap_primary
 
 
 class FourKeyHighway(Highway):
@@ -309,18 +197,18 @@ class FourKeyHighway(Highway):
         # So this is a patch job at best.
         self._sustain_generator = (note for note in self.notes if note.length)
 
-        self._sustain_pool: Pool[SustainNote] = Pool(
-            list(SustainNote(self.note_size) for _ in range(100))
+        self._sustain_pool: Pool[SustainSprites] = Pool(
+            list(SustainSprites(self.note_size) for _ in range(100))
         )
         self._sustain_sprites = SpriteList(capacity=512)
         for sustain in self._sustain_pool.source:
             self._sustain_sprites.extend(sustain.get_sprites())
 
-        self._sustain_textures = {
-            0: SustainTextureSet(load_note_texture('tail', 0, self.note_size), load_note_texture('body', 0, self.note_size), load_note_texture('cap', 0, self.note_size // 2)),
-            1: SustainTextureSet(load_note_texture('tail', 1, self.note_size), load_note_texture('body', 1, self.note_size), load_note_texture('cap', 1, self.note_size // 2)),
-            2: SustainTextureSet(load_note_texture('tail', 2, self.note_size), load_note_texture('body', 2, self.note_size), load_note_texture('cap', 2, self.note_size // 2)),
-            3: SustainTextureSet(load_note_texture('tail', 3, self.note_size), load_note_texture('body', 3, self.note_size), load_note_texture('cap', 3, self.note_size // 2))
+        self._sustain_textures: dict[int, SustainTextureDict] = {
+            0: {'primary': SustainTextures(load_note_texture('tail', 0, self.note_size), load_note_texture('body', 0, self.note_size), load_note_texture('cap', 0, self.note_size // 2))},
+            1: {'primary': SustainTextures(load_note_texture('tail', 1, self.note_size), load_note_texture('body', 1, self.note_size), load_note_texture('cap', 1, self.note_size // 2))},
+            2: {'primary': SustainTextures(load_note_texture('tail', 2, self.note_size), load_note_texture('body', 2, self.note_size), load_note_texture('cap', 2, self.note_size // 2))},
+            3: {'primary': SustainTextures(load_note_texture('tail', 3, self.note_size), load_note_texture('body', 3, self.note_size), load_note_texture('cap', 3, self.note_size // 2))}
         }
 
         self._next_sustain = next(self._sustain_generator, None)

@@ -25,6 +25,7 @@ from charm.lib.errors import ChartParseError, ChartPostReadParseError, NoChartsE
 from charm.lib.generic.engine import DigitalKeyEvent, Engine, Judgement
 from charm.lib.generic.highway import Highway
 from charm.lib.generic.song import Chart, Event, Metadata, Note, Seconds, Song
+from charm.lib.generic.sprite import NoteSprite, SustainSprites, StrikelineSprite, SustainTextureDict, SustainTextures
 from charm.lib.keymap import Action, keymap
 from charm.lib.utils import img_from_path, nuke_smart_quotes
 from charm.objects.lyric_animator import LyricEvent
@@ -667,149 +668,6 @@ def load_note_texture(note_type, note_lane, height) -> Texture:
     return Texture(image)
 
 
-class HeroNoteSprite(Sprite):
-    def __init__(self, note: HeroNote, highway: HeroHighway, height = 128, *args, **kwargs):
-        self.note: HeroNote = note
-        self.highway: HeroHighway = highway
-        tex = load_note_texture(note.type, note.lane, height)
-        super().__init__(tex, *args, **kwargs)
-
-    def __lt__(self, other: HeroNoteSprite):
-        return self.note.time < other.note.time
-
-    def update_animation(self, delta_time: float) -> None:
-        if self.highway.auto:
-            if self.highway.song_time >= self.note.time:
-                self.note.hit = True
-        elif self.note.hit:
-            self.alpha = 0
-
-
-# TODO: Remove redundant LongNoteRenderer code as it has been depreciated
-
-class HeroLongNoteSprites(LongNoteRenderer):
-    def __init__(self, note: HeroNote, highway: "HeroHighway", height=128, *args, **kwargs):
-        cap_texture = load_note_texture('cap', note.lane, 64)
-        cap_missed = load_note_texture('cap', 5, 64)
-        body_texture = load_note_texture('body', note.lane, 128)
-        body_missed = load_note_texture('body', 5, 128)
-        tail_texture = load_note_texture('tail', note.lane, 128)
-        tail_missed = load_note_texture('tail', 5, 128)
-
-        # Notes are positioned based on top left, so we have to shift down to the center
-        x = highway.lane_x(note.lane) + highway.note_size*0.5
-        y = highway.note_y(note.time) - highway.note_size*0.5
-
-        super().__init__(cap_texture, body_texture, tail_texture, highway.note_size, height, x, y,
-                         cap_missed, body_missed, tail_missed)
-        global note_id  # TODO: globals suck, is there a way to store this on the class?
-        note_id += 1
-        self.id = note_id
-
-        self.note = note
-
-    def update_animation(self, delta_time: float) -> None:
-        raise NotImplementedError("Currently Long Notes don't support animations")
-
-
-# TODO: Merge this with the nearly identical code in four_key.py
-
-class NoteSprite(Sprite):
-
-    def __init__(self, x: float, y: float):
-        super().__init__(center_x=x, center_y=y)
-        self.note = None
-
-
-class SustainTextureSet(NamedTuple):
-    tail_primary: Texture
-    body_primary: Texture
-    cap_primary: Texture
-    tail_miss: Texture = None
-    body_miss: Texture = None
-    cap_miss: Texture = None
-    tail_hit: Texture = None
-    body_hit: Texture = None
-    cap_hit: Texture = None
-
-
-class SustainNote:
-
-    def __init__(self, size, tail_spacing: float = 0.0, down_scrolling: bool = False):
-        self.size = size
-        self.down_scrolling: bool = down_scrolling
-
-        self._cap: Sprite = Sprite(center_x=-1000)
-        self._body: Sprite = Sprite(center_x=-1000)
-        self._tail: Sprite = Sprite(center_x=-1000)
-
-        self._tail_spacing: float = tail_spacing
-        self._body_offset: float = 0.0
-        self._cap_offset: float = 0.0
-
-        self.note: Note = None
-        self._textures: SustainTextureSet = None
-
-        self.hide()
-
-    def get_sprites(self):
-        return self._cap, self._body, self._tail
-
-    def place(self, note: Note, x, y, length, textures):
-        self.note = note
-        self._textures = textures
-        self.update_texture()
-
-        body_size = length - textures.cap_primary.height - self._tail_spacing
-        self._body_offset = body_size / 2.0 + self._tail_spacing
-        self._cap_offset = length - textures.cap_primary.height / 2.0
-
-        if self.down_scrolling:
-            self._body_offset *= -1
-            self._cap_offset *= -1
-
-        self._tail.position = x, y
-        self._body.position = x, y - self._body_offset
-        self._body.height = body_size
-        self._cap.position = x, y - self._cap_offset
-
-        self.show()
-
-    def set_y(self, y):
-        self._tail.center_y = y
-        self._body.center_y = y - self._body_offset
-        self._cap.center_y = y - self._cap_offset
-
-    def show(self):
-        self._cap.visible = True
-        self._body.visible = True
-        self._tail.visible = True
-
-    def hide(self):
-        self._cap.visible = False
-        self._body.visible = False
-        self._tail.visible = False
-
-    def update_texture(self):
-        if not self.note or not self._textures:
-            return
-
-        t = self._textures
-
-        if self.note.missed:
-            self._tail.texture = t.tail_miss or t.tail_primary
-            self._body.texture = t.body_miss or t.body_primary
-            self._cap.texture = t.cap_miss or t.cap_primary
-        elif self.note.hit:
-            self._tail.texture = t.tail_hit or t.tail_primary
-            self._body.texture = t.body_hit or t.body_primary
-            self._cap.texture = t.cap_hit or t.cap_primary
-        else:
-            self._tail.texture = t.tail_primary
-            self._body.texture = t.body_primary
-            self._cap.texture = t.cap_primary
-
-
 class HeroHighway(Highway):
     def __init__(self, chart: HeroChart, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5, auto = False, show_flags = False):
         if size is None:
@@ -865,8 +723,8 @@ class HeroHighway(Highway):
         # So this is a patch job at best.
         self._sustain_generator: Generator[Note, Any, None] = (note for note in self.notes if note.length)
 
-        self._sustain_pool: Pool[SustainNote] = Pool(
-            list(SustainNote(self.note_size, self.note_size/2.0, True) for _ in range(100))
+        self._sustain_pool: Pool[SustainSprites] = Pool(
+            list(SustainSprites(self.note_size, self.note_size/2.0, True) for _ in range(100))
         )
         self._sustain_sprites: SpriteList[Sprite] = SpriteList()
         self._sustain_sprites.program = self.window.ctx.sprite_list_program_no_cull  # avoid orthographic culling
@@ -877,27 +735,43 @@ class HeroHighway(Highway):
         _missed_body = load_note_texture('body', 5, self.note_size)
         _missed_cap = load_note_texture('cap', 5, self.note_size // 2)
 
-        self._sustain_textures = {
-            0: SustainTextureSet(load_note_texture('tail', 0, self.note_size),
-                                 load_note_texture('body', 0, self.note_size),
-                                 load_note_texture('cap', 0, self.note_size // 2),
-                                 _missed_tail, _missed_body, _missed_cap),
-            1: SustainTextureSet(load_note_texture('tail', 1, self.note_size),
-                                 load_note_texture('body', 1, self.note_size),
-                                 load_note_texture('cap', 1, self.note_size // 2),
-                                 _missed_tail, _missed_body, _missed_cap),
-            2: SustainTextureSet(load_note_texture('tail', 2, self.note_size),
-                                 load_note_texture('body', 2, self.note_size),
-                                 load_note_texture('cap', 2, self.note_size // 2),
-                                 _missed_tail, _missed_body, _missed_cap),
-            3: SustainTextureSet(load_note_texture('tail', 3, self.note_size),
-                                 load_note_texture('body', 3, self.note_size),
-                                 load_note_texture('cap', 3, self.note_size // 2),
-                                 _missed_tail, _missed_body, _missed_cap),
-            4: SustainTextureSet(load_note_texture('tail', 4, self.note_size),
-                                 load_note_texture('body', 4, self.note_size),
-                                 load_note_texture('cap', 4, self.note_size // 2),
-                                 _missed_tail, _missed_body, _missed_cap)
+        self._sustain_textures: dict[int, SustainTextureDict] = {
+            0: {'primary': SustainTextures(
+                    load_note_texture('tail', 0, self.note_size),
+                    load_note_texture('body', 0, self.note_size),
+                    load_note_texture('cap', 0, self.note_size // 2)
+                ),
+                'miss': SustainTextures(_missed_tail, _missed_body, _missed_cap)},
+            1: {'primary': SustainTextures(
+                    load_note_texture('tail', 1, self.note_size),
+                    load_note_texture('body', 1, self.note_size),
+                    load_note_texture('cap', 1, self.note_size // 2)
+                ),
+                'miss': SustainTextures(_missed_tail, _missed_body, _missed_cap)},
+            2: {'primary': SustainTextures(
+                    load_note_texture('tail', 2, self.note_size),
+                    load_note_texture('body', 2, self.note_size),
+                    load_note_texture('cap', 2, self.note_size // 2)
+                ),
+                'miss': SustainTextures(_missed_tail, _missed_body, _missed_cap)},
+            3: {'primary': SustainTextures(
+                    load_note_texture('tail', 3, self.note_size),
+                    load_note_texture('body', 3, self.note_size),
+                    load_note_texture('cap', 3, self.note_size // 2)
+                ),
+                'miss': SustainTextures(_missed_tail, _missed_body, _missed_cap)},
+            4: {'primary': SustainTextures(
+                    load_note_texture('tail', 4, self.note_size),
+                    load_note_texture('body', 4, self.note_size),
+                    load_note_texture('cap', 4, self.note_size // 2)
+                ),
+                'miss': SustainTextures(_missed_tail, _missed_body, _missed_cap)},
+            5: {'primary': SustainTextures(
+                    load_note_texture('tail', 5, self.note_size),
+                    load_note_texture('body', 5, self.note_size),
+                    load_note_texture('cap', 5, self.note_size // 2)
+                ),
+                'miss': SustainTextures(_missed_tail, _missed_body, _missed_cap)},
         }
 
         self._next_sustain = next(self._sustain_generator, None)
@@ -908,14 +782,17 @@ class HeroHighway(Highway):
 
         self.color = (0, 0, 0, 128)  # TODO: eventually this will be a scrolling image.
 
-        self.strikeline = SpriteList()
+        self.strikeline: SpriteList[StrikelineSprite] = SpriteList()
         self.strikeline.program = self.strikeline.ctx.sprite_list_program_no_cull
-        # TODO: Is this dumb?
-        for i in range(5):
-            sprite = HeroNoteSprite(HeroNote(self.chart, 0, i, 0, "strikeline"), self, self.note_size)
-            sprite.top = self.strikeline_y
-            sprite.left = self.lane_x(sprite.note.lane)
-            sprite.alpha = 128
+        y = self.strikeline_y - self.note_size/2.0
+        for lane in range(5):
+            x = self.lane_x(lane) + self.note_size/2.0
+            sprite = StrikelineSprite(
+                x, y,
+                active_texture=load_note_texture("normal", lane, self.note_size),
+                inactive_texture=load_note_texture("strikeline", lane, self.note_size),
+                inactive_alpha=128
+            )
             self.strikeline.append(sprite)
 
         self._last_strikeline_note: list[HeroNote] = [None] * 5
