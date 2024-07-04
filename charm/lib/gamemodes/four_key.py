@@ -209,7 +209,7 @@ class FourKeyHighway(Highway):
             self._sustain_sprites.extend(sustain.get_sprites())
 
         self._sustain_textures: dict[int, SustainTextureDict] = {
-            i: {'primary': SustainTextures(load_note_texture('tail', 0, self.note_size), load_note_texture('body', i, self.note_size), load_note_texture('cap', i, self.note_size // 2))}
+            i: {'primary': SustainTextures(load_note_texture('tail', i, self.note_size), load_note_texture('body', i, self.note_size), load_note_texture('cap', i, self.note_size // 2))}
         for i in range(4)}
 
         self._next_sustain = next(self._sustain_generator, None)
