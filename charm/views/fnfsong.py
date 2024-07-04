@@ -206,6 +206,14 @@ class FNFSongView(DigiView):
             self.highway_1.show_hit_window = not self.highway_1.show_hit_window
         elif self.window.debug.enabled and keymap.debug_show_results.pressed:
             self.show_results()
+        elif keymap.navup.pressed:
+            # TODO clean-up
+            viewport = self.highway_1.viewport
+            self.highway_1.viewport = self.highway_2.viewport = min(10.0, viewport + 0.05)
+        elif keymap.navdown.pressed:
+            viewport = self.highway_1.viewport
+            self.highway_1.viewport = self.highway_2.viewport = max(0.05, viewport - 0.05)
+
         if self.tracks.playing:
             self.engine.on_key_press(symbol, modifiers)
 

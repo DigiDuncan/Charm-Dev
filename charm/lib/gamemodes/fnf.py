@@ -155,7 +155,6 @@ class FNFSong(Song[FNFChart]):
             for chart in charts:
                 song.charts.append(chart)
 
-
         # Global attributes that are stored per-chart, for some reason.
         chart: FNFChart = song.charts[0]
         song.bpm = chart.bpm

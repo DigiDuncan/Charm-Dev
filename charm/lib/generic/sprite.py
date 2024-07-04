@@ -108,10 +108,21 @@ class SustainSprites:
         if body_size <= 0.0:
             self._body.visible = False
 
-    def set_y(self, y: float) -> None:
+    def update_sustain(self, y: float, length: float) -> None:
+        body_size = length - self._textures['primary'].cap.height - self._tail_spacing
+        self._body_offset = body_size / 2.0 + self._tail_spacing
+        self._cap_offset = length - self._textures['primary'].cap.height / 2.0
+
+        if self.down_scrolling:
+            self._body_offset *= -1
+            self._cap_offset *= -1
+
         self._tail.center_y = y
         self._body.center_y = y - self._body_offset
         self._cap.center_y = y - self._cap_offset
+
+        if body_size <= 0.0:
+            self._body.visible = False
 
     def show(self) -> None:
         self._cap.visible = True

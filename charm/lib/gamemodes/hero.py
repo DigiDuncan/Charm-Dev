@@ -803,11 +803,12 @@ class HeroHighway(Highway):
                 self._note_pool.give(sprite)
 
         for sustain in self._sustain_pool.given_items:
-            sustain.set_y(self.note_y(sustain.note.time) - sustain.size/2.0)
             sustain.update_texture()
+            sustain.update_sustain(self.note_y(sustain.note.time) - sustain.size/2.0, sustain.note.length * self.px_per_s)
             if sustain.note.end <= (song_time - 0.1):
                 sustain.hide()
                 self._sustain_pool.give(sustain)
+
 
     @property
     def pos(self) -> tuple[int, int]:
