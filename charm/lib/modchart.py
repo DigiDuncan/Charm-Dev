@@ -11,7 +11,6 @@ from charm.lib.anim import ease_linear, perc
 from charm.lib.generic.song import Event
 
 
-
 @dataclass
 class ModchartEvent(Event):
     """A single event in a modchart."""

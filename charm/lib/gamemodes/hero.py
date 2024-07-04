@@ -1150,7 +1150,7 @@ class HeroEngine(Engine):
 
         overstrums = [e for e in self.strum_events if self.chart_time > e.time + self.hit_window]
         if overstrums:
-            print(f"Overstrum! ({round(overstrums[0].time, 3)})")
+            logger.info(f"Overstrum! ({round(overstrums[0].time, 3)})")
             self.combo = 0
             for o in overstrums:
                 self.strum_events.remove(o)

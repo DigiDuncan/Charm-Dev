@@ -22,18 +22,22 @@ KeyMod = tuple[Key, Mod]
 key_names = {v: k for k, v in arcade.key.__dict__.items() if isinstance(v, int) and not k.startswith("MOD_")}
 mod_names = {v: k for k, v in arcade.key.__dict__.items() if isinstance(v, int) and k.startswith("MOD_") and k != "MOD_ACCEL"}
 
+
 def get_keyname(k: Key | KeyMod) -> str:
     k, m = to_keymod(k)
     return " + ".join([mod_names[mod] for mod in split_mod(m)] + [key_names[k]])
+
 
 def to_keymod(k: Key | KeyMod) -> KeyMod:
     if isinstance(k, Key):
         return (k, 0)
     return k
 
+
 def split_mod(m: Mod) -> list[Mod]:
     mod_values = [1 << n for n in range(9)]
     return [n for n in mod_values if m & n]
+
 
 # FLAGS
 REQUIRED = 1

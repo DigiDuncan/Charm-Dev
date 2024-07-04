@@ -24,7 +24,6 @@ class Settings:
             case "music":
                 return self.volume.master * self.volume.music
             case "sound":
-                print('heyoooo', self.volume.master)
                 return self.volume.master * self.volume.sound
             case "menu_music":
                 return self.volume.master * self.volume.menu_music

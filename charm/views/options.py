@@ -34,12 +34,10 @@ class OptionsView(DigiView):
 
     def volume_up(self, factor: float):
         settings.volume.master = min(1.0, settings.volume.master + factor)
-        print(settings.volume.master)
         self.sfx.select.play()
 
     def volume_down(self, factor: float):
         settings.volume.master = max(0.0, settings.volume.master - factor)
-        print(settings.volume.master)
         self.sfx.select.play()
 
     @shows_errors

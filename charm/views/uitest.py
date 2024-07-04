@@ -29,7 +29,6 @@ class UiView(DigiView):
         self.element_list.layout()
 
         child_count = self.element_list.bounds.height // 100
-        print(child_count)
 
         self.element_list.empty()
         for _ in range(int(child_count)):
