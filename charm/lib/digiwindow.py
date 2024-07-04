@@ -10,7 +10,7 @@ import logging
 import arcade
 from arcade import Window, Camera2D
 
-from charm.lib.sfxmanager import SfxManager
+from charm.lib.sfxmanager import SFXManager
 from charm.lib.debug import DebugMenu
 from charm.lib.presencemanager import PresenceManager
 from charm.lib.themesong import ThemeSong
@@ -22,7 +22,7 @@ logger = logging.getLogger("charm")
 class DigiWindow(Window):
     def __init__(self, size: tuple[int, int], title: str, fps_cap: int):
         super().__init__(*size, title, update_rate=1 / fps_cap, enable_polling=True, resizable=True, draw_rate=1 / fps_cap)
-        self.sfx = SfxManager()
+        self.sfx = SFXManager()
         self.fps_cap = fps_cap
         self.initial_view: DigiView = TitleView()
 

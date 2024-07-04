@@ -4,14 +4,12 @@ from importlib.resources import files, as_file
 import logging
 import math
 from functools import cache
-from pathlib import Path
 from statistics import mean
 from typing import Literal, cast, Any, NamedTuple
 
 import arcade
-from arcade import Sprite, SpriteList, Texture, Text, color as colors
-from arcade.types import Color, Point2
-import pyglet
+from arcade import Sprite, SpriteList, Texture, color as colors
+from arcade.types import Color
 import PIL
 import PIL.ImageFilter
 import PIL.ImageOps

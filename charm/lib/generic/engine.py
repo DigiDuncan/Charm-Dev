@@ -5,7 +5,6 @@ if TYPE_CHECKING:
     from charm.lib.generic.song import Chart, Note, Seconds
 
 from dataclasses import dataclass
-from charm.lib.keymap import keymap, Action
 
 KeyStates = list[bool]
 Key = int

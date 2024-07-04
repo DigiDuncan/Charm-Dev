@@ -9,7 +9,7 @@ import charm.data.audio
 from charm.lib.settings import MixerNames, settings
 
 
-class Sfx:
+class SFX:
     def __init__(self, sound: Sound):
         self.sound: Sound = sound
         self.mixer: MixerNames = "sound"
@@ -24,11 +24,11 @@ class Sfx:
         return cls(sound)
 
 
-class SfxManager:
+class SFXManager:
     def __init__(self):
-        self.back = Sfx.load("sfx-back.wav")
-        self.select = Sfx.load("sfx-select.wav")
-        self.valid = Sfx.load("sfx-valid.wav")
-        self.error = Sfx.load("error-error.wav")
-        self.warning = Sfx.load("error-warning.wav")
-        self.info = Sfx.load("error-info.wav")
+        self.back = SFX.load("sfx-back.wav")
+        self.select = SFX.load("sfx-select.wav")
+        self.valid = SFX.load("sfx-valid.wav")
+        self.error = SFX.load("error-error.wav")
+        self.warning = SFX.load("error-warning.wav")
+        self.info = SFX.load("error-info.wav")

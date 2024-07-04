@@ -377,7 +377,7 @@ class FNFEngine(FourKeyEngine):
                         try:
                             self.current_notes.remove(note)
                         except ValueError:
-                            logger.info("Sustain pickup failed!")  # I don't know why this happens still, but it does. Often.
+                            logger.info("Sustain pickup failed!")  # TODO: I don't know why this happens still, but it does. Often.
                         self.current_events.remove(event)
                         break
 

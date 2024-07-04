@@ -22,7 +22,7 @@ from charm.lib.components import ComponentManager
 from charm.lib.anim import ease_linear, perc
 from charm.lib.errors import CharmError, GenericError
 from charm.lib.keymap import keymap
-from charm.lib.sfxmanager import SfxManager
+from charm.lib.sfxmanager import SFXManager
 
 logger = logging.getLogger("charm")
 
@@ -89,7 +89,7 @@ class DigiView(View):
         self.debug_timer = DebugTimer()
 
     @property
-    def sfx(self) -> SfxManager:
+    def sfx(self) -> SFXManager:
         return self.window.sfx
 
     @property

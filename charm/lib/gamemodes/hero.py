@@ -20,19 +20,17 @@ from arcade.types import Color
 from arcade.camera import PerspectiveProjector
 from arcade.camera.data_types import duplicate_camera_data
 
-from charm.lib.anim import ease_linear, perc
 from charm.lib.charm import load_missing_texture
 from charm.lib.errors import ChartParseError, ChartPostReadParseError, NoChartsError, NoMetadataError, MetadataParseError
 from charm.lib.generic.engine import DigitalKeyEvent, Engine, Judgement
 from charm.lib.generic.highway import Highway
 from charm.lib.generic.song import Chart, Event, Metadata, Note, Seconds, Song
 from charm.lib.keymap import Action, keymap
-from charm.lib.spritebucket import SpriteBucketCollection
 from charm.lib.utils import img_from_path, nuke_smart_quotes
 from charm.objects.lyric_animator import LyricEvent
 from charm.lib.pool import Pool
 
-from charm.objects.line_renderer import LongNoteRenderer, NoteStruckState
+from charm.objects.line_renderer import LongNoteRenderer
 import charm.data.images.skins as skins
 
 logger = logging.getLogger("charm")
@@ -492,7 +490,7 @@ class HeroSong(Song[HeroChart]):
                     tick = int(tick)
                     if not sync_track and tick != 0:
                         raise ChartParseError(line_num, "Chart has no BPM event at tick 0.")
-                    elif not sync_track:
+                    if not sync_track:
                         events.append(BPMChangeTickEvent(0, tick, mbpm / 1000))
                         sync_track.append(BPMChangeTickEvent(0, tick, mbpm / 1000))
                     else:
