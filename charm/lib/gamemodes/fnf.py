@@ -13,8 +13,7 @@ import arcade
 from arcade import Texture, color as colors
 
 from charm.lib.errors import NoChartsError, UnknownLanesError, ChartPostReadParseError
-from charm.lib.gamemodes.four_key import FourKeyChart, FourKeyEngine, FourKeyJudgement, \
-    FourKeyLongNoteSprite, FourKeyNote, FourKeyNoteSprite
+from charm.lib.gamemodes.four_key import FourKeyChart, FourKeyEngine, FourKeyJudgement, FourKeyNote
 from charm.lib.generic.song import BPMChangeEvent, Event, Metadata, Song
 from charm.lib.types import Seconds, Milliseconds
 from charm.lib.utils import clamp
@@ -99,7 +98,6 @@ class CameraFocusEvent(Event):
 @dataclass(repr = False)
 class FNFNote(FourKeyNote):
     parent: FNFNote = None
-    sprite: FourKeyNoteSprite | FourKeyLongNoteSprite = None
 
     def __lt__(self, other):
         return (self.time, self.lane, self.type) < (other.time, other.lane, other.type)

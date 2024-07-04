@@ -130,10 +130,9 @@ def load_note_texture(note_type: str, note_lane: int, height: int, value: int = 
 
 
 class FourKeyNote(Note):
-    def __init__(self, chart: Chart, time: Seconds, lane: Literal[0,1,2,3], length: Seconds = 0, type: str = "normal", value: int = 0, hit: bool = False, missed: bool = False, hit_time: Seconds | None = None, extra_data: tuple[Any, ...] | None = None, parent: FourKeyNote | None = None, sprite: FourKeyNoteSprite | FourKeyLongNoteSprite | None = None):
+    def __init__(self, chart: Chart, time: Seconds, lane: Literal[0,1,2,3], length: Seconds = 0, type: str = "normal", value: int = 0, hit: bool = False, missed: bool = False, hit_time: Seconds | None = None, extra_data: tuple[Any, ...] | None = None, parent: FourKeyNote | None = None):
         super().__init__(chart, time, lane, length, type, value, hit, missed, hit_time, extra_data)
         self.parent = parent
-        self.sprite = sprite
         self.lane: Literal[0,1,2,3]
 
     def __lt__(self, other: FourKeyNote):
@@ -148,74 +147,6 @@ class FourKeyChart(Chart):
 
 class FourKeySong(Song[FourKeyChart]):
     pass
-
-
-class FourKeyNoteSprite(Sprite):
-    def __init__(self, note: FourKeyNote, highway: FourKeyHighway, height=128, *args, **kwargs):
-        self.note: FourKeyNote = note
-        self.note.sprite = self
-        self.highway: FourKeyHighway = highway
-        tex = load_note_texture(note.type, note.lane, height, note.value)
-        super().__init__(tex, *args, **kwargs)
-        if self.note.type == "sustain":
-            self.alpha = 0
-
-    def __lt__(self, other: FourKeyNoteSprite):
-        return self.note.time < other.note.time
-
-    def update_animation(self, delta_time: float):
-        if self.highway.auto:
-            if self.highway.song_time >= self.note.time:
-                self.note.hit = True
-        # if self.note.hit and self.highway.song_time >= self.note.time:
-        #     self.alpha = 0
-        if self.note.hit:
-            self.alpha = 0
-
-
-class FourKeyStrikelineSprite(FourKeyNoteSprite):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._active = False
-
-    @property
-    def active(self) -> bool:
-        return self._active
-
-    @active.setter
-    def active(self, new_active: bool) -> None:
-        if new_active == self._active:
-            return
-        self._active = new_active
-        if new_active:
-            self.alpha = 255
-            self.texture = load_note_texture("normal", self.note.lane, self.texture.height)
-        else:
-            self.alpha = 64
-            self.texture = load_note_texture("strikeline", self.note.lane, self.texture.height)
-
-
-class FourKeyLongNoteSprite(FourKeyNoteSprite):
-    id = 0
-
-    def __init__(self, note: FourKeyNote, highway: FourKeyHighway, height=128, *args, **kwargs):
-        super().__init__(note, highway, height, *args, **kwargs)
-        self.id += 1
-        self.dead = False
-
-        color = NoteColor.from_note(self.note) if self.note.value == 0 else get_note_color_by_beat(self.note.value)
-        self.trail = NoteTrail(self.id, self.position, self.note.time, self.note.length, self.highway.px_per_s,
-                               color, width=self.highway.note_size, upscroll=True, fill_color=color[:3] + (60,), resolution=100)
-        self.dead_trail = NoteTrail(self.id, self.position, self.note.time, self.note.length, self.highway.px_per_s,
-                                    colors.GRAY, width=self.highway.note_size, upscroll=True, fill_color=colors.GRAY[:3] + (60,), resolution=100)
-
-    def update_animation(self, delta_time: float):
-        self.trail.set_position(*self.position)
-        self.dead_trail.set_position(*self.position)
-        super().update_animation(delta_time)
-
-    def draw_trail(self):
-        self.dead_trail.draw() if self.dead else self.trail.draw()
 
 
 class NoteSprite(Sprite):
