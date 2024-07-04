@@ -54,21 +54,24 @@ class NoteColor:
         if note.type == NoteType.NORMAL:
             if note.lane == 0:
                 return cls.PINK
-            if note.lane == 1:
+            elif note.lane == 1:
                 return cls.BLUE
-            if note.lane == 2:
+            elif note.lane == 2:
                 return cls.GREEN
-            if note.lane == 3:
+            elif note.lane == 3:
                 return cls.RED
+            else:
+                return colors.BLACK
         if note.type == NoteType.BOMB:
             return cls.BOMB
-        if note.type == NoteType.DEATH:
+        elif note.type == NoteType.DEATH:
             return cls.DEATH
-        if note.type == NoteType.HEAL:
+        elif note.type == NoteType.HEAL:
             return cls.HEAL
-        if note.type == NoteType.CAUTION:
+        elif note.type == NoteType.CAUTION:
             return cls.CAUTION
-        return colors.BLACK
+        else:
+            return colors.BLACK
 
 
 # SKIN
@@ -93,7 +96,7 @@ def get_note_color_by_beat(beat: int) -> tuple[int, int, int]:
 
 # SKIN
 @cache
-def load_note_texture(note_type: str, note_lane: int, height: int, value: int = 0, fnf: bool = False) -> Texture:
+def load_note_texture(note_type: str, note_lane: int, height: int, value: int = 0, *, fnf: bool = False) -> Texture:
     if value and note_type == NoteType.NORMAL:
         # "Beat colors", which color a note based on where it lands in the beat.
         # This is useful for desnely packed patterns, and some rhythm games rely
@@ -104,7 +107,7 @@ def load_note_texture(note_type: str, note_lane: int, height: int, value: int = 
             if image.height != height:
                 width = int((height / image.height) * image.width)
                 image = image.resize((width, height), PIL.Image.LANCZOS)
-        except Exception:
+        except Exception:  # noqa: BLE001
             logger.error(f"Unable to load texture: {image_name}")
             return load_missing_texture(height, height)
         color = get_note_color_by_beat(value)
@@ -123,14 +126,19 @@ def load_note_texture(note_type: str, note_lane: int, height: int, value: int = 
             if image.height != height:
                 width = int((height / image.height) * image.width)
                 image = image.resize((width, height), PIL.Image.LANCZOS)
-        except Exception:
+        except Exception:  # noqa: BLE001
             logger.error(f"Unable to load texture: {image_name}")
             return load_missing_texture(height, height)
     return Texture(image)
 
 
 class FourKeyNote(Note):
-    def __init__(self, chart: Chart, time: Seconds, lane: Literal[0,1,2,3], length: Seconds = 0, type: str = "normal", value: int = 0, hit: bool = False, missed: bool = False, hit_time: Seconds | None = None, extra_data: tuple[Any, ...] | None = None, parent: FourKeyNote | None = None):
+    def __init__(self, chart: Chart, time: Seconds, lane: Literal[0,1,2,3],
+                 length: Seconds = 0, type: str = "normal", value: int = 0,
+                 hit: bool = False, missed: bool = False,
+                 hit_time: Seconds | None = None,
+                 extra_data: tuple[Any, ...] | None = None,
+                 parent: FourKeyNote | None = None):
         super().__init__(chart, time, lane, length, type, value, hit, missed, hit_time, extra_data)
         self.parent = parent
         self.lane: Literal[0,1,2,3]
@@ -140,7 +148,7 @@ class FourKeyNote(Note):
 
 
 class FourKeyChart(Chart):
-    def __init__(self, song: Song, difficulty, hash: str | None):
+    def __init__(self, song: Song, difficulty: str, hash: str | None):
         super().__init__(song, "4k", difficulty, "4k", 4, hash)
         self.song: FourKeySong = song
 
@@ -149,7 +157,7 @@ class FourKeySong(Song[FourKeyChart]):
     pass
 
 
-# TODO make this a dict of str -> three tuple (named)
+# TODO: make this a dict of str -> three tuple (named)
 class SustainTextureSet(NamedTuple):
     tail_primary: Texture
     body_primary: Texture
@@ -163,7 +171,8 @@ class SustainTextureSet(NamedTuple):
 
 
 class FourKeyHighway(Highway):
-    def __init__(self, chart: FourKeyChart, engine: FourKeyEngine, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5, auto=False):
+    def __init__(self, chart: FourKeyChart, engine: FourKeyEngine, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5,
+                 *, auto: bool = False):
         if size is None:
             self.window = arcade.get_window()
             size = int(self.window.width / (1280 / 400)), self.window.height
@@ -179,9 +188,7 @@ class FourKeyHighway(Highway):
         # So this is a patch job at best.
         self._note_generator = (note for note in self.notes if note.type != 'sustain')
 
-        self._note_pool: Pool[NoteSprite] = Pool(
-            list(NoteSprite(x=-1000.0, y=-1000.0) for _ in range(1000))
-        )
+        self._note_pool: Pool[NoteSprite] = Pool([NoteSprite(x=-1000.0, y=-1000.0) for _ in range(1000)])
         self._note_sprites = SpriteList(capacity=1024)
         self._note_sprites.extend(self._note_pool.source)
 
@@ -197,19 +204,14 @@ class FourKeyHighway(Highway):
         # So this is a patch job at best.
         self._sustain_generator = (note for note in self.notes if note.length)
 
-        self._sustain_pool: Pool[SustainSprites] = Pool(
-            list(SustainSprites(self.note_size) for _ in range(100))
-        )
+        self._sustain_pool: Pool[SustainSprites] = Pool([SustainSprites(self.note_size) for _ in range(100)])
         self._sustain_sprites = SpriteList(capacity=512)
         for sustain in self._sustain_pool.source:
             self._sustain_sprites.extend(sustain.get_sprites())
 
         self._sustain_textures: dict[int, SustainTextureDict] = {
-            0: {'primary': SustainTextures(load_note_texture('tail', 0, self.note_size), load_note_texture('body', 0, self.note_size), load_note_texture('cap', 0, self.note_size // 2))},
-            1: {'primary': SustainTextures(load_note_texture('tail', 1, self.note_size), load_note_texture('body', 1, self.note_size), load_note_texture('cap', 1, self.note_size // 2))},
-            2: {'primary': SustainTextures(load_note_texture('tail', 2, self.note_size), load_note_texture('body', 2, self.note_size), load_note_texture('cap', 2, self.note_size // 2))},
-            3: {'primary': SustainTextures(load_note_texture('tail', 3, self.note_size), load_note_texture('body', 3, self.note_size), load_note_texture('cap', 3, self.note_size // 2))}
-        }
+            i: {'primary': SustainTextures(load_note_texture('tail', 0, self.note_size), load_note_texture('body', i, self.note_size), load_note_texture('cap', i, self.note_size // 2))}
+        for i in range(4)}
 
         self._next_sustain = next(self._sustain_generator, None)
 
@@ -299,7 +301,7 @@ class FourKeyHighway(Highway):
             strikeline.active = active
 
     @property
-    def pixel_offset(self):
+    def pixel_offset(self) -> int:
         # TODO: Replace with better pixel_offset calculation
         return self._pixel_offset
 
@@ -308,7 +310,7 @@ class FourKeyHighway(Highway):
         return self._pos
 
     @pos.setter
-    def pos(self, p: tuple[int, int]):
+    def pos(self, p: tuple[int, int]) -> None:
         old_pos = self._pos
         diff_x = p[0] - old_pos[0]
         diff_y = p[1] - old_pos[1]
@@ -318,7 +320,7 @@ class FourKeyHighway(Highway):
         self.hit_window_top = self.note_y(-self.engine.hit_window) - (self.note_size / 2)
         self.hit_window_bottom = self.note_y(self.engine.hit_window) - (self.note_size / 2)
 
-    def draw(self):
+    def draw(self) -> None:
         _cam = arcade.get_window().current_camera
         with self.static_camera.activate():
             arcade.draw_lrbt_rectangle_filled(self.x, self.x + self.w,

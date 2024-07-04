@@ -11,6 +11,7 @@ from typing import TypedDict
 
 import arcade
 from arcade import Texture, color as colors
+from arcade.types import Color
 
 from charm.lib.errors import NoChartsError, UnknownLanesError, ChartPostReadParseError
 from charm.lib.gamemodes.four_key import FourKeyChart, FourKeyEngine, FourKeyJudgement, FourKeyNote
@@ -61,7 +62,7 @@ class NoteColor:
     CAUTION = colors.YELLOW
 
     @classmethod
-    def from_note(cls, note: FNFNote):
+    def from_note(cls, note: FNFNote) -> Color:
         match note.type:
             case NoteType.NORMAL:
                 if note.lane == 0:
@@ -72,6 +73,8 @@ class NoteColor:
                     return cls.GREEN
                 elif note.lane == 3:
                     return cls.RED
+                else:
+                    return colors.BLACK
             case NoteType.BOMB:
                 return cls.BOMB
             case NoteType.DEATH:
@@ -124,7 +127,7 @@ class FNFChart(FourKeyChart):
 
         self.notes: list[FNFNote] = []
 
-    def get_current_sustains(self, time: Seconds):
+    def get_current_sustains(self, time: Seconds) -> list[int]:
         return [note.lane for note in self.notes if note.is_sustain and note.time <= time and note.end >= time]
 
 
@@ -249,8 +252,8 @@ class FNFSong(Song[FNFChart]):
                 lanemap: list[tuple[int, int, NoteType]] = [(0, 0, NoteType.NORMAL), (0, 1, NoteType.NORMAL), (0, 2, NoteType.NORMAL), (0, 3, NoteType.NORMAL),
                                                             (1, 0, NoteType.NORMAL), (1, 1, NoteType.NORMAL), (1, 2, NoteType.NORMAL), (1, 3, NoteType.NORMAL)]
             # Actually make two charts
-            sectionNotes = section["sectionNotes"]
-            for note in sectionNotes:
+            section_notes = section["sectionNotes"]
+            for note in section_notes:
                 extra = None
                 if len(note) > 3:
                     extra = note[3:]
@@ -328,7 +331,7 @@ class FNFSong(Song[FNFChart]):
 
         return charts
 
-    def get_chart(self, player, difficulty):
+    def get_chart(self, player: str, difficulty: str) -> FNFChart:
         return next((c for c in self.charts if c.difficulty == difficulty and c.instrument == f"fnf-player{player}"), None)
 
 
@@ -347,7 +350,7 @@ class FNFEngine(FourKeyEngine):
         self.hit_window = hit_window
         self.judgements = judgements
 
-    def calculate_score(self):
+    def calculate_score(self) -> None:
         # Get all non-scored notes within the current window
         for note in [n for n in self.current_notes if n.time <= self.chart_time + self.hit_window]:
             # Missed notes (current time is higher than max allowed time for note)
@@ -384,7 +387,7 @@ class FNFEngine(FourKeyEngine):
         if self.hp == self.min_hp:
             self.has_died = True
 
-    def score_note(self, note: FNFNote):
+    def score_note(self, note: FNFNote) -> None:
         # Ignore notes we haven't done anything with yet
         if not (note.hit or note.missed):
             return
