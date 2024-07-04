@@ -34,27 +34,32 @@ class UiView(DigiView):
         for _ in range(int(child_count)):
             self.element_list.add_child(BoxElement(colour=color.Color.random(a=255), min_size=Vec2(0.0, 100.0)))
         self.element_list.add_child(BoxElement(colour=(0, 0, 0, 0)))
-
-        self.sub_list: VerticalElementList = VerticalElementList(strict=True)
-
         self._ctrl_press: bool = False
 
         self._add_time = 0.0
+
+        self.spawn = -1.0
+        self.sub_list: VerticalElementList = VerticalElementList(strict=True)
+        for _ in range(6):
+            self.sub_list.add_child(BoxElement(colour=color.Color.random(r=200, g=100, a=255), min_size=Vec2(0.0, 60.0)))
 
     def on_resize(self, width: int, height: int) -> None:
         super().on_resize(width, height)
 
         self.root_ui_region.bounds = self.window.rect
-        self.root_ui_region.invalidate_layout()
+        self.root_ui_region.layout()
 
         child_count = self.element_list.bounds.height // 100
 
-        if child_count + 1 == len(self.element_list.children):
+        if child_count == len(self.element_list.children) - 1 and self.sub_list.parent is None:
             return
 
         self.element_list.empty()
         for _ in range(int(child_count) + 1):
             self.element_list.add_child(BoxElement(colour=color.Color.random(a=255), min_size=Vec2(0.0, 100.0)))
+
+        if self.spawn > 0.0:
+            self.spawn = -1.0
 
     def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int):
         if scroll_y:
@@ -82,20 +87,28 @@ class UiView(DigiView):
         super().on_key_press(symbol, modifiers)
         if keymap.back.pressed:
             self.go_back()
-        elif arcade.key.LCTRL:
+        elif symbol == arcade.key.LCTRL:
             self._ctrl_press = True
+        elif symbol == arcade.key.SPACE and self.spawn < 0.0:
+            self.spawn = self.window.time
+            self.element_list.insert_child(self.sub_list, len(self.element_list.children) // 2)
 
     @shows_errors
     @disable_when_focus_lost(keyboard=True)
     def on_key_release(self, symbol: int, modifiers: int) -> None:
         super().on_key_release(symbol, modifiers)
-        if arcade.key.LCTRL:
+        if symbol == arcade.key.LCTRL:
             self._ctrl_press = False
 
     @shows_errors
     def on_update(self, delta_time: float) -> None:
         super().on_update(delta_time)
         self.gum_wrapper.on_update(delta_time)
+
+        if self.spawn > 0.0 and self.sub_list.parent is not None:
+            self.sub_list._minimum_size = Vec2(0.0, 100 + min(300.0, (self.window.time - self.spawn) * 100.0))
+
+            self.element_list.layout()
 
     @shows_errors
     def on_draw(self) -> None:
