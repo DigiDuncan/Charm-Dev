@@ -225,6 +225,36 @@ class NoteSprite(Sprite):
         self.note = None
 
 
+class StrikelineSprite(Sprite):
+
+    def __init__(self, x: float, y: float, active_texture: Texture, inactive_texture: Texture, active_alpha: float = 255.0, inactive_alpha: float = 64.0):
+        super().__init__(path_or_texture=inactive_texture, center_x=x, center_y=y)
+        self._active: bool = False
+
+        self._active_texture: Texture = active_texture
+        self._inactive_texture: Texture = inactive_texture
+
+        self._active_alpha: float = active_alpha
+        self._inactive_alpha: float = inactive_alpha
+
+        self.alpha = inactive_alpha
+
+    @property
+    def active(self):
+        return self._active
+
+    @active.setter
+    def active(self, is_now_active: bool):
+        if is_now_active:
+            self._active = is_now_active
+            self.texture = self._active_texture
+            self.alpha = self._active_alpha
+        else:
+            self._active = False
+            self.texture = self._inactive_texture
+            self.alpha = self._inactive_alpha
+
+
 # TODO make this a dict of str -> three tuple (named)
 class SustainTextureSet(NamedTuple):
     tail_primary: Texture
@@ -369,12 +399,15 @@ class FourKeyHighway(Highway):
         self.bg_color = (0, 0, 0, 128)  # SKIN
         self.show_hit_window = False
 
-        self.strikeline = SpriteList[FourKeyStrikelineSprite]()
-        for i in [0, 1, 2, 3]:
-            sprite = FourKeyStrikelineSprite(FourKeyNote(self.chart, 0, i, 0, "strikeline"), self, self.note_size)
-            sprite.top = self.strikeline_y
-            sprite.left = self.lane_x(sprite.note.lane)
-            sprite.alpha = 64
+        self.strikeline: SpriteList[StrikelineSprite] = SpriteList(capacity=4)
+        y = self.strikeline_y - self.note_size/2.0
+        for lane in (0, 1, 2, 3):
+            x = self.lane_x(lane) + self.note_size/2.0
+            sprite = StrikelineSprite(
+                x, y,
+                active_texture=load_note_texture("normal", lane, self.note_size),
+                inactive_texture=load_note_texture("strikeline", lane, self.note_size)
+            )
             self.strikeline.append(sprite)
 
         self.hit_window_mid = self.note_y(0) - (self.note_size / 2)
