@@ -39,7 +39,7 @@ class TaikoNote(Note):
 
 
 class TaikoChart(Chart):
-    def __init__(self, song: 'Song', difficulty: str, hash: str | None) -> None:
+    def __init__(self, song: Song, difficulty: str, hash: str | None) -> None:
         super().__init__(song, "taiko", difficulty, "taiko", 1, hash)
         self.song: TaikoSong = song
 
@@ -77,7 +77,7 @@ class TaikoSong(Song[TaikoChart]):
         return song
 
     @classmethod
-    def get_metadata(self, folder: Path) -> Metadata:
+    def get_metadata(cls, folder: Path) -> Metadata:
         chart_files = folder.glob("*.osu")
         raw_chart = RawOsuChart.parse(next(chart_files))
         m = raw_chart.metadata
@@ -96,21 +96,21 @@ class TaikoEngine(Engine):
 
 
 @cache
-def load_note_texture(note_type: str, height: int):
+def load_note_texture(note_type: str, height: int) -> Texture:
     image_name = f"{note_type}"
     try:
         image = img_from_path(files(skins) / "taiko" / f"{image_name}.png")
         if image.height != height:
             width = int((height / image.height) * image.width)
             image = image.resize((width, height), PIL.Image.LANCZOS)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Unable to load texture: {image_name} | {e}")
         return load_missing_texture(height, height)
     return Texture(image)
 
 
 class TaikoNoteSprite(Sprite):
-    def __init__(self, note: TaikoNote, highway: "TaikoHighway", height = 128, *args, **kwargs) -> None:
+    def __init__(self, note: TaikoNote, highway: TaikoHighway, height: int = 128, *args, **kwargs) -> None:
         self.note: TaikoNote = note
         self.highway: TaikoHighway = highway
         tex = load_note_texture(note.type.value, height)
@@ -123,18 +123,18 @@ class TaikoNoteSprite(Sprite):
 
 
 class TaikoLongNoteSprite(TaikoNoteSprite):
-    def __init__(self, note: TaikoNote, highway: "TaikoHighway", height = 128, *args, **kwargs) -> None:
+    def __init__(self, note: TaikoNote, highway: TaikoHighway, height: int = 128, *args, **kwargs) -> None:
         super().__init__(note, highway, *args, **kwargs)
 
         color = colors.YELLOW if note.type == NoteType.DRUMROLL else colors.MAGENTA
         self.trail = TaikoNoteTrail(self.position, self.note.length, self.highway.note_size, self.highway.px_per_s,
                                     color, color[:3] + (60,))
 
-    def update_animation(self, delta_time: float):
+    def update_animation(self, delta_time: float) -> None:
         self.trail.set_position(*self.position)
         super().update_animation(delta_time)
 
-    def draw_trail(self):
+    def draw_trail(self) -> None:
         self.trail.draw()
 
 
@@ -187,7 +187,7 @@ class TaikoHighway(Highway):
         self.visible_time = 0.1
 
     @property
-    def strikeline_y(self):
+    def strikeline_y(self) -> float:
         return self.w / 10
 
     @property
@@ -195,14 +195,14 @@ class TaikoHighway(Highway):
         return (self.h // self.chart.lanes)
 
     @property
-    def px_per_s(self):
+    def px_per_s(self) -> float:
         return self.w / self.viewport
 
-    def note_y(self, at: float):
+    def note_y(self, at: float) -> float:
         rt = at - self.song_time
         return (-self.px_per_s * rt) - self.strikeline_y + self.x
 
-    def update(self, song_time: float):
+    def update(self, song_time: float) -> None:
         super().update(song_time)
         self.sprite_buckets.update_animation(song_time)
         # TODO: Replace with better pixel_offset calculation
@@ -229,7 +229,7 @@ class TaikoHighway(Highway):
         return self._pos
 
     @pos.setter
-    def pos(self, p: tuple[int, int]):
+    def pos(self, p: tuple[int, int]) -> None:
         old_pos = self._pos
         diff_x = p[0] - old_pos[0]
         diff_y = p[1] - old_pos[1]
@@ -240,11 +240,11 @@ class TaikoHighway(Highway):
         self.strikeline.move(diff_x, diff_y)
 
     @property
-    def pixel_offset(self):
+    def pixel_offset(self) -> int:
         # TODO: Replace with better pixel_offset calculation
         return self._pixel_offset
 
-    def draw(self):
+    def draw(self) -> None:
         with self.static_camera.activate():
             arcade.draw_lrbt_rectangle_filled(self.x, self.x + self.w,
                                               self.y, self.y + self.h,
