@@ -86,10 +86,9 @@ select = [
     "SLF",      # flake8-self
     "PTH",      # flake8-use-pathlib
     "FIX",      # flake8-fixme
-    "ERA",      # eradicate
     "PGH",      # pygrep-hooks
     "RUF",      # Ruff-specific rules
 
 ]
-ignore = ["E501", "COM812", "PIE790", "RET504", "RUF001", "RUF013", "ANN101", "ANN102", "ANN204", "FBT003", "N817", "B019", "C901", "RET507"]
+ignore = ["E501", "COM812", "PIE790", "RET504", "RUF001", "RUF013", "ANN101", "ANN102", "ANN204", "FBT003", "N817", "B019", "C901", "RET507", "E741"]
 

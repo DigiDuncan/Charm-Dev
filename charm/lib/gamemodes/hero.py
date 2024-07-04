@@ -3,7 +3,8 @@ from __future__ import annotations
 from importlib.resources import files
 from collections import defaultdict
 from functools import cache
-from typing import Literal, cast, TypedDict, Generator, Any, NamedTuple
+from typing import Literal, cast, TypedDict, Any
+from collections.abc import Generator
 from dataclasses import dataclass
 from pathlib import Path
 import configparser
@@ -31,7 +32,6 @@ from charm.lib.utils import img_from_path, nuke_smart_quotes
 from charm.objects.lyric_animator import LyricEvent
 from charm.lib.pool import Pool
 
-from charm.objects.line_renderer import LongNoteRenderer
 import charm.data.images.skins as skins
 
 logger = logging.getLogger("charm")
@@ -248,7 +248,7 @@ class HeroChord:
         return self.notes[0].missed
 
     @missed.setter
-    def missed(self, v) -> None:
+    def missed(self, v: bool) -> None:
         for n in self.notes:
             n.missed = v
 
@@ -325,7 +325,7 @@ class HeroChart(Chart):
     def calculate_hopos(self) -> None:
         # This is basically ripped from Charm-Legacy.
         # https://github.com/DigiDuncan/Charm-Legacy/blob/3187a8f2fa8c8876c2706b731bff6913dc0bad60/charm/song.py#L179
-        for last_chord, current_chord in zip(self.chords[:-1], self.chords[1:]):  # python zip pattern, wee
+        for last_chord, current_chord in zip(self.chords[:-1], self.chords[1:], strict = True):  # python zip pattern, wee
             timesig = self.song.indexes_by_tick["time_sig"].lteq(last_chord.tick)
             if timesig is None:
                 timesig = TSEvent(0, 0, 4, 4)
@@ -487,7 +487,7 @@ class HeroSong(Song[HeroChart]):
                     continue
                 # BPM Events
                 elif m := re.match(RE_B, line):
-                    tick, mbpm = [int(i) for i in m.groups()]
+                    tick, mbpm = (int(i) for i in m.groups())
                     tick = int(tick)
                     if not sync_track and tick != 0:
                         raise ChartParseError(line_num, "Chart has no BPM event at tick 0.")
@@ -581,14 +581,14 @@ class HeroSong(Song[HeroChart]):
         song.metadata = metadata
         return song
 
-    def calculate_beats(self):
+    def calculate_beats(self) -> None:
         beats = []
         current_time = 0
         last_note = max([c.notes[-1] for c in self.charts])
         bpm_events = self.events_by_type(BPMChangeTickEvent)
         bpm_events.append(BPMChangeTickEvent(last_note.time, last_note.tick, bpm_events[-1].new_bpm))
         current_id = 0
-        for current_bpm_event, next_bpm_event in zip(bpm_events[:-1], bpm_events[1:]):
+        for current_bpm_event, next_bpm_event in itertools.pairwise(bpm_events):
             current_beat = 0
             ts: TSEvent = [t for t in self.events_by_type(TSEvent) if t.time <= current_time][-1]
             ts_num, ts_denom = ts.numerator, ts.denominator
@@ -599,7 +599,7 @@ class HeroSong(Song[HeroChart]):
                 current_beat += 1
         self.events.extend(beats)
 
-    def process_lyrics(self):
+    def process_lyrics(self) -> None:
         """Takes a Song and generates a LyricAnimator-compatible list of LyricEvents."""
         end_time = None
         current_full_string = ""
@@ -638,7 +638,7 @@ class HeroSong(Song[HeroChart]):
             p.karaoke = nuke_smart_quotes(p.karaoke)
         self.lyrics = processsed_lyrics
 
-    def index(self):
+    def index(self) -> None:
         """Save indexes of important look-up events. THIS IS SLOW."""
         self.indexes_by_tick["bpm"] = Index[Ticks, BPMChangeTickEvent](self.events_by_type(BPMChangeTickEvent), "tick")
         self.indexes_by_tick["time_sig"] = Index[Ticks, TSEvent](self.events_by_type(TSEvent), "tick")
@@ -651,7 +651,7 @@ class HeroSong(Song[HeroChart]):
 
 # SKIN
 @cache
-def load_note_texture(note_type, note_lane, height) -> Texture:
+def load_note_texture(note_type: str, note_lane: int, height: int) -> Texture:
     image_name = f"{note_type}-{note_lane + 1}"
     open_height = int(height / (128 / 48))
     try:
@@ -662,14 +662,14 @@ def load_note_texture(note_type, note_lane, height) -> Texture:
         elif image.height != open_height:
             width = int((open_height / image.height) * image.width)
             image = image.resize((width, open_height), PIL.Image.LANCZOS)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Unable to load texture: {image_name} | {e}")
         return load_missing_texture(height, height)
     return Texture(image)
 
 
 class HeroHighway(Highway):
-    def __init__(self, chart: HeroChart, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5, auto = False, show_flags = False):
+    def __init__(self, chart: HeroChart, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5, *, show_flags: bool = False):
         if size is None:
             self.window = arcade.get_window()
             size = int(self.window.width / (1280 / 400)), self.window.height
@@ -708,9 +708,7 @@ class HeroHighway(Highway):
         # So this is a patch job at best.
         self._note_generator: Generator[Note, Any, None] = (note for note in self.notes)
 
-        self._note_pool: Pool[NoteSprite] = Pool(
-            list(NoteSprite(x=-1000.0, y=-1000.0) for _ in range(1000))
-        )
+        self._note_pool: Pool[NoteSprite] = Pool([NoteSprite(x=-1000.0, y=-1000.0) for _ in range(1000)])
         self._note_sprites: SpriteList[NoteSprite] = SpriteList(capacity=1024)
         self._note_sprites.program = self.window.ctx.sprite_list_program_no_cull  # avoid orthographic culling
         self._note_sprites.extend(self._note_pool.source)
@@ -723,9 +721,7 @@ class HeroHighway(Highway):
         # So this is a patch job at best.
         self._sustain_generator: Generator[Note, Any, None] = (note for note in self.notes if note.length)
 
-        self._sustain_pool: Pool[SustainSprites] = Pool(
-            list(SustainSprites(self.note_size, self.note_size/2.0, True) for _ in range(100))
-        )
+        self._sustain_pool: Pool[SustainSprites] = Pool([SustainSprites(self.note_size, self.note_size/2.0, True) for _ in range(100)])
         self._sustain_sprites: SpriteList[Sprite] = SpriteList()
         self._sustain_sprites.program = self.window.ctx.sprite_list_program_no_cull  # avoid orthographic culling
         for sustain in self._sustain_pool.source:
@@ -736,47 +732,15 @@ class HeroHighway(Highway):
         _missed_cap = load_note_texture('cap', 5, self.note_size // 2)
 
         self._sustain_textures: dict[int, SustainTextureDict] = {
-            0: {'primary': SustainTextures(
-                    load_note_texture('tail', 0, self.note_size),
-                    load_note_texture('body', 0, self.note_size),
-                    load_note_texture('cap', 0, self.note_size // 2)
+            i: {'primary': SustainTextures(
+                    load_note_texture('tail', i, self.note_size),
+                    load_note_texture('body', i, self.note_size),
+                    load_note_texture('cap', i, self.note_size // 2)
                 ),
-                'miss': SustainTextures(_missed_tail, _missed_body, _missed_cap)},
-            1: {'primary': SustainTextures(
-                    load_note_texture('tail', 1, self.note_size),
-                    load_note_texture('body', 1, self.note_size),
-                    load_note_texture('cap', 1, self.note_size // 2)
-                ),
-                'miss': SustainTextures(_missed_tail, _missed_body, _missed_cap)},
-            2: {'primary': SustainTextures(
-                    load_note_texture('tail', 2, self.note_size),
-                    load_note_texture('body', 2, self.note_size),
-                    load_note_texture('cap', 2, self.note_size // 2)
-                ),
-                'miss': SustainTextures(_missed_tail, _missed_body, _missed_cap)},
-            3: {'primary': SustainTextures(
-                    load_note_texture('tail', 3, self.note_size),
-                    load_note_texture('body', 3, self.note_size),
-                    load_note_texture('cap', 3, self.note_size // 2)
-                ),
-                'miss': SustainTextures(_missed_tail, _missed_body, _missed_cap)},
-            4: {'primary': SustainTextures(
-                    load_note_texture('tail', 4, self.note_size),
-                    load_note_texture('body', 4, self.note_size),
-                    load_note_texture('cap', 4, self.note_size // 2)
-                ),
-                'miss': SustainTextures(_missed_tail, _missed_body, _missed_cap)},
-            5: {'primary': SustainTextures(
-                    load_note_texture('tail', 5, self.note_size),
-                    load_note_texture('body', 5, self.note_size),
-                    load_note_texture('cap', 5, self.note_size // 2)
-                ),
-                'miss': SustainTextures(_missed_tail, _missed_body, _missed_cap)},
-        }
+                'miss': SustainTextures(_missed_tail, _missed_body, _missed_cap)}
+        for i in range(6)}
 
         self._next_sustain = next(self._sustain_generator, None)
-
-        self.auto = auto
 
         self._show_flags = show_flags
 
@@ -845,29 +809,6 @@ class HeroHighway(Highway):
                 sustain.hide()
                 self._sustain_pool.give(sustain)
 
-        # TODO: Remove auto features from Highway and Engine and use an auto-input instead
-
-        # if self.auto:
-        #     # while self.note_sprites[self.note_index].note.time < self.song_time - 0.050:
-        #     #     self.note_index += 1
-        #     # Fancy strikeline
-        #     i = self.chart.indexes_by_time["note"].lteq_index(self.song_time - 0.050) or 0
-        #     while True:
-        #         note_sprite = self.note_sprites[i]
-        #         if note_sprite.note.time > self.song_time + 0.050:
-        #             break
-        #         if note_sprite.note.lane < 5:
-        #             self._last_strikeline_note[note_sprite.note.lane] = note_sprite.note
-        #         if self.song_time > note_sprite.note.time:
-        #             note_sprite.alpha = 0
-        #         i += 1
-        #     for n, note in enumerate(self._last_strikeline_note):
-        #         if note is None:
-        #             self.strikeline[n].alpha = 64
-        #         else:
-        #             self.strikeline[n].alpha = ease_linear(255, 64, perc(note.end, note.end + 0.25, self.song_time))
-
-
     @property
     def pos(self) -> tuple[int, int]:
         return self._pos
@@ -914,16 +855,6 @@ class HeroHighway(Highway):
     @show_flags.setter
     def show_flags(self, v: bool) -> None:
         self._show_flags = v
-        # TODO: Remove? Unsure what this did
-        # if self._show_flags:
-        #     for sprite in self.sprite_buckets.sprites:
-        #         if sprite.note.lane in [5, 6]:
-        #             sprite.alpha = 255
-        # else:
-        #     for sprite in self.sprite_buckets.sprites:
-        #         if sprite.note.lane in [5, 6]:
-        #             sprite.alpha = 0
-
 
 @dataclass
 class StrumEvent(Event):
