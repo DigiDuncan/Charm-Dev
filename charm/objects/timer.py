@@ -9,7 +9,7 @@ from charm.lib.utils import px_to_pt
 
 
 class Timer:
-    def __init__(self, width: int, total_time: float, start_time: float = 0, paused = False,
+    def __init__(self, width: int, total_time: float, start_time: float = 0, paused: bool = False,
                  bar_bg_color: Color = colors.WHITE, bar_fill_color: Color = CharmColors.FADED_PURPLE, bar_border_color: Color = colors.BLACK,
                  height: int = 33, text_color: Color = colors.BLACK, text_font: str = "bananaslip plus",
                  x: int = 0, y: int = 0):
@@ -79,17 +79,17 @@ class Timer:
         return self.y + (self.height // 2)
 
     @center_x.setter
-    def center_x(self, v: int):
+    def center_x(self, v: int) -> None:
         self.x = v - (self.width // 2)
         self._label.x = v
 
     @center_y.setter
-    def center_y(self, v: int):
+    def center_y(self, v: int) -> None:
         self.y = v - (self.height // 2)
         self._label.y = v + 5
 
     def lerp_current_time(self, offset: float, duration: float,
-                          start_time: float = None):
+                          start_time: float = None) -> None:
         start_position = self.current_time_offset
         start_time = start_time or self._clock
         self._current_time_lerps.append(
@@ -97,14 +97,14 @@ class Timer:
         )
 
     def lerp_total_time(self, offset: float, duration: float,
-                        start_time: float = None):
+                        start_time: float = None) -> None:
         start_position = self.total_time_offset
         start_time = start_time or self._clock
         self._total_time_lerps.append(
             LerpData(start_position, offset, start_time, start_time + duration)
         )
 
-    def update(self, delta_time: float, auto_update_time = False):
+    def update(self, delta_time: float, auto_update_time: bool = False) -> None:
         if not self.paused:
             self._clock += delta_time
             if auto_update_time:
@@ -117,7 +117,7 @@ class Timer:
         for lerp in [v for v in self._total_time_lerps if v.end_time > self._clock]:
             self.total_time_offset = ease_linear(lerp.minimum, lerp.maximum, perc(lerp.start_time, lerp.end_time, self._clock))
 
-    def draw(self):
+    def draw(self) -> None:
         arcade.draw_rect_filled(XYWH(self.center_x, self.center_y, self.width, self.height), self.bar_bg_color)
         arcade.draw_rect_filled(LRBT(self.x, self.x + self.fill_px, self.y, self.y + self.height), self.bar_fill_color)
         arcade.draw_rect_outline(XYWH(self.center_x, self.center_y, self.width, self.height), self.bar_border_color, 1)

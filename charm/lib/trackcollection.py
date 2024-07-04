@@ -36,7 +36,7 @@ class TrackCollection:
     def volume(self) -> float:
         if not self.tracks:
             return 1.0
-        return self.tracks[0].volume # type: ignore
+        return self.tracks[0].volume
 
     @volume.setter
     def volume(self, v: float) -> None:
