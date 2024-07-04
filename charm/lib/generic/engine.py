@@ -20,10 +20,10 @@ class Judgement:
     hp_change: float = 0
 
     @property
-    def seconds(self):
+    def seconds(self) -> Seconds:
         return self.ms / 1000
 
-    def __lt__(self, other):
+    def __lt__(self, other: Judgement):
         return self.ms < other.ms
 
     def __repr__(self) -> str:
@@ -70,12 +70,12 @@ class DigitalKeyEvent[K](EngineEvent):
 
 
 class Engine:
-    def __init__(self, chart: Chart, hit_window: Seconds, judgements: list[Judgement] = [], offset: Seconds = 0):
+    def __init__(self, chart: Chart, hit_window: Seconds, judgements: list[Judgement] = None, offset: Seconds = 0):
         """The class that processes user inputs into score according to a Chart."""
         self.chart = chart
         self.hit_window = hit_window
         self.offset = offset
-        self.judgements = judgements
+        self.judgements = judgements or []
 
         self.chart_time: Seconds = 0
         self.active_notes = self.chart.notes.copy()
@@ -138,7 +138,8 @@ class Engine:
 
     def get_note_judgement(self, note: Note) -> Judgement:
         rt = abs(note.hit_time - note.time)
-        # FIXME: Lag?
+        # NOTE: This might not be the fast way to get the right judgement,
+        # maybe we should switch to an Index?
         for j in self.judgements:
             if rt <= j.seconds:
                 return j

@@ -38,11 +38,11 @@ class StrikelineSprite(Sprite):
         self.alpha = inactive_alpha
 
     @property
-    def active(self):
+    def active(self) -> bool:
         return self._active
 
     @active.setter
-    def active(self, is_now_active: bool):
+    def active(self, is_now_active: bool) -> None:
         if is_now_active:
             self._active = is_now_active
             self.texture = self._active_texture
@@ -65,9 +65,9 @@ SustainTextureDict = dict[str, SustainTextures]
 # TODO: better name?
 class SustainSprites:
 
-    def __init__(self, size, tail_spacing: float = 0.0, down_scrolling: bool = False):
+    def __init__(self, size: float, tail_spacing: float = 0.0, *, downscroll: bool = False):
         self.size = size
-        self.down_scrolling: bool = down_scrolling
+        self.down_scrolling: bool = downscroll
 
         self._cap: Sprite = Sprite(center_x=-1000)
         self._body: Sprite = Sprite(center_x=-1000)
@@ -82,10 +82,10 @@ class SustainSprites:
 
         self.hide()
 
-    def get_sprites(self):
+    def get_sprites(self) -> tuple[Sprite]:
         return self._cap, self._body, self._tail
 
-    def place(self, note: Note, x, y, length, textures: SustainTextureDict):
+    def place(self, note: Note, x: float, y: float, length: float, textures: SustainTextureDict) -> None:
         # TODO: test assumption about texture sizes
         self.note = note
         self._textures = textures
@@ -108,22 +108,22 @@ class SustainSprites:
         if body_size <= 0.0:
             self._body.visible = False
 
-    def set_y(self, y):
+    def set_y(self, y: float) -> None:
         self._tail.center_y = y
         self._body.center_y = y - self._body_offset
         self._cap.center_y = y - self._cap_offset
 
-    def show(self):
+    def show(self) -> None:
         self._cap.visible = True
         self._body.visible = True
         self._tail.visible = True
 
-    def hide(self):
+    def hide(self) -> None:
         self._cap.visible = False
         self._body.visible = False
         self._tail.visible = False
 
-    def update_texture(self):
+    def update_texture(self) -> None:
         # TODO: Update to work better with dictionaries / be overridden by game modes
         if not self.note or not self._textures:
             return

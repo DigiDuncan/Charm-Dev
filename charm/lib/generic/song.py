@@ -67,7 +67,7 @@ class Note:
     - `missed: bool`: has this note been missed?
     - `hit_time: float`: when was this note hit?
 
-    - `extra_data: tuple`: ¯\_(ツ)_/¯"""  # noqa
+    - `extra_data: tuple`: ¯\_(ツ)_/¯"""  # noqa: W605
     chart: Chart
     time: Seconds
     lane: int
@@ -86,7 +86,7 @@ class Note:
         return self.time + self.length
 
     @end.setter
-    def end(self, v: Seconds):
+    def end(self, v: Seconds) -> None:
         self.length = v - self.time
 
     @property
@@ -97,13 +97,15 @@ class Note:
     def is_sustain(self) -> bool:
         return self.length > 0
 
-    def __lt__(self, other) -> bool:
+    def __lt__(self, other: Event | Note) -> bool:
         if isinstance(other, Note):
             return (self.time, self.lane) < (other.time, other.lane)
         elif isinstance(other, Event):
             if self.time == other.time:
                 return False
             return self.time < other.time
+        else:
+            raise ValueError
 
     def __repr__(self) -> str:
         end = f"-{self.end:.3f}"
@@ -121,7 +123,7 @@ class Event:
     * `time: float`: event start in seconds."""
     time: Seconds
 
-    def __lt__(self, other) -> bool:
+    def __lt__(self, other: Event) -> bool:
         return self.time < other.time
 
     def __repr__(self) -> str:
@@ -144,7 +146,7 @@ class BPMChangeEvent(Event):
         return 1 / (self.new_bpm / 60)
 
     @beat_length.setter
-    def beat_length(self, v: Seconds):
+    def beat_length(self, v: Seconds) -> None:
         self.new_bpm = (1 / v) * 60
 
     def __repr__(self) -> str:
