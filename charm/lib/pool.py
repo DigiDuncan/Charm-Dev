@@ -16,6 +16,8 @@ the slowest part is getting the item's index, so we could speed it up with some 
 that adds complexity and memory that probably isn't worth it. Also using the idx methods exclude that step
 so if you need the speed that is the way to use the Pool.
 """
+from __future__ import annotations
+
 from collections.abc import Callable
 
 
@@ -27,11 +29,11 @@ class Pool[T]:
         self._free_idx: int = 0
 
     @classmethod
-    def from_callback(cls, size: int, callback: Callable[[int], T]):
-        return cls(list((callback(idx) for idx in range(size))))
+    def from_callback(cls, size: int, callback: Callable[[int], T]) -> Pool[T]:
+        return cls([(callback(idx) for idx in range(size))])
 
     @property
-    def source(self):
+    def source(self) -> list[T]:
         return self._source
 
     @property
@@ -43,14 +45,14 @@ class Pool[T]:
         return tuple(self._source[self._free_idx:])
 
     @property
-    def size(self):
+    def size(self) -> int:
         return self._size
 
     @property
-    def next_idx(self):
+    def next_idx(self) -> int:
         return self._free_idx
 
-    def has_free_slot(self):
+    def has_free_slot(self) -> bool:
         return self._free_idx < self._size
 
     def get(self) -> T:
@@ -61,10 +63,10 @@ class Pool[T]:
         self._free_idx += 1
         return item
 
-    def give(self, item: T):
+    def give(self, item: T) -> None:
         idx = self._source.index(item)
         if idx >= self._free_idx:
-            return ValueError('trying to return an item which was already returned')
+            raise ValueError('trying to return an item which was already returned')
 
         self._free_idx -= 1
         self._source[self._free_idx], self._source[idx] = item, self._source[self._free_idx]
