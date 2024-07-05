@@ -157,19 +157,6 @@ class FourKeySong(Song[FourKeyChart]):
     pass
 
 
-# TODO: make this a dict of str -> three tuple (named)
-class SustainTextureSet(NamedTuple):
-    tail_primary: Texture
-    body_primary: Texture
-    cap_primary: Texture
-    tail_miss: Texture = None
-    body_miss: Texture = None
-    cap_miss: Texture = None
-    tail_hit: Texture = None
-    body_hit: Texture = None
-    cap_hit: Texture = None
-
-
 class FourKeyHighway(Highway):
     def __init__(self, chart: FourKeyChart, engine: FourKeyEngine, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5):
         if size is None:
@@ -179,6 +166,7 @@ class FourKeyHighway(Highway):
         super().__init__(chart, pos, size, gap)
         self.engine = engine
 
+        # TODO: re-add the functionality of
         self.viewport = 0.75  # TODO: BPM scaling?
 
         # NOTE POOL DEFINITION AND CONSTRUCTION

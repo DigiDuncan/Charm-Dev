@@ -82,7 +82,7 @@ class SustainSprites:
 
         self.hide()
 
-    def get_sprites(self) -> tuple[Sprite]:
+    def get_sprites(self) -> tuple[Sprite, ...]:
         return self._cap, self._body, self._tail
 
     def place(self, note: Note, x: float, y: float, length: float, textures: SustainTextureDict) -> None:
@@ -98,6 +98,8 @@ class SustainSprites:
         if self.down_scrolling:
             self._body_offset *= -1
             self._cap_offset *= -1
+
+        # TODO: Add option to flip textures when down scrolling
 
         self._tail.position = x, y
         self._body.position = x, y - self._body_offset

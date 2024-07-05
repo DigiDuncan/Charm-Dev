@@ -209,10 +209,10 @@ class FNFSongView(DigiView):
         elif keymap.navup.pressed:
             # TODO clean-up
             viewport = self.highway_1.viewport
-            self.highway_1.viewport = self.highway_2.viewport = min(10.0, viewport + 0.05)
+            self.highway_1.viewport = self.highway_2.viewport = 0.75
         elif keymap.navdown.pressed:
             viewport = self.highway_1.viewport
-            self.highway_1.viewport = self.highway_2.viewport = max(0.05, viewport - 0.05)
+            self.highway_1.viewport = self.highway_2.viewport = 0.0
 
         if self.tracks.playing:
             self.engine.on_key_press(symbol, modifiers)

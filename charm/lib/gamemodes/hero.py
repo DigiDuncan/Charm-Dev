@@ -727,6 +727,7 @@ class HeroHighway(Highway):
         for sustain in self._sustain_pool.source:
             self._sustain_sprites.extend(sustain.get_sprites())
 
+        # TODO: Add lane 7 (open) sustains correctly
         _missed_tail = load_note_texture('tail', 5, self.note_size)
         _missed_body = load_note_texture('body', 5, self.note_size)
         _missed_cap = load_note_texture('cap', 5, self.note_size // 2)
@@ -884,7 +885,7 @@ class HeroEngine(Engine):
         super().__init__(chart, hit_window, judgements, offset)
 
         self.current_chords: list[HeroChord] = self.chart.chords.copy()
-        self.current_events: list[DigitalKeyEvent[Literal[0,1,2,3,4,5,6,7]]] = []
+        self.current_events: list[DigitalKeyEvent[Literal[0, 1, 2, 3, 4, 5, 6, 7]]] = []
 
         self.combo = 0
         self.star_power = False

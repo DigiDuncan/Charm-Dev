@@ -32,7 +32,7 @@ class Highway:
 
     @property
     def px_per_s(self) -> float:
-        return self.h / self.viewport
+        return float('inf') if not self.viewport else self.h / self.viewport
 
     @property
     def x(self) -> int:
