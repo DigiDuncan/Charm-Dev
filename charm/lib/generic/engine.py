@@ -2,6 +2,7 @@ from __future__ import annotations
 import math
 from typing import TYPE_CHECKING, Literal
 
+from charm.lib.components import Component
 from charm.lib.generic.song import Chart, Seconds
 if TYPE_CHECKING:
     from charm.lib.generic.results import Results
@@ -72,8 +73,8 @@ class DigitalKeyEvent[K](EngineEvent):
         return self.__repr__()
 
 
-class Engine:
-    def __init__(self, chart: Chart, hit_window: Seconds, judgements: list[Judgement] = None, offset: Seconds = 0):
+class Engine(Component):
+    def __init__(self, chart: Chart, hit_window: Seconds = 0.0, judgements: list[Judgement] = None, offset: Seconds = 0):
         """The class that processes user inputs into score according to a Chart."""
         self.chart = chart
         self.hit_window = hit_window

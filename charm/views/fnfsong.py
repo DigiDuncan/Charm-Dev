@@ -1,4 +1,5 @@
 from __future__ import annotations
+import math
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -208,10 +209,8 @@ class FNFSongView(DigiView):
             self.show_results()
         elif keymap.navup.pressed:
             # TODO clean-up
-            viewport = self.highway_1.viewport
             self.highway_1.viewport = self.highway_2.viewport = 0.75
         elif keymap.navdown.pressed:
-            viewport = self.highway_1.viewport
             self.highway_1.viewport = self.highway_2.viewport = 0.0
 
         if self.tracks.playing:
