@@ -4,6 +4,8 @@ from charm.lib.generic.engine import Engine
 from charm.lib.generic.display import Display
 from charm.lib.generic.song import Song, Chart
 
+# -- fnf --
+from charm.lib.gamemodes.fnf import FNFEngine, FNFDisplay
 
 __all__ = (
     'GameModeDefinition',
@@ -18,11 +20,10 @@ __all__ = (
 # ?: Add other gamemode properties?
 # !: We are doing a single engine per mode, prevents multiplayer, but lets leave that for after MVP
 class GameModeDefinition(TypedDict):
-    song: type[Song[Chart]]  # !: So uh we are redoing charts soon so this won't work
     engines: type[Engine]
     display: type[Display]
 
 
 GAMEMODES: dict[str, GameModeDefinition] = {
-
+    'fnf': GameModeDefinition(engines=FNFEngine, display=FNFDisplay)
 }

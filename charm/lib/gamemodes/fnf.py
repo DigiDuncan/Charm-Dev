@@ -10,12 +10,15 @@ from pathlib import Path
 from typing import TypedDict
 
 import arcade
-from arcade import Texture, color as colors
+from arcade import Texture, Sprite, draw_sprite, Text, color as colors
 from arcade.types import Color
 
 from charm.lib.errors import NoChartsError, UnknownLanesError, ChartPostReadParseError
-from charm.lib.gamemodes.four_key import FourKeyChart, FourKeyEngine, FourKeyJudgement, FourKeyNote
+from charm.lib.gamemodes.four_key import FourKeyChart, FourKeyEngine, FourKeyJudgement, FourKeyNote, FourKeyHighway
+from charm.lib.generic.engine import Engine, AutoEngine
+from charm.lib.anim import ease_circout, perc
 from charm.lib.generic.song import BPMChangeEvent, Event, Metadata, Song
+from charm.lib.generic.display import Display
 from charm.lib.types import Seconds, Milliseconds
 from charm.lib.utils import clamp
 import charm.data.images.skins as skins
@@ -446,3 +449,107 @@ class FNFEngine(FourKeyEngine):
             self.max_streak = max(self.streak, self.max_streak)
             self.streak = 0
             self.last_note_missed = True
+
+class FNFDisplay(Display[FNFEngine]):
+
+    def __init__(self, window, engine: FNFEngine, charts: tuple[FNFChart, ...]):
+        super().__init__(window, engine, charts)
+        # TODO: make more flexible post mvp
+        self._enemy_engine: Engine = AutoEngine(charts[1], 0.166)
+
+        # NOTE: change highways to work of their center position not bottom left
+        # TODO: fix weird highway offset
+        self._player_highway: FourKeyHighway = FourKeyHighway(charts[0], engine, (self._win.width / 3 * 2, 0))
+        self._enemy_highway: FourKeyHighway = FourKeyHighway(charts[1], self._enemy_engine, (0, 0))
+
+        # -- Text Objects --
+        self.show_text: bool = True
+        self._overlay_text: Text = Text("PAUSE", (self._win.width // 2), 10, font_size=24,
+                                        anchor_x="center", color=colors.BLACK,
+                                        font_name="bananaslip plus")
+        self._time_text: Text = Text("??:??", self._win.center_x, 10, font_size=24,
+                                     anchor_x="center", color=colors.BLACK,
+                                     font_name="bananaslip plus")
+        self._score_text: Text = Text("0", self._win.center_x, self._win.height - 10, font_size=24,
+                                    anchor_x="center", anchor_y="top", color=colors.BLACK,
+                                    font_name="bananaslip plus")
+        self._grade_text: Text = Text("Clear", self._win.center_x, self._win.height - 135, font_size=16,
+                                      anchor_x="center", anchor_y="center", color=colors.BLACK,
+                                      font_name="bananaslip plus")
+
+        # -- Judgement --
+        # TODO: move to skinning
+        self._judgement_textures: dict[str, Texture] = {
+            judgement.key: arcade.load_texture(files(skins) / "fnf" / f"judgement-{judgement.key}.png")
+            for judgement in self._engine.judgements
+        }
+
+        self._judgement_sprite: Sprite = Sprite(self._judgement_textures[self._engine.judgements[0].key])
+        self._judgement_sprite.scale = 0.8 * (self._player_highway.w / self._judgement_sprite.width)
+        self._judgement_sprite.alpha = 0
+        self._judgement_jump: float = self._win.center_y + 25
+        self._judgement_land: float = self._win.center_y
+
+        # TODO: Lyrics
+
+        # -- Camera Events
+        self._last_camera_event: CameraFocusEvent = CameraFocusEvent(0, 2)
+        self._last_spotlight_position: int = 0
+        self.last_spotlight_change: int = 0
+        self.go_to_spotlight_position: int = 0
+        self.spotlight_position: int = 0
+        self.camera_events: list[CameraFocusEvent] = [e for e in charts[0].events if isinstance(e, CameraFocusEvent)]
+
+        self.hp_bar_length = 250
+        self._song_time: float = 0.0
+
+    def pause(self) -> None:
+        if not self._engine.has_died:
+            self._overlay_text.text = "PAUSED"
+
+    def update(self, song_time: Seconds) -> None:
+        self._song_time = song_time
+
+        # TODO: Chroma Key
+
+        time_str = f"{int(song_time // 60)}:{int(song_time % 60):02}"
+        if self._time_text.text != time_str:
+            self._time_text.text = time_str
+        if self._score_text.text != str(self._engine.score):
+            self._score_text.text = str(self._engine.score)
+
+        self._enemy_engine.update(song_time)
+        self._enemy_engine.calculate_score()
+
+        self._player_highway.update(song_time)
+        self._enemy_highway.update(song_time)
+
+        if self._engine.latest_judgement_time:
+            time = self._engine.latest_judgement_time
+            self._judgement_sprite.texture = self._judgement_textures[self._engine.latest_judgement.key]
+            self._judgement_sprite.center_y = ease_circout(self._judgement_jump, self._judgement_land, perc(time, time + 0.25, song_time))
+            self._judgement_sprite.alpha = int(ease_circout(255, 0, perc(time + 0.5, time + 1, song_time)))
+
+        if self._engine.accuracy is not None:
+            self._grade_text.text = f"{self._engine.fc_type} | {round(self._engine.accuracy * 100, 2)}% ({self._engine.grade})"
+
+        # TODO: timer
+        # TODO: Spotlight
+
+    def draw(self) -> None:
+        if self.show_text:
+            self._time_text.draw()
+            self._score_text.draw()
+            if self._engine.has_died:
+                self._overlay_text.text = "DEAD"
+                self._overlay_text.draw()
+
+        self._player_highway.draw()
+        self._enemy_highway.draw()
+
+        self._grade_text.draw()
+
+        draw_sprite(self._judgement_sprite)
+
+        # TODO: Like litterally eveything else
+

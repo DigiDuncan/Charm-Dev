@@ -143,11 +143,9 @@ class DigiView(View):
             self.window.set_fullscreen(not self.window.fullscreen)
         elif keymap.mute.pressed:
             self.window.theme_song.volume = 0
-        super().on_key_press(symbol, modifiers)
 
     def on_key_release(self, symbol: int, modifiers: int) -> None:
         keymap.on_key_release(symbol, modifiers)
-        super().on_key_release(symbol, modifiers)
 
     def on_update(self, delta_time: float) -> None:
         for popup in self._errors[:]:

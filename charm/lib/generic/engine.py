@@ -73,7 +73,7 @@ class DigitalKeyEvent[K](EngineEvent):
         return self.__repr__()
 
 
-class Engine(Component):
+class Engine:
     def __init__(self, chart: Chart, hit_window: Seconds = 0.0, judgements: list[Judgement] = None, offset: Seconds = 0):
         """The class that processes user inputs into score according to a Chart."""
         self.chart = chart
@@ -98,6 +98,12 @@ class Engine(Component):
         self.weighted_hit_notes: int = 0
 
         self.keystate = (False,) * self.chart.lanes
+
+    def pause(self) -> None:
+        pass
+
+    def unpause(self) -> None:
+        pass
 
     @property
     def accuracy(self) -> float | None:

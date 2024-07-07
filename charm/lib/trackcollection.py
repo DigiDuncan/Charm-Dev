@@ -1,6 +1,9 @@
 import logging
+from typing import Self
+from pathlib import Path
 
 from arcade import Sound
+from charm.lib.oggsound import OGGSound
 
 from charm.lib.settings import MixerNames, settings
 
@@ -13,6 +16,12 @@ class TrackCollection:
         self.tracks = [s.play(volume = settings.get_volume(self.mixer)) for s in sounds]
         self.pause()
         self.seek(0)
+
+    @classmethod
+    def from_path(cls, path: Path) -> Self:
+        track_files = [f for f in path.iterdir() if f.is_file() and f.suffix in {".ogg", ".mp3", ".wav"}]
+        tracks = [OGGSound(track) if track.suffix == '.ogg' else Sound(track) for track in track_files]
+        return cls(tracks)
 
     @property
     def time(self) -> float:

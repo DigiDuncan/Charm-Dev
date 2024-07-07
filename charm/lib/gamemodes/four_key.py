@@ -5,7 +5,7 @@ import logging
 import math
 from functools import cache
 from statistics import mean
-from typing import Literal, cast, Any, NamedTuple
+from typing import Literal, cast, Any
 
 import arcade
 from arcade import SpriteList, Texture, color as colors
@@ -17,7 +17,7 @@ import PIL.ImageEnhance
 
 import charm.data.images.skins as skins
 from charm.lib.charm import load_missing_texture
-from charm.lib.generic.engine import DigitalKeyEvent, Engine, Judgement
+from charm.lib.generic.engine import DigitalKeyEvent, Engine, AutoEngine, Judgement
 from charm.lib.generic.highway import Highway
 from charm.lib.generic.results import Results
 from charm.lib.generic.song import Note, Chart, Seconds, Song
@@ -158,7 +158,7 @@ class FourKeySong(Song[FourKeyChart]):
 
 
 class FourKeyHighway(Highway):
-    def __init__(self, chart: FourKeyChart, engine: FourKeyEngine, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5):
+    def __init__(self, chart: FourKeyChart, engine: FourKeyEngine | AutoEngine, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5):
         if size is None:
             self.window = arcade.get_window()
             size = int(self.window.width / (1280 / 400)), self.window.height
