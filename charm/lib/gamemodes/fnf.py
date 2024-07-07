@@ -458,9 +458,11 @@ class FNFDisplay(Display[FNFEngine]):
         self._enemy_engine: Engine = AutoEngine(charts[1], 0.166)
 
         # NOTE: change highways to work of their center position not bottom left
-        # TODO: fix weird highway offset
-        self._player_highway: FourKeyHighway = FourKeyHighway(charts[0], engine, (self._win.width / 3 * 2, 0))
+        # TODO: place highways at true ideal locations
+        self._player_highway: FourKeyHighway = FourKeyHighway(charts[0], engine, (0, 0))
+        self._player_highway.pos = (self._win.width - self._player_highway.w - 25, 0)
         self._enemy_highway: FourKeyHighway = FourKeyHighway(charts[1], self._enemy_engine, (0, 0))
+        self._enemy_highway.pos = (25, 0)
 
         # -- Text Objects --
         self.show_text: bool = True
@@ -478,7 +480,7 @@ class FNFDisplay(Display[FNFEngine]):
                                       font_name="bananaslip plus")
 
         # -- Judgement --
-        # TODO: move to skinning
+        # TODO: move to skinning eventually [post mvp]
         self._judgement_textures: dict[str, Texture] = {
             judgement.key: arcade.load_texture(files(skins) / "fnf" / f"judgement-{judgement.key}.png")
             for judgement in self._engine.judgements
@@ -489,10 +491,12 @@ class FNFDisplay(Display[FNFEngine]):
         self._judgement_sprite.alpha = 0
         self._judgement_jump: float = self._win.center_y + 25
         self._judgement_land: float = self._win.center_y
+        self._judgement_sprite.center_x = self._win.center_x
 
         # TODO: Lyrics
 
         # -- Camera Events
+        # TODO: actually impliment
         self._last_camera_event: CameraFocusEvent = CameraFocusEvent(0, 2)
         self._last_spotlight_position: int = 0
         self.last_spotlight_change: int = 0
@@ -500,8 +504,10 @@ class FNFDisplay(Display[FNFEngine]):
         self.spotlight_position: int = 0
         self.camera_events: list[CameraFocusEvent] = [e for e in charts[0].events if isinstance(e, CameraFocusEvent)]
 
+        # TODO: hp
         self.hp_bar_length = 250
-        self._song_time: float = 0.0
+
+        # TODO: Timer, although the timer was not used in fnfsong
 
     def pause(self) -> None:
         if not self._engine.has_died:
@@ -551,5 +557,8 @@ class FNFDisplay(Display[FNFEngine]):
 
         draw_sprite(self._judgement_sprite)
 
-        # TODO: Like litterally eveything else
+    def resize(self, width, height):
+        # ! TODO
+        pass
+
 
