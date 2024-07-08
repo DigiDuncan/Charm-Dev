@@ -9,12 +9,12 @@ if TYPE_CHECKING:
     from charm.lib.types import Seconds
 
 
-class Display[T: Engine]:
+class Display[T: Engine, CT: Chart]:
 
-    def __init__(self, window: DigiWindow, engine: T, charts: tuple[Chart, ...]):
+    def __init__(self, window: DigiWindow, engine: T, charts: tuple[CT, ...]):
         self._win: DigiWindow = window
         self._engine: T = engine
-        self._charts: tuple[Chart, ...] = charts
+        self._charts: tuple[CT, ...] = charts
 
     def update(self, song_time: Seconds) -> None:
         pass

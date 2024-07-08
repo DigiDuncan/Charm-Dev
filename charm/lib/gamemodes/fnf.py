@@ -7,7 +7,10 @@ import math
 from dataclasses import dataclass
 from hashlib import sha1
 from pathlib import Path
-from typing import TypedDict
+from typing import TypedDict, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from charm.lib.digiwindow import DigiWindow
 
 import arcade
 from arcade import Texture, Sprite, draw_sprite, Text, color as colors
@@ -450,9 +453,9 @@ class FNFEngine(FourKeyEngine):
             self.streak = 0
             self.last_note_missed = True
 
-class FNFDisplay(Display[FNFEngine]):
+class FNFDisplay(Display[FNFEngine, FNFChart]):
 
-    def __init__(self, window, engine: FNFEngine, charts: tuple[FNFChart, ...]):
+    def __init__(self, window: DigiWindow, engine: FNFEngine, charts: tuple[FNFChart, ...]):
         super().__init__(window, engine, charts)
         # TODO: make more flexible post mvp
         self._enemy_engine: Engine = AutoEngine(charts[1], 0.166)
