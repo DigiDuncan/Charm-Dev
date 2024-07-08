@@ -67,7 +67,7 @@ class Note:
     - `missed: bool`: has this note been missed?
     - `hit_time: float`: when was this note hit?
 
-    - `extra_data: tuple`: ¯\_(ツ)_/¯"""  # noqa: W605
+    - `extra_data: tuple`: ¯\\_(ツ)_/¯"""
     chart: Chart
     time: Seconds
     lane: int
@@ -168,7 +168,7 @@ class Chart:
 
         self.notes: list[Note] = []
         self.events: list[Event] = []
-        self.bpm: float = None
+        self.bpm: float = 0.0
 
 
 class Song[C: Chart]:

@@ -2,7 +2,6 @@ from __future__ import annotations
 import math
 from typing import TYPE_CHECKING, Literal
 
-from charm.lib.components import Component
 from charm.lib.generic.song import Chart, Seconds
 if TYPE_CHECKING:
     from charm.lib.generic.results import Results
@@ -18,7 +17,7 @@ class Judgement:
     """A Judgement of a single note, basically how close a player got to being accurate with their hit."""
     name: str
     key: str
-    ms: int  # maximum
+    ms: float  # maximum
     score: int
     accuracy_weight: float
     hp_change: float = 0
@@ -74,12 +73,12 @@ class DigitalKeyEvent[K](EngineEvent):
 
 
 class Engine:
-    def __init__(self, chart: Chart, hit_window: Seconds = 0.0, judgements: list[Judgement] = None, offset: Seconds = 0):
+    def __init__(self, chart: Chart, hit_window: Seconds = 0.0, judgements: list[Judgement] | None = None, offset: Seconds = 0):
         """The class that processes user inputs into score according to a Chart."""
         self.chart = chart
         self.hit_window = hit_window
         self.offset = offset
-        self.judgements = judgements or []
+        self.judgements: list[Judgement] = judgements or []
 
         self.chart_time: Seconds = 0
         self.current_notes = self.chart.notes.copy()
@@ -106,7 +105,7 @@ class Engine:
         pass
 
     @property
-    def accuracy(self) -> float | None:
+    def accuracy(self) -> float:
         if self.hits or self.misses:
             return self.weighted_hit_notes / (self.hits + self.misses)
         return 0
@@ -156,6 +155,8 @@ class Engine:
         raise NotImplementedError
 
     def get_note_judgement(self, note: Note) -> Judgement:
+        if note.hit_time is None:
+            raise RuntimeError
         rt = abs(note.hit_time - note.time)
         # NOTE: This might not be the fast way to get the right judgement,
         # maybe we should switch to an Index?
