@@ -469,7 +469,7 @@ class FNFDisplay(Display[FNFEngine, FNFChart]):
 
         # -- Text Objects --
         self.show_text: bool = True
-        self._overlay_text: Text = Text("PAUSE", (self._win.width // 2), 10, font_size=24,
+        self._overlay_text: Text = Text("PAUSE", self._win.center_x, self._win.center_y, font_size=92,
                                         anchor_x="center", color=colors.BLACK,
                                         font_name="bananaslip plus")
         self._time_text: Text = Text("??:??", self._win.center_x, 10, font_size=24,
@@ -514,7 +514,10 @@ class FNFDisplay(Display[FNFEngine, FNFChart]):
 
     def pause(self) -> None:
         if not self._engine.has_died:
-            self._overlay_text.text = "PAUSED"
+            self._overlay_text.text = "PAUSE"
+
+    def unpause(self) -> None:
+        self._overlay_text.text = ""
 
     def update(self, song_time: Seconds) -> None:
         self._song_time = song_time
@@ -551,7 +554,7 @@ class FNFDisplay(Display[FNFEngine, FNFChart]):
             self._score_text.draw()
             if self._engine.has_died:
                 self._overlay_text.text = "DEAD"
-                self._overlay_text.draw()
+            self._overlay_text.draw()
 
         self._player_highway.draw()
         self._enemy_highway.draw()

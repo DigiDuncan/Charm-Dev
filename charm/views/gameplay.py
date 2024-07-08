@@ -90,6 +90,25 @@ class GameView(DigiView):
         super().on_key_press(symbol, modifiers)
         if keymap.back.pressed:
             self.go_back()
+        elif keymap.pause.pressed:
+            self.unpause() if self.paused else self.pause()
+        elif keymap.seek_backward.pressed:
+            self._tracks.seek(self._tracks.time - 5)
+        elif keymap.seek_forward.pressed:
+            self._tracks.seek(self._tracks.time + 5)
+        elif keymap.log_sync.pressed:
+            self._tracks.log_sync()
+        elif keymap.toggle_distractions.pressed:
+            pass
+            # TODO: self.distractions = not self.distractions
+        elif keymap.toggle_chroma.pressed:
+            pass
+            # TODO: self.chroma_key = not self.chroma_key
+        elif self.window.debug.enabled and keymap.debug_toggle_hit_window.pressed:
+            pass
+            # TODO: self.highway_1.show_hit_window = not self.highway_1.show_hit_window
+        elif self.window.debug.enabled and keymap.debug_show_results.pressed:
+            self.show_results()
 
         if not self._paused:
             self._engine.on_key_press(symbol, modifiers)

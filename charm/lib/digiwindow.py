@@ -59,7 +59,7 @@ class DigiWindow(Window):
     def save_atlas(self, name: str = "atlas.png") -> None:
         atlas_path = Path("debug") / name
         atlas_path.parent.mkdir(parents=True, exist_ok=True)
-        self.ctx.default_atlas.save(atlas_path, draw_borders=True, )
+        self.ctx.default_atlas.save(atlas_path, draw_borders=True)
 
     def current_view(self) -> DigiView | None:  # pyright: ignore [reportIncompatibleMethodOverride]
         return cast("DigiView | None", super().current_view)

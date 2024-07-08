@@ -12,6 +12,7 @@ from imgui_bundle import imgui, ImVec2, imgui_ctx
 from .overlaycamera import OverlayCamera
 from .tabs.debugsettingstab import DebugSettingsTab
 from .tabs.debuginfotab import DebugInfoTab
+from .tabs.debugviewtab import DebugViewTab
 from .tabs.debuglogtab import DebugLogTab
 from .fpscounter import FPSCounter
 
@@ -29,6 +30,7 @@ class DebugMenu:
         self.impl: PygletProgrammablePipelineRenderer = create_renderer(window) # type: ignore
         self.settings_tab = DebugSettingsTab(window)
         self.info_tab = DebugInfoTab(window)
+        self.view_tab = DebugViewTab(window)
         self.log_tab = DebugLogTab()
         self.fps_counter = FPSCounter()
         self.debug_label = pyglet.text.Label(
@@ -103,3 +105,4 @@ class DebugMenu:
             self.settings_tab.draw()
             self.info_tab.draw()
             self.log_tab.draw()
+            self.view_tab.draw()
