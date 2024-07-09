@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 import arcade
 from arcade import Texture, Sprite, draw_sprite, Text, color as colors
-from arcade.types import Color
+from arcade.types import Color, Point
 
 from charm.lib.errors import NoChartsError, UnknownLanesError, ChartPostReadParseError
 from charm.lib.gamemodes.four_key import FourKeyChart, FourKeyEngine, FourKeyJudgement, FourKeyNote, FourKeyHighway
@@ -440,7 +440,7 @@ class FNFEngine(FourKeyEngine):
                 logger.debug(f"HP lost (judgement {j} hit, {note}), new HP {self.hp}")
 
         # Judge the player
-        rt = note.hit_time - note.time
+        rt = note.hit_time - note.time  # the type checker is stupid, clearly this isn't ever None at this point
         self.latest_judgement = j
         self.latest_judgement_time = self.chart_time
         self.all_judgements.append((self.latest_judgement_time, rt, self.latest_judgement))
@@ -519,7 +519,7 @@ class FNFDisplay(Display[FNFEngine, FNFChart]):
         self.hp_bar = HPBar(self._win.center_x, self._win.height * 0.75, 10, 250, self._engine)
 
         # Timer, although the timer was not used in fnfsong
-        # EDIT: This is a lie
+        # EDIT: This is a lie. -- Digi
         self.timer = Timer(250, 60)
         self.timer.center_x = self._win.center_x
         self.timer.center_y = 20
@@ -580,12 +580,12 @@ class FNFDisplay(Display[FNFEngine, FNFChart]):
 
         draw_sprite(self._judgement_sprite)
 
-    def resize(self, width, height):
+    def resize(self, width: int, height: int) -> None:
         # ! TODO
         pass
 
-    def debug_fetch_note_sprites_at_point(self, point):
-        # TODO NOT HERE
+    def debug_fetch_note_sprites_at_point(self, point: Point) -> list[Sprite]:
+        # TODO: NOT HERE
         from arcade.sprite_list.collision import get_sprites_at_point
 
         player_notes = get_sprites_at_point(point, self._player_highway._note_sprites)
