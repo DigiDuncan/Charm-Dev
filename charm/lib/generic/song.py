@@ -44,8 +44,12 @@ class Metadata:
         self.path = path
         self.gamemode = gamemode
 
+    @property
+    def shortcode(self) -> str:
+        return f"{self.title}:{self.artist}:{self.album}"
+
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} {self.hash} ({self.title}:{self.artist}:{self.album})>"
+        return f"<{self.__class__.__name__} {self.hash} ({self.shortcode})>"
 
     def __str__(self) -> str:
         return self.__repr__()
@@ -73,7 +77,6 @@ class Note:
     lane: int
     length: Seconds = 0
     type: str = "normal"
-    value: int = 0
 
     hit: bool = False
     missed: bool = False
@@ -170,6 +173,12 @@ class Chart:
         self.events: list[Event] = []
         self.bpm: float = 0.0
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}: {self.song.metadata.shortcode}/{self.gamemode}/{self.instrument}/{self.difficulty}>"
+
+    def __str__(self) -> str:
+        return self.__repr__()
+
 
 class Song[C: Chart]:
     """A list of charts and global events, with some helpful metadata."""
@@ -195,3 +204,9 @@ class Song[C: Chart]:
     @classmethod
     def parse(cls, path: Path) -> Self:
         raise NotImplementedError
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} {self.path}>"
+
+    def __str__(self) -> str:
+        return self.__repr__()

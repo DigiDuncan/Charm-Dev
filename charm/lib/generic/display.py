@@ -7,6 +7,7 @@ if TYPE_CHECKING:
     from charm.lib.digiwindow import DigiWindow
     from charm.lib.generic.engine import Engine
     from charm.lib.generic.song import Chart
+    from charm.lib.generic.sprite import NoteSprite
     from charm.lib.types import Seconds
 
 
@@ -31,5 +32,5 @@ class Display[ET: Engine, CT: Chart]:
 
     # -- DEBUG METHODS --
 
-    def debug_fetch_note_sprites_at_point(self, point: Point):
-        pass
+    def debug_fetch_note_sprites_at_point(self, point: Point) -> list[NoteSprite]:
+        ...
