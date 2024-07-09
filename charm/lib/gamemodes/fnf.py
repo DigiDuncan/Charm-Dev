@@ -21,7 +21,7 @@ from charm.lib.gamemodes.four_key import FourKeyChart, FourKeyEngine, FourKeyJud
 from charm.lib.generic.engine import Engine, AutoEngine
 from charm.lib.anim import ease_circout, perc
 from charm.lib.generic.song import BPMChangeEvent, Event, Metadata, Song
-from charm.lib.generic.display import Display
+from charm.lib.generic.display import Display, HPBar
 from charm.lib.types import Seconds, Milliseconds
 from charm.lib.utils import clamp
 import charm.data.images.skins as skins
@@ -508,7 +508,7 @@ class FNFDisplay(Display[FNFEngine, FNFChart]):
         self.camera_events: list[CameraFocusEvent] = [e for e in charts[0].events if isinstance(e, CameraFocusEvent)]
 
         # TODO: hp
-        self.hp_bar_length = 250
+        self.hp_bar = HPBar(self._win.height / 0.75, self._win.center_y, 10, 250, self._engine)
 
         # TODO: Timer, although the timer was not used in fnfsong
 
@@ -558,6 +558,8 @@ class FNFDisplay(Display[FNFEngine, FNFChart]):
 
         self._player_highway.draw()
         self._enemy_highway.draw()
+
+        self.hp_bar.draw()
 
         self._grade_text.draw()
 
