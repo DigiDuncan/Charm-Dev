@@ -27,7 +27,7 @@ from charm.lib.generic.display import Display, HPBar
 from charm.lib.types import Seconds, Milliseconds
 from charm.lib.utils import clamp
 import charm.data.images.skins as skins
-from charm.objects.lyric_animator import LyricEvent
+from charm.objects.lyric_animator import LyricAnimator, LyricEvent
 from charm.lib.keymap import keymap
 
 logger = logging.getLogger("charm")
@@ -468,8 +468,10 @@ class FNFDisplay(Display[FNFEngine, FNFChart]):
         # TODO: place highways at true ideal locations
         self._player_highway: FourKeyHighway = FourKeyHighway(charts[0], engine, (0, 0))
         self._player_highway.pos = (self._win.width - self._player_highway.w - 25, 0)
+        self._player_highway.bg_color = Color(0, 0, 0, 64)
         self._enemy_highway: FourKeyHighway = FourKeyHighway(charts[1], self._enemy_engine, (0, 0))
         self._enemy_highway.pos = (25, 0)
+        self._enemy_highway.bg_color = Color(0, 0, 0, 64)
 
         # -- Text Objects --
         self.show_text: bool = True
@@ -493,14 +495,19 @@ class FNFDisplay(Display[FNFEngine, FNFChart]):
         self._judgement_sprite: Sprite = Sprite(self._judgement_textures[self._engine.judgements[0].key])
         self._judgement_sprite.scale = 0.8 * (self._player_highway.w / self._judgement_sprite.width)
         self._judgement_sprite.alpha = 0
-        self._judgement_jump: float = self._win.center_y + 25
-        self._judgement_land: float = self._win.center_y
+        self._judgement_jump: float = self._win.center_y * 0.333 + 25
+        self._judgement_land: float = self._win.center_y * 0.333
         self._judgement_sprite.center_x = self._win.center_x
 
-        # TODO: Lyrics
+        # TODO: Anywhere we do `_charts[0].song` is bad and we shouldn't do it
+        if self._charts[0].song.lyrics:
+            self.lyric_animator = LyricAnimator(self._win.width / 2, self._win.height / 2, self._charts[0].song.lyrics)
+            self.lyric_animator.prerender()
+        else:
+            self.lyric_animator = None
 
         # -- Camera Events
-        # TODO: actually impliment
+        # TODO: actually implement
         self._last_camera_event: CameraFocusEvent = CameraFocusEvent(0, 2)
         self._last_spotlight_position: int = 0
         self.last_spotlight_change: int = 0
@@ -548,6 +555,9 @@ class FNFDisplay(Display[FNFEngine, FNFChart]):
         self.timer.current_time = song_time
         self.timer.update(self._win.global_clock.delta_time)
 
+        if self.lyric_animator:
+            self.lyric_animator.update(song_time)
+
         # TODO: Spotlight
 
     def draw(self) -> None:
@@ -564,6 +574,9 @@ class FNFDisplay(Display[FNFEngine, FNFChart]):
         self.timer.draw()
 
         self._grade_text.draw()
+
+        if self.lyric_animator:
+            self.lyric_animator.draw()
 
         draw_sprite(self._judgement_sprite)
 

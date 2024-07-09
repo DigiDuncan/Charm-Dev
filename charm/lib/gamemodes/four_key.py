@@ -204,7 +204,7 @@ class FourKeyHighway(Highway):
 
         self._next_sustain = next(self._sustain_generator, None)
 
-        self.bg_color = (0, 0, 0, 128)  # SKIN
+        self.bg_color: Color = Color(0, 0, 0, 128)  # SKIN
         self.show_hit_window = False
 
         self.strikeline: SpriteList[StrikelineSprite] = SpriteList(capacity=4)
