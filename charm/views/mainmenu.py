@@ -32,7 +32,7 @@ class MainMenuView(DigiView):
             MainMenuItem("FNF Songs", "songs", FNFSongMenuView(back=self)),
             MainMenuItem("4K Songs", "songs", FourKeySongMenuView(back=self)),
             MainMenuItem("Options", "options", OptionsView(back=self)),
-            MainMenuItem("Generic Test", "test", GameView(back=self)),
+            MainMenuItem("Generic Test", "test", GameView.random(back=self)),
             # MainMenuItem("Emoji Test", "test", EmojiTestView(back=self)),
             # MainMenuItem("Menu Test", "test", NewMenuView(back=self)),
             # MainMenuItem("Cycler Test", "test", CycleTestView(back=self)),

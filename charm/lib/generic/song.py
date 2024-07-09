@@ -174,7 +174,7 @@ class Chart:
         self.bpm: float = 0.0
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__}: {self.song.metadata.shortcode}/{self.gamemode}/{self.instrument}/{self.difficulty}>"
+        return f"<{self.__class__.__name__} {self.song.metadata.shortcode}/{self.gamemode}/{self.instrument}/{self.difficulty}>"
 
     def __str__(self) -> str:
         return self.__repr__()

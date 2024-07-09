@@ -10,11 +10,13 @@ from charm.lib.anim import ease_quartout, perc
 from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView, disable_when_focus_lost, shows_errors
 from charm.lib.errors import NoSongsFoundError
+from charm.lib.gamemodes.fnf import FNFSong
 from charm.lib.keymap import keymap
 from charm.objects.gif import GIF
 from charm.objects.songmenu import SongMenu
 from charm.views.fnfsong import FNFSongView
 from charm.lib.songloader import load_songs_fnf
+from charm.views.gameplay import GameView
 
 
 class FNFSongMenuView(DigiView):
@@ -158,7 +160,7 @@ class FNFSongMenuView(DigiView):
     def start(self) -> None:
         if self.menu is not None:
             self.sfx.valid.play()
-            songview = FNFSongView(self.menu.selected.song.path, back=self)
+            songview = GameView(FNFSong.parse(self.menu.selected.song.path), back = self)
             songview.setup()
             self.window.show_view(songview)
 
