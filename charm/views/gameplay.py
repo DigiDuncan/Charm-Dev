@@ -77,8 +77,13 @@ class GameView(DigiView):
         tracks = TrackCollection.from_path(path)
         fnf_song = FNFSong.parse(path)
 
-        # TODO: This is still bad! FNF hardcode because I can't figure out where the gamemode is/should be stored
-        self.initialise_gamemode("fnf", tracks, tuple(fnf_song.charts))
+        # TODO: This is still bad, but for a new reason!
+        # Gamemode needs to be handled better in general.
+        # It makes sense that they're stored on the Chart, since later on Song will be more generic,
+        # but I imagine the problem is that the GameView should be passed in a Chart, not a Song?
+        # Then what's the Song for?
+        # :amtired:
+        self.initialise_gamemode(self._song.charts[0].gamemode, tracks, tuple(fnf_song.charts))
         self.postsetup()
 
     def on_show_view(self) -> None:

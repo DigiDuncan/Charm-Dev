@@ -129,6 +129,7 @@ class FNFChart(FourKeyChart):
         self.notespeed = speed
         self.hash = hash
 
+        self.name = ""
         self.instrument = f"fnf-player{player}"
 
         self.notes: list[FNFNote] = []
@@ -198,6 +199,7 @@ class FNFSong(Song[FNFChart]):
             chart.player2 = songdata.get("player2", "dad")
             chart.spectator = songdata.get("player3", "gf")
             chart.stage = songdata.get("stage", "stage")
+            chart.gamemode = "fnf"
 
         sections = songdata["song"]  # Unused
 
