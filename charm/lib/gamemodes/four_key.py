@@ -321,6 +321,7 @@ class FourKeyHighway(Highway):
                 sprite.center_x = self.lane_x(sprite.note.lane) + sprite.width/2.0
 
                 if sprite.note.hit or sprite.note.end <= (self.song_time - 0.1):
+                    sprite.position = -1000.0, -1000.0
                     sprite.visible = False
                     self._note_pool.give(sprite)
 

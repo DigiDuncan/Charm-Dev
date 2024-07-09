@@ -508,7 +508,7 @@ class FNFDisplay(Display[FNFEngine, FNFChart]):
         self.camera_events: list[CameraFocusEvent] = [e for e in charts[0].events if isinstance(e, CameraFocusEvent)]
 
         # TODO: hp
-        self.hp_bar = HPBar(self._win.height / 0.75, self._win.center_y, 10, 250, self._engine)
+        self.hp_bar = HPBar(self._win.center_x, self._win.height * 0.75, 10, 250, self._engine)
 
         # TODO: Timer, although the timer was not used in fnfsong
 

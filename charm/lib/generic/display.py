@@ -42,10 +42,10 @@ class HPBar:
         hp = lerp(hp_min, hp_max, hp_normalized)
         arcade.draw_lrbt_rectangle_filled(
             hp_min, hp_max,
-            self.y - self.width // 2, self.y + self.width // 2,
+            self.y - self.height // 2, self.y + self.height // 2,
             self.color
         )
-        self.center_sprite.x = hp
+        self.center_sprite.center_x = hp
         arcade.draw_sprite(self.center_sprite)
 
 
