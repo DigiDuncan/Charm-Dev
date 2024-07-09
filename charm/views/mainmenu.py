@@ -6,7 +6,7 @@ from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView, disable_when_focus_lost, shows_errors
 from charm.lib.errors import TestError
 from charm.lib.keymap import keymap
-from charm.objects.menu import MainMenu, MainMenuItem
+from charm.objects.mainmenu import MainMenu, MainMenuItem
 # from charm.views.cycletest import CycleTestView
 # from charm.views.emojitest import EmojiTestView
 from charm.views.fnfsongmenu import FNFSongMenuView

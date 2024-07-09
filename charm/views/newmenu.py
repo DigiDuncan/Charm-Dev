@@ -5,7 +5,7 @@ from arcade import color as colors
 
 from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView
-from charm.objects.songmenu2 import SongMenu
+from charm.unused.songmenu2 import SongMenu
 from charm.lib.keymap import keymap
 
 logger = logging.getLogger("charm")
