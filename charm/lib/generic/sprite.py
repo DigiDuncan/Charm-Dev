@@ -24,7 +24,7 @@ class StrikelineSprite(Sprite):
     def __init__(self,
                  x: float, y: float,
                  active_texture: Texture, inactive_texture: Texture,
-                 active_alpha: float = 255.0, inactive_alpha: float = 64.0
+                 active_alpha: int = 255, inactive_alpha: int = 64
     ):
         super().__init__(path_or_texture=inactive_texture, center_x=x, center_y=y)
         self._active: bool = False
@@ -32,8 +32,8 @@ class StrikelineSprite(Sprite):
         self._active_texture: Texture = active_texture
         self._inactive_texture: Texture = inactive_texture
 
-        self._active_alpha: float = active_alpha
-        self._inactive_alpha: float = inactive_alpha
+        self._active_alpha: int = active_alpha
+        self._inactive_alpha: int = inactive_alpha
 
         self.alpha = inactive_alpha
 
@@ -121,6 +121,7 @@ class SustainSprites:
 
         self._tail.center_y = y
         self._body.center_y = y - self._body_offset
+        self._body.height = body_size
         self._cap.center_y = y - self._cap_offset
 
         if body_size <= 0.0:

@@ -24,7 +24,7 @@ from charm.lib.generic.song import Note, Chart, Seconds, Song
 from charm.lib.generic.sprite import NoteSprite, SustainSprites, StrikelineSprite, SustainTextureDict, SustainTextures
 from charm.lib.keymap import keymap, Action
 from charm.lib.utils import img_from_path, clamp
-from charm.lib.pool import Pool
+from charm.lib.pool import Pool, OrderedPool
 
 logger = logging.getLogger("charm")
 
@@ -175,7 +175,9 @@ class FourKeyHighway(Highway):
         # So this is a patch job at best.
         self._note_generator = (note for note in self.notes if note.type != 'sustain')
 
-        self._note_pool: Pool[NoteSprite] = Pool([NoteSprite(x=-1000.0, y=-1000.0) for _ in range(1000)])
+        self._note_sprites = SpriteList(capacity=1024)
+        self._note_sprites.extend([NoteSprite(x=-1000.0, y=-1000.0) for _ in range(1000)])
+        self._note_pool: OrderedPool[NoteSprite] = OrderedPool(self._note_sprites)  # type: ignore[]
         self._note_sprites = SpriteList(capacity=1024)
         self._note_sprites.extend(self._note_pool.source)
 
@@ -251,21 +253,21 @@ class FourKeyHighway(Highway):
 
             self._next_sustain = next(self._sustain_generator, None)
 
-        for sprite in self._note_pool.given_items:
-            # TODO note_y and lane_x need to work of center not top left
-            sprite.center_y = self.note_y(sprite.note.time) - sprite.height/2.0
-            sprite.center_x = self.lane_x(sprite.note.lane) + sprite.width/2.0
+        # for sprite in self._note_pool.given_items:
+        #     # TODO note_y and lane_x need to work of center not top left
+        #     sprite.center_y = self.note_y(sprite.note.time) - sprite.height/2.0
+        #     sprite.center_x = self.lane_x(sprite.note.lane) + sprite.width/2.0
 
-            if sprite.note.hit or sprite.note.end <= (song_time - 0.1):
-                sprite.visible = False
-                self._note_pool.give(sprite)
+        #     if sprite.note.hit or sprite.note.end <= (song_time - 0.1):
+        #         sprite.visible = False
+        #         self._note_pool.give(sprite)
 
-        for sustain in self._sustain_pool.given_items:
-            sustain.update_texture()
-            sustain.update_sustain(self.note_y(sustain.note.time) - sustain.size/2.0, sustain.note.length * self.px_per_s)
-            if sustain.note.end <= (song_time - 0.1):
-                sustain.hide()
-                self._sustain_pool.give(sustain)
+        # for sustain in self._sustain_pool.given_items:
+        #     sustain.update_texture()
+        #     sustain.update_sustain(self.note_y(sustain.note.time) - sustain.size/2.0, sustain.note.length * self.px_per_s)
+        #     if sustain.note.end <= (song_time - 0.1):
+        #         sustain.hide()
+        #         self._sustain_pool.give(sustain)
 
         # TODO: Replace with better pixel_offset calculation
         delta_draw_time = self.song_time - self.last_update_time
@@ -312,6 +314,22 @@ class FourKeyHighway(Highway):
                                                   self.hit_window_bottom, self.hit_window_top,
                                                   (255, 0, 0, 128))
             self.strikeline.draw()
+
+            for sprite in self._note_pool.given_items:
+                # TODO note_y and lane_x need to work of center not top left
+                sprite.center_y = self.note_y(sprite.note.time) - sprite.height/2.0
+                sprite.center_x = self.lane_x(sprite.note.lane) + sprite.width/2.0
+
+                if sprite.note.hit or sprite.note.end <= (self.song_time - 0.1):
+                    sprite.visible = False
+                    self._note_pool.give(sprite)
+
+            for sustain in self._sustain_pool.given_items:
+                sustain.update_texture()
+                sustain.update_sustain(self.note_y(sustain.note.time) - sustain.size/2.0, sustain.note.length * self.px_per_s)
+                if sustain.note.end <= (self.song_time - 0.1):
+                    sustain.hide()
+                    self._sustain_pool.give(sustain)
 
             self._sustain_sprites.draw(pixelated=True)
             self._note_sprites.draw(pixelated=True)

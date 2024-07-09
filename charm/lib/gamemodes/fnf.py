@@ -567,4 +567,12 @@ class FNFDisplay(Display[FNFEngine, FNFChart]):
         # ! TODO
         pass
 
+    def debug_fetch_note_sprites_at_point(self, point):
+        # TODO NOT HERE
+        from arcade.sprite_list.collision import get_sprites_at_point
+
+        player_notes = get_sprites_at_point(point, self._player_highway._note_sprites)
+        enemy_notes = get_sprites_at_point(point, self._enemy_highway._note_sprites)
+        return player_notes + enemy_notes
+
 

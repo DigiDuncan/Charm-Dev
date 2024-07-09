@@ -11,6 +11,8 @@ from charm.lib.settings import settings
 from charm.lib.utils import pyglet_img_from_path
 from charm.lib.digiwindow import DigiWindow
 
+import cProfile
+
 # Fix font
 pyglet.options["win32_disable_shaping"] = True
 arcade_accelerate.bootstrap()

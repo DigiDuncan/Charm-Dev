@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from arcade.types import Point
 
 if TYPE_CHECKING:
     from charm.lib.digiwindow import DigiWindow
@@ -26,4 +27,9 @@ class Display[ET: Engine, CT: Chart]:
         pass
 
     def unpause(self) -> None:
+        pass
+
+    # -- DEBUG METHODS --
+
+    def debug_fetch_note_sprites_at_point(self, point: Point):
         pass
