@@ -14,7 +14,6 @@ from charm.lib.gamemodes.fnf import FNFSong
 from charm.lib.keymap import keymap
 from charm.objects.gif import GIF
 from charm.objects.songmenu import SongMenu
-from charm.views.fnfsong import FNFSongView
 from charm.lib.songloader import load_songs_fnf
 from charm.views.gameplay import GameView
 
@@ -137,7 +136,7 @@ class FNFSongMenuView(DigiView):
     @shows_errors
     @disable_when_focus_lost(mouse=True)
     def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int) -> None:
-        self.nav(scroll_y)
+        self.nav(int(scroll_y))
 
     @shows_errors
     @disable_when_focus_lost(mouse=True)

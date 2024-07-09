@@ -139,9 +139,7 @@ class FourKeySongMenuView(DigiView):
     @shows_errors
     @disable_when_focus_lost(mouse=True)
     def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int) -> None:
-        if self.menu is not None:
-            self.menu.selected_id += int(scroll_y)
-            self.sfx.select.play()
+        self.nav(int(scroll_y))
 
     @shows_errors
     @disable_when_focus_lost(mouse=True)

@@ -7,12 +7,12 @@ from charm.lib.digiview import DigiView, disable_when_focus_lost, shows_errors
 from charm.lib.errors import TestError
 from charm.lib.keymap import keymap
 from charm.objects.menu import MainMenu, MainMenuItem
-from charm.views.cycletest import CycleTestView
-from charm.views.emojitest import EmojiTestView
+# from charm.views.cycletest import CycleTestView
+# from charm.views.emojitest import EmojiTestView
 from charm.views.fnfsongmenu import FNFSongMenuView
 from charm.views.fourkeysongmenu import FourKeySongMenuView
 from charm.views.herotest import HeroTestView
-from charm.views.newmenu import NewMenuView
+# from charm.views.newmenu import NewMenuView
 from charm.views.parallaxtest import ParallaxTestView
 from charm.views.spritetest import SpriteTestView
 from charm.views.taikosongtest import TaikoSongTestView
