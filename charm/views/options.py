@@ -1,5 +1,8 @@
 import logging
 
+from arcade import Text
+import arcade
+
 from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView, shows_errors, disable_when_focus_lost
 from charm.lib.settings import settings
@@ -16,6 +19,9 @@ class OptionsView(DigiView):
     def setup(self) -> None:
         super().presetup()
         self.gum_wrapper = GumWrapper()
+        self.haha = Text("100%", (self.size[0] // 2), (self.size[1] // 2), font_size=128,
+                    anchor_x="center", anchor_y="center", color=arcade.color.BLACK,
+                    font_name="bananaslip plus")
         super().postsetup()
 
     def on_show_view(self) -> None:
@@ -32,12 +38,14 @@ class OptionsView(DigiView):
         elif keymap.navdown.pressed:
             self.volume_down(0.1)
 
-    def volume_up(self, factor: float):
+    def volume_up(self, factor: float) -> None:
         settings.volume.master = min(1.0, settings.volume.master + factor)
+        self.haha.text = f"{round(settings.volume.master * 100)}%"
         self.sfx.select.play()
 
-    def volume_down(self, factor: float):
+    def volume_down(self, factor: float) -> None:
         settings.volume.master = max(0.0, settings.volume.master - factor)
+        self.haha.text = f"{round(settings.volume.master * 100)}%"
         self.sfx.select.play()
 
     @shows_errors
@@ -50,4 +58,5 @@ class OptionsView(DigiView):
         super().predraw()
         # Charm BG
         self.gum_wrapper.draw()
+        self.haha.draw()
         super().postdraw()
