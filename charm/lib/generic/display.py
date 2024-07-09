@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from arcade import Sprite, SpriteCircle, draw_lrbt_rectangle_filled
-import arcade
+from arcade import Sprite, SpriteCircle
 from arcade.types import Point, Color
+import arcade
 
 from charm.lib.anim import lerp
 from charm.lib.charm import CharmColors

@@ -9,6 +9,8 @@ from hashlib import sha1
 from pathlib import Path
 from typing import TypedDict, TYPE_CHECKING
 
+from charm.objects.timer import Timer
+
 if TYPE_CHECKING:
     from charm.lib.digiwindow import DigiWindow
 
@@ -474,9 +476,6 @@ class FNFDisplay(Display[FNFEngine, FNFChart]):
         self._overlay_text: Text = Text("PAUSE", self._win.center_x, self._win.center_y, font_size=92,
                                         anchor_x="center", color=colors.BLACK,
                                         font_name="bananaslip plus")
-        self._time_text: Text = Text("??:??", self._win.center_x, 10, font_size=24,
-                                     anchor_x="center", color=colors.BLACK,
-                                     font_name="bananaslip plus")
         self._score_text: Text = Text("0", self._win.center_x, self._win.height - 10, font_size=24,
                                     anchor_x="center", anchor_y="top", color=colors.BLACK,
                                     font_name="bananaslip plus")
@@ -509,10 +508,14 @@ class FNFDisplay(Display[FNFEngine, FNFChart]):
         self.spotlight_position: int = 0
         self.camera_events: list[CameraFocusEvent] = [e for e in charts[0].events if isinstance(e, CameraFocusEvent)]
 
-        # TODO: hp
+        # HP
         self.hp_bar = HPBar(self._win.center_x, self._win.height * 0.75, 10, 250, self._engine)
 
-        # TODO: Timer, although the timer was not used in fnfsong
+        # Timer, although the timer was not used in fnfsong
+        # EDIT: This is a lie
+        self.timer = Timer(250, 60)
+        self.timer.center_x = self._win.center_x
+        self.timer.center_y = 20
 
     def pause(self) -> None:
         if not self._engine.has_died:
@@ -524,11 +527,6 @@ class FNFDisplay(Display[FNFEngine, FNFChart]):
     def update(self, song_time: Seconds) -> None:
         self._song_time = song_time
 
-        # TODO: Chroma Key
-
-        time_str = f"{int(song_time // 60)}:{int(song_time % 60):02}"
-        if self._time_text.text != time_str:
-            self._time_text.text = time_str
         if self._score_text.text != str(self._engine.score):
             self._score_text.text = str(self._engine.score)
 
@@ -547,12 +545,13 @@ class FNFDisplay(Display[FNFEngine, FNFChart]):
         if self._engine.accuracy is not None:
             self._grade_text.text = f"{self._engine.fc_type} | {round(self._engine.accuracy * 100, 2)}% ({self._engine.grade})"
 
-        # TODO: timer
+        self.timer.current_time = song_time
+        self.timer.update(self._win.global_clock.delta_time)
+
         # TODO: Spotlight
 
     def draw(self) -> None:
         if self.show_text:
-            self._time_text.draw()
             self._score_text.draw()
             if self._engine.has_died:
                 self._overlay_text.text = "DEAD"
@@ -562,6 +561,7 @@ class FNFDisplay(Display[FNFEngine, FNFChart]):
         self._enemy_highway.draw()
 
         self.hp_bar.draw()
+        self.timer.draw()
 
         self._grade_text.draw()
 

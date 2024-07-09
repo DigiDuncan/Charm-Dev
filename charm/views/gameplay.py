@@ -84,6 +84,11 @@ class GameView(DigiView):
         # Then what's the Song for?
         # :amtired:
         self.initialise_gamemode(self._song.charts[0].gamemode, tracks, tuple(fnf_song.charts))
+
+        # HACK: Wow, don't do this! But Display doesn't get the TrackCollection soooooo
+        if hasattr(self._display, "timer"):
+            self._display.timer.total_time = self._tracks.duration
+
         self.postsetup()
 
     def on_show_view(self) -> None:

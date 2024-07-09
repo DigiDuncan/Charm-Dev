@@ -12,7 +12,7 @@ class Timer:
     def __init__(self, width: int, total_time: float, start_time: float = 0, paused: bool = False,
                  bar_bg_color: Color = colors.WHITE, bar_fill_color: Color = CharmColors.FADED_PURPLE, bar_border_color: Color = colors.BLACK,
                  height: int = 33, text_color: Color = colors.BLACK, text_font: str = "bananaslip plus",
-                 x: int = 0, y: int = 0):
+                 x: float = 0, y: float = 0):
         self.width = width
         self.start_time = start_time
         self.total_time = total_time
@@ -71,21 +71,21 @@ class Timer:
         return f"{int(self.current_minutes)}:{int(self.current_seconds):02} / {int(self.total_minutes)}:{int(self.total_seconds):02}"
 
     @property
-    def center_x(self) -> int:
-        return self.x + (self.width // 2)
+    def center_x(self) -> float:
+        return self.x + (self.width / 2)
 
     @property
-    def center_y(self) -> int:
-        return self.y + (self.height // 2)
+    def center_y(self) -> float:
+        return self.y + (self.height / 2)
 
     @center_x.setter
-    def center_x(self, v: int) -> None:
-        self.x = v - (self.width // 2)
+    def center_x(self, v: float) -> None:
+        self.x = v - (self.width / 2)
         self._label.x = v
 
     @center_y.setter
-    def center_y(self, v: int) -> None:
-        self.y = v - (self.height // 2)
+    def center_y(self, v: float) -> None:
+        self.y = v - (self.height / 2)
         self._label.y = v + 5
 
     def lerp_current_time(self, offset: float, duration: float,
