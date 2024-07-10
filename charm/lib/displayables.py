@@ -1,8 +1,9 @@
-from arcade import Sprite, SpriteCircle, Text, LRBT, XYWH, color as colors, draw_rect_filled, draw_rect_outline, draw_sprite
+from arcade import Sprite, SpriteCircle, Text, LRBT, XYWH, color as colors, \
+    draw_rect_filled, draw_rect_outline, draw_sprite, get_window
 from arcade.types import Color
 from arcade.color import BLACK
 
-from charm.lib.anim import lerp, ease_linear, LerpData, perc
+from charm.lib.anim import ease_circout, lerp, ease_linear, LerpData, perc
 from charm.lib.charm import CharmColors
 from charm.lib.generic.engine import Engine
 from charm.lib.utils import map_range, px_to_pt
@@ -151,3 +152,39 @@ class Timer:
         draw_rect_filled(LRBT(self.x, self.x + self.fill_px, self.y, self.y + self.height), self.bar_fill_color)
         draw_rect_outline(XYWH(self.center_x, self.center_y, self.width, self.height), self.bar_border_color, 1)
         self._label.draw()
+
+class Spotlight:
+    def __init__(self, camera_events: list["CameraFocusEvent"]) -> None:
+        self.camera_events = camera_events
+        self.window = get_window()
+
+        self.last_camera_event: "CameraFocusEvent" =  None
+        self.last_spotlight_position = 0
+        self.last_spotlight_change = 0
+        self.go_to_spotlight_position = 0
+        self.spotlight_position = 0
+
+    def update(self, song_time: float) -> None:
+        focus_pos = {
+            1: 0,
+            0: self.window.center_x
+        }
+        cameraevents = [e for e in self.camera_events if e.time < song_time + 0.25]
+        if cameraevents:
+            current_camera_event = cameraevents[-1]
+            if self.last_camera_event != current_camera_event:
+                self.last_spotlight_change = song_time
+                self.last_spotlight_position = self.spotlight_position
+                self.go_to_spotlight_position = focus_pos[current_camera_event.focused_player]
+                self.last_camera_event = current_camera_event
+        self.spotlight_position = ease_circout(self.last_spotlight_position, self.go_to_spotlight_position, perc(self.last_spotlight_change, self.last_spotlight_change + 0.125, song_time))
+
+    def draw(self) -> None:
+        draw_rect_filled(LRBT(
+            self.spotlight_position - self.window.center_x, self.spotlight_position, 0, self.window.height),
+            colors.BLACK[:3] + (127,)
+        )
+        draw_rect_filled(LRBT(
+            self.spotlight_position + self.window.center_x, self.spotlight_position + self.window.width, 0, self.window.height),
+            colors.BLACK[:3] + (127,)
+        )

@@ -9,15 +9,12 @@ import json
 import logging
 import math
 
-if TYPE_CHECKING:
-    from charm.lib.digiwindow import DigiWindow
-
 import arcade
 from arcade import Texture, Sprite, draw_sprite, Text, color as colors
 from arcade.types import Color, Point
 
 from charm.lib.anim import ease_circout, perc
-from charm.lib.displayables import HPBar, Timer
+from charm.lib.displayables import HPBar, Spotlight, Timer
 from charm.lib.errors import NoChartsError, UnknownLanesError, ChartPostReadParseError
 from charm.lib.gamemodes.four_key import FourKeyChart, FourKeyEngine, FourKeyJudgement, FourKeyNote, FourKeyHighway
 from charm.lib.generic.engine import Engine, AutoEngine
@@ -28,6 +25,9 @@ from charm.lib.types import Seconds, Milliseconds
 from charm.lib.utils import clamp
 from charm.objects.lyric_animator import LyricAnimator, LyricEvent
 import charm.data.images.skins as skins
+
+if TYPE_CHECKING:
+    from charm.lib.digiwindow import DigiWindow
 
 logger = logging.getLogger("charm")
 
@@ -467,10 +467,10 @@ class FNFDisplay(Display[FNFEngine, FNFChart]):
         # TODO: place highways at true ideal locations
         self._player_highway: FourKeyHighway = FourKeyHighway(charts[0], engine, (0, 0))
         self._player_highway.pos = (self._win.width - self._player_highway.w - 25, 0)
-        self._player_highway.bg_color = Color(0, 0, 0, 64)
+        self._player_highway.bg_color = Color(0, 0, 0, 0)
         self._enemy_highway: FourKeyHighway = FourKeyHighway(charts[1], self._enemy_engine, (0, 0))
         self._enemy_highway.pos = (25, 0)
-        self._enemy_highway.bg_color = Color(0, 0, 0, 64)
+        self._enemy_highway.bg_color = Color(0, 0, 0, 0)
 
         # -- Text Objects --
         self.show_text: bool = True
@@ -506,13 +506,9 @@ class FNFDisplay(Display[FNFEngine, FNFChart]):
             self.lyric_animator = None
 
         # -- Camera Events
-        # TODO: actually implement
-        self._last_camera_event: CameraFocusEvent = CameraFocusEvent(0, 2)
-        self._last_spotlight_position: int = 0
-        self.last_spotlight_change: int = 0
-        self.go_to_spotlight_position: int = 0
-        self.spotlight_position: int = 0
-        self.camera_events: list[CameraFocusEvent] = [e for e in charts[0].events if isinstance(e, CameraFocusEvent)]
+        camera_events: list[CameraFocusEvent] = [e for e in charts[0].events if isinstance(e, CameraFocusEvent)]
+        self.spotlight = Spotlight(camera_events)
+        self.spotlight.last_camera_event = CameraFocusEvent(0, 2)
 
         # HP
         self.hp_bar = HPBar(self._win.center_x, self._win.height * 0.75, 10, 250, self._engine)
@@ -554,10 +550,10 @@ class FNFDisplay(Display[FNFEngine, FNFChart]):
         self.timer.current_time = song_time
         self.timer.update(self._win.global_clock.delta_time)
 
+        self.spotlight.update(song_time)
+
         if self.lyric_animator:
             self.lyric_animator.update(song_time)
-
-        # TODO: Spotlight
 
     def draw(self) -> None:
         if self.show_text:
@@ -568,6 +564,8 @@ class FNFDisplay(Display[FNFEngine, FNFChart]):
 
         self._player_highway.draw()
         self._enemy_highway.draw()
+
+        self.spotlight.draw()
 
         self.hp_bar.draw()
         self.timer.draw()
