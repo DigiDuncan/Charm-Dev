@@ -507,8 +507,11 @@ class FNFDisplay(Display[FNFEngine, FNFChart]):
 
         # -- Camera Events
         camera_events: list[CameraFocusEvent] = [e for e in charts[0].events if isinstance(e, CameraFocusEvent)]
-        self.spotlight = Spotlight(camera_events)
-        self.spotlight.last_camera_event = CameraFocusEvent(0, 2)
+        if not camera_events:
+            self.spotlight = Spotlight(camera_events)
+            self.spotlight.last_camera_event = CameraFocusEvent(0, 2)
+        else:
+            self.spotlight = None
 
         # HP
         self.hp_bar = HPBar(self._win.center_x, self._win.height * 0.75, 10, 250, self._engine)
@@ -550,7 +553,8 @@ class FNFDisplay(Display[FNFEngine, FNFChart]):
         self.timer.current_time = song_time
         self.timer.update(self._win.global_clock.delta_time)
 
-        self.spotlight.update(song_time)
+        if self.spotlight:
+            self.spotlight.update(song_time)
 
         if self.lyric_animator:
             self.lyric_animator.update(song_time)
@@ -565,7 +569,8 @@ class FNFDisplay(Display[FNFEngine, FNFChart]):
         self._player_highway.draw()
         self._enemy_highway.draw()
 
-        self.spotlight.draw()
+        if self.spotlight:
+            self.spotlight.draw()
 
         self.hp_bar.draw()
         self.timer.draw()
