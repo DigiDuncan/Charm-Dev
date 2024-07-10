@@ -16,7 +16,7 @@ def draw_game_view(win: DigiWindow, tab: DebugViewTab):
     view: GameView = win.current_view()
     m_x, m_y = imgui.get_mouse_pos_on_opening_current_popup()
     proj_pos = win.current_camera.unproject((m_x, win.height - m_y))
-    if imgui.get_mouse_clicked_count(0) == 1:
+    if imgui.get_mouse_clicked_count(0) == 1 and not imgui.get_io().want_capture_mouse:
         sprites = view._display.debug_fetch_note_sprites_at_point(proj_pos)
         draw_game_view.selected_sprite = None if not sprites else (sprites[0] if sprites[0] != draw_game_view.selected_sprite else sprites[-1])
     imgui.text(str(draw_game_view.selected_sprite))

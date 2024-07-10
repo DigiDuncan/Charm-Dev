@@ -507,7 +507,7 @@ class FNFDisplay(Display[FNFEngine, FNFChart]):
 
         # -- Camera Events
         camera_events: list[CameraFocusEvent] = [e for e in charts[0].events if isinstance(e, CameraFocusEvent)]
-        if not camera_events:
+        if camera_events:
             self.spotlight = Spotlight(camera_events)
             self.spotlight.last_camera_event = CameraFocusEvent(0, 2)
         else:
@@ -593,5 +593,3 @@ class FNFDisplay(Display[FNFEngine, FNFChart]):
         player_notes = get_sprites_at_point(point, self._player_highway._note_sprites)
         enemy_notes = get_sprites_at_point(point, self._enemy_highway._note_sprites)
         return player_notes + enemy_notes
-
-
