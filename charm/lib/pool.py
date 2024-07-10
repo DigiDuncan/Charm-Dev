@@ -71,7 +71,7 @@ class Pool[T]:
         self._free_idx -= 1
         self._source[self._free_idx], self._source[idx] = item, self._source[self._free_idx]
 
-
+# TODO: make a SpritePool that works better with how Spritelists work internally
 class OrderedPool[T]:
     """
     A Pool object which uses a shifting index to mark which items are free and which aren't
