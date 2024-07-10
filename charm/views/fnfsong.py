@@ -13,6 +13,7 @@ from arcade import Sprite, SpriteList, Text, Sound, color as colors
 from charm.lib.anim import perc, ease_circout, lerp
 from charm.lib.charm import CharmColors, GumWrapper
 from charm.lib.digiview import DigiView, disable_when_focus_lost, shows_errors
+from charm.lib.displayables import Timer
 from charm.lib.gamemodes.fnf import CameraFocusEvent, FNFEngine, FNFSong
 from charm.lib.gamemodes.four_key import FourKeyHighway
 from charm.lib.generic.engine import AutoEngine
@@ -22,7 +23,6 @@ from charm.lib.oggsound import OGGSound
 from charm.lib.trackcollection import TrackCollection
 from charm.lib.utils import map_range
 from charm.objects.lyric_animator import LyricAnimator
-from charm.objects.timer import Timer
 from charm.views.results import ResultsView
 
 logger = logging.getLogger("charm")

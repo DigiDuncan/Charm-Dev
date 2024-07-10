@@ -1,15 +1,13 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+from hashlib import sha1
 from importlib.resources import files, as_file
+from pathlib import Path
+from typing import TypedDict, TYPE_CHECKING
 import json
 import logging
 import math
-from dataclasses import dataclass
-from hashlib import sha1
-from pathlib import Path
-from typing import TypedDict, TYPE_CHECKING
-
-from charm.objects.timer import Timer
 
 if TYPE_CHECKING:
     from charm.lib.digiwindow import DigiWindow
@@ -18,17 +16,18 @@ import arcade
 from arcade import Texture, Sprite, draw_sprite, Text, color as colors
 from arcade.types import Color, Point
 
+from charm.lib.anim import ease_circout, perc
+from charm.lib.displayables import HPBar, Timer
 from charm.lib.errors import NoChartsError, UnknownLanesError, ChartPostReadParseError
 from charm.lib.gamemodes.four_key import FourKeyChart, FourKeyEngine, FourKeyJudgement, FourKeyNote, FourKeyHighway
 from charm.lib.generic.engine import Engine, AutoEngine
-from charm.lib.anim import ease_circout, perc
 from charm.lib.generic.song import BPMChangeEvent, Event, Metadata, Song
-from charm.lib.generic.display import Display, HPBar
+from charm.lib.generic.display import Display
+from charm.lib.keymap import keymap
 from charm.lib.types import Seconds, Milliseconds
 from charm.lib.utils import clamp
-import charm.data.images.skins as skins
 from charm.objects.lyric_animator import LyricAnimator, LyricEvent
-from charm.lib.keymap import keymap
+import charm.data.images.skins as skins
 
 logger = logging.getLogger("charm")
 
