@@ -130,3 +130,33 @@ class OrderedPool[T]:
         self._free_idx -= 1
         self._source.remove(item)
         self._source.append(item)
+
+
+from arcade import SpriteList, BasicSprite
+
+
+class SpritePool[S: BasicSprite](Pool[S]):
+
+    def __init__(self, items: list[S]):
+        self._size: int = len(items)
+        self._source: SpriteList[S] = SpriteList(capacity=self._size)
+        self._source.extend(items)
+        self._free_idx: int = 0
+
+    def give(self, item: S) -> None:
+        idx = self._source.index(item)
+        if idx >= self._free_idx:
+            raise ValueError('trying to return an item which was already returned')
+
+        self._free_idx -= 1
+
+        self._source.sprite_list.append(self._source.sprite_list.pop(idx))
+        self._source._sprite_index_data.append(self._source._sprite_index_data.pop(idx))  # noqa: SLF001
+        self._source._sprite_index_changed = True  # noqa: SLF001
+
+    # TODO: Add args
+    def draw(self) -> None:
+        slots = self._source._sprite_index_slots  # noqa: SLF001
+        self._source._sprite_index_slots = self._free_idx  # noqa: SLF001
+        self._source.draw()
+        self._source._sprite_index_slots = slots  # noqa: SLF001

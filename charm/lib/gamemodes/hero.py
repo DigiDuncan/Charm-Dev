@@ -30,7 +30,7 @@ from charm.lib.generic.sprite import NoteSprite, SustainSprites, StrikelineSprit
 from charm.lib.keymap import Action, keymap
 from charm.lib.utils import img_from_path, nuke_smart_quotes
 from charm.objects.lyric_animator import LyricEvent
-from charm.lib.pool import Pool
+from charm.lib.pool import Pool, SpritePool
 
 import charm.data.images.skins as skins
 
@@ -708,10 +708,9 @@ class HeroHighway(Highway):
         # So this is a patch job at best.
         self._note_generator: Generator[Note, Any, None] = (note for note in self.notes)
 
-        self._note_pool: Pool[NoteSprite] = Pool([NoteSprite(x=-1000.0, y=-1000.0) for _ in range(1000)])
-        self._note_sprites: SpriteList[NoteSprite] = SpriteList(capacity=1024)
-        self._note_sprites.program = self.window.ctx.sprite_list_program_no_cull  # avoid orthographic culling
-        self._note_sprites.extend(self._note_pool.source)
+        self._note_pool: SpritePool[NoteSprite] = SpritePool([NoteSprite(x=-1000.0, y=-1000.0) for _ in range(1000)])
+        # avoid orthographic culling TODO: make source program more accessable
+        self._note_pool._source.program = self.window.ctx.sprite_list_program_no_cull # noqa: SLF001
 
         self._next_note: HeroNote = next(self._note_generator, None)
 
@@ -843,7 +842,7 @@ class HeroHighway(Highway):
             self.strikeline.draw()
 
             self._sustain_sprites.draw()
-            self._note_sprites.draw()
+            self._note_pool.draw()
 
     def lane_x(self, lane_num: int) -> int:
         if lane_num == 7:  # tap note override

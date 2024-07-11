@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from typing import Any
+from collections.abc import Generator
 from importlib.resources import files
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from functools import cache
 from pathlib import Path
 import logging
@@ -14,10 +16,13 @@ from arcade import Sprite, SpriteList, Texture, color as colors
 
 from charm.lib.charm import load_missing_texture
 from charm.lib.gamemodes.osu import OsuHitCircle, OsuSlider, OsuSpinner, RawOsuChart
-from charm.lib.generic.engine import Engine
+from charm.lib.generic.engine import Engine, AutoEngine
 from charm.lib.generic.highway import Highway
 from charm.lib.generic.song import Chart, Metadata, Note, Song
 from charm.lib.spritebucket import SpriteBucketCollection
+from charm.lib.pool import SpritePool, Pool
+from charm.lib.generic.sprite import NoteSprite, SustainSprites, SustainTextures, SustainTextureDict
+from charm.lib.generic.display import Display
 from charm.lib.utils import clamp, img_from_path
 
 import charm.data.images.skins as skins
@@ -26,7 +31,7 @@ from charm.objects.line_renderer import TaikoNoteTrail
 logger = logging.getLogger("charm")
 
 
-class NoteType(Enum):
+class NoteType(StrEnum):
     DON = "don"
     KAT = "kat"
     DRUMROLL = "drumroll"
@@ -113,7 +118,7 @@ class TaikoNoteSprite(Sprite):
     def __init__(self, note: TaikoNote, highway: TaikoHighway, height: int = 128, *args, **kwargs) -> None:
         self.note: TaikoNote = note
         self.highway: TaikoHighway = highway
-        tex = load_note_texture(note.type.value, height)
+        tex = load_note_texture(note.type, height)
         super().__init__(tex, *args, **kwargs)
 
     def update_animation(self, delta_time: float = 1 / 60) -> None:
@@ -154,11 +159,20 @@ class TaikoHighway(Highway):
 
         self.color = (0, 0, 0, 128)  # TODO: eventually this will be a scrolling image.
 
+        # Generators are great for ease, but it means we can't really 'scrub' backwards through the song
+        # So this is a patch job at best.
+        self._note_generator: Generator[TaikoNote, Any, None] = (note for note in self.notes) # type: ignore[]
+        self._note_pool: SpritePool[NoteSprite] = SpritePool([NoteSprite(x=-1000.0, y=-1000.0) for _ in range(1000)])
+        self._next_note: TaikoNote | None = next(self._note_generator, None)
+
         self.note_sprites: list[TaikoNoteSprite] = []
         self.sprite_buckets = SpriteBucketCollection()
         for note in self.notes:
+            if not note.length:
+                continue
+
             note = cast("TaikoNote", note)
-            sprite = TaikoNoteSprite(note, self, self.note_size) if note.length == 0 else TaikoLongNoteSprite(note, self, self.note_size)
+            sprite = TaikoLongNoteSprite(note, self, self.note_size)
             sprite.center_x = -self.note_y(note.time)
             sprite.center_y = self.y + (self.h / 2)
             if note.large:
@@ -166,8 +180,6 @@ class TaikoHighway(Highway):
             note.sprite = sprite
             self.sprite_buckets.append(sprite, note.time, note.length)
             self.note_sprites.append(sprite)
-
-        self.strikeline = SpriteList()
 
         for spritelist in self.sprite_buckets.buckets:
             spritelist.reverse()
@@ -204,6 +216,24 @@ class TaikoHighway(Highway):
 
     def update(self, song_time: float) -> None:
         super().update(song_time)
+        while self._next_note is not None and self._next_note.time <= (self.song_time + self.viewport) and self._note_pool.has_free_slot():
+            note = self._next_note
+            sprite = self._note_pool.get()
+            sprite.texture = load_note_texture(note.type, self.note_size)
+            sprite.position = -self.note_y(note.time), self.y + (self.h / 2)
+            sprite.scale = 1.5 if note.large else 1.0
+            sprite.visible = True
+            sprite.note = note
+
+            self._next_note = next(self._note_generator, None)
+
+        for sprite in self._note_pool.given_items:
+            sprite.center_x = -self.note_y(sprite.note.time)
+            if sprite.note.hit or sprite.note.time <= (song_time - 0.1):
+                sprite.visible = False
+                sprite.position = -1000.0, -1000.0
+                self._note_pool.give(sprite)
+
         self.sprite_buckets.update_animation(song_time)
         # TODO: Replace with better pixel_offset calculation
         delta_draw_time = self.song_time - self.last_update_time
@@ -237,7 +267,6 @@ class TaikoHighway(Highway):
         for bucket in self.sprite_buckets.buckets:
             bucket.move(diff_x, diff_y)
         self.sprite_buckets.overbucket.move(diff_x, diff_y)
-        self.strikeline.move(diff_x, diff_y)
 
     @property
     def pixel_offset(self) -> int:
@@ -268,7 +297,7 @@ class TaikoHighway(Highway):
                     else:
                         arcade.draw_arc_outline(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2, self.note_size * 2, colors.BRIGHT_CERULEAN, 90, 270, 20)
 
-            self.strikeline.draw()
+            self._note_pool.draw()
 
             self.highway_camera.use()
             b = self.sprite_buckets.calc_bucket(self.song_time)
@@ -277,3 +306,9 @@ class TaikoHighway(Highway):
                     if isinstance(note, TaikoLongNoteSprite) and note.note.time < self.song_time + self.viewport and note.note.end > self.song_time:
                         note.draw_trail()
             self.sprite_buckets.draw(self.song_time)
+
+
+class TaikoDisplay(Display[AutoEngine, TaikoChart]):
+
+    def __init__(self) -> None:
+        pass

@@ -24,7 +24,7 @@ from charm.lib.generic.song import Note, Chart, Seconds, Song
 from charm.lib.generic.sprite import NoteSprite, SustainSprites, StrikelineSprite, SustainTextureDict, SustainTextures
 from charm.lib.keymap import keymap, Action
 from charm.lib.utils import img_from_path, clamp
-from charm.lib.pool import Pool, OrderedPool
+from charm.lib.pool import Pool, OrderedPool, SpritePool
 
 logger = logging.getLogger("charm")
 
@@ -174,12 +174,9 @@ class FourKeyHighway(Highway):
         # Generators are great for ease, but it means we can't really 'scrub' backwards through the song
         # So this is a patch job at best.
         self._note_generator = (note for note in self.notes if note.type != 'sustain')
-
-        self._note_sprites = SpriteList(capacity=1024)
-        self._note_sprites.extend([NoteSprite(x=-1000.0, y=-1000.0) for _ in range(1000)])
-        self._note_pool: OrderedPool[NoteSprite] = OrderedPool(self._note_sprites)  # type: ignore[]
-        self._note_sprites = SpriteList(capacity=1024)
-        self._note_sprites.extend(self._note_pool.source)
+        self._note_pool: SpritePool[NoteSprite] = SpritePool([NoteSprite(x=-1000.0, y=-1000.0) for _ in range(1000)])
+        # self._note_sprites = SpriteList(capacity=1024)
+        # self._note_sprites.extend(self._note_pool.source)
 
         self._note_textures = {
             t: {l: load_note_texture(t, l, self.note_size) for l in range(4)} for t in (NoteType.NORMAL, NoteType.BOMB, NoteType.DEATH, NoteType.HEAL, NoteType.CAUTION)
@@ -332,8 +329,8 @@ class FourKeyHighway(Highway):
                     sustain.hide()
                     self._sustain_pool.give(sustain)
 
-            self._sustain_sprites.draw(pixelated=True)
-            self._note_sprites.draw(pixelated=True)
+            self._sustain_sprites.draw()
+            self._note_pool.draw()
         _cam.use()
 
 
