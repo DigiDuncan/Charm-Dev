@@ -80,7 +80,7 @@ class LyricAnimator:
 
         self._string_sizes: dict[str, int] = {}
 
-        self._test_label: FormattedLabel = FormattedLabel("", font_name = "bananaslip plus", font_size=self.max_font_size)
+        self._test_label: FormattedLabel = FormattedLabel("test", font_name = "bananaslip plus", font_size=self.max_font_size, align = "center", anchor_x = "center",)
 
         self._label_batch: pyglet.graphics.Batch = pyglet.graphics.Batch()
 
@@ -131,6 +131,9 @@ class LyricAnimator:
         return font_size
 
     def prerender(self) -> None:
+        # This forces the generation of expensive regex removing a lag spike
+        # TODO: doesn't work lmao
+        self.get_font_size(":wave:")
         self._label_batch.draw()
         return
         with cProfile.Profile() as pr:
@@ -142,4 +145,6 @@ class LyricAnimator:
     def draw(self) -> None:
         if self.current_subtitles:
             self._label_batch.draw()
+            # TODO: BAD BAD BAD, but the shadow keeps going above the others so ¯\_(ツ)_/¯
+            self._over_label.draw()
             # self.current_subtitles[-1].draw()
