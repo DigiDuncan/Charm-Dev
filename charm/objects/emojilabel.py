@@ -145,7 +145,8 @@ class FormattedLabel(DocumentLabel):
         """
         doc = FormattedDocument(text)
         super().__init__(doc, x, y, z, width, height, anchor_x, anchor_y, rotation, multiline, dpi, batch, group)
-
+        self.stretch = stretch
+        self.align = align
         self.document.set_style(0, len(self.document.text), {
             'font_name': font_name,
             'font_size': font_size,
@@ -156,8 +157,35 @@ class FormattedLabel(DocumentLabel):
             'align': align,
         })
 
+    @property
+    def document(self) -> AbstractDocument:
+        """Document to display.
+
+         For :py:class:`~pyglet.text.layout.IncrementalTextLayout` it is
+         far more efficient to modify a document in-place than to replace
+         the document instance on the layout.
+
+         :type: `AbstractDocument`
+         """
+        return self._document
+
+    @document.setter
+    def document(self, document: AbstractDocument) -> None:
+        document.set_style(0, len(document.text), {
+            'font_name': self.font_name,
+            'font_size': self.font_size,
+            'bold': self.bold,
+            'italic': self.italic,
+            'stretch':self.stretch,
+            'color': self.color,
+            'align': self.align,
+        })
+        self._set_document(document)
+        self._init_document()
+
 
 class EmojiLabel(FormattedLabel):
+
     def __init__(self, text: str, *args, emojiset: str = "twemoji", **kwargs):
         super().__init__(text, *args, **kwargs)
         if emojiset in emojisets:
@@ -171,7 +199,30 @@ class EmojiLabel(FormattedLabel):
 
         doc: AbstractDocument = self.document
         for pos, i in inserts:
-            doc.insert_element(pos, i)
+            doc.insert_text(pos, '\0', None)
+            i._position = pos # noqa: SLF001
+            doc._elements.append(i) # noqa: SLF001
             logger.debug(f"Inserted element {i} at {pos}")
+        doc._elements.sort(key=lambda d: d.position)  # noqa: SLF001
 
         self.document = doc
+
+
+def update_emoji_doc(doc: AbstractDocument, text: str, font_size: int, emojiset: str = 'twemoji'):
+    if emojiset in emojisets:
+        emoji_picker: EmojiPicker = emojisets[emojiset]
+    else:
+        emojisets[emojiset] = get_emoji_picker(emojiset)
+        emoji_picker: EmojiPicker = emojisets[emojiset]
+
+    cleaned_text, inserts = emoji_picker.get_clean_string(text, font_size)
+    doc.text = cleaned_text
+    for pos, i in inserts:
+        doc.insert_text(pos, '\0', None)
+        i._position = pos # noqa: SLF001
+        doc._elements.append(i) # noqa: SLF001
+        logger.debug(f"Inserted element {i} at {pos}")
+    doc._elements.sort(key=lambda d: d.position)  # noqa: SLF001
+
+    return doc
+

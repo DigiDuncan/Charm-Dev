@@ -6,7 +6,9 @@ import pyglet
 from pyglet import gl
 
 from charm.lib.types import Seconds
-from charm.objects.emojilabel import EmojiLabel
+from charm.objects.emojilabel import EmojiLabel, FormattedLabel, update_emoji_doc
+
+import cProfile
 
 
 gl.glEnable(gl.GL_DEPTH_TEST)
@@ -20,7 +22,7 @@ class LyricEvent:
         self.karaoke = karaoke
 
         self._labels: list[EmojiLabel] = []
-        self._batch = pyglet.graphics.Batch()
+        self.labels: list[EmojiLabel] = []
 
     @property
     def end_time(self) -> Seconds:
@@ -42,10 +44,19 @@ class LyricEvent:
                 self._labels.append(label_over)
         return self._labels
 
-    def draw(self) -> None:
-        if not self._labels:
-            self.get_labels(x, y, font_size) # TODO: What goes in these arguments???
-        self._batch.draw()
+    def update_labels(self, shadow: EmojiLabel, under: EmojiLabel, over: EmojiLabel, x: float, y: float, font_size: int) -> None:
+        default_emoji_set = "twemoji-bw" if self.karaoke else "twemoji"
+        shadow.document = generate_emoji_doc(self.text, font_size, "twemoji-shadow")
+        shadow.position = x + 2, y - 2, 3
+        under.document = generate_emoji_doc(self.text, font_size, default_emoji_set)
+        under.position = x, y, 2
+        if self.karaoke:
+            over.document = generate_emoji_doc(self.text, font_size, "twemoji")
+        else:
+            over.document = generate_emoji_doc("", font_size, "twemoji")
+        over.position = x, y, 1
+
+        self.labels = [shadow, under, over]
 
 
 class LyricAnimator:
@@ -69,31 +80,66 @@ class LyricAnimator:
 
         self._string_sizes: dict[str, int] = {}
 
+        self._test_label: FormattedLabel = FormattedLabel("", font_name = "bananaslip plus", font_size=self.max_font_size)
+
+        self._label_batch: pyglet.graphics.Batch = pyglet.graphics.Batch()
+
+        self._shadow_label: FormattedLabel = FormattedLabel("shadow", x = -1000, y = -1000, z = 3, font_name = "bananaslip plus", font_size = self.max_font_size, color = (0, 0, 0, 127), align = "center", anchor_x = "center", batch = self._label_batch)
+        self._under_label: FormattedLabel = FormattedLabel("under", x = -1000, y = -1000, z = 2, font_name = "bananaslip plus", font_size = self.max_font_size, color = (0, 0, 0, 255), align = "center", anchor_x = "center", batch = self._label_batch)
+        self._over_label: FormattedLabel = FormattedLabel("over", x = -1000, y = -1000, z = 1, font_name = "bananaslip plus", font_size = self.max_font_size, color = (255, 255, 0, 255), align = "left", anchor_x = "left", batch = self._label_batch)
+        self._shown_event: LyricEvent = None
+
     def update(self, song_time: Seconds) -> None:
         self.song_time = song_time
         for subtitle in self.current_subtitles:
             if subtitle.end_time < self.song_time:
                 self.current_subtitles.remove(subtitle)
+
         for subtitle in self.active_subtitles:
             if subtitle.time <= self.song_time:
                 self.current_subtitles.append(subtitle)
                 self.active_subtitles.remove(subtitle)
 
+        if not self.current_subtitles:
+            self._shown_event = None
+
+            self._shadow_label.position = -1000.0, -1000.0, 3
+            self._under_label.position = -1000.0, -1000.0, 2
+            self._over_label.position = -1000.0, -1000.0, 1
+        elif self.current_subtitles[-1] != self._shown_event:
+            self._shown_event = subtitle = self.current_subtitles[-1]
+
+            fs = self.get_font_size(subtitle.text)
+            self._shadow_label.document = update_emoji_doc(self._shadow_label.document, subtitle.text, fs, "twemoji-shadow")
+            self._shadow_label.position = self.x + 2, self.y - 2, 3
+            self._under_label.document = update_emoji_doc(self._under_label.document, subtitle.text, fs, "twemoji-bw" if subtitle.karaoke else "twemoji")
+            self._under_label.position = self.x, self.y, 2
+            if subtitle.karaoke:
+                self._over_label.document = update_emoji_doc(self._over_label.document, subtitle.karaoke, fs, 'twemoji')
+                self._over_label.position = self.x - self._under_label.content_width // 2, self.y, 1
+            else:
+                self._over_label.position = -1000.0, -1000.0, 1
+
     def get_font_size(self, s: str) -> int:
         if s in self._string_sizes:
             return self._string_sizes[s]
         font_size = self.max_font_size
-        label = EmojiLabel(s, x = 0, y = 0, font_name = "bananaslip plus", font_size = font_size)
-        if label.content_width > self.width:
-            font_size = int(font_size / (label.content_width / self.width))
+        self._test_label.document = update_emoji_doc(self._test_label.document, s, font_size)
+        if self._test_label.content_width > self.width:
+            font_size = int(font_size / (self._test_label.content_width / self.width))
         self._string_sizes[s] = font_size
         return font_size
 
     def prerender(self) -> None:
-        for s in self.active_subtitles:
-            fs = self.get_font_size(s.text)
-            s.get_labels(self.x, self.y, fs)
+        self._label_batch.draw()
+        return
+        with cProfile.Profile() as pr:
+            for s in self.active_subtitles:
+                fs = self.get_font_size(s.text)
+                s.get_labels(self.x, self.y, fs)
+        pr.print_stats('time')
 
     def draw(self) -> None:
         if self.current_subtitles:
-            self.current_subtitles[-1].draw()
+            self._label_batch.draw()
+            # self.current_subtitles[-1].draw()
