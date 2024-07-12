@@ -11,6 +11,7 @@ import json
 import re
 
 import emoji_data_python
+
 from pyglet.text.formats.structured import ImageElement
 from pyglet.text.document import FormattedDocument
 from pyglet.text import DocumentLabel
@@ -18,6 +19,7 @@ from pyglet.text import DocumentLabel
 import charm.data.images
 from charm.lib.utils import pt_to_px, pyglet_img_from_path
 
+emoji_data_python.get_emoji_regex = cache(emoji_data_python.get_emoji_regex)
 logger = logging.getLogger("charm")
 
 
@@ -79,7 +81,7 @@ def get_emoji_picker(id: str) -> EmojiPicker:
     return EmojiPicker(png, region_data)
 
 
-emojisets = {}
+emojisets: dict[str, EmojiPicker] = {}
 
 
 class FormattedLabel(DocumentLabel):
