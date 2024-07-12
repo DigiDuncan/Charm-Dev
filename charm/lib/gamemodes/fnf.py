@@ -500,10 +500,10 @@ class FNFDisplay(Display[FNFEngine, FNFChart]):
 
         # TODO: Anywhere we do `_charts[0].song` is bad and we shouldn't do it
         if self._charts[0].song.lyrics:
-            self.lyric_animator = LyricAnimator(self._win.width / 2, self._win.height / 2, self._charts[0].song.lyrics)
+            self.lyric_animator: LyricAnimator = LyricAnimator(self._win.width / 2, self._win.height / 2, self._charts[0].song.lyrics)
             self.lyric_animator.prerender()
         else:
-            self.lyric_animator = None
+            self.lyric_animator: LyricAnimator = None
 
         # -- Camera Events
         camera_events: list[CameraFocusEvent] = [e for e in charts[0].events if isinstance(e, CameraFocusEvent)]
