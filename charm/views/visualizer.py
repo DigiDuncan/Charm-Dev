@@ -190,6 +190,7 @@ class VisualizerView(DigiView):
         self.sprite.update_animation(delta_time)
         self.boyfriend.update_animation(delta_time)
         self.engine.update(self.song.time)
+        self.engine.calculate_score()
         self.highway.update(self.song.time)
 
     @shows_errors
