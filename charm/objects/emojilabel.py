@@ -223,6 +223,5 @@ def update_emoji_doc(doc: AbstractDocument, text: str, font_size: int, emojiset:
         doc._elements.append(i) # noqa: SLF001
         logger.debug(f"Inserted element {i} at {pos}")
     doc._elements.sort(key=lambda d: d.position)  # noqa: SLF001
-
     return doc
 

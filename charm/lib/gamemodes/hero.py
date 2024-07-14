@@ -943,11 +943,15 @@ class HeroEngine(Engine):
         # Overstrums
         # Strum leniency
 
-        # Get all non-scored notes within the current window
-        look_at_chords = [c for c in self.current_chords if c.time <= self.chart_time + self.hit_window]
+        # Get all strums within the window
         look_at_strums = [e for e in self.strum_events if self.chart_time - self.hit_window <= e.time <= self.chart_time + self.hit_window]
 
-        for chord in look_at_chords:
+        for chord in self.current_chords:
+            if chord.time > self.chart_time + self.hit_window:
+                # Since the chords are time sorted we can break
+                # once outside the window
+                break
+
             # Strums or HOPOs in strum mode
             if chord.type == "normal" or (chord.type == "hopo" and self.combo == 0):
                 self.process_strum(chord, look_at_strums)
@@ -955,13 +959,18 @@ class HeroEngine(Engine):
                 self.process_tap(chord, look_at_strums)
 
         # Missed chords
-        missed_chords = [c for c in self.current_chords if self.chart_time > c.time + self.hit_window]
-        for chord in missed_chords:
+        for chord in self.current_chords:
+            if chord.time >= self.chart_time - self.hit_window:
+                break
             self.process_missed(chord)
 
         overstrums = [e for e in self.strum_events if self.chart_time > e.time + self.hit_window]
-        if overstrums:
-            logger.info(f"Overstrum! ({round(overstrums[0].time, 3)})")
+
+        for strum in self.strum_events:
+            if strum.time <= self.chart_time - self.hit_window:
+                break
+
+            logger.info(f"Overstrum! ({round(strum.time, 3)})")
             self.combo = 0
             for o in overstrums:
                 self.strum_events.remove(o)
