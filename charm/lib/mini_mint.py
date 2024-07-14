@@ -104,6 +104,8 @@ class Element:
 
     def invalidate_layout(self):
         self.has_outdated_layout = True
+        for child in self.children:
+            child.invalidate_layout()
 
 
 class RegionElement(Element):
@@ -113,7 +115,6 @@ class RegionElement(Element):
         self._region: Rect = region
         self._ideal_size = ideal_size
         self._sub_bounds: Rect = self._bounds
-        self._win: Window = get_window()
 
     @property
     def region(self):
@@ -197,7 +198,7 @@ class VerticalElementList(Element):
             return
 
         target_height = -float('inf') if self.ideal_size is None else self.ideal_size.y
-        min_size = sum(child.minimum_size.y for child in self.children)
+        min_size = sum(child.minimum_size.y or 1.0 for child in self.children)
 
         free_height = self._bounds.height
 
@@ -207,12 +208,11 @@ class VerticalElementList(Element):
         if min_size < target_height < self._bounds.height:
             free_height = target_height
 
-        child_height = free_height / len(self.children)
-
-        heights = [max(child.minimum_size.y, child_height) for child in self.children]
+        heights = [child.minimum_size.y or 1.0 for child in self.children]
         height = sum(heights)
-        inset = 0.0 if len(self.children) == 1 else (free_height - height) / (len(self.children) - 1)
-
+        fraction = free_height / height
+        heights = [fraction * h for h in heights]
+        inset = 0.0 # if len(self.children) == 1 else (free_height - height) / (len(self.children) - 1)
         left, width = self._bounds.left, self._bounds.width
 
         match self._anchor_axis:

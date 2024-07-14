@@ -6,6 +6,7 @@ from arcade import Vec2, LRBT, color
 from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView, shows_errors, disable_when_focus_lost
 from charm.lib.keymap import keymap
+from charm.lib.anim import perc, ease_expoout
 
 from charm.lib.mini_mint import RegionElement, VerticalElementList, BoxElement
 
@@ -39,9 +40,12 @@ class UiView(DigiView):
         self._add_time = 0.0
 
         self.spawn = -1.0
+        self.speed = 0.75
         self.sub_list: VerticalElementList = VerticalElementList(strict=True)
         for _ in range(6):
-            self.sub_list.add_child(BoxElement(colour=color.Color.random(r=200, g=100, a=255), min_size=Vec2(0.0, 60.0)))
+            reg = RegionElement(LRBT(0.0, 0.8, 0.1, 0.9))
+            reg.add_child(BoxElement(colour=color.Color.random(r=40 + 10 * _, a=255), min_size=Vec2(0.0, 60.0)))
+            self.sub_list.add_child(reg)
 
     def on_resize(self, width: int, height: int) -> None:
         super().on_resize(width, height)
@@ -106,7 +110,8 @@ class UiView(DigiView):
         self.gum_wrapper.on_update(delta_time)
 
         if self.spawn > 0.0 and self.sub_list.parent is not None:
-            self.sub_list._minimum_size = Vec2(0.0, 100 + min(300.0, (self.window.time - self.spawn) * 100.0))
+            min_y = ease_expoout(100.0, 80.0 * len(self.sub_list.children), perc(self.spawn, self.spawn + self.speed, self.window.time))
+            self.sub_list._minimum_size = Vec2(0.0, min_y)
 
             self.element_list.layout()
 
