@@ -50,6 +50,12 @@ animationmap = [
     "right"
 ]
 
+# TODO: FIX ME OH GOD
+# OK, so this is just "when Scott is supposed to make the phone animation"
+# Investigate:
+# Is this encoded in the chart?
+# Is it encoded in a way that we can reliably use this information in other charts?
+# Is it worth adding this functionality to Charm, or should this be an injector?
 BAD_HARDCODE_TIME = 129.857142857143
 
 
