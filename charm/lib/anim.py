@@ -39,6 +39,9 @@ def lerp(start: float, end: float, i: float) -> float:
     """Convert a number between 0 and 1 to be the progress within a range start -> end."""
     return start + (i * (end - start))
 
+def smerp(start: float, end: float, decay: float, dt: float) -> float:
+    """Lerp between a and b over time independant of fluctuations in dt. https://www.youtube.com/watch?v=LSNQuFEDOyQ"""
+    return end + (start - end) * math.exp(-decay * dt)
 
 def bounce(n: float, m: float, bpm: float, x: float) -> float:
     """Create a bouncing motion between max(0, n) and m at bpm at time x."""
