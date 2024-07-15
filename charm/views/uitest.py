@@ -105,6 +105,8 @@ class UiView(DigiView):
             self.scroll = self.target_scroll
         else:
             self.scroll = s
+
+        # This scroll value doesn't take into account the sub_list which will have to change.
         self.root_ui_region.region = self._base_region.move(0.0, (self.scroll % 1.0) * 100.0/self.root_ui_region.bounds.height)
 
         # This is really cursed and shouldn't be run every frame. Also it relies on the len of the element list which
@@ -112,6 +114,7 @@ class UiView(DigiView):
         focus_idx = int(self.scroll)
         start_idx = focus_idx - len(self.element_list.children) // 2 + 1
         for idx in range(len(self.element_list.children)):
+            # Elements should probably have a generic for children types
             item = self.element_list.children[idx].children[0]
             item.text = str(start_idx + idx)
             item.colour = color.Color(10 * idx, 255 - 10 * idx, 100, 255)
