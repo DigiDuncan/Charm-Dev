@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import NamedTuple
 from enum import Enum
 
-from arcade import Rect, Vec2, get_window, LRBT, LBWH, XYWH, Window, draw_rect_filled, color, draw_rect_outline
+from arcade import Rect, Vec2, get_window, LRBT, LBWH, XYWH, Window, draw_rect_filled, color, draw_rect_outline, draw_text
 from arcade.math import clamp
 
 # TODO: add resize anchor
@@ -195,13 +195,16 @@ class BoxElement(Element):
     def __init__(
             self,
             colour: color.Color, parent: Element = None,
-            min_size: Vec2 = Vec2(0.0, 0.0)
+            min_size: Vec2 = Vec2(0.0, 0.0), text: str = None
     ):
         super().__init__(parent, min_size=min_size)
         self.colour: color.Color = colour
+        self.text = text
 
     def _display(self):
         draw_rect_filled(self._bounds, self.colour)
+        if self.text is not None:
+            draw_text(self.text, self.bounds.x, self.bounds.y, anchor_x='center', anchor_y='center')
 
 
 class AxisAnchor(Enum):

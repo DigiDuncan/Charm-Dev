@@ -107,6 +107,17 @@ class UiView(DigiView):
             self.scroll = s
         self.root_ui_region.region = self._base_region.move(0.0, (self.scroll % 1.0) * 100.0/self.root_ui_region.bounds.height)
 
+        # This is really cursed and shouldn't be run every frame. Also it relies on the len of the element list which
+        # will change when the sub-list gets added
+        focus_idx = int(self.scroll)
+        start_idx = focus_idx - len(self.element_list.children) // 2 + 1
+        for idx in range(len(self.element_list.children)):
+            item = self.element_list.children[idx].children[0]
+            item.text = str(start_idx + idx)
+            item.colour = color.Color(10 * idx, 255 - 10 * idx, 100, 255)
+            if start_idx + idx >= len(self._songs) or start_idx + idx < 0:
+                item.colour = color.Color(0, 0, 0, 0)
+
     @shows_errors
     def on_draw(self) -> None:
         super().predraw()
