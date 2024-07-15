@@ -21,6 +21,13 @@ class Padding(NamedTuple):
     top: float
 
 
+def padded_rect(rect: Rect, padding: Padding) -> Rect:
+    return LRBT(rect.left - padding.left, rect.right + padding.right, rect.bottom - padding.bottom, rect.top + padding.top)
+
+def padded_sub_rect(rect: Rect, padding: Padding) -> Rect:
+    return LRBT(rect.left + padding.left, rect.right - padding.right, rect.bottom + padding.bottom, rect.top - padding.top)
+
+
 # An alias for Vec2 which generally denotes a vector within the range 0.0 -> 1.0
 Anchor = Vec2
 
@@ -86,6 +93,7 @@ class Element:
         self.invalidate_layout()
 
     def _display(self):
+        return
         draw_rect_outline(self._bounds, DRAGON_PEACH, 4)
 
     def _calc_layout(self):
@@ -101,6 +109,8 @@ class Element:
 
     def layout(self):
         self._calc_layout()
+        for child in self.children:
+            child._calc_layout()
         self.has_outdated_layout = False
 
     def invalidate_layout(self):
@@ -111,9 +121,9 @@ class Element:
 
 class RegionElement(Element):
 
-    def __init__(self, region: Rect, ideal_size: Vec2 = Vec2(float('inf'), float('inf'))):
+    def __init__(self, region: Rect = None, ideal_size: Vec2 = Vec2(float('inf'), float('inf'))):
         super().__init__(ideal_size=ideal_size)
-        self._region: Rect = region
+        self._region: Rect = region if region is not None else LRBT(0.0, 1.0, 0.0, 1.0)
         self._ideal_size = ideal_size
         self._sub_bounds: Rect = self._bounds
 
@@ -130,6 +140,13 @@ class RegionElement(Element):
     def sub_bounds(self) -> Rect:
         return self._sub_bounds
 
+    def pixel_rect(self, left = None, right = None, bottom = None, top = None) -> Rect:
+        left = (left - self.bounds.left) / self.bounds.width if left is not None else self.region.left
+        right = (right - self.bounds.left) / self.bounds.width if right is not None else self.region.right
+        bottom = (bottom - self.bounds.bottom) / self.bounds.height if bottom is not None else self.region.bottom
+        top = (top - self.bounds.bottom) / self.bounds.height if top is not None else self.region.top
+        return LRBT(left, right, bottom, top)
+
     def _calc_layout(self):
         window_rect = self.bounds
         region_bottom_left = self.region.left, self.region.bottom
@@ -140,6 +157,37 @@ class RegionElement(Element):
         self._sub_bounds = LRBT(left, right, bottom, top).max_size(self._ideal_size.x, self._ideal_size.y)
         for child in self.children:
             child.bounds = self._sub_bounds
+
+
+class PaddingElement(Element):
+
+    def __init__(self, padding: Padding, *, children: list[Element] = None, parent: Element = None, ideal_size: Vec2 | None = None, min_size: Vec2 = Vec2(0, 0)):
+        super().__init__(parent, ideal_size, min_size)
+        self._padding: Padding = padding
+        self._sub_region: Rect = None
+
+        if not children:
+            return
+        for child in children:
+            self.add_child(child)
+
+    @property
+    def padding(self) -> Padding:
+        return self._padding
+
+    @padding.setter
+    def padding(self, new_padding: Padding) -> None:
+        self._padding = new_padding
+        self.invalidate_layout()
+
+    @property
+    def sub_region(self) -> Rect:
+        return self._sub_region
+
+    def _calc_layout(self):
+        self._sub_region = padded_sub_rect(self._bounds, self._padding)
+        for child in self.children:
+            child.bounds = self._sub_region
 
 
 class BoxElement(Element):

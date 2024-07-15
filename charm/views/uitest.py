@@ -6,75 +6,73 @@ from arcade import Vec2, LRBT, color
 from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView, shows_errors, disable_when_focus_lost
 from charm.lib.keymap import keymap
-from charm.lib.anim import perc, ease_expoout
+from charm.lib.anim import perc, ease_expoout, smerp
 
-from charm.lib.mini_mint import RegionElement, VerticalElementList, BoxElement
+from charm.lib.mini_mint import RegionElement, Padding, Element, PaddingElement, VerticalElementList, BoxElement
 
 logger = logging.getLogger("charm")
 
+
+def make_padded_debug(idx: int, padding: Padding = Padding(0, 20.0, 5.0, 5.0), blue: int = 100, min_size: Vec2 = Vec2(0.0, 100.0)):
+    return PaddingElement(padding, children=[BoxElement(colour=color.Color(10 * idx, 255 - 10 * idx, blue, 255))], min_size=min_size)
+
+def make_padded_empty(idx: int):
+    return Element(min_size=Vec2(0.0, 100.0))
 
 class UiView(DigiView):
     def __init__(self, back: DigiView):
         super().__init__(fade_in=1, back=back)
 
-        self._base_region = LRBT(0.0, 0.65, 0.2, 0.8)
-        self._test_offset = 0.0
+        self._songs = ["asdoikaspldk" for _ in range(100)] # data we pick from when showing the list elements
 
-        self.root_ui_region: RegionElement = RegionElement(self._base_region)
+        # The region of the screen taken up by the list. Includes space above and below screen so our
+        # trick to fake an infitely scrollable list isn't spoiled
+        self.root_ui_region: RegionElement = RegionElement(LRBT(0.0, 0.6, 0.0, 1.0))
         self.root_ui_region.bounds = self.window.rect
+        self.root_ui_region.region = self._base_region = self.root_ui_region.pixel_rect(bottom=-100.0, top=self.window.height+100.0)
 
+        # Actual element list
         self.element_list: VerticalElementList = VerticalElementList(strict=False)
         self.root_ui_region.add_child(self.element_list)
 
+        # Update everything
         self.root_ui_region.layout()
-        self.element_list.layout()
 
         child_count = self.element_list.bounds.height // 100
 
         self.element_list.empty()
-        for _ in range(int(child_count)):
-            self.element_list.add_child(BoxElement(colour=color.Color.random(a=255), min_size=Vec2(0.0, 100.0)))
-        self.element_list.add_child(BoxElement(colour=(0, 0, 0, 0)))
-        self._ctrl_press: bool = False
+        for _ in range(int(child_count) + 1):
+            self.element_list.add_child(make_padded_debug(_))
 
         self._add_time = 0.0
+
+        self.list_idx = 0
+        self.sub_idx = 0
+
+        self.scroll = 0.0
+        self.target_scroll = 0.0
+        self._scroll_decay = 16 # 1 - 25, slow -> fast
+
+        self.select_time = 0.0
 
         self.spawn = -1.0
         self.speed = 0.75
         self.sub_list: VerticalElementList = VerticalElementList(strict=True)
-        for _ in range(6):
-            reg = RegionElement(LRBT(0.0, 0.8, 0.1, 0.9))
-            reg.add_child(BoxElement(colour=color.Color.random(r=40 + 10 * _, a=255), min_size=Vec2(0.0, 60.0)))
-            self.sub_list.add_child(reg)
 
-    def on_resize(self, width: int, height: int) -> None:
-        super().on_resize(width, height)
-
+    def place_items(self):
         self.root_ui_region.bounds = self.window.rect
+        self.root_ui_region.region = self._base_region = self.root_ui_region.pixel_rect(bottom=-100.0, top=self.window.height+100.0)
         self.root_ui_region.layout()
 
         child_count = self.element_list.bounds.height // 100
 
-        if child_count == len(self.element_list.children) - 1 and self.sub_list.parent is None:
-            return
-
         self.element_list.empty()
         for _ in range(int(child_count) + 1):
-            self.element_list.add_child(BoxElement(colour=color.Color.random(a=255), min_size=Vec2(0.0, 100.0)))
+            self.element_list.add_child(make_padded_debug(_))
 
-        if self.spawn > 0.0:
-            self.spawn = -1.0
-
-    def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int):
-        if scroll_y:
-            shift = scroll_y / 100.0
-            if self._ctrl_press:
-                self.sub_list._minimum_size = Vec2(0.0, max(0.0, self.sub_list.minimum_size.y + scroll_y * 10.0))
-                self.element_list.invalidate_layout()
-                self.sub_list.invalidate_layout()
-            else:
-                self._test_offset += shift
-                self.root_ui_region.region = self._base_region.move(0.0, self._test_offset)
+    def on_resize(self, width: int, height: int) -> None:
+        super().on_resize(width, height)
+        self.place_items()
 
     @shows_errors
     def setup(self) -> None:
@@ -91,29 +89,23 @@ class UiView(DigiView):
         super().on_key_press(symbol, modifiers)
         if keymap.back.pressed:
             self.go_back()
-        elif symbol == arcade.key.LCTRL:
-            self._ctrl_press = True
-        elif symbol == arcade.key.SPACE and self.spawn < 0.0:
-            self.spawn = self.window.time
-            self.element_list.insert_child(self.sub_list, len(self.element_list.children) // 2)
-
-    @shows_errors
-    @disable_when_focus_lost(keyboard=True)
-    def on_key_release(self, symbol: int, modifiers: int) -> None:
-        super().on_key_release(symbol, modifiers)
-        if symbol == arcade.key.LCTRL:
-            self._ctrl_press = False
+        if keymap.navdown.pressed:
+            self.target_scroll = (self.target_scroll + 1) % len(self._songs)
+        if keymap.navup.pressed:
+            self.target_scroll = (self.target_scroll - 1) % len(self._songs)
 
     @shows_errors
     def on_update(self, delta_time: float) -> None:
         super().on_update(delta_time)
         self.gum_wrapper.on_update(delta_time)
 
-        if self.spawn > 0.0 and self.sub_list.parent is not None:
-            min_y = ease_expoout(100.0, 80.0 * len(self.sub_list.children), perc(self.spawn, self.spawn + self.speed, self.window.time))
-            self.sub_list._minimum_size = Vec2(0.0, min_y)
-
-            self.element_list.layout()
+        s = smerp(self.scroll, self.target_scroll, self._scroll_decay, delta_time)
+        print(s, self.scroll, self.target_scroll)
+        if abs(self.scroll - s) < 0.00001:
+            self.scroll = self.target_scroll
+        else:
+            self.scroll = s
+        self.root_ui_region.region = self._base_region.move(0.0, (self.scroll % 1.0) * 100.0/self.root_ui_region.bounds.height)
 
     @shows_errors
     def on_draw(self) -> None:
