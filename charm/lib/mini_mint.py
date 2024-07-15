@@ -51,6 +51,7 @@ class Element:
 
     def add_child(self, child: Element):
         self.children.append(child)
+        child.parent = self
         child.invalidate_layout()
         self.invalidate_layout()
 
