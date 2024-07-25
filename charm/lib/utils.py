@@ -77,20 +77,21 @@ def map_range(x: float, n1: float, m1: float, n2: float = -1, m2: float = 1) -> 
     ans = new_pos + n2
     return ans
 
-type Flatable[T] = T | Iterable[Flatable[T]]
-
-def flatten[T: Any](item: Flatable[T]) -> list[T]:
-    if not isinstance(item, Iterable):
-        return [item]
-    return [newitem for subitem in item for newitem in flatten(subitem)]
-
-
-def next_or_none[T](iterator: Iterator[T]) -> T | None:
-    try:
-        val = next(iterator)
-    except StopIteration:
-        val = None
-    return val
+# Stinky shenanigans that nuitka (and Dragon) doesn't like
+# type Flatable[T] = T | Iterable[Flatable[T]]
+# 
+# def flatten[T: Any](item: Flatable[T]) -> list[T]:
+#     if not isinstance(item, Iterable):
+#         return [item]
+#     return [newitem for subitem in item for newitem in flatten(subitem)]
+# 
+# 
+# def next_or_none[T](iterator: Iterator[T]) -> T | None:
+#     try:
+#         val = next(iterator)
+#     except StopIteration:
+#         val = None
+#     return val
 
 
 def color_with_alpha(color: RGB | RGBA, alpha: int) -> RGBA:

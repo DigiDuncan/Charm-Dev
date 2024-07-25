@@ -2,7 +2,7 @@
 A temporary stop gap between the old menu system and Mint.
 """
 from __future__ import annotations
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 from enum import Enum
 
 from arcade import Rect, Vec2, get_window, LRBT, LBWH, XYWH, Window, draw_rect_filled, color, draw_rect_outline, draw_text
@@ -11,7 +11,6 @@ from arcade.math import clamp
 # TODO: add resize anchor
 # TODO: add Subregion element
 # TODO: add AnchorRegion element
-# TODO: add Padding element
 
 
 class Padding(NamedTuple):
@@ -35,10 +34,9 @@ Anchor = Vec2
 DRAGON_PEACH = color.Color(255, 140, 120)
 
 
-class Element:
+class Element[P: Element | None, C: Element]:
 
-    def __init__(self, parent: Element = None,
-                 ideal_size: Vec2 | None = None,
+    def __init__(self, parent: P = None,
                  min_size: Vec2 = Vec2(0.0, 0.0)):
         # The area the Element takes up. Not necessarily the area that an Element's children will work within
         # see PaddingElement, but a parent will work on an element based on its bounds. The area an Element draws
@@ -46,74 +44,115 @@ class Element:
         self._bounds: Rect = LBWH(0.0, 0.0, min_size.x, min_size.y)
 
         self._minimum_size: Vec2 = min_size
-        self._ideal_size: Vec2 = ideal_size
 
-        self.children: list[Element] = []
-        self.parent: Element = parent
+        self.children: list[C] = []
 
         self.has_outdated_layout: bool = True
+        self._visible: bool = True
 
         if parent is not None:
-            self.parent.add_child(self)
+            parent.add_child(self)
 
-    def add_child(self, child: Element):
+    def add_child(self, child: C) -> None:
         self.children.append(child)
-        child.parent = self
-        child.invalidate_layout()
         self.invalidate_layout()
 
-    def empty(self):
+    def insert_child(self, child: C, idx: int = -1) -> None:
+        self.children.insert(idx, child)
+        self.invalidate_layout()
+
+    def swap_children(self, child_a: C, child_b: C) -> None:
+        idx_a, idx_b = self.children.index(child_a), self.children.index(child_b)
+        self.children[idx_a], self.children[idx_b] = self.children[idx_b], self.children[idx_a]
+        self.invalidate_layout()
+
+    def remove_child(self, child: C) -> None:
+        self.children.remove(child)
+        self.invalidate_layout()
+
+    def get_child_idx(self, child: C) -> int:
+        return self.children.index(child)
+
+    def empty(self, *, recursive: bool = False) -> None:
         children = self.children[:]
         self.children = []
         for child in children:
-            child.parent = None
+            if recursive:
+                child.empty(recursive=recursive)
+                continue
             child.invalidate_layout()
         self.invalidate_layout()
+
+    @property
+    def visible(self) -> bool:
+        return self._visible
+
+    @visible.setter
+    def visible(self, is_visible: bool) -> None:
+        self._visible = is_visible
+        self._visibility_changed()
+
+    def _visibility_changed(self) -> None:
+        """
+        Overridable property allowing element subclasses
+        to have more complicated visibility behaviour
+        such as setting an internal sprite's visibility
+        """
+        pass
 
     @property
     def bounds(self) -> Rect:
         return self._bounds
 
     @property
-    def ideal_size(self) -> Vec2:
-        return self._ideal_size
-
-    @property
     def minimum_size(self) -> Vec2:
         return self._minimum_size
 
     @bounds.setter
-    def bounds(self, new_bounds: Rect):
+    def bounds(self, new_bounds: Rect) -> None:
         if self._bounds == new_bounds:
             return
+
         self._bounds = new_bounds.min_size(
             self._minimum_size.x,
             self._minimum_size.y,
         )
+
         self.invalidate_layout()
 
-    def _display(self):
+    def _display(self) -> None:
         return
-        draw_rect_outline(self._bounds, DRAGON_PEACH, 4)
 
-    def _calc_layout(self):
+    def _calc_layout(self) -> None:
         pass
 
-    def draw(self):
+    def draw(self) -> None:
         if self.has_outdated_layout:
-            self.layout()
+            # We don't propogate here because we already propogate draw calls
+            self._calc_layout()
+            self.has_outdated_layout = False
+
+        if not self._visible:
+            return
 
         self._display()
         for child in self.children:
             child.draw()
 
-    def layout(self):
+    def layout(self, *, force: bool = False, recursive: bool = True) -> None:
+        if not self.has_outdated_layout and not force:
+            return
+
         self._calc_layout()
-        for child in self.children:
-            child._calc_layout()
         self.has_outdated_layout = False
 
-    def invalidate_layout(self):
+        if not recursive:
+            return
+
+        for child in self.children:
+            child.layout()
+
+    def invalidate_layout(self) -> None:
         self.has_outdated_layout = True
         for child in self.children:
             child.invalidate_layout()
@@ -121,10 +160,9 @@ class Element:
 
 class RegionElement(Element):
 
-    def __init__(self, region: Rect = None, ideal_size: Vec2 = Vec2(float('inf'), float('inf'))):
-        super().__init__(ideal_size=ideal_size)
+    def __init__(self, region: Rect = None):
+        super().__init__()
         self._region: Rect = region if region is not None else LRBT(0.0, 1.0, 0.0, 1.0)
-        self._ideal_size = ideal_size
         self._sub_bounds: Rect = self._bounds
 
     @property
@@ -154,15 +192,15 @@ class RegionElement(Element):
         left, bottom = window_rect.uv_to_position(region_bottom_left)
         right, top = window_rect.uv_to_position(region_top_right)
 
-        self._sub_bounds = LRBT(left, right, bottom, top).max_size(self._ideal_size.x, self._ideal_size.y)
+        self._sub_bounds = LRBT(left, right, bottom, top)
         for child in self.children:
             child.bounds = self._sub_bounds
 
 
 class PaddingElement(Element):
 
-    def __init__(self, padding: Padding, *, children: list[Element] = None, parent: Element = None, ideal_size: Vec2 | None = None, min_size: Vec2 = Vec2(0, 0)):
-        super().__init__(parent, ideal_size, min_size)
+    def __init__(self, padding: Padding, *, children: list[Element] = None, parent: Element = None, min_size: Vec2 = Vec2(0, 0)):
+        super().__init__(parent, min_size)
         self._padding: Padding = padding
         self._sub_region: Rect = None
 
@@ -220,45 +258,35 @@ class AxisAnchor(Enum):
     END = 2
 
 
-class VerticalElementList(Element):
+class VerticalElementList(Element[Element | None, Element]):
     # TODO: allow for varying priority in the children. Current they are all equally scaled based on the available size
 
-    def __init__(self, anchor_axis: AxisAnchor = AxisAnchor.TOP, strict: bool = True):
-        super().__init__()
+    def __init__(self, anchor_axis: AxisAnchor = AxisAnchor.TOP, strict: bool = True, *, min_size: Vec2 = Vec2()):
+        super().__init__(min_size=min_size)
         self._strict: bool = strict
         self._anchor_axis: AxisAnchor = anchor_axis
 
     @property
-    def anchor_axis(self):
+    def anchor_axis(self) -> AxisAnchor:
         return self._anchor_axis
 
     @anchor_axis.setter
-    def anchor_axis(self, new_anchor: AxisAnchor):
+    def anchor_axis(self, new_anchor: AxisAnchor) -> None:
         self._anchor_axis = new_anchor
         self.invalidate_layout()
 
-    def insert_child(self, child: Element, idx: int = -1):
-        self.children.insert(idx, child)
-        child.parent = self
-        self.invalidate_layout()
-        child.invalidate_layout()
-
-    def _calc_layout(self):
+    def _calc_layout(self) -> None:
         # Todo make this smarter I got lazy
 
         if not self.children:
             return
 
-        target_height = -float('inf') if self.ideal_size is None else self.ideal_size.y
         min_size = sum(child.minimum_size.y or 1.0 for child in self.children)
 
         free_height = self._bounds.height
 
         if not self._strict:
             free_height = max(free_height, min_size)
-
-        if min_size < target_height < self._bounds.height:
-            free_height = target_height
 
         heights = [child.minimum_size.y or 1.0 for child in self.children]
         height = sum(heights)
