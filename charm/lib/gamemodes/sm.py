@@ -69,13 +69,13 @@ class SMSong(FourKeySong):
                 note = notes[0]
                 time = timing_engine.time_at(note.beat)
                 beat = note.beat % 1
-                value = beat.denominator
+                value = beat.denominator  # TODO: Reimplement?
                 note_type = sm_to_fnf_name_map.get(note.note_type.name, None)
                 if isinstance(note, NoteWithTail):
                     end_time = timing_engine.time_at(note.tail_beat)
-                    chart.notes.append(FourKeyNote(chart, time, note.column, end_time - time, NoteType.NORMAL, value = value))
+                    chart.notes.append(FourKeyNote(chart, time, note.column, end_time - time, NoteType.NORMAL))
                 else:
-                    chart.notes.append(FourKeyNote(chart, time, note.column, 0, note_type, value = value))
+                    chart.notes.append(FourKeyNote(chart, time, note.column, 0, note_type))
 
             for bpm in timing.bpms.data:
                 bpm: BeatValue = bpm

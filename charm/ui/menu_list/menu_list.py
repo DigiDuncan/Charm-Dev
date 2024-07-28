@@ -1,13 +1,19 @@
 from arcade import Rect, LRBT
 
-from charm.lib.mini_mint import Element, RegionElement, VerticalElementList
-from charm.lib.generic.song import Song
+from charm.lib.mini_mint import Element, VerticalElementList
+from charm.lib.pool import Pool
+
+from charm.ui.menu_list.song_element import SongElement, ChartElement, SongListElement
 
 
-class SongMenuListElement(Element[Element | None, VerticalElementList]):
+class Song:
+    pass
 
-    def __init__(self, parent: Element = None, songs: list[Song] = None, min_element_size: float = 100, element_padding: int = 2, left_fraction: float = 0.0, right_fraction: float = 1.0):
-        super().__init__(parent)
+
+class SongMenuListElement(Element[VerticalElementList]):
+
+    def __init__(self, songs: list[Song] = None, min_element_size: float = 100, element_padding: int = 2, left_fraction: float = 0.0, right_fraction: float = 1.0):
+        super().__init__()
         self.min_element_size: float = min_element_size  # uses this to estimate the number of needed elements to simulate the full list
         self.element_padding: int = element_padding  # uses this to make sure the full list illusion isn't broken
 
@@ -16,7 +22,7 @@ class SongMenuListElement(Element[Element | None, VerticalElementList]):
 
         self.songs: list[Song] = songs or []
 
-        self.element_list: VerticalElementList = VerticalElementList()
+        self.element_list: VerticalElementList[SongListElement] = VerticalElementList(strict=False)
         self.add_child(self.element_list)
 
         self.layout(force=True)
@@ -34,6 +40,22 @@ class SongMenuListElement(Element[Element | None, VerticalElementList]):
         top = self.bounds.y + v_count * self.min_element_size
         bot = self.bounds.y - v_count * self.min_element_size
         lef = self.bounds.left + self.left_fraction * self.bounds.width
-        rig = self.bounds.left + self.right_fraction * self.bounds.height
+        rig = self.bounds.left + self.right_fraction * self.bounds.width
 
-        # Then calc the offset bassed on the children. This is a semi-recursive behaviour oh no O.o
+        curr_count = len(self.element_list.children)
+        child_count = int(v_count*2)
+
+        # TODO: optimise
+        if curr_count != child_count:
+            self.element_list.empty()
+            for _ in range(child_count):
+                self.element_list.add_child(SongListElement(self.min_element_size))
+
+        # The menu list works with the children's minimum size to figure out the needed offset
+        centering_offset = sum(child.minimum_size.y for child in self.element_list.children[:half_count]) - (half_count * self.min_element_size)
+
+        # Idx scroll
+
+        # Sub scroll
+
+        self.element_list.bounds = LRBT(lef, rig, bot + centering_offset, top + centering_offset)

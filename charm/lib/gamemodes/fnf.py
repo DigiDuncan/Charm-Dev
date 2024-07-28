@@ -551,7 +551,7 @@ class FNFDisplay(Display[FNFEngine, FNFChart]):
             self._grade_text.text = f"{self._engine.fc_type} | {round(self._engine.accuracy * 100, 2)}% ({self._engine.grade})"
 
         self.timer.current_time = song_time
-        self.timer.update(self._win.global_clock.delta_time)
+        self.timer.update(self._win.delta_time)
 
         if self.spotlight:
             self.spotlight.update(song_time)

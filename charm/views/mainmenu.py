@@ -20,6 +20,7 @@ from charm.views.visualizer import VisualizerView
 from charm.views.uitest import UiView
 from charm.views.options import OptionsView
 from charm.views.gameplay import GameView
+from charm.views.unifiedmenu import UnifiedSongMenuView
 
 
 class MainMenuView(DigiView):
@@ -28,6 +29,7 @@ class MainMenuView(DigiView):
         # Generate "gum wrapper" background
         self.gum_wrapper = GumWrapper()
         self.menu = MainMenu([
+            MainMenuItem("Play", "songs", UnifiedSongMenuView(back=self)),
             MainMenuItem("Playlists", "playlists", None),
             MainMenuItem("FNF Songs", "songs", FNFSongMenuView(back=self)),
             MainMenuItem("4K Songs", "songs", FourKeySongMenuView(back=self)),

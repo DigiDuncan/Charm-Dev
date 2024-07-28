@@ -2,16 +2,18 @@
 A temporary stop gap between the old menu system and Mint.
 """
 from __future__ import annotations
-from typing import NamedTuple, Optional
+from typing import NamedTuple
+from collections.abc import Callable
+from dataclasses import dataclass
 from enum import Enum
 
-from arcade import Rect, Vec2, get_window, LRBT, LBWH, XYWH, Window, draw_rect_filled, color, draw_rect_outline, draw_text
+from arcade import Rect, Vec2, LRBT, LBWH, XYWH, draw_rect_filled, color, draw_text
 from arcade.math import clamp
+from arcade.clock import GLOBAL_CLOCK, GLOBAL_FIXED_CLOCK
 
-# TODO: add resize anchor
-# TODO: add Subregion element
-# TODO: add AnchorRegion element
+from charm.lib.anim import EasingFunction, ease_linear, perc
 
+DRAGON_PEACH = color.Color(255, 140, 120)
 
 class Padding(NamedTuple):
     left: float
@@ -30,14 +32,64 @@ def padded_sub_rect(rect: Rect, padding: Padding) -> Rect:
 # An alias for Vec2 which generally denotes a vector within the range 0.0 -> 1.0
 Anchor = Vec2
 
+@dataclass
+class Animation:
+    callback: Callable[[float, float]]
+    duration: float
+    start_time: float
+    elapsed: float = 0.0
+    delay: float = 0.0
+    function: EasingFunction = ease_linear
 
-DRAGON_PEACH = color.Color(255, 140, 120)
+class Animator:
+    """
+    A generic animator able to animate properties of gui over time.
+    Used to give the UI logic over time.
+    """
+
+    def __init__(self) -> None:
+        self.animations: list[Animation] = []
+
+    def update(self, delta_time: float) -> None:
+        for animation in self.animations[:]:
+            if GLOBAL_CLOCK.time < animation.start_time:
+                continue
+
+            elapsed = animation.elapsed = GLOBAL_CLOCK.time_since(animation.start_time)
+            fraction = animation.function(0.0, 1.0, perc(0.0, animation.duration, elapsed))
+
+            animation.callback(fraction, elapsed)
+
+            if animation.duration <= elapsed:
+                self.animations.remove(animation)
+
+    def fixed_update(self, delta_time: float) -> None:
+        pass
+
+    def kill_animation(self, animation: Animation, *, final_callback: bool = True):
+        if animation not in self.animations:
+            return
+
+        if animation.start_time < GLOBAL_CLOCK.time and final_callback:
+            elapsed = animation.elapsed = GLOBAL_CLOCK.time_since(animation.start_time)
+            fraction = animation.function(0.0, 1.0, perc(0.0, animation.duration, elapsed))
+            animation.callback(fraction, GLOBAL_CLOCK.delta_time)
+
+        self.animations.remove(animation)
 
 
-class Element[P: Element | None, C: Element]:
+    def start_animation(self, callback: Callable[[float, float]], duration: float, *,
+                        elapsed: float = 0.0, delay: float = 0.0, function: EasingFunction = ease_linear) -> Animation:
+        new_animation = Animation(callback, duration, GLOBAL_CLOCK.time + delay, elapsed, delay, function)
+        self.animations.append(new_animation)
+        return new_animation
 
-    def __init__(self, parent: P = None,
-                 min_size: Vec2 = Vec2(0.0, 0.0)):
+    # TODO: add fixed update logic
+
+class Element[C: Element]:
+    Animator: Animator = None
+
+    def __init__(self, min_size: Vec2 = Vec2(0.0, 0.0)):
         # The area the Element takes up. Not necessarily the area that an Element's children will work within
         # see PaddingElement, but a parent will work on an element based on its bounds. The area an Element draws
         # to is also not depended on the bounds, but they should mostly match to get correct behaviour.
@@ -47,11 +99,13 @@ class Element[P: Element | None, C: Element]:
 
         self.children: list[C] = []
 
-        self.has_outdated_layout: bool = True
+        self._has_outdated_layout: bool = True
         self._visible: bool = True
 
-        if parent is not None:
-            parent.add_child(self)
+    @staticmethod
+    def start_animation(callback: Callable[[float, float]], duration: float, *,
+                        elapsed: float = 0.0, delay: float = 0.0, function: EasingFunction = ease_linear) -> Animation:
+        return Element.Animator.start_animation(callback, duration, elapsed=elapsed, delay=delay, function=function)
 
     def add_child(self, child: C) -> None:
         self.children.append(child)
@@ -101,12 +155,19 @@ class Element[P: Element | None, C: Element]:
         pass
 
     @property
-    def bounds(self) -> Rect:
-        return self._bounds
-
-    @property
     def minimum_size(self) -> Vec2:
         return self._minimum_size
+
+    @minimum_size.setter
+    def minimum_size(self, new_min: Vec2) -> None:
+        if new_min == self._minimum_size:
+            return
+        self._minimum_size = new_min
+        self.invalidate_layout()
+
+    @property
+    def bounds(self) -> Rect:
+        return self._bounds
 
     @bounds.setter
     def bounds(self, new_bounds: Rect) -> None:
@@ -119,6 +180,14 @@ class Element[P: Element | None, C: Element]:
         )
 
         self.invalidate_layout()
+
+    @property
+    def has_outdated_layout(self) -> bool:
+        return self._has_outdated_layout or any(child.has_outdated_layout for child in self.children)
+
+    @has_outdated_layout.setter
+    def has_outdated_layout(self, outdated: bool) -> None:
+        self._has_outdated_layout = outdated
 
     def _display(self) -> None:
         return
@@ -150,12 +219,10 @@ class Element[P: Element | None, C: Element]:
             return
 
         for child in self.children:
-            child.layout()
+            child.layout(force=force, recursive=recursive)
 
     def invalidate_layout(self) -> None:
-        self.has_outdated_layout = True
-        for child in self.children:
-            child.invalidate_layout()
+        self._has_outdated_layout = True
 
 
 class RegionElement(Element):
@@ -199,8 +266,8 @@ class RegionElement(Element):
 
 class PaddingElement(Element):
 
-    def __init__(self, padding: Padding, *, children: list[Element] = None, parent: Element = None, min_size: Vec2 = Vec2(0, 0)):
-        super().__init__(parent, min_size)
+    def __init__(self, padding: Padding, *, children: list[Element] = None, min_size: Vec2 = Vec2(0, 0)):
+        super().__init__(min_size)
         self._padding: Padding = padding
         self._sub_region: Rect = None
 
@@ -232,10 +299,10 @@ class BoxElement(Element):
 
     def __init__(
             self,
-            colour: color.Color, parent: Element = None,
+            colour: color.Color,
             min_size: Vec2 = Vec2(0.0, 0.0), text: str = None
     ):
-        super().__init__(parent, min_size=min_size)
+        super().__init__(min_size=min_size)
         self.colour: color.Color = colour
         self.text = text
 
@@ -258,7 +325,7 @@ class AxisAnchor(Enum):
     END = 2
 
 
-class VerticalElementList(Element[Element | None, Element]):
+class VerticalElementList[C: Element](Element[C]):
     # TODO: allow for varying priority in the children. Current they are all equally scaled based on the available size
 
     def __init__(self, anchor_axis: AxisAnchor = AxisAnchor.TOP, strict: bool = True, *, min_size: Vec2 = Vec2()):

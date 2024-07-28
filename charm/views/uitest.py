@@ -5,7 +5,7 @@ from arcade import Vec2, LRBT, color, types
 from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView, shows_errors, disable_when_focus_lost
 from charm.lib.keymap import keymap
-from charm.lib.anim import perc, ease_expoout, smerp
+from charm.lib.anim import smerp
 
 from charm.lib.mini_mint import RegionElement, Padding, Element, PaddingElement, VerticalElementList, BoxElement
 
@@ -73,7 +73,6 @@ class UiView(DigiView):
         region_bottom = self.window.center_y - vertical_count * 100
 
         self.root_ui_region.region = self._base_region = self.root_ui_region.pixel_rect(bottom=region_bottom, top=region_top)
-
 
         curr_count = len(self.element_list_items)
         child_count = int(vertical_count*2)

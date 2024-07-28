@@ -11,8 +11,6 @@ from charm.lib.settings import settings
 from charm.lib.utils import pyglet_img_from_path
 from charm.lib.digiwindow import DigiWindow
 
-import cProfile
-
 # Fix font
 pyglet.options["win32_disable_shaping"] = True
 arcade_accelerate.bootstrap()
@@ -25,7 +23,7 @@ with as_file(files(charm.data.fonts) / "bananaslipplus.otf") as p:
 class CharmGame(DigiWindow):
     def __init__(self):
         super().__init__(settings.resolution, "Charm", settings.fps)
-        self.set_min_size(1, 1)
+        self.set_minimum_size(1280, 720)
         icon = pyglet_img_from_path(files(charm.data.images) / "charm-icon32t.png")
         self.set_icon(icon)
         arcade.hitbox.algo_default = arcade.hitbox.algo_bounding_box

@@ -134,12 +134,12 @@ def load_note_texture(note_type: str, note_lane: int, height: int, value: int = 
 
 class FourKeyNote(Note):
     def __init__(self, chart: Chart, time: Seconds, lane: Literal[0,1,2,3],
-                 length: Seconds = 0, type: str = "normal", value: int = 0,
+                 length: Seconds = 0, type: str = "normal",
                  hit: bool = False, missed: bool = False,
                  hit_time: Seconds | None = None,
                  extra_data: tuple[Any, ...] | None = None,
                  parent: FourKeyNote | None = None):
-        super().__init__(chart, time, lane, length, type, value, hit, missed, hit_time, extra_data)
+        super().__init__(chart, time, lane, length, type, hit, missed, hit_time, extra_data)
         self.parent = parent
         self.lane: Literal[0,1,2,3]
 
