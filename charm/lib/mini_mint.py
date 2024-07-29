@@ -371,7 +371,7 @@ class VerticalElementList[C: Element](Element[C]):
             offset = 0.0
         else:
             fraction = 1.0
-            offset = (free_height - height) / len(self.children)
+            offset = 0.0 if len(self.children) <= 1 else (free_height - height) / (len(self.children) - 1)
 
         heights = [fraction * h for h in heights]
         left, width = self._bounds.left, self._bounds.width

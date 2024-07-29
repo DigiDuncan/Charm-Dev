@@ -3,7 +3,7 @@
 from pyglet.math import Vec2
 from arcade import Rect, LRBT
 from charm.lib.mini_mint import Element, VerticalElementList, Padding, padded_sub_rect, Animation
-from charm.lib.anim import ease_expoout
+from charm.lib.anim import ease_expoout, ease_quadinout
 
 # -- TEMP --
 from arcade import draw
@@ -13,7 +13,7 @@ from arcade import Text
 
 class ChartElement(Element[Element]):
     # displays info about a specific chart and are spawned in the sublist of the SongListElement
-    def __init__(self, padding: Padding = Padding(0, 0, 5, 5), min_height: float = 45.0):
+    def __init__(self, padding: Padding = Padding(0, 0, 2.5, 2.5), min_height: float = 45.0):
         super().__init__(min_size=Vec2(0.0, min_height))
         self._padding: Padding = padding
         self._sub_region: Rect = padded_sub_rect(self.bounds, self._padding)
@@ -124,7 +124,7 @@ class SongListElement(Element[SongElement | VerticalElementList]):
         self.invalidate_layout()
 
     def shrink(self, fraction: float, elapsed: float):
-        new_size = Vec2(0.0, 100.0 + (1 - fraction) * (45.0 + 45.0 * (len(self._song.charts)) - 1))
+        new_size = Vec2(0.0, 100.0 + (1 - fraction) * (45.0 * len(self._song.charts)))
         if elapsed >= 0.2:
             new_size = Vec2(0.0, 100.0)
         self.minimum_size = new_size
@@ -147,12 +147,13 @@ class SongListElement(Element[SongElement | VerticalElementList]):
 
         self._list_element.empty()
         self._list_element.visible = True
+
         for chart in self._song.charts:
             elem = ChartElement()
             elem.set_chart(chart)
             self._list_element.add_child(elem)
 
-        self._anim = self.start_animation(self.grow, 0.2, cutoff=0.2, function=ease_expoout, cleanup=self.cleanup)
+        self._anim = self.start_animation(self.grow, 0.3, function=ease_expoout, cleanup=self.cleanup)
 
     def deselect(self) -> None:
         if not self._selected:
@@ -164,7 +165,7 @@ class SongListElement(Element[SongElement | VerticalElementList]):
             Element.Animator.kill_animation(self._anim)
             self._anim = None
 
-        self._anim = self.start_animation(self.shrink, 0.2, cutoff=0.2, function=ease_expoout, cleanup=self.cleanup)
+        self._anim = self.start_animation(self.shrink, 0.3, function=ease_expoout, cleanup=self.cleanup)
 
     def toggle(self) -> None:
         if self._selected:
@@ -189,7 +190,7 @@ class SongListElement(Element[SongElement | VerticalElementList]):
         l, r, b, t = self.bounds.lrbt
         self._song_element.bounds = LRBT(l, r, t - self._min_height, t)
 
-        if self._anim is None and not self._selected:
+        if (self._anim is None and not self._selected) or self.bounds.height < self._min_height + 40.0:
             self._list_element.empty()
             self._list_element.visible = False
         self._list_element.visible = True
