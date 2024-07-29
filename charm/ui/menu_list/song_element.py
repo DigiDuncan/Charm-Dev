@@ -7,7 +7,7 @@ from charm.lib.generic.song import Song
 from charm.lib.anim import ease_expoout
 
 # -- TEMP --
-from arcade import draw_commands
+from arcade import draw
 
 
 class ChartElement(Element[Element]):
@@ -33,7 +33,7 @@ class ChartElement(Element[Element]):
         self._sub_region = padded_sub_rect(self.bounds, self._padding)
 
     def _display(self) -> None:
-        draw_commands.draw_rect_filled(self._sub_region, (255, 255, 255, 255))
+        draw.draw_rect_filled(self._sub_region, (255, 255, 255, 255))
 
 
 class SongElement(Element[Element]):
@@ -60,7 +60,7 @@ class SongElement(Element[Element]):
         self._sub_region = padded_sub_rect(self.bounds, self._padding)
 
     def _display(self) -> None:
-        draw_commands.draw_rect_filled(self._sub_region, (255, 255, 255, 255))
+        draw.draw_rect_filled(self._sub_region, (255, 255, 255, 255))
 
 
 class SongListElement(Element[SongElement | VerticalElementList]):
