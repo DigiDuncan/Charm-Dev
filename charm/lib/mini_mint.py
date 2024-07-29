@@ -39,7 +39,10 @@ class Animation:
     start_time: float
     elapsed: float = 0.0
     delay: float = 0.0
+    inset: float = 0.0
+    cutoff: float = 0.0
     function: EasingFunction = ease_linear
+    cleanup: Callable[[Animation]] | None = None
 
 class Animator:
     """
@@ -62,25 +65,31 @@ class Animator:
 
             if animation.duration <= elapsed:
                 self.animations.remove(animation)
+                if animation.cleanup is not None:
+                    animation.cleanup(animation)
 
     def fixed_update(self, delta_time: float) -> None:
         pass
 
-    def kill_animation(self, animation: Animation, *, final_callback: bool = True):
+    def kill_animation(self, animation: Animation, *, do_final_callback: bool = True, do_cleanup: bool = True):
         if animation not in self.animations:
             return
 
-        if animation.start_time < GLOBAL_CLOCK.time and final_callback:
+        if animation.start_time < GLOBAL_CLOCK.time and do_final_callback:
             elapsed = animation.elapsed = GLOBAL_CLOCK.time_since(animation.start_time)
             fraction = animation.function(0.0, 1.0, perc(0.0, animation.duration, elapsed))
             animation.callback(fraction, GLOBAL_CLOCK.delta_time)
 
         self.animations.remove(animation)
 
+        if do_cleanup and animation.cleanup is not None:
+            animation.cleanup(animation)
+
 
     def start_animation(self, callback: Callable[[float, float]], duration: float, *,
-                        elapsed: float = 0.0, delay: float = 0.0, function: EasingFunction = ease_linear) -> Animation:
-        new_animation = Animation(callback, duration, GLOBAL_CLOCK.time + delay, elapsed, delay, function)
+                        elapsed: float = 0.0, delay: float = 0.0, inset: float = 0.0, cutoff: float = 0.0,
+                        function: EasingFunction = ease_linear, cleanup: Callable[[Animation]] | None = None) -> Animation:
+        new_animation = Animation(callback, duration, GLOBAL_CLOCK.time + delay, elapsed, inset, delay, cutoff, function, cleanup)
         self.animations.append(new_animation)
         return new_animation
 
@@ -104,8 +113,9 @@ class Element[C: Element]:
 
     @staticmethod
     def start_animation(callback: Callable[[float, float]], duration: float, *,
-                        elapsed: float = 0.0, delay: float = 0.0, function: EasingFunction = ease_linear) -> Animation:
-        return Element.Animator.start_animation(callback, duration, elapsed=elapsed, delay=delay, function=function)
+                        elapsed: float = 0.0, delay: float = 0.0, inset: float = 0.0, cutoff: float = 0.0,
+                        function: EasingFunction = ease_linear, cleanup: Callable[[Animation]] | None = None) -> Animation:
+        return Element.Animator.start_animation(callback, duration, elapsed=elapsed, delay=delay, inset=inset, cutoff=cutoff, function=function, cleanup=cleanup)
 
     def add_child(self, child: C) -> None:
         self.children.append(child)
@@ -348,20 +358,23 @@ class VerticalElementList[C: Element](Element[C]):
         if not self.children:
             return
 
-        min_size = sum(child.minimum_size.y or 1.0 for child in self.children)
+        heights = [child.minimum_size.y or 1.0 for child in self.children]
+        height = sum(heights)
 
         free_height = self._bounds.height
 
         if not self._strict:
-            free_height = max(free_height, min_size)
+            free_height = max(free_height, height)
 
-        heights = [child.minimum_size.y or 1.0 for child in self.children]
-        height = sum(heights)
-        fraction = free_height / height
+        if height <= free_height:
+            fraction = free_height / height
+            offset = 0.0
+        else:
+            fraction = 1.0
+            offset = (free_height - height) / len(self.children)
+
         heights = [fraction * h for h in heights]
-        inset = 0.0 # if len(self.children) == 1 else (free_height - height) / (len(self.children) - 1)
         left, width = self._bounds.left, self._bounds.width
-
         match self._anchor_axis:
             case AxisAnchor.TOP:
                 top = self._bounds.top
@@ -371,8 +384,9 @@ class VerticalElementList[C: Element](Element[C]):
                 for idx in range(1, len(self.children)):
                     next_height = heights[idx]
                     child = self.children[idx]
-                    child.bounds = LBWH(left, next_top - next_height - inset, width, next_height)
+                    child.bounds = LBWH(left, next_top - next_height - offset, width, next_height)
                     next_top = child.bounds.bottom
+
 
             case AxisAnchor.CENTER:
                 pass

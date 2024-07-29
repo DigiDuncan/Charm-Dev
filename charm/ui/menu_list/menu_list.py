@@ -1,13 +1,9 @@
-from arcade import Rect, LRBT
+from arcade import LRBT
 
 from charm.lib.mini_mint import Element, VerticalElementList
-from charm.lib.pool import Pool
 
-from charm.ui.menu_list.song_element import SongElement, ChartElement, SongListElement
-
-
-class Song:
-    pass
+from charm.ui.menu_list.song_element import SongListElement
+from charm.ui.menu_list.song_stub import Song, Metadata, Chart
 
 
 class SongMenuListElement(Element[VerticalElementList]):
@@ -45,11 +41,27 @@ class SongMenuListElement(Element[VerticalElementList]):
         curr_count = len(self.element_list.children)
         child_count = int(v_count*2)
 
-        # TODO: optimise
-        if curr_count != child_count:
-            self.element_list.empty()
-            for _ in range(child_count):
-                self.element_list.add_child(SongListElement(self.min_element_size))
+        if curr_count == 0:
+            # Since v_count as the 0.5 it will always be odd, and there should ways be atleast one.
+            self.element_list.add_child(SongListElement(self.min_element_size))
+            self.element_list.children[0].song = Song(Metadata('MIDDLE'), [Chart('fnf', 'yes') for _ in range(6)])
+            curr_count += 1
+
+        # TODO: optimise with pool maybe?
+        if curr_count > child_count:
+            for _ in range((curr_count - child_count) // 2):
+                self.element_list.remove_child(self.element_list.children[0])
+                self.element_list.remove_child(self.element_list.children[-1])
+            # remove children
+        elif curr_count < child_count:
+            for _ in range((child_count - curr_count) // 2):
+                start_element = SongListElement(self.min_element_size)
+                start_element.song = Song(Metadata('AJKLSHDAJKLS'), [Chart('a', 'easy') for _ in range(_ + 3)])  # TODO: remove once scrolling is in
+                self.element_list.insert_child(start_element, 0)
+                end_element = SongListElement(self.min_element_size)
+                end_element.song = Song(Metadata('asdklasdl'), [Chart('b', 'HARD >:)') for _ in range(_ + 2)])  # TODO: remove once scrolling is in
+                self.element_list.add_child(end_element)
+            # add children
 
         # The menu list works with the children's minimum size to figure out the needed offset
         centering_offset = sum(child.minimum_size.y for child in self.element_list.children[:half_count]) - (half_count * self.min_element_size)
