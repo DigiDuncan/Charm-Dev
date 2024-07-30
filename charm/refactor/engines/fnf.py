@@ -1,9 +1,11 @@
 import logging
 import math
-from charm.lib.keymap import keymap
-from charm.lib.types import Seconds
+from charm.lib.keymap import Action, keymap
+from charm.lib.types import Range4, Seconds
 from charm.lib.utils import clamp
 from charm.refactor.generic import Engine, Judgement
+from charm.refactor.charts.fnf import FNFNote, FNFChart
+from charm.refactor.generic.engine import DigitalKeyEvent
 
 
 logger = logging.getLogger("charm")
@@ -20,8 +22,32 @@ class FNFEngine(Engine[FNFChart]):
             Judgement("miss",  "miss",  math.inf, 0,     -1,   -0.1)
         ]
         super().__init__(chart, offset)
+
         self.hit_window = hit_window
         self.judgements = judgements
+
+        self.min_hp = 0
+        self.hp = 1
+        self.max_hp = 2
+        self.bomb_hp = 0.5
+
+        self.has_died = False
+
+        self.latest_judgement = None
+        self.latest_judgement_time = None
+        self.all_judgements: list[tuple[Seconds, Seconds, Judgement]] = []
+
+        self.current_notes: list[FNFNote] = self.chart.notes.copy()
+        self.current_events: list[DigitalKeyEvent[Range4]] = []
+
+        self.last_p1_action: Action | None = None
+        self.last_note_missed = False
+        self.streak = 0
+        self.max_streak = 0
+
+        self.active_sustains: list[FNFNote] = []
+        self.last_sustain_tick = 0
+        self.keystate: tuple[bool, bool, bool, bool] = (False, False, False, False)
 
     def calculate_score(self) -> None:
         # Get all non-scored notes within the current window

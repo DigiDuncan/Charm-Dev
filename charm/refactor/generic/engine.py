@@ -92,7 +92,7 @@ class Engine[CT: Chart]:
 
         # Accuracy
         self.max_notes = len(self.chart.notes)
-        self.weighted_hit_notes: int = 0
+        self.weighted_hit_notes: float = 0
 
         self.keystate = (False,) * self.chart.lanes
 

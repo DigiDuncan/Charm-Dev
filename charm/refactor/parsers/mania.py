@@ -18,7 +18,7 @@ class ManiaParser(Parser[FourKeyChart]):
         chart_files = path.glob("*.osu")
         charts = []
 
-        added_bpm_events = False
+        # added_bpm_events = False
 
         for p in chart_files:
             raw_chart = RawOsuChart.parse(p)  # SO MUCH is hidden by this function
