@@ -5,12 +5,17 @@ They do no bounds checking.
 It's just for readability in function signatures.
 """
 
+from typing import Literal
+
+
 Seconds = float
 Milliseconds = float
 
 RGB = tuple[int, int, int]
 RGBA = tuple[int, int, int, int]
 TuplePoint = tuple[int | float, int | float]
+
+Range4 = Literal[0, 1, 2, 3]
 
 class Point:
     def __init__(self, point: TuplePoint):

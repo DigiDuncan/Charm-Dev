@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import logging
 from typing import Any, Literal
-from charm.lib.types import Seconds
+from charm.lib.types import Range4, Seconds
 from charm.refactor.generic.chart import Chart, Note
 
-Range4 = Literal[0, 1, 2, 3]
+logger = logging.getLogger("charm")
 
 class FourKeyNoteType:
     NORMAL = "normal"

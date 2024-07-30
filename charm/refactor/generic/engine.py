@@ -70,8 +70,8 @@ class DigitalKeyEvent[K](EngineEvent):
         return self.__repr__()
 
 
-class Engine:
-    def __init__(self, chart: Chart, hit_window: Seconds = 0.0, judgements: list[Judgement] | None = None, offset: Seconds = 0):
+class Engine[CT: Chart]:
+    def __init__(self, chart: CT, hit_window: Seconds = 0.0, judgements: list[Judgement] | None = None, offset: Seconds = 0):
         """The class that processes user inputs into score according to a Chart."""
         self.chart = chart
         self.hit_window = hit_window
