@@ -3,24 +3,14 @@ from arcade import Sprite, Texture
 
 from charm.lib.generic.song import Note
 
-__all__ = (
-    "NoteSprite",
-    "StrikelineSprite",
-    "SustainSprites",
-    "SustainTextureDict",
-    "SustainTextures"
-)
-
 
 class NoteSprite(Sprite):
-
     def __init__(self, x: float, y: float):
-        super().__init__(center_x=x, center_y=y)
+        super().__init__(center_x = x, center_y = y)
         self.note: Note | None = None
 
 
 class StrikelineSprite(Sprite):
-
     def __init__(self,
                  x: float, y: float,
                  active_texture: Texture, inactive_texture: Texture,
@@ -64,7 +54,6 @@ SustainTextureDict = dict[str, SustainTextures]
 
 # TODO: better name?
 class SustainSprites:
-
     def __init__(self, size: float, tail_spacing: float = 0.0, *, downscroll: bool = False):
         self.size = size
         self.down_scrolling: bool = downscroll
@@ -77,8 +66,8 @@ class SustainSprites:
         self._body_offset: float = 0.0
         self._cap_offset: float = 0.0
 
-        self.note: Note | None = None
-        self._textures: SustainTextureDict = {}
+        self.note: Note = None
+        self._textures: SustainTextureDict = None
 
         self.hide()
 
