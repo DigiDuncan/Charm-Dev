@@ -117,7 +117,7 @@ class SongListElement(Element[SongElement | VerticalElementList]):
     def grow(self, fraction: float, elapsed: float) -> None:
         new_size = Vec2(0.0, 145.0 + fraction * (45.0 * (len(self._song.charts) - 1)))
         # TODO: make this better v
-        if elapsed >= 0.2:
+        if elapsed >= 0.3:
             new_size = Vec2(0.0, 145.0 + (45.0 * (len(self._song.charts) - 1)))
         self.minimum_size = new_size
 
@@ -125,7 +125,7 @@ class SongListElement(Element[SongElement | VerticalElementList]):
 
     def shrink(self, fraction: float, elapsed: float):
         new_size = Vec2(0.0, 100.0 + (1 - fraction) * (45.0 * len(self._song.charts)))
-        if elapsed >= 0.2:
+        if elapsed >= 0.3:
             new_size = Vec2(0.0, 100.0)
         self.minimum_size = new_size
 
