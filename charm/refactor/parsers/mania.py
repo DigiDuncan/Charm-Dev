@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from charm.lib.gamemodes.osu import OsuHold
-from charm.refactor.charts.fourkey import FourKeyNote, FourKeyChart
+from charm.refactor.charts.four_key import FourKeyNote, FourKeyChart
 from charm.refactor.generic.parser import Parser
 from charm.refactor.parsers._osu import OsuHitCircle, RawOsuChart
 

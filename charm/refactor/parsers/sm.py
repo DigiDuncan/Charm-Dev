@@ -12,7 +12,7 @@ from simfile.timing import TimingData, BeatValue
 from simfile.timing.engine import TimingEngine
 
 from charm.lib.errors import NoChartsError
-from charm.refactor.charts.fourkey import FourKeyNoteType, FourKeyNote, FourKeyChart
+from charm.refactor.charts.four_key import FourKeyNoteType, FourKeyNote, FourKeyChart
 from charm.refactor.generic.chart import BPMChangeEvent
 from charm.refactor.generic.parser import Parser
 
