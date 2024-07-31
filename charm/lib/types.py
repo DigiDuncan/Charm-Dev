@@ -16,6 +16,7 @@ RGBA = tuple[int, int, int, int]
 TuplePoint = tuple[int | float, int | float]
 
 Range4 = Literal[0, 1, 2, 3]
+Range8 = Literal[0, 1, 2, 3, 4, 5, 6, 7]
 
 class Point:
     def __init__(self, point: TuplePoint):
