@@ -71,10 +71,9 @@ class DigitalKeyEvent[K](EngineEvent):
 
 
 class Engine[CT: Chart]:
-    def __init__(self, chart: CT, hit_window: Seconds = 0.0, judgements: list[Judgement] | None = None, offset: Seconds = 0):
+    def __init__(self, chart: CT, judgements: list[Judgement] | None = None, offset: Seconds = 0):
         """The class that processes user inputs into score according to a Chart."""
         self.chart = chart
-        self.hit_window = hit_window
         self.offset = offset
         self.judgements: list[Judgement] = judgements or []
 
@@ -95,6 +94,17 @@ class Engine[CT: Chart]:
         self.weighted_hit_notes: float = 0
 
         self.keystate = (False,) * self.chart.lanes
+
+    @property
+    def hit_window(self) -> Seconds:
+        """The maximum seconds offset from the intended note timing that points can be scored in.
+        Works as a kind of first-pass check to see if we should try to score a note.
+
+        Fun fact! This used to be set seperately from the judgements, but that doesn't make sense!
+        Why were we doing that?"""
+        # NOTE: This will break if there aren't at least two judgements, but if we run into that
+        # we should really look into why on Earth we're doing that and what the intended effect is.
+        return self.judgements[-2].ms / 1000
 
     def pause(self) -> None:
         pass
@@ -171,11 +181,11 @@ class Engine[CT: Chart]:
 
 
 class AutoEngine(Engine):
-    def __init__(self, chart: Chart, hit_window: Seconds, offset: float = 0):
-        super().__init__(chart, hit_window,
+    def __init__(self, chart: Chart, offset: float = 0):
+        super().__init__(chart,
                          [Judgement("Auto", "auto", chart.notes[-1].end, 0, 0),
                           Judgement("Miss", "miss", float('inf'), 0, 0)],
-                         offset)
+                          offset)
 
     def calculate_score(self) -> None:
         # Get all non-scored notes within the current window

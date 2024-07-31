@@ -4,15 +4,22 @@ from charm.lib.keymap import Action, keymap
 from charm.lib.types import Range4, Seconds
 from charm.lib.utils import clamp
 from charm.refactor.generic import Engine, Judgement
-from charm.refactor.charts.fnf import FNFNote, FNFChart
+from charm.refactor.charts.four_key import FourKeyNoteType, FourKeyNote, FourKeyChart
 from charm.refactor.generic.engine import DigitalKeyEvent
 
 
 logger = logging.getLogger("charm")
 
-class FNFEngine(Engine[FNFChart]):
-    def __init__(self, chart: FNFChart, offset: Seconds = 0):
-        hit_window = 0.166
+# *: I do think at this point it's worth evaluating whether this should exist.
+# The major differences between this and SMEngine (which shouldn't exist either, see the comment there)
+# is that it:
+# - supports heal notes
+# - has different judgements
+# - has different sustain scoring (aaa)
+# Like, should engines just be as maximally supportive as possible and the configurable via, like, presets?
+# :amtired:
+class FNFEngine(Engine[FourKeyChart]):
+    def __init__(self, chart: FourKeyChart, offset: Seconds = 0):
         judgements = [
             #        ("name",  "key"    ms,       score, acc,   hp=0)
             Judgement("sick",  "sick",  45,       350,   1,     0.04),
@@ -21,15 +28,13 @@ class FNFEngine(Engine[FNFChart]):
             Judgement("awful", "awful", 166,      50,    -1,   -0.06),  # I'm not calling this "s***", it's not funny.
             Judgement("miss",  "miss",  math.inf, 0,     -1,   -0.1)
         ]
-        super().__init__(chart, offset)
-
-        self.hit_window = hit_window
-        self.judgements = judgements
+        super().__init__(chart, judgements, offset)
 
         self.min_hp = 0
         self.hp = 1
         self.max_hp = 2
         self.bomb_hp = 0.5
+        self.heal_hp = 0.25
 
         self.has_died = False
 
@@ -37,7 +42,7 @@ class FNFEngine(Engine[FNFChart]):
         self.latest_judgement_time = None
         self.all_judgements: list[tuple[Seconds, Seconds, Judgement]] = []
 
-        self.current_notes: list[FNFNote] = self.chart.notes.copy()
+        self.current_notes: list[FourKeyNote] = self.chart.notes.copy()
         self.current_events: list[DigitalKeyEvent[Range4]] = []
 
         self.last_p1_action: Action | None = None
@@ -45,7 +50,7 @@ class FNFEngine(Engine[FNFChart]):
         self.streak = 0
         self.max_streak = 0
 
-        self.active_sustains: list[FNFNote] = []
+        self.active_sustains: list[FourKeyNote] = []
         self.last_sustain_tick = 0
         self.keystate: tuple[bool, bool, bool, bool] = (False, False, False, False)
 
@@ -59,7 +64,7 @@ class FNFEngine(Engine[FNFChart]):
                 self.score_note(note)
                 self.current_notes.remove(note)
             else:
-                if note.type == "sustain":
+                if note.type == FourKeyNoteType.SUSTAIN:
                     # Sustain notes just require the right key is held down, and don't "use" an event.
                     if self.keystate[note.lane]:
                         note.hit = True
@@ -86,13 +91,13 @@ class FNFEngine(Engine[FNFChart]):
         if self.hp == self.min_hp:
             self.has_died = True
 
-    def score_note(self, note: FNFNote) -> None:
+    def score_note(self, note: FourKeyNote) -> None:
         # Ignore notes we haven't done anything with yet
         if not (note.hit or note.missed):
             return
 
         # Sustains use different scoring
-        if note.type == "sustain":
+        if note.type == FourKeyNoteType.SUSTAIN:
             self.last_p1_action = keymap.fourkey.actions[note.lane]
             if note.hit:
                 self.hp += 0.02
@@ -104,16 +109,14 @@ class FNFEngine(Engine[FNFChart]):
             return
 
         # Death notes set HP to minimum when hit
-        if note.type == "death":
-            if note.hit:
-                self.hp = self.min_hp
+        if note.type == FourKeyNoteType.DEATH and note.hit:
+            self.hp = self.min_hp
             return
 
         # Bomb notes penalize HP when hit
-        if note.type == "bomb":
-            if note.hit:
-                self.hp -= self.bomb_hp
-                logger.debug(f"HP lost (bomb hit, {note}), new HP {self.hp}")
+        if note.type == FourKeyNoteType.BOMB and note.hit:
+            self.hp -= self.bomb_hp
+            logger.debug(f"HP lost (bomb hit, {note}), new HP {self.hp}")
             return
 
         # Score the note
@@ -122,7 +125,7 @@ class FNFEngine(Engine[FNFChart]):
         self.weighted_hit_notes += j.accuracy_weight
 
         # Give HP for hit note (heal notes give more)
-        if note.type == "heal" and note.hit:
+        if note.type == FourKeyNoteType.HEAL and note.hit:
             self.hp += self.heal_hp
         elif note.hit:
             self.hp += j.hp_change
@@ -130,7 +133,7 @@ class FNFEngine(Engine[FNFChart]):
                 logger.debug(f"HP lost (judgement {j} hit, {note}), new HP {self.hp}")
 
         # Judge the player
-        rt = note.hit_time - note.time  # the type checker is stupid, clearly this isn't ever None at this point
+        rt = note.hit_time - note.time  # type: ignore -- the type checker is stupid, clearly this isn't ever None at this point
         self.latest_judgement = j
         self.latest_judgement_time = self.chart_time
         self.all_judgements.append((self.latest_judgement_time, rt, self.latest_judgement))

@@ -5,14 +5,18 @@ from typing import cast
 from charm.lib.keymap import Action, keymap
 from charm.lib.types import Range4, Seconds
 from charm.lib.utils import clamp
-from charm.refactor.charts.four_key import FourKeyChart, FourKeyNote
+from charm.refactor.charts.four_key import FourKeyChart, FourKeyNote, FourKeyNoteType
 from charm.refactor.generic import Engine, Judgement, DigitalKeyEvent, Results
 
 logger = logging.getLogger("charm")
 
+# !: Should SMEngine exist?
+# FourKeyEngine is probably a better idea, but same with the SMParser, this thing
+# relies heavily on the simfile library's TimingEngine and frankly would require
+# a lot of rewriting to not do that.
+# Oh well!
 class SMEngine(Engine[FourKeyChart]):
     def __init__(self, chart: FourKeyChart, offset: Seconds = 0):  # TODO: Set this dynamically
-        hit_window: Seconds = 0.075
         judgements = [
             #        ("name",           "key"             ms, score, acc, hp=0)
             Judgement("Super Charming", "supercharming",  10, 1000, 1.0, 0.04),
@@ -23,7 +27,7 @@ class SMEngine(Engine[FourKeyChart]):
             Judgement("OK",             "ok",             75, 200,  0.5),
             Judgement("Miss",           "miss",     math.inf,   0,    0, -0.1)
         ]
-        super().__init__(chart, hit_window, judgements, offset)
+        super().__init__(chart, judgements, offset)
 
         self.min_hp = 0
         self.hp = 1
@@ -126,7 +130,7 @@ class SMEngine(Engine[FourKeyChart]):
             return
 
         # Bomb notes penalize HP when hit
-        if note.type == "bomb":
+        if note.type == FourKeyNoteType.BOMB:
             if note.hit:
                 self.hp -= self.bomb_hp
             return
@@ -137,7 +141,7 @@ class SMEngine(Engine[FourKeyChart]):
         self.weighted_hit_notes += j.accuracy_weight
 
         # Judge the player
-        rt = note.hit_time - note.time
+        rt = note.hit_time - note.time  # type: ignore -- the type checker is stupid, clearly this isn't ever None at this point
         self.latest_judgement = j
         self.latest_judgement_time = self.chart_time
         self.all_judgements.append((self.latest_judgement_time, rt, self.latest_judgement))

@@ -112,7 +112,7 @@ class BPMChangeEvent(Event):
 # necessarily know what song we're attaching ourselves to.
 # Should we attached the Song later in a finalization step?
 
-class Chart:
+class Chart[NT: Note]:
     """A collection of notes and events, with helpful metadata."""
     def __init__(self, gamemode: str, difficulty: str, instrument: str, lanes: int, hash: str | None) -> None:
         self.gamemode = gamemode
@@ -121,7 +121,7 @@ class Chart:
         self.lanes = lanes
         self.hash = hash
 
-        self.notes: list[Note] = []
+        self.notes: list[NT] = []
         self.events: list[Event] = []
         self.bpm: float = 0.0
 

@@ -3,6 +3,27 @@ from arcade import Sprite, Texture
 
 from charm.lib.generic.song import Note
 
+# *: This needs to be skinnable
+def get_note_color_by_beat(beat: int) -> tuple[int, int, int]:
+    """Used for beat coloring, essentially tinting a note to reflect where it falls in a measure.
+    This allows for reading patterns easier."""
+    beat_color = {
+        1: (0xFF, 0x00, 0x00),
+        2: (0x00, 0x00, 0xFF),
+        3: (0x00, 0xFF, 0x00),
+        4: (0xFF, 0xFF, 0x00),
+        5: (0xAA, 0xAA, 0xAA),
+        6: (0xFF, 0x00, 0xFF),
+        8: (0xFF, 0x77, 0x00),
+        12: (0x00, 0xFF, 0xFF),
+        16: (0x00, 0x77, 0x00),
+        24: (0xCC, 0xCC, 0xCC),
+        32: (0xAA, 0xAA, 0xFF),
+        48: (0x55, 0x77, 0x55)
+    }
+    default_color = (0x00, 0x22, 0x22)
+    return beat_color.get(beat, default_color)
+
 
 class NoteSprite(Sprite):
     def __init__(self, x: float, y: float):
