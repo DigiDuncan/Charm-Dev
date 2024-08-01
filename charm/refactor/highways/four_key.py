@@ -204,7 +204,6 @@ class FourKeyHighway(Highway):
         self.hit_window_bottom = self.note_y(self.engine.hit_window) - (self.note_size / 2)
 
     def draw(self) -> None:
-        _cam = arcade.get_window().current_camera
         with self.static_camera.activate():
             arcade.draw_lrbt_rectangle_filled(self.x, self.x + self.w,
                                               self.y, self.y + self.h,
@@ -234,4 +233,3 @@ class FourKeyHighway(Highway):
 
             self._sustain_sprites.draw()
             self._note_pool.draw()
-        _cam.use()

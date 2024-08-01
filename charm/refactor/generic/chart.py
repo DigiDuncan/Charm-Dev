@@ -22,7 +22,7 @@ class Note:
     - `missed: bool`: has this note been missed?
     - `hit_time: float`: when was this note hit?
 
-    - `extra_data: tuple`: ¯\\_(ツ)_/¯"""
+    - `extra_data: tuple`: ¯\\_(ツ)_//¯"""
     chart: Chart
     time: Seconds
     lane: int
