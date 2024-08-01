@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from enum import StrEnum
 import logging
 from typing import Any
 from charm.lib.types import Range4, Seconds
@@ -7,7 +8,7 @@ from charm.refactor.generic.chart import Chart, Note
 
 logger = logging.getLogger("charm")
 
-class FourKeyNoteType:
+class FourKeyNoteType(StrEnum):
     NORMAL = "normal"
     BOMB = "bomb"
     DEATH = "death"
@@ -18,7 +19,7 @@ class FourKeyNoteType:
 
 class FourKeyNote(Note):
     def __init__(self, chart: Chart, time: Seconds, lane: Range4,
-                 length: Seconds = 0, type: str = FourKeyNoteType.NORMAL,
+                 length: Seconds = 0, type: FourKeyNoteType = FourKeyNoteType.NORMAL,
                  hit: bool = False, missed: bool = False,
                  hit_time: Seconds | None = None,
                  extra_data: tuple[Any, ...] | None = None,
