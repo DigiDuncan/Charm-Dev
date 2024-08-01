@@ -27,9 +27,6 @@ class FourKeyNote(Note):
         super().__init__(chart, time, lane, length, type, hit, missed, hit_time, extra_data)
         self.parent = parent
 
-    def __lt__(self, other: FourKeyNote):
-        return (self.time, self.lane, self.type) < (other.time, other.lane, other.type)
-
 class FourKeyChart(Chart[FourKeyNote]):
-    def __init__(self, difficulty: str, hash: str | None):
-        super().__init__("4k", difficulty, "4k", 4, hash)
+    def __init__(self, difficulty: str, instrument: str = "4k", hash: str | None = None):
+        super().__init__(difficulty, instrument, 4, hash)

@@ -8,7 +8,7 @@ from charm.lib.types import Seconds
 
 @dataclass
 @total_ordering
-class Note:
+class Note[NT: str]:
     """Represents a note on a chart.
 
     - `chart: Chart`: the chart this Note belongs to
@@ -27,7 +27,7 @@ class Note:
     time: Seconds
     lane: int
     length: Seconds = 0
-    type: str = "normal"
+    type: NT = "normal"  # type: ignore -- Hey, type checker; I guarantee "normal" is compatible with str.
 
     hit: bool = False
     missed: bool = False
@@ -51,13 +51,10 @@ class Note:
 
     def __lt__(self, other: Event | Note) -> bool:
         if isinstance(other, Note):
-            return (self.time, self.lane) < (other.time, other.lane)
+            return (self.time, self.lane, self.type) < (other.time, other.lane, other.type)
         elif isinstance(other, Event):
-            if self.time == other.time:
-                return False
             return self.time < other.time
-        else:
-            raise ValueError
+        raise ValueError
 
     def __repr__(self) -> str:
         end = f"-{self.end:.3f}"
@@ -114,8 +111,7 @@ class BPMChangeEvent(Event):
 
 class Chart[NT: Note]:
     """A collection of notes and events, with helpful metadata."""
-    def __init__(self, gamemode: str, difficulty: str, instrument: str, lanes: int, hash: str | None) -> None:
-        self.gamemode = gamemode
+    def __init__(self, difficulty: str, instrument: str, lanes: int, hash: str | None) -> None:
         self.difficulty = difficulty
         self.instrument = instrument
         self.lanes = lanes
@@ -126,7 +122,7 @@ class Chart[NT: Note]:
         self.bpm: float = 0.0
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} {self.gamemode}/{self.instrument}/{self.difficulty}>"
+        return f"<{self.__class__.__name__} {self.instrument}/{self.difficulty}>"
 
     def __str__(self) -> str:
         return self.__repr__()
