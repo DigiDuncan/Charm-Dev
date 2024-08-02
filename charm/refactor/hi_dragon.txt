@@ -21,7 +21,7 @@ The objects I can think of us needing:
 - Displays: FNFDisplay, FourKeyDisplay, HeroDisplay, TaikoDisplay
 - Engines: FNFEngine, SMEngine*, FourKeyEngine/ManiaEngine, HeroEngine**
 - Highways: FourKeyHighway, HeroHighway, TaikoHighway
-- Charts: FourKeyChart, FNFChart***, HeroChart, TaikoChart (and corrosponding XXXNotes and XXXNoteTypes)
+- Charts: FourKeyChart, HeroChart, TaikoChart (and corrosponding XXXNotes and XXXNoteTypes)
 
 * It's possible this doesn't make sense? Like it should be FourKeyEngine and be customizable
 but the issue is that SMEngine relies on TimingEngine existing which only exists in SM files
@@ -31,5 +31,3 @@ and *that's* due to a quirk of the simfile library that we definitely over-rely 
 and frankly I don't know what to do about it
 Bass and Five Key Keys are the same but Pro Keys, GH Live (6fret), and Drums/Pro Drums aren't and like what do I do about that
 We don't even support those yet so maybe it doesn't matter
-
-*** Should this be merged with FourKeyChart? At the end of the day it's just a superset of 4K because it just adds more note types.
