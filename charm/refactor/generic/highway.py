@@ -15,8 +15,8 @@ class Highway:
         self.gap = gap
         self.downscroll = downscroll
         self.viewport: float = 1
-        self.window = arcade.get_window()  # ???: This can't be a good idea, right?
-        self.size = size if size is not None else (self.window.width // 3, self.window.height)
+        window = arcade.get_window()  # ???: This can't be a good idea, right?
+        self.size = size if size is not None else (window.width // 3, window.height)
 
         self.static_camera = Camera2D()
         self.highway_camera = Camera2D()
