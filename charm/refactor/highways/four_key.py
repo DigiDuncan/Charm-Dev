@@ -10,12 +10,9 @@ from arcade.types import Color
 
 import charm.data.images.skins as skins
 from charm.lib.charm import load_missing_texture
-from charm.lib.keymap import keymap
 from charm.lib.pool import Pool, SpritePool
 from charm.lib.utils import img_from_path
-from charm.refactor.engines.fnf import FNFEngine
-from charm.refactor.engines.sm import SMEngine
-from charm.refactor.generic.engine import AutoEngine
+from charm.refactor.generic.engine import Engine
 from charm.refactor.charts.four_key import FourKeyChart, FourKeyNoteType
 from charm.refactor.generic import Highway
 from charm.refactor.generic.sprite import NoteSprite, StrikelineSprite, SustainSprites, SustainTextureDict, SustainTextures, get_note_color_by_beat
@@ -59,7 +56,7 @@ def load_note_texture(note_type: str, note_lane: int, height: int, value: int = 
     return Texture(image)
 
 class FourKeyHighway(Highway):
-    def __init__(self, chart: FourKeyChart, engine: SMEngine | FNFEngine | AutoEngine,
+    def __init__(self, chart: FourKeyChart, engine: Engine,
                  pos: tuple[int, int], size: tuple[int, int] | None = None, gap: int = 5):
 
         if size is None:
@@ -124,10 +121,7 @@ class FourKeyHighway(Highway):
 
         logger.debug(f"Generated highway for chart {chart.instrument}/{chart.difficulty}.")
 
-        # TODO: Replace with better pixel_offset calculation
-        self.last_update_time = 0
-        self._pixel_offset = 0
-        self.keystate = keymap.fourkey.state
+        self.keystate = (False, False, False, False)
 
     def update(self, song_time: float) -> None:
         super().update(song_time)
@@ -153,27 +147,6 @@ class FourKeyHighway(Highway):
 
             self._next_sustain = next(self._sustain_generator, None)
 
-        # for sprite in self._note_pool.given_items:
-        #     # TODO note_y and lane_x need to work of center not top left
-        #     sprite.center_y = self.note_y(sprite.note.time) - sprite.height/2.0
-        #     sprite.center_x = self.lane_x(sprite.note.lane) + sprite.width/2.0
-
-        #     if sprite.note.hit or sprite.note.end <= (song_time - 0.1):
-        #         sprite.visible = False
-        #         self._note_pool.give(sprite)
-
-        # for sustain in self._sustain_pool.given_items:
-        #     sustain.update_texture()
-        #     sustain.update_sustain(self.note_y(sustain.note.time) - sustain.size/2.0, sustain.note.length * self.px_per_s)
-        #     if sustain.note.end <= (song_time - 0.1):
-        #         sustain.hide()
-        #         self._sustain_pool.give(sustain)
-
-        # TODO: Replace with better pixel_offset calculation
-        delta_draw_time = self.song_time - self.last_update_time
-        self._pixel_offset += (self.px_per_s * delta_draw_time)
-        self.last_update_time = self.song_time
-
         self.update_strikeline()
 
     def update_strikeline(self) -> None:
@@ -182,11 +155,6 @@ class FourKeyHighway(Highway):
         self.keystate = self.engine.keystate
         for strikeline, active in zip(self.strikeline, self.keystate, strict=True):
             strikeline.active = active
-
-    @property
-    def pixel_offset(self) -> int:
-        # TODO: Replace with better pixel_offset calculation
-        return self._pixel_offset
 
     @property
     def pos(self) -> tuple[int, int]:
@@ -202,6 +170,10 @@ class FourKeyHighway(Highway):
         self.hit_window_mid = self.note_y(0) - (self.note_size / 2)
         self.hit_window_top = self.note_y(-self.engine.hit_window) - (self.note_size / 2)
         self.hit_window_bottom = self.note_y(self.engine.hit_window) - (self.note_size / 2)
+
+    @property
+    def note_size(self) -> int:
+        return (self.w // 4) - self.gap
 
     def draw(self) -> None:
         with self.static_camera.activate():

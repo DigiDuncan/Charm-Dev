@@ -68,7 +68,7 @@ class Highway:
 
     @property
     def note_size(self) -> int:
-        return (self.w // self.chart.lanes) - self.gap
+        raise NotImplementedError
 
     @property
     def strikeline_y(self) -> int:

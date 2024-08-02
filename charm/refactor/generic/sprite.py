@@ -28,7 +28,7 @@ def get_note_color_by_beat(beat: int) -> tuple[int, int, int]:
 class NoteSprite(Sprite):
     def __init__(self, x: float, y: float):
         super().__init__(center_x = x, center_y = y)
-        self.note: Note | None = None
+        self.note: Note = None  # type: ignore --
 
 
 class StrikelineSprite(Sprite):
@@ -87,8 +87,8 @@ class SustainSprites:
         self._body_offset: float = 0.0
         self._cap_offset: float = 0.0
 
-        self.note: Note = None
-        self._textures: SustainTextureDict = None
+        self.note: Note = None # type: ignore --
+        self._textures: SustainTextureDict = None # type: ignore --
 
         self.hide()
 
