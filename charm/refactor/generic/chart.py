@@ -31,6 +31,8 @@ class Note[NT: str]:
     # A basic string technically might not satisfy a subclass of string (not that we are doing that so its fine)
     type: NT = "normal"  # type: ignore --
 
+    parent: Note[NT] | None = None
+
     hit: bool = False
     missed: bool = False
     hit_time: Seconds | None = None
