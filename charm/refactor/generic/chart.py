@@ -6,6 +6,7 @@ from typing import Any
 
 from charm.lib.types import Seconds
 
+
 @dataclass
 @total_ordering
 class Note[NT: str]:
@@ -27,7 +28,8 @@ class Note[NT: str]:
     time: Seconds
     lane: int
     length: Seconds = 0
-    type: NT = "normal"  # type: ignore -- Hey, type checker; I guarantee "normal" is compatible with str.
+    # A basic string technically might not satisfy a subclass of string (not that we are doing that so its fine)
+    type: NT = "normal"  # type: ignore --
 
     hit: bool = False
     missed: bool = False
