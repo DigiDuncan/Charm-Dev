@@ -113,18 +113,17 @@ class BPMChangeEvent(Event):
 
 class Chart[NT: Note]:
     """A collection of notes and events, with helpful metadata."""
-    def __init__(self, difficulty: str, instrument: str, lanes: int, hash: str | None) -> None:
+    def __init__(self, gamemode: str, difficulty: str, instrument: str | None = None) -> None:
+        self.gamemode = gamemode
         self.difficulty = difficulty
         self.instrument = instrument
-        self.lanes = lanes
-        self.hash = hash
 
         self.notes: list[NT] = []
         self.events: list[Event] = []
         self.bpm: float = 0.0
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} {self.instrument}/{self.difficulty}>"
+        return f"<{self.__class__.__name__} {self.gamemode}/{self.instrument}/{self.difficulty}>"
 
     def __str__(self) -> str:
         return self.__repr__()

@@ -15,8 +15,8 @@ class FourKeyNoteType(StrEnum):
     STRIKELINE = "strikeline"
     SUSTAIN = "sustain"  # FNF specific and maybe going away one day
 
-FourKeyNote = Note[FourKeyNoteType]
+class FourKeyNote(Note[FourKeyNoteType]):
+    pass
 
 class FourKeyChart(Chart[FourKeyNote]):
-    def __init__(self, difficulty: str, instrument: str = "4k", hash: str | None = None):
-        super().__init__(difficulty, instrument, 4, hash)
+    pass

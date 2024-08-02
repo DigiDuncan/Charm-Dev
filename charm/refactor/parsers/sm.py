@@ -48,7 +48,7 @@ class SMParser(Parser[FourKeyChart]):
 
         for c in sm.charts:
             c: SMChart | SSCChart = c
-            chart = FourKeyChart(c.difficulty, None)
+            chart = FourKeyChart("4k", c.difficulty)
             temp_file = StringIO()
             c.serialize(temp_file)
             chart.hash = sha1(bytes(temp_file.read(), encoding = "utf-8")).hexdigest()

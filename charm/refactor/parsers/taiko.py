@@ -15,7 +15,7 @@ class TaikoParser(Parser[TaikoChart]):
 
         for p in chart_files:
             raw_chart = RawOsuChart.parse(p)  # SO MUCH is hidden by this function
-            chart = TaikoChart(raw_chart.metadata.difficulty, None)
+            chart = TaikoChart("taiko", raw_chart.metadata.difficulty)
             # !: Removed this! Is it even used? If it is, aaa!
             # if not added_bpm_events:
             #     song.events.extend(raw_chart.timing_points)

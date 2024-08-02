@@ -22,7 +22,7 @@ class ManiaParser(Parser[FourKeyChart]):
 
         for p in chart_files:
             raw_chart = RawOsuChart.parse(p)  # SO MUCH is hidden by this function
-            chart = FourKeyChart(raw_chart.metadata.difficulty, None)
+            chart = FourKeyChart("4k", raw_chart.metadata.difficulty)
             # !: Removed this! Is it even used? If it is, aaa!
             # if not added_bpm_events:
             #     song.events.extend(raw_chart.timing_points)
