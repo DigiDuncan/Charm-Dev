@@ -31,3 +31,14 @@ and *that's* due to a quirk of the simfile library that we definitely over-rely 
 and frankly I don't know what to do about it
 Bass and Five Key Keys are the same but Pro Keys, GH Live (6fret), and Drums/Pro Drums aren't and like what do I do about that
 We don't even support those yet so maybe it doesn't matter
+
+TODO:
+- Move HeroParser, HeroChart
+- Move HeroHighway, HeroDisplay
+- Move HeroEngine
+- Move FNFDisplay
+- Move TaikoHighway, TaikoDisplay
+
+- Restructure sustains in engines
+- Rethink Hero engine algorithm
+- Consider XKey
