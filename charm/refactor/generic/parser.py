@@ -1,5 +1,5 @@
 from pathlib import Path
-from charm.refactor.generic import Chart
+from charm.refactor.generic.chart import Chart
 
 class Parser[T: Chart]:
     def __init__(self, path: Path) -> None:

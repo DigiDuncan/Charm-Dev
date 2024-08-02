@@ -2,37 +2,13 @@ from __future__ import annotations
 import math
 from typing import Literal
 
-from charm.refactor.generic import Chart, Note, Results
+from charm.refactor.generic.chart import Chart, Note
+from charm.refactor.generic.judgement import Judgement
+from charm.refactor.generic.results import Results
 from charm.lib.types import Seconds
-
-from dataclasses import dataclass
 
 KeyStates = list[bool]
 Key = int
-
-@dataclass
-class Judgement:
-    """A Judgement of a single note, basically how close a player got to being accurate with their hit."""
-    name: str
-    key: str
-    ms: float  # maximum
-    score: int
-    accuracy_weight: float
-    hp_change: float = 0
-
-    @property
-    def seconds(self) -> Seconds:
-        return self.ms / 1000
-
-    def __lt__(self, other: Judgement):
-        return self.ms < other.ms
-
-    def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} {self.name}: {self.ms}ms>"
-
-    def __str__(self) -> str:
-        return self.__repr__()
-
 
 class EngineEvent:
     """Any Event that happens at a time. Meant to be subclassed."""

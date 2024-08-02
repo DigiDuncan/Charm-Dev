@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from arcade.types import Point
 
-from charm.refactor.generic import Engine, Chart, NoteSprite
+from charm.refactor.generic.engine import Engine
+from charm.refactor.generic.chart import Chart
+from charm.refactor.generic.sprite import NoteSprite
 from charm.lib.types import Seconds
 
 
