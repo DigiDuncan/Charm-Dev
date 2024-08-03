@@ -8,6 +8,7 @@ from typing import TypedDict
 
 from charm.lib.errors import ChartPostReadParseError, NoChartsError, UnknownLanesError
 from charm.lib.types import Milliseconds
+from charm.refactor.charts.fnf import CameraFocusEvent
 from charm.refactor.charts.four_key import FourKeyChart, FourKeyNote, FourKeyNoteType
 from charm.refactor.generic.chart import BPMChangeEvent, Event
 from charm.refactor.generic.parser import Parser
@@ -28,16 +29,6 @@ class SongJson(TypedDict):
 
 class SongFileJson(TypedDict):
     song: SongJson
-
-@dataclass
-class CameraFocusEvent(Event):
-    focused_player: int
-
-    def __repr__(self) -> str:
-        return f"<{self.__class__.__name__}@{self.time:.3f} p:{self.focused_player}>"
-
-    def __str__(self) -> str:
-        return self.__repr__()
 
 class FNFParser(Parser[FourKeyChart]):
     def parse(self, path: Path) -> list[FourKeyChart]:
