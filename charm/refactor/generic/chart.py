@@ -109,9 +109,9 @@ class BPMChangeEvent(Event):
         return self.__repr__()
 
 
-# ?: I removed the reference to the Chart's parent Song here, because during the parsing phase we don't
-# necessarily know what song we're attaching ourselves to.
-# Should we attached the Song later in a finalization step?
+# ?: I removed the reference to the Chart's parent ChartSet here, because during the parsing
+# phase we don't necessarily know what ChartSet we're attaching ourselves to.
+# Should we attached the ChartSet later in a finalization step?
 
 class Chart[NT: Note]:
     """A collection of notes and events, with helpful metadata."""

@@ -4,7 +4,7 @@ Hi, Dragon!
 
 The goal here is to refactor the backend of how songs work to accomplish these goals:
 
-- Song is now a generic container for Charts.
+- Song (now ChartSet) is now a generic container for Charts.
 - Parsers and Charts are now seperate concepts (Parsers take in a Path and return a list of Charts)
 - Split the monolithic gamemodes/ files into seperate modules for charts, displays, engines, highways, and parsers.
 - Use as few custom types as possible:
