@@ -4,7 +4,7 @@ from .engine import Judgement, EngineEvent, DigitalKeyEvent, Engine
 from .highway import Highway
 from .metadata import Metadata
 from .results import Results, ScoreJSON
-from .song import Song
+from .chartset import ChartSet
 from .sprite import NoteSprite
 
 __all__ = [
@@ -21,6 +21,6 @@ __all__ = [
     "Metadata",
     "Results",
     "ScoreJSON",
-    "Song",
+    "ChartSet",
     "NoteSprite"
 ]
