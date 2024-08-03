@@ -63,11 +63,11 @@ class SongMenuListElement(Element[VerticalElementList]):
                 self.element_list.add_child(end_element)
             # add children
 
-        # The menu list works with the children's minimum size to figure out the needed offset
-        centering_offset = sum(child.minimum_size.y for child in self.element_list.children[:half_count]) - (half_count * self.min_element_size)
-
         # Idx scroll
 
         # Sub scroll
+
+        # The menu list works with the children's minimum size to figure out the needed offset
+        centering_offset = sum(child.minimum_size.y for child in self.element_list.children[:half_count]) - (half_count * self.min_element_size)
 
         self.element_list.bounds = LRBT(lef, rig, bot + centering_offset, top + centering_offset)

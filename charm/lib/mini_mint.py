@@ -11,7 +11,7 @@ from arcade import Rect, Vec2, LRBT, LBWH, XYWH, draw_rect_filled, color, draw_t
 from arcade.math import clamp
 from arcade.clock import GLOBAL_CLOCK, GLOBAL_FIXED_CLOCK
 
-from charm.lib.anim import EasingFunction, ease_linear, perc
+from charm.lib.anim import EasingFunction, ease_linear, perc, smerp
 
 DRAGON_PEACH = color.Color(255, 140, 120)
 
@@ -43,6 +43,14 @@ class Animation:
     cutoff: float = 0.0
     function: EasingFunction = ease_linear
     cleanup: Callable[[Animation]] | None = None
+
+@dataclass
+class ProceduralAnimation:
+    callback: Callable[[float, float]]
+    start_time: float
+    elapsed: float
+    driver: Callable[[float, float, float, float]]
+    target: float
 
 class Animator:
     """
