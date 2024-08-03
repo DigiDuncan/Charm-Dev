@@ -15,7 +15,9 @@ logger = logging.getLogger("charm")
 # relies heavily on the simfile library's TimingEngine and frankly would require
 # a lot of rewriting to not do that.
 # Oh well!
-class SMEngine(Engine[FourKeyChart]):
+# * EDIT: This got renamed to FourKeyEngine, but didn't fundamentally change!
+# * aaaaaaaa
+class FourKeyEngine(Engine[FourKeyChart]):
     def __init__(self, chart: FourKeyChart, offset: Seconds = 0):  # TODO: Set this dynamically
         judgements = [
             #        ("name",           "key"             ms, score, acc, hp=0)
