@@ -1,29 +1,20 @@
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from functools import total_ordering
 from typing import Any
 
 from charm.lib.types import Seconds
 
+@dataclass
+class AbstractNote(ABC):
+    ...
+
 
 @dataclass
 @total_ordering
-class Note[NT: str]:
-    """Represents a note on a chart.
-
-    - `chart: Chart`: the chart this Note belongs to
-    - `time: float`: (in seconds, 0 is the beginning of the song)
-    - `lane: int`: The key the user will have to hit to trigger this note
-    (which usually corrosponds with it's X position on the highway)
-    - `length: float`: the length of the note in seconds, 0 by default
-    - `type: str`: the note's type, 'normal' be default
-
-    - `hit: bool`: has this note been hit?
-    - `missed: bool`: has this note been missed?
-    - `hit_time: float`: when was this note hit?
-
-    - `extra_data: tuple`: ¯\\_(ツ)_//¯"""
+class Note[NT: str](AbstractNote):
     chart: Chart
     time: Seconds
     lane: int
@@ -113,7 +104,12 @@ class BPMChangeEvent(Event):
 # phase we don't necessarily know what ChartSet we're attaching ourselves to.
 # Should we attached the ChartSet later in a finalization step?
 
-class Chart[NT: Note]:
+class AbstractChart(ABC):
+    @abstractmethod
+    def __init__(self, gamemode: str, difficulty: str, instrument: str | None = None) -> None:
+        ...
+
+class Chart[NT: Note](AbstractChart):
     """A collection of notes and events, with helpful metadata."""
     def __init__(self, gamemode: str, difficulty: str, instrument: str | None = None) -> None:
         self.gamemode = gamemode

@@ -2,7 +2,7 @@
 # It's here because there's currently no gamemode definitions
 # so it's unclear why FNFParser -> FourKeyHighway.
 
-from charm.refactor.highways.four_key import FourKeyHighway
+from charm.refactor.fourkey.highway import FourKeyHighway
 
 
 class FNFHighway(FourKeyHighway):

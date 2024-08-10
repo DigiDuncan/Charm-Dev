@@ -13,7 +13,7 @@ from charm.lib.charm import load_missing_texture
 from charm.lib.pool import Pool, SpritePool
 from charm.lib.utils import img_from_path
 from charm.refactor.generic.engine import Engine
-from charm.refactor.charts.four_key import FourKeyChart, FourKeyNoteType
+from charm.refactor.fourkey.chart import FourKeyChart, FourKeyNoteType
 from charm.refactor.generic import Highway
 from charm.refactor.generic.sprite import NoteSprite, StrikelineSprite, SustainSprites, SustainTextureDict, SustainTextures, get_note_color_by_beat
 

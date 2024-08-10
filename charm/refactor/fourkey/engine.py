@@ -5,7 +5,7 @@ from typing import cast
 from charm.lib.keymap import Action, keymap
 from charm.lib.types import Range4, Seconds
 from charm.lib.utils import clamp
-from charm.refactor.charts.four_key import FourKeyChart, FourKeyNote, FourKeyNoteType
+from charm.refactor.fourkey.chart import FourKeyChart, FourKeyNote, FourKeyNoteType
 from charm.refactor.generic.engine import Engine, Judgement, DigitalKeyEvent, Results
 
 logger = logging.getLogger("charm")

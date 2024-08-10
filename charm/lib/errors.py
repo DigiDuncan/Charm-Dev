@@ -1,4 +1,5 @@
 from importlib.resources import files
+from pathlib import Path
 
 import PIL, PIL.Image, PIL.ImageDraw  # noqa: E401
 import arcade
@@ -65,6 +66,11 @@ class TestError(CharmError):
 class NoChartsError(CharmError):
     def __init__(self, song_name: str):
         super().__init__(title="No charts found!", message=f"No charts found for song '{song_name}'")
+
+
+class NoChartsErrorByPath(CharmError):
+    def __init__(self, path: Path):
+        super().__init__(title="No charts found!", message=f"No charts found in path: '{path}'")
 
 
 class NoMetadataError(CharmError):

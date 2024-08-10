@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import json
 import logging
 from pathlib import Path
 from typing import TypedDict
 
-from charm.lib.errors import ChartPostReadParseError, NoChartsError, UnknownLanesError
+from charm.lib.errors import ChartPostReadParseError, NoChartsErrorByPath, UnknownLanesError
 from charm.lib.types import Milliseconds
-from charm.refactor.charts.fnf import CameraFocusEvent
-from charm.refactor.charts.four_key import FourKeyChart, FourKeyNote, FourKeyNoteType
+from charm.refactor.fnf.chart import CameraFocusEvent
+from charm.refactor.fourkey.chart import FourKeyChart, FourKeyNote, FourKeyNoteType
+from charm.refactor.fourkey.chartset import FourKeyChartSet
 from charm.refactor.generic.chart import BPMChangeEvent, Event
 from charm.refactor.generic.parser import Parser
 
@@ -30,23 +30,24 @@ class SongJson(TypedDict):
 class SongFileJson(TypedDict):
     song: SongJson
 
-class FNFParser(Parser[FourKeyChart]):
-    def parse(self, path: Path) -> list[FourKeyChart]:
-        folder_path = Path(path)
-        stem = folder_path.stem
-
-        charts = path.glob(f"./{stem}*.json")
-        parsed_charts = [self.parse_chart(chart) for chart in charts]
-        if len(parsed_charts) == 0:
-            raise NoChartsError(path.stem)
-
-        returned_charts = []
-        for x in parsed_charts:
-            returned_charts.extend(x)
-        return returned_charts
+class FNFParser(Parser):
+    @classmethod
+    def parse_chartset(cls, path: Path) -> FourKeyChartSet:
+        """path: Path to fourkey chartset folder
+        """
+        chart_paths = cls.get_chart_paths(path)
+        charts = [chart for p in chart_paths for chart in cls.parse_chart(p)]
+        if len(charts) == 0:
+            raise NoChartsErrorByPath(path)
+        chartset = FourKeyChartSet(path, charts)
+        return chartset
 
     @classmethod
-    def parse_chart(cls, path: Path) -> list[FourKeyChart]:
+    def get_chart_paths(cls, path: Path) -> list[Path]:
+        return list(path.glob(f"{path.name}*.json"))
+
+    @classmethod
+    def parse_chart(cls, path: Path) -> tuple[FourKeyChart, FourKeyChart]:
         with open(path) as p:
             j: SongFileJson = json.load(p)
         fnf_overrides = None
@@ -63,7 +64,8 @@ class FNFParser(Parser[FourKeyChart]):
         speed = songdata["speed"]  # !: Speed used to be on the FNFChart, but FNFChart is dead!
         charts = [
             FourKeyChart("fnf", difficulty, "1"),
-            FourKeyChart("fnf", difficulty, "2")]
+            FourKeyChart("fnf", difficulty, "2")
+        ]
 
         for chart in charts:
             chart.bpm = bpm

@@ -3,7 +3,7 @@ import math
 from charm.lib.keymap import Action, keymap
 from charm.lib.types import Range4, Seconds
 from charm.lib.utils import clamp
-from charm.refactor.charts.four_key import FourKeyNoteType, FourKeyNote, FourKeyChart
+from charm.refactor.fourkey.chart import FourKeyNoteType, FourKeyNote, FourKeyChart
 from charm.refactor.generic.engine import DigitalKeyEvent, Engine, Judgement
 
 
