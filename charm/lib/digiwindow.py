@@ -2,6 +2,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
+from charm.lib.splashscreen import SplashView
+
 if TYPE_CHECKING:
     from charm.lib.digiview import DigiView
 
@@ -25,7 +27,7 @@ class DigiWindow(Window):
         self.ctx.default_atlas.resize((2048, 2048))
         self.sfx = SFXManager()
         self.fps_cap = fps_cap
-        self.initial_view: DigiView = TitleView()
+        self.initial_view: DigiView = SplashView(TitleView)
 
         # Play music
         self.theme_song: ThemeSong = ThemeSong()
