@@ -5,6 +5,9 @@ from charm.lib.mini_mint import Element, VerticalElementList
 from charm.ui.menu_list.song_element import SongListElement
 from charm.ui.menu_list.song_stub import Song, Metadata, Chart
 
+# -- TEMP --
+from arcade import draw_text
+
 
 class SongMenuListElement(Element[VerticalElementList]):
 
@@ -18,6 +21,13 @@ class SongMenuListElement(Element[VerticalElementList]):
 
         self.songs: list[Song] = songs or []
 
+        self.highlighted_song_idx: int = 0
+        self.highlighted_chart_idx: int = 0
+        self.current_selected_song: Song = None
+        self.current_selected_chart: Chart = None
+
+        self.song_element_map: dict[Song, SongListElement] = {}
+
         self.element_list: VerticalElementList[SongListElement] = VerticalElementList(strict=False)
         self.add_child(self.element_list)
 
@@ -25,6 +35,10 @@ class SongMenuListElement(Element[VerticalElementList]):
 
     def set_songs(self, songs: list[Song]) -> None:
         self.songs = songs
+        self.highlighted_song_idx = 0
+        self.highlighted_chart_idx = 0
+        self.current_selected_song = None
+        self.current_selected_chart = None
         self.invalidate_layout()
 
     def _calc_layout(self) -> None:
@@ -71,3 +85,84 @@ class SongMenuListElement(Element[VerticalElementList]):
         centering_offset = sum(child.minimum_size.y for child in self.element_list.children[:half_count]) - (half_count * self.min_element_size)
 
         self.element_list.bounds = LRBT(lef, rig, bot + centering_offset, top + centering_offset)
+
+    def _select_current_song(self):
+        self.current_selected_song = self.songs[self.highlighted_song_idx]
+        self.highlighted_chart_idx = 0
+
+        #TODO: Open highlighted song element
+
+    def _select_current_chart(self):
+        self.current_selected_chart = self.current_selected_song.charts[self.highlighted_chart_idx]
+
+        #TODO: load chart?
+
+    def select(self):
+        if self.current_selected_song is None:
+            self._select_current_song()
+            return
+        self._select_current_chart()
+
+    def _down_sub_scroll(self):
+        self.highlighted_chart_idx += 1
+
+        if self.highlighted_chart_idx < len(self.current_selected_song.charts):
+            return
+
+        # We are outside the chartsets list of charts, so lets close it
+        self.current_selected_chart = None
+        self.current_selected_song = None
+        self.highlighted_chart_idx = 0
+        # TODO: Toggle the current song element
+
+        self._down_scroll()
+
+    def _down_scroll(self):
+        self.highlighted_song_idx = (self.highlighted_song_idx + 1) % len(self.songs)
+
+    def down_scroll(self):
+        if self.current_selected_song is not None:
+            self._down_sub_scroll()
+            return
+        self._down_scroll()
+
+    def _up_sub_scroll(self):
+        self.highlighted_chart_idx -= 1
+
+        if self.highlighted_chart_idx > 0:
+            return
+
+        # We are outside the chartsets list of charts, so lets close it
+        self.current_selected_chart = None
+        self.current_selected_song = None
+        self.highlighted_chart_idx = 0
+        # TODO: Toggle the current song element
+
+    def _up_scroll(self):
+        self.highlighted_song_idx = (self.highlighted_song_idx - 1) % len(self.songs)
+
+    def up_scroll(self):
+        if self.current_selected_song is not None:
+            self._up_sub_scroll()
+            return
+        self._up_scroll()
+
+    def _display(self) -> None:
+        draw_text(
+            f'highlighted song: {self.highlighted_song_idx} - {self.songs[self.highlighted_song_idx]}',
+            self.bounds.right - 5.0, self.bounds.y, anchor_x='right', color=(0, 0, 0, 255)#
+        )
+        draw_text(
+            f'selected song: {self.current_selected_song}',
+            self.bounds.right - 5.0, self.bounds.y - 15.0, anchor_x='right', color=(0, 0, 0, 255)
+        )
+        c_chart_idx = None if self.current_selected_song is None else self.highlighted_chart_idx
+        c_chart = None if self.current_selected_song is None else self.current_selected_song.charts[self.highlighted_chart_idx]
+        draw_text(
+            f'highlighted chart: {c_chart_idx} - {c_chart}',
+            self.bounds.right - 5.0, self.bounds.y - 30.0, anchor_x='right', color=(0, 0, 0, 255)
+        )
+        draw_text(
+            f'selected chart: {self.current_selected_chart}',
+            self.bounds.right - 5.0, self.bounds.y - 45.0, anchor_x='right', color=(0, 0, 0, 255)
+        )

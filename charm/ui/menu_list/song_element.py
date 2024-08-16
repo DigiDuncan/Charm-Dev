@@ -173,6 +173,10 @@ class SongListElement(Element[SongElement | VerticalElementList]):
             return
         self.select()
 
+    def get_chart_element_from_idx(self, idx: int):
+        # TODO
+        pass
+
     @property
     def song(self) -> Song:
         return self._song

@@ -7,6 +7,7 @@ from charm.lib.keymap import keymap
 # -- UI --
 from charm.lib.mini_mint import Animator, Element
 from charm.ui.menu_list import SongMenuListElement
+from charm.ui.menu_list.song_stub import Song, Chart, Metadata
 
 logger = logging.getLogger("charm")
 
@@ -18,6 +19,15 @@ class UnifiedSongMenuView(DigiView):
         Element.Animator = self.animator
         self.element = SongMenuListElement(right_fraction=0.6)
         self.element.bounds = self.window.rect
+        self.element.set_songs(
+            [
+                Song(Metadata('tahi'), [Chart('māori', 'whēuaua'), Chart('māori', 'mārū'), Chart('māori', 'pai')]),
+                Song(Metadata('rua'), [Chart('māori', 'whēuaua'), Chart('māori', 'mārū')]),
+                Song(Metadata('toru'), [Chart('māori', 'whēuaua'), Chart('māori', 'mārū'), Chart('māori', 'pai')]),
+                Song(Metadata('whā'), [Chart('māori', 'whēuaua')]),
+                Song(Metadata('rima'), [Chart('māori', 'whēuaua'), Chart('māori', 'mārū'), Chart('māori', 'pai')]),
+            ]
+        )
 
     @shows_errors
     def setup(self) -> None:
@@ -46,6 +56,12 @@ class UnifiedSongMenuView(DigiView):
         super().on_key_press(symbol, modifiers)
         if keymap.back.pressed:
             self.go_back()
+        elif keymap.navdown.pressed:
+            self.element.down_scroll()
+        elif keymap.navup.pressed:
+            self.element.up_scroll()
+        elif keymap.start.pressed:
+            self.element.select()
 
     @shows_errors
     def on_update(self, delta_time: float) -> None:
