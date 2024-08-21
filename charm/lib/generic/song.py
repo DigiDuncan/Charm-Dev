@@ -158,6 +158,26 @@ class BPMChangeEvent(Event):
     def __str__(self) -> str:
         return self.__repr__()
 
+@dataclass
+class TSChangeEvent(Event):
+    """Event indicating the song's BPM has changed.
+
+    * `numerator: float`: the numerator of the new BPM.
+    * `denominator: float`: the denominator of the new BPM (default 4).
+    * `time: float`: event start in seconds."""
+    numerator: int
+    denominator: int = 4
+
+    @property
+    def time_sig(self) -> tuple[int, int]:
+        return (self.numerator, self.denominator)
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}@{self.time:.3f} ts:{self.numerator}/{self.denominator}>"
+
+    def __str__(self) -> str:
+        return self.__repr__()
+
 
 class Chart:
     """A collection of notes and events, with helpful metadata."""
