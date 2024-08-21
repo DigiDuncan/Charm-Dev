@@ -1,5 +1,7 @@
-from arcade import Sprite, SpriteCircle, Text, LRBT, XYWH, color as colors, \
+from typing import Protocol
+from arcade import LBWH, Sprite, SpriteCircle, Text, LRBT, XYWH, color as colors, \
     draw_rect_filled, draw_rect_outline, draw_sprite, get_window
+import arcade
 from arcade.types import Color
 from arcade.color import BLACK
 
@@ -7,6 +9,13 @@ from charm.lib.anim import ease_circout, lerp, ease_linear, LerpData, perc
 from charm.lib.charm import CharmColors
 from charm.lib.generic.engine import Engine
 from charm.lib.utils import map_range, px_to_pt
+
+class Drawable(Protocol):
+    def update(self, song_time: float):
+        ...
+
+    def draw(self):
+        ...
 
 class HPBar:
     def __init__(self, x: float, y: float,
@@ -24,6 +33,9 @@ class HPBar:
 
         self.center_sprite.center_x = x
         self.center_sprite.center_y = y
+
+    def update(self, song_time: float):
+        pass
 
     def draw(self) -> None:
         hp_min = self.x - self.width // 2
@@ -188,3 +200,36 @@ class Spotlight:
             self.spotlight_position + self.window.center_x, self.spotlight_position + self.window.width, 0, self.window.height),
             colors.BLACK[:3] + (127,)
         )
+
+class Countdown:
+    def __init__(self, start_time: float, duration: float,
+                 x: float, y: float, width: float, height: float = 50.0,
+                 color: Color = arcade.color.WHITE,
+                 units_per_second: float = 1.0, current_time: float = 0.0) -> None:
+        self.start_time = start_time
+        self.duration = duration
+        self.units_per_second = units_per_second
+        self.current_time = current_time
+
+        self.x = x - (width / 2)  # center align this thing, please!
+        self.y = y
+        self.width = width
+        self.height = height
+
+        self.color = color
+
+        self.text = Text("0", self.x, self.y + self.height + 5, self.color, 48, self.width, "center", "bananaslip plus", anchor_x = "center")
+
+    def update(self, song_time: float) -> None:
+        self.current_time = song_time
+        time_remaining = self.duration - (self.current_time - self.start_time)
+        self.text.text = str(time_remaining)
+
+    def draw(self) -> None:
+        progress = map_range(self.current_time, self.start_time,
+                             self.start_time + self.duration,
+                             self.x, self.x + self.width)
+        rect = LBWH(self.x, self.y, progress, self.height)
+
+        arcade.draw_rect_filled(rect, self.color)
+        self.text.draw()

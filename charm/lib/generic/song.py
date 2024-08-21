@@ -178,6 +178,20 @@ class TSChangeEvent(Event):
     def __str__(self) -> str:
         return self.__repr__()
 
+@dataclass
+class CountdownEvent(Event):
+    """Event indicating the song's BPM has changed.
+
+    * `duration: float`: the duration of this countdown.
+    * `time: float`: event start in seconds."""
+    duration: float
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}@{self.time:.3f} time:{self.duration}>"
+
+    def __str__(self) -> str:
+        return self.__repr__()
+
 
 class Chart:
     """A collection of notes and events, with helpful metadata."""
@@ -192,6 +206,9 @@ class Chart:
         self.notes: list[Note] = []
         self.events: list[Event] = []
         self.bpm: float = 0.0
+
+    def events_by_type[T: Event](self, t: type[T]) -> list[T]:
+        return [e for e in self.events if isinstance(e, t)]
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {self.song.metadata.shortcode}/{self.gamemode}/{self.instrument}/{self.difficulty}>"
