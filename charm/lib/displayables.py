@@ -1,4 +1,6 @@
-from typing import Protocol
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Protocol
 from arcade import LBWH, Sprite, SpriteCircle, Text, LRBT, XYWH, color as colors, \
     draw_rect_filled, draw_rect_outline, draw_sprite, get_window
 import arcade
@@ -9,6 +11,9 @@ from charm.lib.anim import ease_circout, lerp, ease_linear, LerpData, perc
 from charm.lib.charm import CharmColors
 from charm.lib.generic.engine import Engine
 from charm.lib.utils import map_range, px_to_pt
+
+if TYPE_CHECKING:
+    from charm.lib.gamemodes.fnf import CameraFocusEvent
 
 class Displayable(Protocol):
     def update(self, song_time: float):
@@ -98,7 +103,7 @@ class Timer:
 
     @property
     def current_minutes(self) -> int:
-        return (self.current_time + self.current_time_offset) // 60
+        return int((self.current_time + self.current_time_offset) // 60)
 
     @property
     def total_seconds(self) -> float:
@@ -106,7 +111,7 @@ class Timer:
 
     @property
     def total_minutes(self) -> int:
-        return (self.total_time + self.total_time_offset) // 60
+        return int((self.total_time + self.total_time_offset) // 60)
 
     @property
     def display_string(self) -> str:
@@ -153,11 +158,11 @@ class Timer:
                 self.current_time += delta_time
         self._label.text = self.display_string
 
-        for lerp in [v for v in self._current_time_lerps if v.end_time > self._clock]:
-            self.current_time_offset = ease_linear(lerp.minimum, lerp.maximum, perc(lerp.start_time, lerp.end_time, self._clock))
+        for l in [v for v in self._current_time_lerps if v.end_time > self._clock]:
+            self.current_time_offset = ease_linear(l.minimum, l.maximum, perc(l.start_time, l.end_time, self._clock))
 
-        for lerp in [v for v in self._total_time_lerps if v.end_time > self._clock]:
-            self.total_time_offset = ease_linear(lerp.minimum, lerp.maximum, perc(lerp.start_time, lerp.end_time, self._clock))
+        for l in [v for v in self._total_time_lerps if v.end_time > self._clock]:
+            self.total_time_offset = ease_linear(l.minimum, l.maximum, perc(l.start_time, l.end_time, self._clock))
 
     def draw(self) -> None:
         draw_rect_filled(XYWH(self.center_x, self.center_y, self.width, self.height), self.bar_bg_color)
@@ -166,11 +171,11 @@ class Timer:
         self._label.draw()
 
 class Spotlight:
-    def __init__(self, camera_events: list["CameraFocusEvent"]) -> None:
+    def __init__(self, camera_events: list[CameraFocusEvent]) -> None:
         self.camera_events = camera_events
         self.window = get_window()
 
-        self.last_camera_event: "CameraFocusEvent" =  None
+        self.last_camera_event: CameraFocusEvent | None = None
         self.last_spotlight_position = 0
         self.last_spotlight_change = 0
         self.go_to_spotlight_position = 0
