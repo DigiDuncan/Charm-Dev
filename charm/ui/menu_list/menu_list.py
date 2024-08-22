@@ -22,11 +22,11 @@ class SongMenuListElement(Element[VerticalElementList]):
         self.songs: list[Song] = songs or []
 
         self.highlighted_song_idx: int = 0
+        self.song_scroll: float = 0.0
         self.highlighted_chart_idx: int = 0
+        self.chart_scroll: float = 0.0
         self.current_selected_song: Song = None
         self.current_selected_chart: Chart = None
-
-        self.song_element_map: dict[Song, SongListElement] = {}
 
         self.element_list: VerticalElementList[SongListElement] = VerticalElementList(strict=False)
         self.add_child(self.element_list)
@@ -39,9 +39,31 @@ class SongMenuListElement(Element[VerticalElementList]):
         self.highlighted_chart_idx = 0
         self.current_selected_song = None
         self.current_selected_chart = None
+        self._initialise_song_elements()
         self.invalidate_layout()
 
+    def _initialise_song_elements(self):
+        self.element_list.empty()
+        v = self.bounds.height
+        vh = v / 2.0
+
+        half_count = int(vh // self.min_element_size) + self.element_padding
+
+        center = SongListElement(self.min_element_size)
+        center.song = self.songs[0]
+        self.element_list.add_child(center)
+
+        for idx in range(half_count):
+            above_element = SongListElement(self.min_element_size)
+            self.element_list.insert_child(above_element, 0)
+            post_element = SongListElement(self.min_element_size)
+            if (idx + 1) < len(self.songs):
+                post_element.song = self.songs[idx + 1]
+            self.element_list.add_child(post_element)
+
     def _calc_layout(self) -> None:
+        self.song_scroll = self.highlighted_song_idx
+
         v = self.bounds.height
         vh = v / 2.0
 
@@ -54,44 +76,42 @@ class SongMenuListElement(Element[VerticalElementList]):
 
         curr_count = len(self.element_list.children)
         child_count = int(v_count*2)
-
-        # Notes for dev time:
-        #  Need to find some way to consistently and safely map between
-        #  the song idx and the element idx.
-        #  e.g. the current and target idx. If we can manage the curr idx
-        #  to always actually line up properly then this could work.
-        #  This will have to be watched though I'm sure there will be nasty edge cases
-
         if curr_count == 0:
-            # Since v_count as the 0.5 it will always be odd, and there should ways be atleast one.
-            self.element_list.add_child(SongListElement(self.min_element_size))
-            self.element_list.children[0].song = Song(Metadata('MIDDLE'), [Chart('fnf', 'yes') for _ in range(6)])
-            curr_count += 1
+            return
 
-        # TODO: optimise with pool maybe?
+        _center_idx = int(self.song_scroll)
+        _current_end_idx = _center_idx + half_count
+        _current_start_idx = _center_idx - half_count
+
+        # TODO: Find why the elements may be empty when they shouldn't be
+        # TODO: Figure out a way to account for each elements size when idx scrolling
+
         if curr_count > child_count:
             for _ in range((curr_count - child_count) // 2):
                 self.element_list.remove_child(self.element_list.children[0])
                 self.element_list.remove_child(self.element_list.children[-1])
             # remove children
         elif curr_count < child_count:
-            for _ in range((child_count - curr_count) // 2):
+            for idx_offset in range((child_count - curr_count) // 2):
                 start_element = SongListElement(self.min_element_size)
-                start_element.song = Song(Metadata('AJKLSHDAJKLS'), [Chart('a', 'easy') for _ in range(_ + 3)])  # TODO: remove once scrolling is in
+                if 0 <= _current_start_idx - idx_offset < len(self.songs):
+                    start_element.song = self.songs[_current_start_idx - idx_offset]
                 self.element_list.insert_child(start_element, 0)
                 end_element = SongListElement(self.min_element_size)
-                end_element.song = Song(Metadata('asdklasdl'), [Chart('b', 'HARD >:)') for _ in range(_ + 2)])  # TODO: remove once scrolling is in
+                if 0 <= _current_end_idx + idx_offset < len(self.songs):
+                    end_element.song = self.songs[_current_end_idx + idx_offset]
                 self.element_list.add_child(end_element)
             # add children
 
         # Idx scroll
+        idx_offset = self.min_element_size * self.song_scroll
 
         # Sub scroll
 
         # The menu list works with the children's minimum size to figure out the needed offset
         centering_offset = sum(child.minimum_size.y for child in self.element_list.children[:half_count]) - (half_count * self.min_element_size)
 
-        self.element_list.bounds = LRBT(lef, rig, bot + centering_offset, top + centering_offset)
+        self.element_list.bounds = LRBT(lef, rig, bot + centering_offset + idx_offset, top + centering_offset + idx_offset)
 
     def _select_current_song(self):
         self.current_selected_song = self.songs[self.highlighted_song_idx]
@@ -136,7 +156,7 @@ class SongMenuListElement(Element[VerticalElementList]):
     def _up_sub_scroll(self):
         self.highlighted_chart_idx -= 1
 
-        if self.highlighted_chart_idx > 0:
+        if self.highlighted_chart_idx >= 0:
             return
 
         # We are outside the chartsets list of charts, so lets close it

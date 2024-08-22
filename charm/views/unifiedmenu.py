@@ -43,6 +43,8 @@ class UnifiedSongMenuView(DigiView):
         self.window.theme_song.volume = 0
 
     def on_mouse_press(self, x: int, y: int, button: int, modifiers: int) -> bool | None:
+        # TODO: Move this to the actual song element list, and also allow for using the mouse to
+        # highlight/select a song or chart.
         if self.element.bounds.point_in_bounds((x, y)):
             for child in self.element.element_list.children:
                 if child.bounds.point_in_bounds((x, y)):

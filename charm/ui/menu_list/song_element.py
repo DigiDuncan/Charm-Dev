@@ -114,6 +114,8 @@ class SongListElement(Element[SongElement | VerticalElementList]):
         self._decay: float = 16.0
         self._anim: Animation = None
 
+        self.visible = False
+
     def grow(self, fraction: float, elapsed: float) -> None:
         new_size = Vec2(0.0, 145.0 + fraction * (45.0 * (len(self._song.charts) - 1)))
         # TODO: make this better v
@@ -186,6 +188,7 @@ class SongListElement(Element[SongElement | VerticalElementList]):
         if song == self._song:
             return
 
+        self.visible = song is not None
         self._song = song
         self._song_element.set_metadata(song.data)
         self.invalidate_layout()
