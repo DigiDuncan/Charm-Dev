@@ -55,6 +55,13 @@ class SongMenuListElement(Element[VerticalElementList]):
         curr_count = len(self.element_list.children)
         child_count = int(v_count*2)
 
+        # Notes for dev time:
+        #  Need to find some way to consistently and safely map between
+        #  the song idx and the element idx.
+        #  e.g. the current and target idx. If we can manage the curr idx
+        #  to always actually line up properly then this could work.
+        #  This will have to be watched though I'm sure there will be nasty edge cases
+
         if curr_count == 0:
             # Since v_count as the 0.5 it will always be odd, and there should ways be atleast one.
             self.element_list.add_child(SongListElement(self.min_element_size))
