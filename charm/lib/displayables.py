@@ -10,7 +10,7 @@ from charm.lib.charm import CharmColors
 from charm.lib.generic.engine import Engine
 from charm.lib.utils import map_range, px_to_pt
 
-class Drawable(Protocol):
+class Displayable(Protocol):
     def update(self, song_time: float):
         ...
 
