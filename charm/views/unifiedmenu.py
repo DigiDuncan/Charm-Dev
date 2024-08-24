@@ -26,6 +26,21 @@ class UnifiedSongMenuView(DigiView):
                 Song(Metadata('toru'), [Chart('māori', 'whēuaua'), Chart('māori', 'mārū'), Chart('māori', 'pai')]),
                 Song(Metadata('whā'), [Chart('māori', 'whēuaua')]),
                 Song(Metadata('rima'), [Chart('māori', 'whēuaua'), Chart('māori', 'mārū'), Chart('māori', 'pai')]),
+                Song(Metadata('ono'), [Chart('māori', 'whēuaua'), Chart('māori', 'mārū'), Chart('māori', 'pai')]),
+                Song(Metadata('whitu'), [Chart('māori', 'whēuaua'), Chart('māori', 'mārū'), Chart('māori', 'pai')]),
+                Song(Metadata('waru'), [Chart('māori', 'whēuaua'), Chart('māori', 'mārū'), Chart('māori', 'pai')]),
+                Song(Metadata('iwa'), [Chart('māori', 'whēuaua'), Chart('māori', 'mārū'), Chart('māori', 'pai')]),
+                Song(Metadata('tekau'), [Chart('māori', 'whēuaua'), Chart('māori', 'mārū'), Chart('māori', 'pai')]),
+                Song(Metadata('tekau mā tahi'), [Chart('māori', 'whēuaua'), Chart('māori', 'mārū'), Chart('māori', 'pai')]),
+                Song(Metadata('tekau mā rua'), [Chart('māori', 'whēuaua'), Chart('māori', 'mārū'), Chart('māori', 'pai')]),
+                Song(Metadata('tekau mā toru'), [Chart('māori', 'whēuaua'), Chart('māori', 'mārū'), Chart('māori', 'pai')]),
+                Song(Metadata('tekau mā whā'), [Chart('māori', 'whēuaua'), Chart('māori', 'mārū'), Chart('māori', 'pai')]),
+                Song(Metadata('tekau mā rima'), [Chart('māori', 'whēuaua'), Chart('māori', 'mārū'), Chart('māori', 'pai')]),
+                Song(Metadata('tekau mā ono'), [Chart('māori', 'whēuaua'), Chart('māori', 'mārū'), Chart('māori', 'pai')]),
+                Song(Metadata('tekau mā whitu'), [Chart('māori', 'whēuaua'), Chart('māori', 'mārū'), Chart('māori', 'pai')]),
+                Song(Metadata('tekau mā waru'), [Chart('māori', 'whēuaua'), Chart('māori', 'mārū'), Chart('māori', 'pai')]),
+                Song(Metadata('tekau mā iwa'), [Chart('māori', 'whēuaua'), Chart('māori', 'mārū'), Chart('māori', 'pai')]),
+                Song(Metadata('rua tekau'), [Chart('māori', 'whēuaua'), Chart('māori', 'mārū'), Chart('māori', 'pai')]),
             ]
         )
 
@@ -48,9 +63,9 @@ class UnifiedSongMenuView(DigiView):
         if self.element.bounds.point_in_bounds((x, y)):
             for child in self.element.element_list.children:
                 if child.bounds.point_in_bounds((x, y)):
-                    child.toggle()
-                    break
-
+                    self.element.select_song(child.song)
+                    if child.song is not None:
+                        self.element.highlighted_song_idx = self.element.songs.index(child.song)
 
     @shows_errors
     @disable_when_focus_lost(keyboard=True)
@@ -63,7 +78,7 @@ class UnifiedSongMenuView(DigiView):
         elif keymap.navup.pressed:
             self.element.up_scroll()
         elif keymap.start.pressed:
-            self.element.select()
+            self.element.select_currently_highlighted()
 
     @shows_errors
     def on_update(self, delta_time: float) -> None:

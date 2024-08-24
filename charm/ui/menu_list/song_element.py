@@ -99,7 +99,7 @@ class SongElement(Element[Element]):
 
 class SongListElement(Element[SongElement | VerticalElementList]):
     # Holds a SongElement and a sublist of ChartElements and manages how and when the sublist appears
-    def __init__(self, min_height: float):
+    def __init__(self, min_height: float, song: Song = None):
         super().__init__(Vec2(0.0, min_height))
         self._song: Song = None
         self._min_height: float = min_height
@@ -115,6 +115,8 @@ class SongListElement(Element[SongElement | VerticalElementList]):
         self._anim: Animation = None
 
         self.visible = False
+
+        self.song = song
 
     def grow(self, fraction: float, elapsed: float) -> None:
         new_size = Vec2(0.0, 145.0 + fraction * (45.0 * (len(self._song.charts) - 1)))

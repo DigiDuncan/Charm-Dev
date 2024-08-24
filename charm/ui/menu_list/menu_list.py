@@ -28,6 +28,8 @@ class SongMenuListElement(Element[VerticalElementList]):
         self.current_selected_song: Song = None
         self.current_selected_chart: Chart = None
 
+        self.shown_songs: dict[str, SongListElement] = {}
+
         self.element_list: VerticalElementList[SongListElement] = VerticalElementList(strict=False)
         self.add_child(self.element_list)
 
@@ -39,30 +41,52 @@ class SongMenuListElement(Element[VerticalElementList]):
         self.highlighted_chart_idx = 0
         self.current_selected_song = None
         self.current_selected_chart = None
-        self._initialise_song_elements()
+        self._place_song_elements()
         self.invalidate_layout()
 
-    def _initialise_song_elements(self):
+    def _place_song_elements(self):
         self.element_list.empty()
+        if not self.songs:
+            return
         v = self.bounds.height
         vh = v / 2.0
 
         half_count = int(vh // self.min_element_size) + self.element_padding
 
-        center = SongListElement(self.min_element_size)
-        center.song = self.songs[0]
+        # TODO: THIS MAKES THE ASSUMPTION THE SONG INDEX IS ALWAYS VALID
+        # If this breaks sowwy :3
+        start_idx = int(self.song_scroll)
+
+        shown_songs = self.shown_songs
+        next_songs: dict[str, SongListElement] = {}
+
+        c_song = self.songs[start_idx]
+        center = shown_songs.get(c_song.data.name, SongListElement(self.min_element_size, c_song))
+        next_songs[c_song.data.name] = center
         self.element_list.add_child(center)
 
-        for idx in range(half_count):
-            above_element = SongListElement(self.min_element_size)
+        for offset in range(half_count):
+            above_song = None if start_idx - offset - 1 < 0 else self.songs[start_idx - offset - 1]
+            if above_song:
+                above_element = shown_songs.get(above_song.data.name, SongListElement(self.min_element_size, above_song))
+                next_songs[above_song.data.name] = above_element
+            else:
+                above_element = SongListElement(self.min_element_size)
             self.element_list.insert_child(above_element, 0)
-            post_element = SongListElement(self.min_element_size)
-            if (idx + 1) < len(self.songs):
-                post_element.song = self.songs[idx + 1]
+
+            post_song = None if start_idx + offset + 1 >= len(self.songs) else self.songs[start_idx + offset + 1]
+            if post_song:
+                post_element = shown_songs.get(post_song.data.name, SongListElement(self.min_element_size, post_song))
+                next_songs[post_song.data.name] = post_element
+            else:
+                post_element = SongListElement(self.min_element_size)
             self.element_list.add_child(post_element)
+
+        self.shown_songs = next_songs
 
     def _calc_layout(self) -> None:
         self.song_scroll = self.highlighted_song_idx
+        self.chart_scroll =  self.highlighted_chart_idx
 
         v = self.bounds.height
         vh = v / 2.0
@@ -74,61 +98,45 @@ class SongMenuListElement(Element[VerticalElementList]):
         lef = self.bounds.left + self.left_fraction * self.bounds.width
         rig = self.bounds.left + self.right_fraction * self.bounds.width
 
-        curr_count = len(self.element_list.children)
-        child_count = int(v_count*2)
-        if curr_count == 0:
-            return
-
-        _center_idx = int(self.song_scroll)
-        _current_end_idx = _center_idx + half_count
-        _current_start_idx = _center_idx - half_count
-
-        # TODO: Find why the elements may be empty when they shouldn't be
-        # TODO: Figure out a way to account for each elements size when idx scrolling
-
-        if curr_count > child_count:
-            for _ in range((curr_count - child_count) // 2):
-                self.element_list.remove_child(self.element_list.children[0])
-                self.element_list.remove_child(self.element_list.children[-1])
-            # remove children
-        elif curr_count < child_count:
-            for idx_offset in range((child_count - curr_count) // 2):
-                start_element = SongListElement(self.min_element_size)
-                if 0 <= _current_start_idx - idx_offset < len(self.songs):
-                    start_element.song = self.songs[_current_start_idx - idx_offset]
-                self.element_list.insert_child(start_element, 0)
-                end_element = SongListElement(self.min_element_size)
-                if 0 <= _current_end_idx + idx_offset < len(self.songs):
-                    end_element.song = self.songs[_current_end_idx + idx_offset]
-                self.element_list.add_child(end_element)
-            # add children
+        self._place_song_elements()
 
         # Idx scroll
-        idx_offset = self.min_element_size * self.song_scroll
 
         # Sub scroll
+        # TODO: The 45.0 here is hard coded which is gross af.
+        sub_scroll = (self.current_selected_song is not None and (self.min_element_size / 2 + 20.0)) + 45.0 * self.chart_scroll
 
         # The menu list works with the children's minimum size to figure out the needed offset
         centering_offset = sum(child.minimum_size.y for child in self.element_list.children[:half_count]) - (half_count * self.min_element_size)
 
-        self.element_list.bounds = LRBT(lef, rig, bot + centering_offset + idx_offset, top + centering_offset + idx_offset)
+        self.element_list.bounds = LRBT(lef, rig, bot + centering_offset + sub_scroll, top + centering_offset + sub_scroll)
 
-    def _select_current_song(self):
-        self.current_selected_song = self.songs[self.highlighted_song_idx]
+    def select_song(self, song: Song):
+        if self.current_selected_song is not None and self.current_selected_song.data.name in self.shown_songs:
+            self.shown_songs[self.current_selected_song.data.name].deselect()
+
+        self.current_selected_song = song
         self.highlighted_chart_idx = 0
+        self.invalidate_layout()
 
-        #TODO: Open highlighted song element
+        if song.data.name in self.shown_songs:
+            self.shown_songs[song.data.name].select()
+        #TODO: If the song element doesn't exist, delay the opening, or track that it needs to happen at creation
 
-    def _select_current_chart(self):
-        self.current_selected_chart = self.current_selected_song.charts[self.highlighted_chart_idx]
-
+    def select_chart(self, chart: Chart):
+        self.current_selected_chart = chart
+        self.invalidate_layout()
         #TODO: load chart?
 
-    def select(self):
+    def select_chart_element(self, element):
+        raise NotImplementedError
+
+    def select_currently_highlighted(self):
+        self.invalidate_layout()
         if self.current_selected_song is None:
-            self._select_current_song()
+            self.select_song(self.songs[self.highlighted_song_idx])
             return
-        self._select_current_chart()
+        self.select_chart(self.current_selected_song.charts[self.highlighted_chart_idx])
 
     def _down_sub_scroll(self):
         self.highlighted_chart_idx += 1
@@ -137,6 +145,8 @@ class SongMenuListElement(Element[VerticalElementList]):
             return
 
         # We are outside the chartsets list of charts, so lets close it
+        if self.current_selected_song.data.name in self.shown_songs:
+            self.shown_songs[self.current_selected_song.data.name].deselect()
         self.current_selected_chart = None
         self.current_selected_song = None
         self.highlighted_chart_idx = 0
@@ -148,6 +158,7 @@ class SongMenuListElement(Element[VerticalElementList]):
         self.highlighted_song_idx = (self.highlighted_song_idx + 1) % len(self.songs)
 
     def down_scroll(self):
+        self.invalidate_layout()
         if self.current_selected_song is not None:
             self._down_sub_scroll()
             return
@@ -160,6 +171,8 @@ class SongMenuListElement(Element[VerticalElementList]):
             return
 
         # We are outside the chartsets list of charts, so lets close it
+        if self.current_selected_song.data.name in self.shown_songs:
+            self.shown_songs[self.current_selected_song.data.name].deselect()
         self.current_selected_chart = None
         self.current_selected_song = None
         self.highlighted_chart_idx = 0
@@ -169,12 +182,14 @@ class SongMenuListElement(Element[VerticalElementList]):
         self.highlighted_song_idx = (self.highlighted_song_idx - 1) % len(self.songs)
 
     def up_scroll(self):
+        self.invalidate_layout()
         if self.current_selected_song is not None:
             self._up_sub_scroll()
             return
         self._up_scroll()
 
     def _display(self) -> None:
+        return
         draw_text(
             f'highlighted song: {self.highlighted_song_idx} - {self.songs[self.highlighted_song_idx]}',
             self.bounds.right - 5.0, self.bounds.y, anchor_x='right', color=(0, 0, 0, 255)#
