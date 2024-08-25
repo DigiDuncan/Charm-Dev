@@ -31,12 +31,20 @@ class SongFileJson(TypedDict):
     song: SongJson
 
 class FNFParser(Parser[FourKeyChart]):
+    @classmethod
+    def parse_metadata(cls, path: Path) -> list[FourKeyChart]:
+        return []
+
+    @classmethod
+    def parse_chart(cls, chart: FourKeyChart) -> list[FourKeyChart]:
+        return super().parse_chart(chart)
+
     def parse(self, path: Path) -> list[FourKeyChart]:
         folder_path = Path(path)
         stem = folder_path.stem
 
         charts = path.glob(f"./{stem}*.json")
-        parsed_charts = [self.parse_chart(chart) for chart in charts]
+        parsed_charts = [self._parse_chart(chart) for chart in charts]
         if len(parsed_charts) == 0:
             raise NoChartsError(path.stem)
 
@@ -46,7 +54,7 @@ class FNFParser(Parser[FourKeyChart]):
         return returned_charts
 
     @classmethod
-    def parse_chart(cls, path: Path) -> list[FourKeyChart]:
+    def _parse_chart(cls, path: Path) -> list[FourKeyChart]:
         with open(path) as p:
             j: SongFileJson = json.load(p)
         fnf_overrides = None

@@ -4,11 +4,16 @@ from charm.refactor.charts.taiko import TaikoNote, TaikoChart, TaikoNoteType
 from charm.refactor.parsers._osu import OsuHitCircle, OsuSlider, OsuSpinner, RawOsuChart
 
 class TaikoParser(Parser[TaikoChart]):
-    def __init__(self, path: Path):
-        super().__init__(path)
+    @classmethod
+    def parse_metadata(cls, path: Path) -> list[TaikoChart]:
+        return []
 
-    def parse(self) -> list[TaikoChart]:
-        chart_files = self.path.glob("*.osu")
+    @classmethod
+    def parse_chart(cls, chart: TaikoChart) -> list[TaikoChart]:
+        return super().parse_chart(chart)
+
+    def parse(self, path: Path) -> list[TaikoChart]:
+        chart_files = path.glob("*.osu")
         charts = []
 
         # added_bpm_events = False

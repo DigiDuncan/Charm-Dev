@@ -9,9 +9,13 @@ from charm.refactor.parsers._osu import OsuHitCircle, RawOsuChart
 
 
 class ManiaParser(Parser[FourKeyChart]):
-    def __init__(self, path: Path):
-        """A four-key song from osu!mania."""
-        super().__init__(path)
+    @classmethod
+    def parse_metadata(cls, path: Path) -> list[FourKeyChart]:
+        return []
+
+    @classmethod
+    def parse_chart(cls, chart: FourKeyChart) -> list[FourKeyChart]:
+        return super().parse_chart(chart)
 
     @classmethod
     def parse(cls, path: Path) -> list[FourKeyChart]:

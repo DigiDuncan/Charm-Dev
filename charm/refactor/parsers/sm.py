@@ -22,11 +22,13 @@ sm_name_map = {
 }
 
 class SMParser(Parser[FourKeyChart]):
-    def __init__(self, path: Path):
-        super().__init__(path)
+    @classmethod
+    def parse_metadata(cls, path: Path) -> list[FourKeyChart]:
+        return []
 
-        # !: See comment below
-        self.timing_engine: TimingEngine = None
+    @classmethod
+    def parse_chart(cls, chart: FourKeyChart) -> list[FourKeyChart]:
+        return super().parse_chart(chart)
 
     def parse(self, path: Path) -> list[FourKeyChart]:
         # OK, figure out what chart file to use.
@@ -59,7 +61,7 @@ class SMParser(Parser[FourKeyChart]):
             grouped_notes = group_notes(notedata, join_heads_to_tails=True)
             timing = TimingData(sm, c)
             timing_engine = TimingEngine(timing)
-            self.timing_engine = timing_engine
+            timing_engine = timing_engine
 
             for notes in grouped_notes:
                 note = notes[0]

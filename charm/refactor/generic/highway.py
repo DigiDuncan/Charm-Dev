@@ -18,6 +18,7 @@ class Highway:
         window = arcade.get_window()  # ???: This can't be a good idea, right?
         self.size = size if size is not None else (window.width // 3, window.height)
 
+        # !: This isn't a valid assumption for the hero/rock gamemode.
         self.static_camera = Camera2D()
         self.highway_camera = Camera2D()
         self.song_time: float = 0

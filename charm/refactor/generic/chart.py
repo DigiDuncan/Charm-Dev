@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from dataclasses import dataclass
 from functools import total_ordering
 from typing import Any
@@ -115,10 +116,11 @@ class BPMChangeEvent(Event):
 
 class Chart[NT: Note]:
     """A collection of notes and events, with helpful metadata."""
-    def __init__(self, gamemode: str, difficulty: str, instrument: str | None = None) -> None:
+    def __init__(self, gamemode: str, difficulty: str, path: Path, instrument: str | None = None) -> None:
         self.gamemode = gamemode
         self.difficulty = difficulty
         self.instrument = instrument
+        self.path = path
 
         self.notes: list[NT] = []
         self.events: list[Event] = []
