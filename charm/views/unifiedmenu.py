@@ -62,10 +62,9 @@ class UnifiedSongMenuView(DigiView):
         # highlight/select a song or chart.
         if self.element.bounds.point_in_bounds((x, y)):
             for child in self.element.element_list.children:
-                if child.bounds.point_in_bounds((x, y)):
+                if child.bounds.point_in_bounds((x, y)) and child.song is not None:
                     self.element.select_song(child.song)
-                    if child.song is not None:
-                        self.element.highlighted_song_idx = self.element.songs.index(child.song)
+                    self.element.highlighted_song_idx = self.element.songs.index(child.song)
 
     @shows_errors
     @disable_when_focus_lost(keyboard=True)

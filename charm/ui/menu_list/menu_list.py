@@ -62,6 +62,8 @@ class SongMenuListElement(Element[VerticalElementList]):
 
         c_song = self.songs[start_idx]
         center = shown_songs.get(c_song.data.name, SongListElement(self.min_element_size, c_song))
+        if c_song == self.current_selected_song:
+            center.select()
         next_songs[c_song.data.name] = center
         self.element_list.add_child(center)
 
@@ -73,6 +75,8 @@ class SongMenuListElement(Element[VerticalElementList]):
             else:
                 above_element = SongListElement(self.min_element_size)
             self.element_list.insert_child(above_element, 0)
+            if above_song == self.current_selected_song:
+                above_element.select()
 
             post_song = None if start_idx + offset + 1 >= len(self.songs) else self.songs[start_idx + offset + 1]
             if post_song:
@@ -81,6 +85,8 @@ class SongMenuListElement(Element[VerticalElementList]):
             else:
                 post_element = SongListElement(self.min_element_size)
             self.element_list.add_child(post_element)
+            if post_song == self.current_selected_song:
+                post_element.select()
 
         self.shown_songs = next_songs
 
@@ -103,7 +109,7 @@ class SongMenuListElement(Element[VerticalElementList]):
         # Idx scroll
 
         # Sub scroll
-        # TODO: The 45.0 here is hard coded which is gross af.
+        # TODO: The 45.0 here is hard coded which is gross af. so is that 20.0 initial offset, both should depend on the size of the chart elements.
         sub_scroll = (self.current_selected_song is not None and (self.min_element_size / 2 + 20.0)) + 45.0 * self.chart_scroll
 
         # The menu list works with the children's minimum size to figure out the needed offset
