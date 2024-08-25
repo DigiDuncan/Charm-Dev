@@ -87,7 +87,7 @@ class SongElement(Element[Element]):
         if self._song_metadata is None:
             return
 
-        self._text_obj.text = f'{self._song_metadata.name}' if self._sub_region.height > 15.0 else ''
+        self._text_obj.text = f'{self._song_metadata.title}' if self._sub_region.height > 15.0 else ''
         self._text_obj.x = self._sub_region.left + 5  # TODO: Make this a variable
         self._text_obj.y = self._sub_region.center_y
 
@@ -99,7 +99,7 @@ class SongElement(Element[Element]):
 
 class SongListElement(Element[SongElement | VerticalElementList]):
     # Holds a SongElement and a sublist of ChartElements and manages how and when the sublist appears
-    def __init__(self, min_height: float):
+    def __init__(self, min_height: float, song: Song = None):
         super().__init__(Vec2(0.0, min_height))
         self._song: Song = None
         self._min_height: float = min_height
@@ -114,10 +114,14 @@ class SongListElement(Element[SongElement | VerticalElementList]):
         self._decay: float = 16.0
         self._anim: Animation = None
 
+        self.visible = False
+
+        self.song = song
+
     def grow(self, fraction: float, elapsed: float) -> None:
         new_size = Vec2(0.0, 145.0 + fraction * (45.0 * (len(self._song.charts) - 1)))
         # TODO: make this better v
-        if elapsed >= 0.2:
+        if elapsed >= 0.3:
             new_size = Vec2(0.0, 145.0 + (45.0 * (len(self._song.charts) - 1)))
         self.minimum_size = new_size
 
@@ -125,7 +129,7 @@ class SongListElement(Element[SongElement | VerticalElementList]):
 
     def shrink(self, fraction: float, elapsed: float):
         new_size = Vec2(0.0, 100.0 + (1 - fraction) * (45.0 * len(self._song.charts)))
-        if elapsed >= 0.2:
+        if elapsed >= 0.3:
             new_size = Vec2(0.0, 100.0)
         self.minimum_size = new_size
 
@@ -173,6 +177,10 @@ class SongListElement(Element[SongElement | VerticalElementList]):
             return
         self.select()
 
+    def get_chart_element_from_idx(self, idx: int):
+        # TODO
+        pass
+
     @property
     def song(self) -> Song:
         return self._song
@@ -182,8 +190,9 @@ class SongListElement(Element[SongElement | VerticalElementList]):
         if song == self._song:
             return
 
+        self.visible = song is not None
         self._song = song
-        self._song_element.set_metadata(song.data)
+        self._song_element.set_metadata(song.metadata)
         self.invalidate_layout()
 
     def _calc_layout(self) -> None:

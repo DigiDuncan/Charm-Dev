@@ -5,6 +5,9 @@ from charm.lib.mini_mint import Element, VerticalElementList
 from charm.ui.menu_list.song_element import SongListElement
 from charm.ui.menu_list.song_stub import Song, Metadata, Chart
 
+# -- TEMP --
+from arcade import draw_text
+
 
 class SongMenuListElement(Element[VerticalElementList]):
 
@@ -18,6 +21,15 @@ class SongMenuListElement(Element[VerticalElementList]):
 
         self.songs: list[Song] = songs or []
 
+        self.highlighted_song_idx: int = 0
+        self.song_scroll: float = 0.0
+        self.highlighted_chart_idx: int = 0
+        self.chart_scroll: float = 0.0
+        self.current_selected_song: Song = None
+        self.current_selected_chart: Chart = None
+
+        self.shown_songs: dict[str, SongListElement] = {}
+
         self.element_list: VerticalElementList[SongListElement] = VerticalElementList(strict=False)
         self.add_child(self.element_list)
 
@@ -25,9 +37,63 @@ class SongMenuListElement(Element[VerticalElementList]):
 
     def set_songs(self, songs: list[Song]) -> None:
         self.songs = songs
+        self.highlighted_song_idx = 0
+        self.highlighted_chart_idx = 0
+        self.current_selected_song = None
+        self.current_selected_chart = None
+        self._place_song_elements()
         self.invalidate_layout()
 
+    def _place_song_elements(self):
+        self.element_list.empty()
+        if not self.songs:
+            return
+        v = self.bounds.height
+        vh = v / 2.0
+
+        half_count = int(vh // self.min_element_size) + self.element_padding
+
+        # TODO: THIS MAKES THE ASSUMPTION THE SONG INDEX IS ALWAYS VALID
+        # If this breaks sowwy :3
+        start_idx = int(self.song_scroll)
+
+        shown_songs = self.shown_songs
+        next_songs: dict[str, SongListElement] = {}
+
+        c_song = self.songs[start_idx]
+        center = shown_songs.get(c_song.metadata.title, SongListElement(self.min_element_size, c_song))
+        if c_song == self.current_selected_song:
+            center.select()
+        next_songs[c_song.metadata.title] = center
+        self.element_list.add_child(center)
+
+        for offset in range(half_count):
+            above_song = None if start_idx - offset - 1 < 0 else self.songs[start_idx - offset - 1]
+            if above_song:
+                above_element = shown_songs.get(above_song.metadata.title, SongListElement(self.min_element_size, above_song))
+                next_songs[above_song.metadata.title] = above_element
+            else:
+                above_element = SongListElement(self.min_element_size)
+            self.element_list.insert_child(above_element, 0)
+            if above_song == self.current_selected_song:
+                above_element.select()
+
+            post_song = None if start_idx + offset + 1 >= len(self.songs) else self.songs[start_idx + offset + 1]
+            if post_song:
+                post_element = shown_songs.get(post_song.metadata.title, SongListElement(self.min_element_size, post_song))
+                next_songs[post_song.metadata.title] = post_element
+            else:
+                post_element = SongListElement(self.min_element_size)
+            self.element_list.add_child(post_element)
+            if post_song == self.current_selected_song:
+                post_element.select()
+
+        self.shown_songs = next_songs
+
     def _calc_layout(self) -> None:
+        self.song_scroll = self.highlighted_song_idx
+        self.chart_scroll =  self.highlighted_chart_idx
+
         v = self.bounds.height
         vh = v / 2.0
 
@@ -38,36 +104,113 @@ class SongMenuListElement(Element[VerticalElementList]):
         lef = self.bounds.left + self.left_fraction * self.bounds.width
         rig = self.bounds.left + self.right_fraction * self.bounds.width
 
-        curr_count = len(self.element_list.children)
-        child_count = int(v_count*2)
-
-        if curr_count == 0:
-            # Since v_count as the 0.5 it will always be odd, and there should ways be atleast one.
-            self.element_list.add_child(SongListElement(self.min_element_size))
-            self.element_list.children[0].song = Song(Metadata('MIDDLE'), [Chart('fnf', 'yes') for _ in range(6)])
-            curr_count += 1
-
-        # TODO: optimise with pool maybe?
-        if curr_count > child_count:
-            for _ in range((curr_count - child_count) // 2):
-                self.element_list.remove_child(self.element_list.children[0])
-                self.element_list.remove_child(self.element_list.children[-1])
-            # remove children
-        elif curr_count < child_count:
-            for _ in range((child_count - curr_count) // 2):
-                start_element = SongListElement(self.min_element_size)
-                start_element.song = Song(Metadata('AJKLSHDAJKLS'), [Chart('a', 'easy') for _ in range(_ + 3)])  # TODO: remove once scrolling is in
-                self.element_list.insert_child(start_element, 0)
-                end_element = SongListElement(self.min_element_size)
-                end_element.song = Song(Metadata('asdklasdl'), [Chart('b', 'HARD >:)') for _ in range(_ + 2)])  # TODO: remove once scrolling is in
-                self.element_list.add_child(end_element)
-            # add children
-
-        # The menu list works with the children's minimum size to figure out the needed offset
-        centering_offset = sum(child.minimum_size.y for child in self.element_list.children[:half_count]) - (half_count * self.min_element_size)
+        self._place_song_elements()
 
         # Idx scroll
 
         # Sub scroll
+        # TODO: The 45.0 here is hard coded which is gross af. so is that 20.0 initial offset, both should depend on the size of the chart elements.
+        sub_scroll = (self.current_selected_song is not None and (self.min_element_size / 2 + 20.0)) + 45.0 * self.chart_scroll
 
-        self.element_list.bounds = LRBT(lef, rig, bot + centering_offset, top + centering_offset)
+        # The menu list works with the children's minimum size to figure out the needed offset
+        centering_offset = sum(child.minimum_size.y for child in self.element_list.children[:half_count]) - (half_count * self.min_element_size)
+
+        self.element_list.bounds = LRBT(lef, rig, bot + centering_offset + sub_scroll, top + centering_offset + sub_scroll)
+
+    def select_song(self, song: Song):
+        if self.current_selected_song is not None and self.current_selected_song.metadata.title in self.shown_songs:
+            self.shown_songs[self.current_selected_song.metadata.title].deselect()
+
+        self.current_selected_song = song
+        self.highlighted_chart_idx = 0
+        self.invalidate_layout()
+
+        if song.metadata.title in self.shown_songs:
+            self.shown_songs[song.metadata.title].select()
+        #TODO: If the song element doesn't exist, delay the opening, or track that it needs to happen at creation
+
+    def select_chart(self, chart: Chart):
+        self.current_selected_chart = chart
+        self.invalidate_layout()
+        #TODO: load chart?
+
+    def select_chart_element(self, element):
+        print('not yet implimented internally')
+
+    def select_currently_highlighted(self):
+        self.invalidate_layout()
+        if self.current_selected_song is None:
+            self.select_song(self.songs[self.highlighted_song_idx])
+            return
+        self.select_chart(self.current_selected_song.charts[self.highlighted_chart_idx])
+
+    def _down_sub_scroll(self):
+        self.highlighted_chart_idx += 1
+
+        if self.highlighted_chart_idx < len(self.current_selected_song.charts):
+            return
+
+        # We are outside the chartsets list of charts, so lets close it
+        if self.current_selected_song.metadata.title in self.shown_songs:
+            self.shown_songs[self.current_selected_song.metadata.title].deselect()
+        self.current_selected_chart = None
+        self.current_selected_song = None
+        self.highlighted_chart_idx = 0
+        # TODO: Toggle the current song element
+
+        self._down_scroll()
+
+    def _down_scroll(self):
+        self.highlighted_song_idx = (self.highlighted_song_idx + 1) % len(self.songs)
+
+    def down_scroll(self):
+        self.invalidate_layout()
+        if self.current_selected_song is not None:
+            self._down_sub_scroll()
+            return
+        self._down_scroll()
+
+    def _up_sub_scroll(self):
+        self.highlighted_chart_idx -= 1
+
+        if self.highlighted_chart_idx >= 0:
+            return
+
+        # We are outside the chartsets list of charts, so lets close it
+        if self.current_selected_song.metadata.title in self.shown_songs:
+            self.shown_songs[self.current_selected_song.metadata.title].deselect()
+        self.current_selected_chart = None
+        self.current_selected_song = None
+        self.highlighted_chart_idx = 0
+        # TODO: Toggle the current song element
+
+    def _up_scroll(self):
+        self.highlighted_song_idx = (self.highlighted_song_idx - 1) % len(self.songs)
+
+    def up_scroll(self):
+        self.invalidate_layout()
+        if self.current_selected_song is not None:
+            self._up_sub_scroll()
+            return
+        self._up_scroll()
+
+    def _display(self) -> None:
+        return
+        draw_text(
+            f'highlighted song: {self.highlighted_song_idx} - {self.songs[self.highlighted_song_idx]}',
+            self.bounds.right - 5.0, self.bounds.y, anchor_x='right', color=(0, 0, 0, 255)#
+        )
+        draw_text(
+            f'selected song: {self.current_selected_song}',
+            self.bounds.right - 5.0, self.bounds.y - 15.0, anchor_x='right', color=(0, 0, 0, 255)
+        )
+        c_chart_idx = None if self.current_selected_song is None else self.highlighted_chart_idx
+        c_chart = None if self.current_selected_song is None else self.current_selected_song.charts[self.highlighted_chart_idx]
+        draw_text(
+            f'highlighted chart: {c_chart_idx} - {c_chart}',
+            self.bounds.right - 5.0, self.bounds.y - 30.0, anchor_x='right', color=(0, 0, 0, 255)
+        )
+        draw_text(
+            f'selected chart: {self.current_selected_chart}',
+            self.bounds.right - 5.0, self.bounds.y - 45.0, anchor_x='right', color=(0, 0, 0, 255)
+        )

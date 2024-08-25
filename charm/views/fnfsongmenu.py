@@ -57,6 +57,8 @@ class FNFSongMenuView(DigiView):
         self.menu = menu
         self.selection_changed = 0
 
+        print(songs)
+
         self.album_art_list = SpriteList(capacity=2)
 
         album_art = Sprite(menu.selected.album_art)

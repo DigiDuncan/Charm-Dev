@@ -37,6 +37,7 @@ class SongMenuItem(Sprite):
             window.width // 2,
             window.height // 8
         )
+
         _tex = Texture.create_empty(f"{key}-menuitem", size)
         super().__init__(_tex)
         window.ctx.default_atlas.add(_tex)
@@ -44,58 +45,50 @@ class SongMenuItem(Sprite):
         self.position = (0, -window.height)
 
         with window.ctx.default_atlas.render_into(_tex) as fbo:
-            l, b, w, h = cast("tuple[int, int, int, int]", fbo.viewport)
-            temp_cam = Camera2D(
-                viewport=LBWH(l, b, w, h),
-                projection=LRBT(0, w, h, 0),
-                position=(0.0, 0.0),
-                render_target=fbo
-            )
-            with temp_cam.activate():
-                fbo.clear()
-                arcade.draw_circle_filled(self.width - self.height / 2, self.height / 2, self.height / 2, CharmColors.FADED_PURPLE)
-                arcade.draw_lrbt_rectangle_filled(0, self.width - self.height / 2, 0, self.height, CharmColors.FADED_PURPLE)
-                if (self.artist or self.album):
-                    if self.artist:
-                        # Has artist
-                        # add the comma
-                        artistalbum = self.artist + ", " + str(self.album)
-                    else:
-                        # No artist but has Album
-                        # only album name
-                        artistalbum = self.album
-                    # Has artist OR album
-                    arcade.draw_text(
-                        self.title,
-                        int(self.width - self.height / 2 - 5),
-                        int(self.height / 2),
-                        colors.BLACK,
-                        font_size=self.height / 3 * (3 / 4),
-                        font_name="bananaslip plus",
-                        anchor_x="right"
-                    )
-                    arcade.draw_text(
-                        artistalbum,
-                        int(self.width - self.height / 2 - 5),
-                        int(self.height / 2),
-                        colors.BLACK,
-                        font_size=self.height / 4 * (3 / 4),
-                        font_name="bananaslip plus",
-                        anchor_x="right",
-                        anchor_y="top"
-                    )
+            fbo.clear()
+            arcade.draw_circle_filled(self.width - self.height / 2, self.height / 2, self.height / 2, CharmColors.FADED_PURPLE)
+            arcade.draw_lrbt_rectangle_filled(0, self.width - self.height / 2, 0, self.height, CharmColors.FADED_PURPLE)
+            if (self.artist or self.album):
+                if self.artist:
+                    # Has artist
+                    # add the comma
+                    artistalbum = self.artist + ", " + str(self.album)
                 else:
-                    # No artist & No album
-                    arcade.draw_text(
-                        self.title,
-                        int(self.width - self.height / 2 - 5),
-                        int(self.height / 2),
-                        colors.BLACK,
-                        font_size=self.height / 3,
-                        font_name="bananaslip plus",
-                        anchor_x="right",
-                        anchor_y="center"
-                    )
+                    # No artist but has Album
+                    # only album name
+                    artistalbum = self.album
+                # Has artist OR album
+                arcade.draw_text(
+                    self.title,
+                    int(self.width - self.height / 2 - 5),
+                    int(self.height / 2),
+                    colors.BLACK,
+                    font_size=self.height / 3 * (3 / 4),
+                    font_name="bananaslip plus",
+                    anchor_x="right"
+                )
+                arcade.draw_text(
+                    artistalbum,
+                    int(self.width - self.height / 2 - 5),
+                    int(self.height / 2),
+                    colors.BLACK,
+                    font_size=self.height / 4 * (3 / 4),
+                    font_name="bananaslip plus",
+                    anchor_x="right",
+                    anchor_y="top"
+                )
+            else:
+                # No artist & No album
+                arcade.draw_text(
+                    self.title,
+                    int(self.width - self.height / 2 - 5),
+                    int(self.height / 2),
+                    colors.BLACK,
+                    font_size=self.height / 3,
+                    font_name="bananaslip plus",
+                    anchor_x="right",
+                    anchor_y="center"
+                )
 
 
 class SongMenu:

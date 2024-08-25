@@ -123,6 +123,7 @@ class FNFJudgement(FourKeyJudgement):
 class FNFChart(FourKeyChart):
     def __init__(self, song: FNFSong, difficulty: str, player: int, speed: float, hash: str | None):
         super().__init__(song, difficulty, hash)
+        self.gamemode = "fnf"
         self.player1 = "bf"
         self.player2 = "dad"
         self.spectator = "gf"
