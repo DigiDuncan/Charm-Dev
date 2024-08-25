@@ -61,7 +61,6 @@ class UnifiedSongMenuView(DigiView):
             if self.element.current_selected_song is not None:
                 song = self.element.current_selected_song
                 chart = self.element.current_selected_song.charts[self.element.highlighted_chart_idx]
-                
             else:
                 self.element.select_currently_highlighted()
 

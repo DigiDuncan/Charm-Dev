@@ -33,7 +33,7 @@ def load_songs_and_chart_stub_fnf() -> list[FNFSong]:
         chart_srcs = (f for f in os.listdir(d) if re.match(expression, f.casefold()) is not None)
 
         chart_srcs = tuple(chart_srcs)
-        print(chart_srcs)
+        # TODO: This should warn if the folder is empty
         if not chart_srcs:
             continue
 
