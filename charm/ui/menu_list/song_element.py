@@ -87,7 +87,7 @@ class SongElement(Element[Element]):
         if self._song_metadata is None:
             return
 
-        self._text_obj.text = f'{self._song_metadata.name}' if self._sub_region.height > 15.0 else ''
+        self._text_obj.text = f'{self._song_metadata.title}' if self._sub_region.height > 15.0 else ''
         self._text_obj.x = self._sub_region.left + 5  # TODO: Make this a variable
         self._text_obj.y = self._sub_region.center_y
 
@@ -192,7 +192,7 @@ class SongListElement(Element[SongElement | VerticalElementList]):
 
         self.visible = song is not None
         self._song = song
-        self._song_element.set_metadata(song.data)
+        self._song_element.set_metadata(song.metadata)
         self.invalidate_layout()
 
     def _calc_layout(self) -> None:

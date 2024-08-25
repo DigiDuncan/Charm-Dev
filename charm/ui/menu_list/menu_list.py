@@ -61,17 +61,17 @@ class SongMenuListElement(Element[VerticalElementList]):
         next_songs: dict[str, SongListElement] = {}
 
         c_song = self.songs[start_idx]
-        center = shown_songs.get(c_song.data.name, SongListElement(self.min_element_size, c_song))
+        center = shown_songs.get(c_song.metadata.title, SongListElement(self.min_element_size, c_song))
         if c_song == self.current_selected_song:
             center.select()
-        next_songs[c_song.data.name] = center
+        next_songs[c_song.metadata.title] = center
         self.element_list.add_child(center)
 
         for offset in range(half_count):
             above_song = None if start_idx - offset - 1 < 0 else self.songs[start_idx - offset - 1]
             if above_song:
-                above_element = shown_songs.get(above_song.data.name, SongListElement(self.min_element_size, above_song))
-                next_songs[above_song.data.name] = above_element
+                above_element = shown_songs.get(above_song.metadata.title, SongListElement(self.min_element_size, above_song))
+                next_songs[above_song.metadata.title] = above_element
             else:
                 above_element = SongListElement(self.min_element_size)
             self.element_list.insert_child(above_element, 0)
@@ -80,8 +80,8 @@ class SongMenuListElement(Element[VerticalElementList]):
 
             post_song = None if start_idx + offset + 1 >= len(self.songs) else self.songs[start_idx + offset + 1]
             if post_song:
-                post_element = shown_songs.get(post_song.data.name, SongListElement(self.min_element_size, post_song))
-                next_songs[post_song.data.name] = post_element
+                post_element = shown_songs.get(post_song.metadata.title, SongListElement(self.min_element_size, post_song))
+                next_songs[post_song.metadata.title] = post_element
             else:
                 post_element = SongListElement(self.min_element_size)
             self.element_list.add_child(post_element)
@@ -118,15 +118,15 @@ class SongMenuListElement(Element[VerticalElementList]):
         self.element_list.bounds = LRBT(lef, rig, bot + centering_offset + sub_scroll, top + centering_offset + sub_scroll)
 
     def select_song(self, song: Song):
-        if self.current_selected_song is not None and self.current_selected_song.data.name in self.shown_songs:
-            self.shown_songs[self.current_selected_song.data.name].deselect()
+        if self.current_selected_song is not None and self.current_selected_song.metadata.title in self.shown_songs:
+            self.shown_songs[self.current_selected_song.metadata.title].deselect()
 
         self.current_selected_song = song
         self.highlighted_chart_idx = 0
         self.invalidate_layout()
 
-        if song.data.name in self.shown_songs:
-            self.shown_songs[song.data.name].select()
+        if song.metadata.title in self.shown_songs:
+            self.shown_songs[song.metadata.title].select()
         #TODO: If the song element doesn't exist, delay the opening, or track that it needs to happen at creation
 
     def select_chart(self, chart: Chart):
@@ -135,7 +135,7 @@ class SongMenuListElement(Element[VerticalElementList]):
         #TODO: load chart?
 
     def select_chart_element(self, element):
-        raise NotImplementedError
+        print('not yet implimented internally')
 
     def select_currently_highlighted(self):
         self.invalidate_layout()
@@ -151,8 +151,8 @@ class SongMenuListElement(Element[VerticalElementList]):
             return
 
         # We are outside the chartsets list of charts, so lets close it
-        if self.current_selected_song.data.name in self.shown_songs:
-            self.shown_songs[self.current_selected_song.data.name].deselect()
+        if self.current_selected_song.metadata.title in self.shown_songs:
+            self.shown_songs[self.current_selected_song.metadata.title].deselect()
         self.current_selected_chart = None
         self.current_selected_song = None
         self.highlighted_chart_idx = 0
@@ -177,8 +177,8 @@ class SongMenuListElement(Element[VerticalElementList]):
             return
 
         # We are outside the chartsets list of charts, so lets close it
-        if self.current_selected_song.data.name in self.shown_songs:
-            self.shown_songs[self.current_selected_song.data.name].deselect()
+        if self.current_selected_song.metadata.title in self.shown_songs:
+            self.shown_songs[self.current_selected_song.metadata.title].deselect()
         self.current_selected_chart = None
         self.current_selected_song = None
         self.highlighted_chart_idx = 0
