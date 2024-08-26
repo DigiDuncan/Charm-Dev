@@ -6,7 +6,7 @@ import math
 from pathlib import Path
 from typing import TypedDict
 
-from charm.lib.errors import ChartPostReadParseError, NoChartsError, UnknownLanesError
+from charm.lib.errors import ChartPostReadParseError, UnknownLanesError
 from charm.lib.types import Milliseconds
 from charm.objects.lyric_animator import LyricEvent
 from charm.refactor.charts.fnf import CameraFocusEvent, FNFChart, FNFNote, FNFNoteType
@@ -30,26 +30,12 @@ class SongJson(TypedDict):
 class SongFileJson(TypedDict):
     song: SongJson
 
-class FNFParser(Parser[FourKeyChart]):
+class FNFParser(Parser[FNFChart]):
     @staticmethod
     def parse_metadata(path: Path) -> list[ChartMetadata]:
         stem = path.stem
         charts = path.glob(f"./{stem}*.json")
-        return [ChartMetadata('fnf', chart_path.stem.casefold().removeprefix(f'{stem.casefold()}').removeprefix('-') or 'normal', chart_path, 'player1') for chart_path in charts]
-
-    def parse(self, path: Path) -> list[FourKeyChart]:
-        folder_path = Path(path)
-        stem = folder_path.stem
-
-        charts = path.glob(f"./{stem}*.json")
-        parsed_charts = [self._parse_chart(chart) for chart in charts]
-        if len(parsed_charts) == 0:
-            raise NoChartsError(path.stem)
-
-        returned_charts = []
-        for x in parsed_charts:
-            returned_charts.extend(x)
-        return returned_charts
+        return [ChartMetadata('fnf', chart_path.stem.casefold().removeprefix(f'{stem.casefold()}').removeprefix('-') or 'normal', chart_path, '1') for chart_path in charts]
 
     @staticmethod
     def parse_chart(chart_data: ChartMetadata) -> list[FNFChart]:
