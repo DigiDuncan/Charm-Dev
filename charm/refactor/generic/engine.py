@@ -159,11 +159,12 @@ class Engine[CT: Chart]:
 
 
 class AutoEngine(Engine):
-    def __init__(self, chart: Chart, offset: float = 0):
+    def __init__(self, chart: Chart, offset: float = 0, lanes: int = 4):
         super().__init__(chart,
                          [Judgement("Auto", "auto", chart.notes[-1].end, 0, 0),
                           Judgement("Miss", "miss", float('inf'), 0, 0)],
                           offset)
+        self.keystate = (False, ) * lanes
 
     def calculate_score(self) -> None:
         # Get all non-scored notes within the current window

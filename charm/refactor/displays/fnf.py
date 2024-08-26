@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING
 from arcade import get_window, color, load_texture, draw_sprite, Text, Sprite, Texture
 from arcade.types import Color, Point
 
+from charm.lib.types import Seconds
+
 from charm.objects.lyric_animator import LyricAnimator, LyricEvent
 from charm.lib.displayables import Spotlight, HPBar, Timer
 
@@ -19,7 +21,7 @@ from charm.refactor.highways.fnf import FNFHighway
 from charm.lib.anim import perc, ease_circout
 
 # TODO: turn into actually using skin manager :3
-from importlib.resources import files, as_file
+from importlib.resources import files
 import charm.data.images.skins as skins
 
 
@@ -81,7 +83,7 @@ class FNFDisplay(Display[FNFEngine, FourKeyChart]):
             self.lyric_animator: LyricAnimator = None
 
         # -- Camera Events
-        if camera_events := self.player_chart.events_by_type(LyricEvent):
+        if camera_events := self.player_chart.events_by_type(CameraFocusEvent):
             self.spotlight = Spotlight(camera_events)
             self.spotlight.last_camera_event = CameraFocusEvent(0, 2)
         else:

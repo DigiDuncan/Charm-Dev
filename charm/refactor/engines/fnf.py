@@ -1,10 +1,12 @@
 import logging
 import math
+from typing import Literal, cast
 from charm.lib.keymap import Action, keymap
 from charm.lib.types import Range4, Seconds
 from charm.lib.utils import clamp
 from charm.refactor.charts.four_key import FourKeyNoteType, FourKeyNote, FourKeyChart
 from charm.refactor.generic.engine import DigitalKeyEvent, Engine, Judgement
+
 
 
 logger = logging.getLogger("charm")
@@ -52,6 +54,33 @@ class FNFEngine(Engine[FourKeyChart]):
         self.active_sustains: list[FourKeyNote] = []
         self.last_sustain_tick = 0
         self.keystate: tuple[bool, bool, bool, bool] = (False, False, False, False)
+
+    def on_key_press(self, symbol: int, modifiers: int) -> None:
+        self.keystate = keymap.fourkey.state
+        # ignore spam during front/back porch
+        if (self.chart_time < self.chart.notes[0].time - self.hit_window \
+           or self.chart_time > self.chart.notes[-1].time + self.hit_window):
+            return
+        action = keymap.fourkey.pressed_action
+        if action is None:
+            return
+        key = cast(Literal[0, 1, 2, 3], keymap.fourkey.actions.index(action))
+        self.current_events.append(DigitalKeyEvent(self.chart_time, key, "down"))
+
+    def on_key_release(self, symbol: int, modifiers: int) -> None:
+        self.keystate = keymap.fourkey.state
+        if self.last_p1_action is not None and not self.last_p1_action.held:
+            self.last_p1_action = None
+        # ignore spam during front/back porch
+        if (self.chart_time < self.chart.notes[0].time - self.hit_window \
+           or self.chart_time > self.chart.notes[-1].time + self.hit_window):
+            return
+        action = keymap.fourkey.released_action
+        if action is None:
+            return
+        key = cast(Literal[0,1,2,3], keymap.fourkey.actions.index(action))
+        self.current_events.append(DigitalKeyEvent(self.chart_time, key, "up"))
+
 
     def calculate_score(self) -> None:
         # Get all non-scored notes within the current window
