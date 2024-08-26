@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 from pathlib import Path
 from typing import TypedDict
 
 from charm.lib.errors import ChartPostReadParseError, NoChartsError, UnknownLanesError
 from charm.lib.types import Milliseconds
-from charm.refactor.charts.fnf import CameraFocusEvent
-from charm.refactor.charts.four_key import FourKeyChart, FourKeyNote, FourKeyNoteType
+from charm.objects.lyric_animator import LyricEvent
+from charm.refactor.charts.fnf import CameraFocusEvent, FNFChart, FNFNote, FNFNoteType
 from charm.refactor.generic.chart import BPMChangeEvent, Event, ChartMetadata
 from charm.refactor.generic.parser import Parser
 
@@ -36,10 +37,6 @@ class FNFParser(Parser[FourKeyChart]):
         charts = path.glob(f"./{stem}*.json")
         return [ChartMetadata('fnf', chart_path.stem.casefold().removeprefix(f'{stem.casefold()}').removeprefix('-') or 'normal', chart_path, 'player1') for chart_path in charts]
 
-    @staticmethod
-    def parse_chart(chart_data: ChartMetadata) -> list[FourKeyChart]:
-        raise NotImplementedError
-
     def parse(self, path: Path) -> list[FourKeyChart]:
         folder_path = Path(path)
         stem = folder_path.stem
@@ -54,25 +51,28 @@ class FNFParser(Parser[FourKeyChart]):
             returned_charts.extend(x)
         return returned_charts
 
-    @classmethod
-    def _parse_chart(cls, path: Path) -> list[FourKeyChart]:
-        with open(path) as p:
+    @staticmethod
+    def parse_chart(chart_data: ChartMetadata) -> list[FNFChart]:
+        with open(chart_data.path) as p:
             j: SongFileJson = json.load(p)
         fnf_overrides = None
-        override_path = path.parent / "fnf.json"
+        override_path = chart_data.path.parent / "fnf.json"
         if override_path.exists() and override_path.is_file():
             with open(override_path) as f:
                 fnf_overrides = json.load(f)
-        difficulty = path.stem.rsplit("-", 1)[1] if "-" in path.stem else "normal"
         songdata = j["song"]
 
         name = songdata["song"].replace("-", " ").title()
         logger.debug(f"Parsing {name}...")
         bpm = songdata["bpm"]
         speed = songdata["speed"]  # !: Speed used to be on the FNFChart, but FNFChart is dead!
+
+        p1_metadata = ChartMetadata(chart_data.gamemode, chart_data.difficulty, chart_data.path, "1")
+        p2_metadata = ChartMetadata(chart_data.gamemode, chart_data.difficulty, chart_data.path, "2")
         charts = [
-            FourKeyChart("fnf", difficulty, "1"),
-            FourKeyChart("fnf", difficulty, "2")]
+            FNFChart(p1_metadata, [], [], bpm),
+            FNFChart(p2_metadata, [], [], bpm)
+        ]
 
         for chart in charts:
             chart.bpm = bpm
@@ -130,10 +130,10 @@ class FNFParser(Parser[FourKeyChart]):
             if fnf_overrides:
                 # This is done because some mods use "extra lanes" differents, so I have to provide
                 # a file that maps them to the right lane.
-                lanemap = [(lane[0], lane[1], getattr(FourKeyNoteType, lane[2])) for lane in fnf_overrides["lanes"]]
+                lanemap = [(lane[0], lane[1], getattr(FNFNoteType, lane[2])) for lane in fnf_overrides["lanes"]]
             else:
-                lanemap: list[tuple[int, int, FourKeyNoteType]] = [(0, 0, FourKeyNoteType.NORMAL), (0, 1, FourKeyNoteType.NORMAL), (0, 2, FourKeyNoteType.NORMAL), (0, 3, FourKeyNoteType.NORMAL),
-                                                                   (1, 0, FourKeyNoteType.NORMAL), (1, 1, FourKeyNoteType.NORMAL), (1, 2, FourKeyNoteType.NORMAL), (1, 3, FourKeyNoteType.NORMAL)]
+                lanemap: list[tuple[int, int, FNFNoteType]] = [(0, 0, FNFNoteType.NORMAL), (0, 1, FNFNoteType.NORMAL), (0, 2, FNFNoteType.NORMAL), (0, 3, FNFNoteType.NORMAL),
+                                                               (1, 0, FNFNoteType.NORMAL), (1, 1, FNFNoteType.NORMAL), (1, 2, FNFNoteType.NORMAL), (1, 3, FNFNoteType.NORMAL)]
             # Actually make two charts
             section_notes = section["sectionNotes"]
             for note in section_notes:
@@ -163,9 +163,9 @@ class FNFParser(Parser[FourKeyChart]):
                 chart_lane = note_data[1]
                 note_type = note_data[2]
 
-                thisnote = FourKeyNote(charts[note_player], pos, chart_lane, length, type = note_type)
+                thisnote = FNFNote(charts[note_player], pos, chart_lane, length, type = note_type)
                 thisnote.extra_data = extra  # Append that data we don't know what to do with, in case one day we do
-                if thisnote.type in [FourKeyNoteType.BOMB, FourKeyNoteType.DEATH, FourKeyNoteType.HEAL, FourKeyNoteType.CAUTION]:
+                if thisnote.type in [FNFNoteType.BOMB, FNFNoteType.DEATH, FNFNoteType.HEAL, FNFNoteType.CAUTION]:
                     thisnote.length = 0  # why do these ever have length?
                 if thisnote.length < 0.001:
                     thisnote.length = 0
@@ -178,35 +178,40 @@ class FNFParser(Parser[FourKeyChart]):
                 if thisnote.length != 0:
                     sustainbeats = round(thisnote.length / seconds_per_sixteenth)
                     for i in range(sustainbeats):
-                        thatnote = FourKeyNote(charts[note_player], pos + (seconds_per_sixteenth * (i + 1)), chart_lane, 0, FourKeyNoteType.SUSTAIN)
+                        thatnote = FNFNote(charts[note_player], pos + (seconds_per_sixteenth * (i + 1)), chart_lane, 0, FNFNoteType.SUSTAIN)
                         thatnote.parent = thisnote
                         charts[note_player].notes.append(thatnote)
 
             section_start += section_length
 
-        # !: LYRICS CURRENTLY UNSUPPORTED, WHAT DO?
-        # # Pysch Engine events look like this
-        # if "events" in songdata:
-        #     events = songdata["events"]
-        #     for e in events:
-        #         time = e[0] / 1000
-        #         subevents = e[1]
-        #         for s in subevents:
-        #             t, d1, d2 = s
-        #             if t == "lyrics":
-        #                 song.lyrics.append(LyricEvent(time, None, d1))
+        # LYRICS
+        lyrics = []
 
-        #     # Psych Engine lyrics
-        #     if song.lyrics:
-        #         song.lyrics[-1].length = math.inf
-        #         for n, lyric_event in enumerate(song.lyrics[:-1]):
-        #             lyric_event.length = song.lyrics[n + 1].time - lyric_event.time
+        # Pysch Engine events look like this
+        if "events" in songdata:
+            events = songdata["events"]
+            for e in events:  # * HEY DRAGON CHECK THIS OUT
+                time = e[0] / 1000
+                subevents = e[1]
+                for s in subevents:
+                    t, d1, d2 = s
+                    if t == "lyrics":
+                        lyrics.append(LyricEvent(time, None, d1))  # type: ignore None is a stop-gap for a later stage of parsing
+
+            # Psych Engine lyrics
+            if lyrics:
+                lyrics[-1].length = math.inf
+                for n, lyric_event in enumerate(lyrics[:-1]):
+                    lyric_event.length = lyrics[n + 1].time - lyric_event.time
+
+            for c in charts:
+                c.events.extend(lyrics)
 
         for c in charts:
             c.events = events
             c.notes.sort()
             c.events.sort()
-            logger.debug(f"Parsed chart {c.instrument} with {len(c.notes)} notes.")
+            logger.debug(f"Parsed chart {c.metadata.instrument} with {len(c.notes)} notes.")
 
         unknown_lanes = sorted(set(unknown_lanes))
         if unknown_lanes:
