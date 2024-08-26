@@ -8,7 +8,7 @@
 #
 #   ! This is currently done per gamemode folder, but if a mod
 #   ! in the future wants to mix gamemodes this will need updating.
-
+from functools import cache
 from typing import NamedTuple
 from pathlib import Path
 import os
@@ -16,7 +16,7 @@ import os
 from charm.lib.paths import songspath
 
 from charm.refactor.generic.chartset import ChartSet
-from charm.refactor.generic.chart import Chart
+from charm.refactor.generic.chart import Chart, ChartMetadata
 
 # -- PARSERS --
 from charm.refactor.generic.parser import Parser
@@ -52,21 +52,20 @@ def load_chartsets() -> list[ChartSet]:
         needed_parsers = {parser for typepair, parser in pairs if any(file.endswith(typepair.filetype) for file in files)}
         charts = []
         for parser in needed_parsers:
-            print(parser)
             charts.extend(parser.parse_metadata(d))
-        chartset = ChartSet(d)
-        chartset.charts = charts
-        # TODO: Lyric events?
-        chartsets.append(chartset)
+
+        if charts:
+            chartset = ChartSet(d)
+            chartset.charts = charts
+            # TODO: Lyric events?
+            chartsets.append(chartset)
     return chartsets
 
 
-def load_chart(chart: Chart) -> list[Chart]:
-    gamemode = chart.gamemode
-    filetype = chart.path.suffix
+@cache
+def load_chart(chart_metadata: ChartMetadata) -> list[Chart]:
+    gamemode = chart_metadata.gamemode
+    filetype = chart_metadata.path.suffix
 
     parser = parser_map[TypePair(gamemode, filetype)]
-    return parser.parse_chart(chart)
-
-chartsets = load_chartsets()
-print(chartsets)
+    return parser.parse_chart(chart_metadata)

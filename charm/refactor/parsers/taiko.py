@@ -1,16 +1,17 @@
 from pathlib import Path
 from charm.refactor.generic.parser import Parser
+from charm.refactor.generic.chart import ChartMetadata
 from charm.refactor.charts.taiko import TaikoNote, TaikoChart, TaikoNoteType
 from charm.refactor.parsers._osu import OsuHitCircle, OsuSlider, OsuSpinner, RawOsuChart
 
 class TaikoParser(Parser[TaikoChart]):
-    @classmethod
-    def parse_metadata(cls, path: Path) -> list[TaikoChart]:
+    @staticmethod
+    def parse_metadata(path: Path) -> list[ChartMetadata]:
         return []
 
-    @classmethod
-    def parse_chart(cls, chart: TaikoChart) -> list[TaikoChart]:
-        return super().parse_chart(chart)
+    @staticmethod
+    def parse_chart(chart_data: ChartMetadata) -> list[TaikoChart]:
+        raise NotImplementedError
 
     def parse(self, path: Path) -> list[TaikoChart]:
         chart_files = path.glob("*.osu")

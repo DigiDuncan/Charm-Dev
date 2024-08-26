@@ -114,20 +114,37 @@ class BPMChangeEvent(Event):
 # phase we don't necessarily know what ChartSet we're attaching ourselves to.
 # Should we attached the ChartSet later in a finalization step?
 
-class Chart[NT: Note]:
-    """A collection of notes and events, with helpful metadata."""
+class ChartMetadata:
+    """Chart metadata needed to later parse the chart fully"""
     def __init__(self, gamemode: str, difficulty: str, path: Path, instrument: str | None = None) -> None:
         self.gamemode = gamemode
         self.difficulty = difficulty
         self.instrument = instrument
         self.path = path
 
-        self.notes: list[NT] = []
-        self.events: list[Event] = []
-        self.bpm: float = 0.0
+    def __hash__(self) -> int:
+        return hash((self.gamemode, self.difficulty, self.instrument, str(self.path)))
+
+    def __eq__(self, other: ChartMetadata) -> bool:
+        return (self.path, self.gamemode, self.difficulty, self.instrument) == (other.path, other.gamemode, other.difficulty, other.instrument)
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {self.gamemode}/{self.instrument}/{self.difficulty}>"
+
+    def __str__(self) -> str:
+        return self.__repr__()
+
+
+class Chart[NT: Note]:
+    """A collection of notes and events, with helpful metadata."""
+    def __init__(self, metadata: ChartMetadata, notes: list[NT], events: list[Event], bpm: float) -> None:
+        self.metadata: ChartMetadata = metadata
+        self.notes: list[NT] = notes
+        self.events: list[Event] = events
+        self.bpm: float = bpm
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} {self.metadata.gamemode}/{self.metadata.instrument}/{self.metadata.difficulty}>"
 
     def __str__(self) -> str:
         return self.__repr__()

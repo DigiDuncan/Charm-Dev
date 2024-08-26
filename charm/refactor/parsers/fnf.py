@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import json
 import logging
 from pathlib import Path
@@ -10,7 +9,7 @@ from charm.lib.errors import ChartPostReadParseError, NoChartsError, UnknownLane
 from charm.lib.types import Milliseconds
 from charm.refactor.charts.fnf import CameraFocusEvent
 from charm.refactor.charts.four_key import FourKeyChart, FourKeyNote, FourKeyNoteType
-from charm.refactor.generic.chart import BPMChangeEvent, Event
+from charm.refactor.generic.chart import BPMChangeEvent, Event, ChartMetadata
 from charm.refactor.generic.parser import Parser
 
 logger = logging.getLogger("charm")
@@ -31,13 +30,15 @@ class SongFileJson(TypedDict):
     song: SongJson
 
 class FNFParser(Parser[FourKeyChart]):
-    @classmethod
-    def parse_metadata(cls, path: Path) -> list[FourKeyChart]:
-        return []
+    @staticmethod
+    def parse_metadata(path: Path) -> list[ChartMetadata]:
+        stem = path.stem
+        charts = path.glob(f"./{stem}*.json")
+        return [ChartMetadata('fnf', chart_path.stem.casefold().removeprefix(f'{stem.casefold()}').removeprefix('-') or 'normal', chart_path, 'player1') for chart_path in charts]
 
-    @classmethod
-    def parse_chart(cls, chart: FourKeyChart) -> list[FourKeyChart]:
-        return super().parse_chart(chart)
+    @staticmethod
+    def parse_chart(chart_data: ChartMetadata) -> list[FourKeyChart]:
+        raise NotImplementedError
 
     def parse(self, path: Path) -> list[FourKeyChart]:
         folder_path = Path(path)

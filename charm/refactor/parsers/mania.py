@@ -5,17 +5,18 @@ from pathlib import Path
 from charm.lib.gamemodes.osu import OsuHold
 from charm.refactor.charts.four_key import FourKeyNote, FourKeyChart
 from charm.refactor.generic.parser import Parser
+from charm.refactor.generic.chart import ChartMetadata
 from charm.refactor.parsers._osu import OsuHitCircle, RawOsuChart
 
 
 class ManiaParser(Parser[FourKeyChart]):
-    @classmethod
-    def parse_metadata(cls, path: Path) -> list[FourKeyChart]:
+    @staticmethod
+    def parse_metadata(path: Path) -> list[ChartMetadata]:
         return []
 
-    @classmethod
-    def parse_chart(cls, chart: FourKeyChart) -> list[FourKeyChart]:
-        return super().parse_chart(chart)
+    @staticmethod
+    def parse_chart(chart_data: ChartMetadata) -> list[FourKeyChart]:
+        raise NotImplementedError
 
     @classmethod
     def parse(cls, path: Path) -> list[FourKeyChart]:

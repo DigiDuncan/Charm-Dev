@@ -7,10 +7,9 @@ from charm.lib.keymap import keymap
 # -- UI --
 from charm.lib.mini_mint import Animator, Element
 from charm.ui.menu_list import SongMenuListElement
-from charm.ui.menu_list.song_stub import Song, Chart, Metadata
 
 # -- TEMP --
-from charm.lib.songloader import load_songs_and_chart_stub_fnf
+from charm.refactor.loading import load_chartsets
 
 logger = logging.getLogger("charm")
 
@@ -22,7 +21,7 @@ class UnifiedSongMenuView(DigiView):
         Element.Animator = self.animator
         self.element = SongMenuListElement(right_fraction=0.6)
         self.element.bounds = self.window.rect
-        self.element.set_songs(load_songs_and_chart_stub_fnf())
+        self.element.set_songs(load_chartsets())
 
     @shows_errors
     def setup(self) -> None:
