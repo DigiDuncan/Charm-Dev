@@ -8,7 +8,6 @@
 #
 #   ! This is currently done per gamemode folder, but if a mod
 #   ! in the future wants to mix gamemodes this will need updating.
-from functools import cache
 from typing import NamedTuple
 from pathlib import Path
 import os
@@ -62,7 +61,6 @@ def load_chartsets() -> list[ChartSet]:
     return chartsets
 
 
-@cache
 def load_chart(chart_metadata: ChartMetadata) -> list[Chart]:
     gamemode = chart_metadata.gamemode
     filetype = chart_metadata.path.suffix

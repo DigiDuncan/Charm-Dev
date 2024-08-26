@@ -69,7 +69,7 @@ class Engine[CT: Chart]:
         self.max_notes = len(self.chart.notes)
         self.weighted_hit_notes: float = 0
 
-        self.keystate = (False,) * self.chart.lanes
+        self.keystate: tuple[bool, ...] = NotImplemented
 
     @property
     def hit_window(self) -> Seconds:
@@ -130,10 +130,12 @@ class Engine[CT: Chart]:
         self.chart_time = song_time + self.offset
 
     def on_key_press(self, symbol: int, modifiers: int) -> None:
-        raise NotImplementedError
+        pass
+        # TODO: Maybe remove?
 
     def on_key_release(self, symbol: int, modifiers: int) -> None:
-        raise NotImplementedError
+        pass
+        # TODO: Maybe remove?
 
     def calculate_score(self) -> None:
         raise NotImplementedError

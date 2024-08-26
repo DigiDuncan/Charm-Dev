@@ -9,7 +9,8 @@ from charm.lib.mini_mint import Animator, Element
 from charm.ui.menu_list import SongMenuListElement
 
 # -- TEMP --
-from charm.refactor.loading import load_chartsets
+from charm.refactor.loading import load_chartsets, load_chart
+from charm.refactor.gameview import GameView
 
 logger = logging.getLogger("charm")
 
@@ -56,10 +57,16 @@ class UnifiedSongMenuView(DigiView):
         elif keymap.navup.pressed:
             self.element.up_scroll()
         elif keymap.start.pressed:
-            # ! Warning this is Windows and FNF specific
             if self.element.current_selected_song is not None:
-                song = self.element.current_selected_song
-                chart = self.element.current_selected_song.charts[self.element.highlighted_chart_idx]
+                chartset = self.element.current_selected_song
+                chartdata = self.element.current_selected_song.charts[self.element.highlighted_chart_idx]
+                charts = load_chart(chartdata)
+
+                game_view = GameView(back=self)
+                game_view.initialize_chart(chartset, charts)
+
+                game_view.setup()
+                self.window.show_view(game_view)
             else:
                 self.element.select_currently_highlighted()
 

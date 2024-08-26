@@ -148,3 +148,6 @@ class Chart[NT: Note]:
 
     def __str__(self) -> str:
         return self.__repr__()
+
+    def events_by_type[T: Event](self, t: type[T]) -> list[T]:
+        return [e for e in self.events if isinstance(e, t)]

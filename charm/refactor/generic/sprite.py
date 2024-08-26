@@ -1,7 +1,7 @@
 from typing import NamedTuple
 from arcade import Sprite, Texture
 
-from charm.lib.generic.song import Note
+from charm.refactor.generic.chart import Note
 
 # *: This needs to be skinnable
 def get_note_color_by_beat(beat: int) -> tuple[int, int, int]:

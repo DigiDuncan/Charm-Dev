@@ -8,17 +8,17 @@ from pyglet import gl
 from charm.lib.types import Seconds
 from charm.objects.emojilabel import FormattedLabel, update_emoji_doc
 
+from charm.refactor.generic.chart import Event
 
 gl.glEnable(gl.GL_DEPTH_TEST)
 
 
-class LyricEvent:
+class LyricEvent(Event):
     def __init__(self, time: Seconds, length: Seconds, text: str, karaoke: str = ""):
         self.time = time
         self.length = length
         self.text = text
         self.karaoke = karaoke
-
 
     @property
     def end_time(self) -> Seconds:
