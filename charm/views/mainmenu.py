@@ -9,17 +9,13 @@ from charm.lib.keymap import keymap
 from charm.objects.mainmenu import MainMenu, MainMenuItem
 # from charm.views.cycletest import CycleTestView
 # from charm.views.emojitest import EmojiTestView
-from charm.views.fnfsongmenu import FNFSongMenuView
 from charm.views.fourkeysongmenu import FourKeySongMenuView
 from charm.views.herotest import HeroTestView
 # from charm.views.newmenu import NewMenuView
-from charm.views.parallaxtest import ParallaxTestView
 from charm.views.spritetest import SpriteTestView
 from charm.views.taikosongtest import TaikoSongTestView
 from charm.views.visualizer import VisualizerView
-from charm.views.uitest import UiView
 from charm.views.options import OptionsView
-from charm.views.gameplay import GameView
 from charm.views.unifiedmenu import UnifiedSongMenuView
 
 
@@ -30,19 +26,15 @@ class MainMenuView(DigiView):
         self.gum_wrapper = GumWrapper()
         self.menu = MainMenu([
             MainMenuItem("Play", "songs", UnifiedSongMenuView(back=self)),
-            MainMenuItem("Playlists", "playlists", None),
-            MainMenuItem("FNF Songs", "songs", FNFSongMenuView(back=self)),
-            MainMenuItem("4K Songs", "songs", FourKeySongMenuView(back=self)),
+            # MainMenuItem("Playlists", "playlists", None),
             MainMenuItem("Options", "options", OptionsView(back=self)),
-            MainMenuItem("Generic Test", "test", GameView.random(back=self)),
+            MainMenuItem("4K Songs", "songs", FourKeySongMenuView(back=self)),
             # MainMenuItem("Emoji Test", "test", EmojiTestView(back=self)),
             # MainMenuItem("Menu Test", "test", NewMenuView(back=self)),
             # MainMenuItem("Cycler Test", "test", CycleTestView(back=self)),
-            MainMenuItem("UI Test", "test", UiView(back=self)),
-            MainMenuItem("Sprite Test", "test", SpriteTestView(back=self)),
-            MainMenuItem("Parallax Test", "test", ParallaxTestView(back=self)),
             MainMenuItem("Hero Test", "test", HeroTestView(back=self)),
             MainMenuItem("Taiko Test", "test", TaikoSongTestView(back=self)),
+            MainMenuItem("Sprite Test", "test", SpriteTestView(back=self)),
             MainMenuItem("Scott Test", "test", VisualizerView(back=self)),
         ])
 
