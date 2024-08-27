@@ -24,7 +24,6 @@ from charm.lib.anim import perc, ease_circout
 from importlib.resources import files
 import charm.data.images.skins as skins
 
-
 if TYPE_CHECKING:
     from charm.lib.digiwindow import DigiWindow
 
@@ -32,7 +31,7 @@ class FNFDisplay(Display[FNFEngine, FourKeyChart]):
 
     def __init__(self, engine: FNFEngine, charts: tuple[FourKeyChart, ...]):
         super().__init__(engine, charts)
-        self._win = DigiWindow = get_window()
+        self._win: DigiWindow = get_window()
         assert len(charts) == 2, "FNF expects two charts. [0] for the player, [1] for the opposition"
         self.player_chart: FourKeyChart
         self.opp_chart: FourKeyChart

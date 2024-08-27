@@ -215,8 +215,8 @@ class FNFParser(Parser[FNFChart]):
 
         # Pysch Engine events look like this
         if "events" in songdata:
-            events = songdata["events"]
-            for e in events:  # * HEY DRAGON CHECK THIS OUT
+            es = songdata["events"]
+            for e in es:  # * HEY DRAGON CHECK THIS OUT
                 time = e[0] / 1000
                 subevents = e[1]
                 for s in subevents:
@@ -230,8 +230,7 @@ class FNFParser(Parser[FNFChart]):
                 for n, lyric_event in enumerate(lyrics[:-1]):
                     lyric_event.length = lyrics[n + 1].time - lyric_event.time
 
-            for c in charts:
-                c.events.extend(lyrics)
+            events.extend(lyrics)
 
         for c in charts:
             c.events = events
