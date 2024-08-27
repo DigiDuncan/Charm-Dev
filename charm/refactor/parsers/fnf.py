@@ -35,7 +35,7 @@ class FNFParser(Parser[FNFChart]):
     def parse_metadata(path: Path) -> list[ChartMetadata]:
         stem = path.stem
         charts = path.glob(f"./{stem}*.json")
-        return [ChartMetadata('fnf', chart_path.stem.casefold().removeprefix(f'{stem.casefold()}').removeprefix('-') or 'normal', chart_path, '1') for chart_path in charts]
+        return [ChartMetadata('fnf', chart_path.stem.casefold().removeprefix(f'{stem.casefold()}').removeprefix('-') or 'normal', chart_path, '0') for chart_path in charts]
 
     @staticmethod
     def parse_chart(chart_data: ChartMetadata) -> list[FNFChart]:
@@ -51,7 +51,7 @@ class FNFParser(Parser[FNFChart]):
         name = songdata["song"].replace("-", " ").title()
         logger.debug(f"Parsing {name}...")
         bpm = songdata["bpm"]
-        speed = songdata["speed"]  # !: Speed used to be on the FNFChart, but FNFChart is dead!
+        speed = songdata["speed"]
 
         p1_metadata = ChartMetadata(chart_data.gamemode, chart_data.difficulty, chart_data.path, "1")
         p2_metadata = ChartMetadata(chart_data.gamemode, chart_data.difficulty, chart_data.path, "2")
@@ -59,6 +59,8 @@ class FNFParser(Parser[FNFChart]):
             FNFChart(p1_metadata, [], [], bpm),
             FNFChart(p2_metadata, [], [], bpm)
         ]
+        charts[0].speed = speed
+        charts[1].speed = speed
 
         for chart in charts:
             chart.bpm = bpm
@@ -114,7 +116,7 @@ class FNFParser(Parser[FNFChart]):
 
             # Lanemap: (player, lane, type)
             if fnf_overrides:
-                # This is done because some mods use "extra lanes" differents, so I have to provide
+                # This is done because some mods use "extra lanes" differently, so I have to provide
                 # a file that maps them to the right lane.
                 lanemap = [(lane[0], lane[1], getattr(FNFNoteType, lane[2])) for lane in fnf_overrides["lanes"]]
             else:

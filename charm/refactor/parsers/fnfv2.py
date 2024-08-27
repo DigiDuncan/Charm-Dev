@@ -23,28 +23,116 @@
 
 import json
 from pathlib import Path
-from typing import TypedDict
-from charm.refactor.charts.fnf import FNFChart
+from typing import Any, Literal, TypedDict
+from charm.refactor.charts.fnf import FNFChart, FNFNote, FNFNoteType
 from charm.refactor.generic.chart import ChartMetadata
 from charm.refactor.generic.parser import Parser
 
-class SongFileJson(TypedDict):
-    ...
+TimeFormat = Literal["s", "ms"]
 
+class EventJSON(TypedDict):
+    t: float
+    e: str
+    v: dict[str, Any]
+
+class NoteJSON(TypedDict):
+    t: float
+    d: int
+    l: float
+
+class NoteWithDataJSON(TypedDict):
+    t: float
+    d: int
+    l: float
+    k: str
+
+class SongFileJSON(TypedDict):
+    version: str
+    scrollSpeed: dict[str, float]
+    events: list[EventJSON]
+    notes: dict[str, list[NoteJSON | NoteWithDataJSON]]
+
+class PlayDataJSON(TypedDict):
+    album: str
+    previewStart: int
+    previewEnd: int
+    stage: str
+    characters: dict[str, str]
+    ratings: dict[str, int]
+    difficulties: list[str]
+    noteStyle: str
+
+class TimeChangesJSON(TypedDict):
+    d: int
+    n: int
+    t: float
+    bt: list[int]
+    bpm: float
+
+class MetadataJSON(TypedDict):
+    timeFormat: TimeFormat
+    artist: str
+    charter: str
+    playData: PlayDataJSON
+    songName: str
+    timeChanges: list[TimeChangesJSON]
+    generatedBy: str
+    version: str
 
 class FNFParser(Parser[FNFChart]):
     @staticmethod
     def parse_metadata(path: Path) -> list[ChartMetadata]:
         stem = path.stem
-        chart = path.parent / (stem + "-chart.json")
-        meta = path.parent / (stem + "-metadata.json")
-        return []
+        chart_path = path.parent / (stem + "-chart.json")
+        meta_path = path.parent / (stem + "-metadata.json")
+        with open(meta_path) as m:
+            metadata: MetadataJSON = json.load(m)
+        metadatas = []
+        for d in metadata["playData"]["difficulties"]:
+            metadatas.append(ChartMetadata("fnf", d, chart_path, '0'))
+        return metadatas
 
     @staticmethod
     def parse_chart(chart_data: ChartMetadata) -> list[FNFChart]:
         with open(chart_data.path) as p:
-            j: SongFileJson = json.load(p)
+            j: SongFileJSON = json.load(p)
 
-        charts = []
+        fnf_metadata_path = chart_data.path.parent / (chart_data.path.stem + "-metadata.json")
+        with open(fnf_metadata_path) as m:
+            metadata: MetadataJSON = json.load(m)
+
+        p1_metadata = ChartMetadata(chart_data.gamemode, chart_data.difficulty, chart_data.path, "1")
+        p2_metadata = ChartMetadata(chart_data.gamemode, chart_data.difficulty, chart_data.path, "2")
+        charts = [
+            FNFChart(p1_metadata, [], [], metadata["timeChanges"][0]["bpm"]),
+            FNFChart(p2_metadata, [], [], metadata["timeChanges"][0]["bpm"])
+        ]
+
+        # Lanemap: (player, lane, type)
+        fnf_overrides = None
+        override_path = chart_data.path.parent / "fnf.json"
+        if override_path.exists() and override_path.is_file():
+            with open(override_path) as f:
+                fnf_overrides = json.load(f)
+        if fnf_overrides:
+            # This is done because some mods use "extra lanes" differently, so I have to provide
+            # a file that maps them to the right lane.
+            lanemap = [(lane[0], lane[1], getattr(FNFNoteType, lane[2])) for lane in fnf_overrides["lanes"]]
+        else:
+            lanemap: list[tuple[int, int, FNFNoteType]] = [(0, 0, FNFNoteType.NORMAL), (0, 1, FNFNoteType.NORMAL), (0, 2, FNFNoteType.NORMAL), (0, 3, FNFNoteType.NORMAL),
+                                                           (1, 0, FNFNoteType.NORMAL), (1, 1, FNFNoteType.NORMAL), (1, 2, FNFNoteType.NORMAL), (1, 3, FNFNoteType.NORMAL)]
+
+        difficulty = j["notes"][chart_data.difficulty]
+        for note in difficulty:
+            player, lane, note_type = lanemap[note["d"]]
+            n = (FNFNote(charts[player], note["t"], lane, note["l"], note_type))
+            if "k" in note:
+                n.extra_data = (note["k"], )
+            charts[player].notes.append(n)
+
+            # TODO: SUSTAINS
+            # They don't work right now because I kinda just want to get rid of the hacked sustains ASAP
+            # And rewriting how the old ones work in this new parser adds so much complexity that I'd rather
+            # not deal with right now.
 
         return charts
