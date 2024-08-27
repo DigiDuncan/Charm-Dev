@@ -26,9 +26,7 @@ from charm.lib.sfxmanager import SFXManager
 
 logger = logging.getLogger("charm")
 
-
 def shows_errors[S: DigiView, **P](fn: Callable[Concatenate[S, P], None]) -> Callable[Concatenate[S, P], None]:
-    # return fn # TODO: TEMPORARILY DISABLED FOR TESTING
     @functools.wraps(fn)
     def wrapper(self: S, *args: P.args, **kwargs: P.kwargs) -> None:
         try:
@@ -36,7 +34,7 @@ def shows_errors[S: DigiView, **P](fn: Callable[Concatenate[S, P], None]) -> Cal
         except Exception as e:  # noqa: BLE001
             if not isinstance(e, CharmError):
                 e = GenericError(e)
-            if not self.shown and self.back is not None:
+            if (not self.shown) and self.back is not None:
                 self = self.back
             self.on_error(e)
             logger_fn = {
@@ -45,7 +43,8 @@ def shows_errors[S: DigiView, **P](fn: Callable[Concatenate[S, P], None]) -> Cal
                 "info": logger.info
             }.get(e.icon_name, logger.info)
             logger_fn(f"{e.title}: {e.message}")
-            logger.debug(traceback.format_exc())
+            if e.repeat == 1:
+                logger.debug(traceback.format_exc())
     return wrapper
 
 
@@ -87,6 +86,7 @@ class DigiView(View):
         self.fader = Fader(self, fade_in)
         self.components = ComponentManager()
         self.debug_timer = DebugTimer()
+        self.last_error: CharmError | None = None
 
     @property
     def sfx(self) -> SFXManager:
@@ -101,12 +101,17 @@ class DigiView(View):
         return self.window.time - self.local_start
 
     def on_error(self, error: CharmError) -> None:
-        offset = len(self._errors) * 4
-        error.sprite.center_x += offset
-        error.sprite.center_y += offset
+        if self.last_error and (self.last_error.title, self.last_error.message) == (error.title, error.message) and self.last_error in [e.error for e in self._errors]:
+            error.repeat = self.last_error.repeat + 1
+            error.redraw()
+        else:
+            offset = len(self._errors) * 4
+            error.sprite.center_x += offset
+            error.sprite.center_y += offset
+            self.sfx.error.play()
         self._errors.append(ErrorPopup(error, self.local_time + 3))
         self._error_list.append(error.sprite)
-        self.sfx.error.play()
+        self.last_error = error
 
     def presetup(self) -> None:
         """Must be called at the beginning of setup()"""

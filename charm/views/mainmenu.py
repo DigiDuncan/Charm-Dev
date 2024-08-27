@@ -49,6 +49,7 @@ class MainMenuView(DigiView):
             self.menu.loading = False
 
     def on_show_view(self) -> None:
+        super().on_show_view()
         if self.menu is not None:
             self.menu.loading = False
 

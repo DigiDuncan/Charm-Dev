@@ -11,10 +11,11 @@ from charm.lib.utils import img_from_path
 class CharmError(Exception):
     _icon_textures: dict[str, Texture] = {}
 
-    def __init__(self, *, title: str, message: str, icon: str = "error"):
+    def __init__(self, *, title: str, message: str, icon: str = "error", repeat: int = 1):
         self.title = title
         self.message = message
         self.icon_name = icon
+        self.repeat = repeat
         super().__init__(message)
         try:
             window = arcade.get_window()
@@ -28,7 +29,11 @@ class CharmError(Exception):
             CharmError._icon_textures[icon] = Texture(icon_img)
 
         self._icon = CharmError._icon_textures[icon]
+        self.sprite = self.get_sprite()
+        self.sprite.position = (window.width / 2, window.height / 2)
 
+    def redraw(self) -> None:
+        window = arcade.get_window()
         self.sprite = self.get_sprite()
         self.sprite.position = (window.width / 2, window.height / 2)
 
@@ -45,7 +50,7 @@ class CharmError(Exception):
 
             arcade.draw_lrbt_rectangle_filled(0, 500, 0, 200, colors.BLANCHED_ALMOND)
             arcade.draw_lrbt_rectangle_filled(0, 500, 150, 200, colors.BRANDEIS_BLUE)
-            arcade.draw_text(self.title, 50, 165, font_size=24, bold=True, font_name="bananaslip plus")
+            arcade.draw_text(self.title + f"{' (' + str(self.repeat) + ')' if self.repeat > 1 else ''}", 50, 165, font_size=24, bold=True, font_name="bananaslip plus")
             arcade.draw_text(self.message, 5, 146, font_size=16, anchor_y="top", multiline=True, width=492, color=colors.BLACK, font_name="bananaslip plus")
             arcade.draw_texture_rect(self._icon, arcade.XYWH(25, 175, 32, 32))
 

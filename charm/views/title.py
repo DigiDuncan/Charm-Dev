@@ -104,7 +104,9 @@ class TitleView(DigiView):
         self.fade_volume = self.window.theme_song.volume
 
     def go_start(self) -> None:
-        self.goto(MainMenuView(back=self))
+        v = MainMenuView(back=self)
+        v.setup()
+        self.goto(v)
 
 
 class ClownLogo(Text, Component):
