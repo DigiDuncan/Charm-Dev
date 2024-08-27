@@ -8,13 +8,22 @@
 #
 #   ! This is currently done per gamemode folder, but if a mod
 #   ! in the future wants to mix gamemodes this will need updating.
-import json
+
+# NOTE:
+#   There are some major complications caused by FNF having two versions
+#   which share file type. We also have to work around 4k and taiko both
+#   using .osu files. This is solved in the mvp, but if we want chartsets
+#   to mix gamemodes in the future we need to solve this issue.
+#   FNF makes things harder again because there are also 'erect' versions
+#   of some charts which currently means two chartsets from one folder.
+#   This breaks a core assumption of Charm.
+
 from typing import NamedTuple
 from collections.abc import Callable
 from pathlib import Path
-import os
 
 from charm.lib.paths import songspath
+from charm.lib.errors import ChartUnparseableError
 
 from charm.refactor.generic.chartset import ChartSet
 from charm.refactor.generic.chart import Chart, ChartMetadata
@@ -35,36 +44,24 @@ class TypePair(NamedTuple):
     filetype: str
 
 # TODO: Parse MIDI
-parser_map: dict[TypePair, type[Parser]] = {
-    TypePair('fnf', '.json'): FNFParser,
-    TypePair('fnf', '.json'): FNFV2Parser,
-    TypePair('4k', '.osu'): ManiaParser,
-    TypePair('4k', '.ssc'): SMParser,
-    TypePair('4k', '.sm'): SMParser,
-    TypePair('hero', '.chart'): HeroParser,
-    TypePair('taiko', '.osu'): TaikoParser
+gamemode_parsers: dict[str, tuple[type[Parser], ...]] = {
+    'fnf': (FNFParser, FNFV2Parser),
+    '4k': (ManiaParser, SMParser),
+    'hero': (HeroParser,),
+    'taiko': (TaikoParser,)
 }
 
-def get_needed_parsers(files: list[str]) -> set[Parser]:
-    pairs = tuple(parser_map.items())
-    found_parsers = []
-    for typepair, parser in pairs:
-        if any(file.endswith(typepair.filetype) for file in files):
-            found_parsers.append(parser)
-    return set(found_parsers)
 
-def load_chartsets() -> list[ChartSet]:
-    all_set_paths = (p for p in songspath.glob('**/*') if p.is_dir())
+def load_gamemode_chartsets(gamemode: str) -> list[ChartSet]:
+    parsers = gamemode_parsers[gamemode]
+    all_gamemode_paths = (p for p in (songspath / gamemode).glob("**/*") if p.is_dir())
     chartsets = []
-    for d in all_set_paths:
-        files = [f for f in os.listdir(d) if Path.is_file(d / f)]
-        if not files:
-           continue
-        needed_parsers = get_needed_parsers(files)
+    for d in all_gamemode_paths:
         charts = []
-        for parser in needed_parsers:
-            if parser.is_parseable(d):
-                charts.extend(parser.parse_metadata(d))
+        for parser in parsers:
+            if not parser.is_possible_chartset(d):
+                continue
+            charts.extend(parser.parse_chart_metadata(d))
         if charts:
             chartset = ChartSet(d)
             chartset.charts = charts
@@ -72,7 +69,18 @@ def load_chartsets() -> list[ChartSet]:
             chartsets.append(chartset)
     return chartsets
 
+
+def load_chartsets() -> list[ChartSet]:
+    gamemodes = ('fnf', '4k', 'hero', 'taiko')
+    chartsets = []
+    for gamemode in gamemodes:
+        chartsets.extend(load_gamemode_chartsets(gamemode))
+    return chartsets
+
+
 def load_chart(chart_metadata: ChartMetadata) -> list[Chart]:
-    parsers = get_needed_parsers(list(os.listdir(chart_metadata.path)))
-    parser = next(p for p in parsers if p.is_parseable(chart_metadata.path))
-    return parser.parse_chart(chart_metadata)
+    parsers = gamemode_parsers[chart_metadata.gamemode]
+    for parser in parsers:
+        if parser.is_parsable_chart(chart_metadata.path):
+            return parser.parse_chart(chart_metadata)
+    raise ChartUnparseableError(message=f'chart: {chart_metadata} cannot be parsed by any parser for gamemode {chart_metadata.gamemode}')

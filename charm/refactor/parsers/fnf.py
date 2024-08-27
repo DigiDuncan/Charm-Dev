@@ -32,11 +32,21 @@ class SongFileJson(TypedDict):
 
 class FNFParser(Parser[FNFChart]):
     @staticmethod
-    def is_parseable(path: Path) -> bool:
+    def is_possible_chartset(path: Path) -> bool:
+        """Does this folder possibly contain a parseable ChartSet?"""
+        valid_files = list(path.glob(f'./{path.stem}*.json'))
+        if any('metadata' in file.stem for file in valid_files):
+            # We are assuming since there is a metadata this is a V2 chartset
+            return False
+        return len(valid_files) > 0
+
+    @staticmethod
+    def is_parsable_chart(path: Path) -> bool:
+        """Is this chart parsable by this Parser"""
         if path.suffix != ".json":
-            return 0
+            return False
         else:
-            with open(p, encoding = "utf-8") as f:
+            with open(path, encoding = "utf-8") as f:
                 try:
                     j = json.load(f)
                 except json.JSONDecodeError:
@@ -51,10 +61,19 @@ class FNFParser(Parser[FNFChart]):
                         return True
 
     @staticmethod
-    def parse_metadata(path: Path) -> list[ChartMetadata]:
-        stem = path.stem
-        charts = path.glob(f"./{stem}*.json")
-        return [ChartMetadata('fnf', chart_path.stem.casefold().removeprefix(f'{stem.casefold()}').removeprefix('-') or 'normal', chart_path, '0') for chart_path in charts]
+    def parse_chart_metadata(path: Path) -> list[ChartMetadata]:
+        stem = path.stem.casefold()
+        chart_paths = path.glob(f"./{stem}*.json")
+        chart_metadatas = []
+        for chart_path in chart_paths:
+            chart_stem = chart_path.stem.casefold()
+            if 'metadata' in chart_stem:
+                # TODO!: This means we are wasting time making uneeded objects, but it's pretty small
+                # This check may not be needed here since its checked earlier, but don't trust it.
+                # We are assuming since there is a metadata this is a V2 chartset
+                return []
+            chart_metadatas.append(ChartMetadata('fnf', chart_stem.removeprefix(stem).removeprefix('-') or 'normal', chart_path, '0'))
+        return chart_metadatas
 
     @staticmethod
     def parse_chart(chart_data: ChartMetadata) -> list[FNFChart]:

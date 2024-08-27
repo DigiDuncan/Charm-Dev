@@ -86,6 +86,9 @@ class MetadataParseError(CharmError):
     def __init__(self, message: str):
         super().__init__(title="Metadata parsing error!", message=message)
 
+class ChartUnparseableError(CharmError):
+    def __init__(self, *, message: str):
+        super().__init__(title="Chart is unparsable", message=message, icon="error")
 
 class ChartPostReadParseError(CharmError):
     def __init__(self, message: str):

@@ -81,11 +81,21 @@ class MetadataJSON(TypedDict):
 
 class FNFV2Parser(Parser[FNFChart]):
     @staticmethod
-    def is_parseable(path: Path) -> bool:
+    def is_possible_chartset(path: Path) -> bool:
+        """Does this folder possibly contain a parseable ChartSet?"""
+        valid_files = list(path.glob(f'./{path.stem}*.json'))
+        if not any('metadata' in file.stem for file in valid_files):
+            # We are assuming since there is no metadata this is a V1 chartset
+            return False
+        return len(valid_files) > 0
+
+    @staticmethod
+    def is_parsable_chart(path: Path) -> bool:
+        """Is this chart parsable by this Parser"""
         if path.suffix != ".json":
-            return 0
+            return False
         else:
-            with open(p, encoding = "utf-8") as f:
+            with open(path, encoding = "utf-8") as f:
                 try:
                     j = json.load(f)
                 except json.JSONDecodeError:
@@ -100,7 +110,8 @@ class FNFV2Parser(Parser[FNFChart]):
                         return False
 
     @staticmethod
-    def parse_metadata(path: Path) -> list[ChartMetadata]:
+    def parse_chart_metadata(path: Path) -> list[ChartMetadata]:
+        #! WARNING: This is currently case sensitive so be careful!!!
         stem = path.stem
         chart_path = path / (stem + "-chart.json")
         meta_path = path / (stem + "-metadata.json")
@@ -113,6 +124,7 @@ class FNFV2Parser(Parser[FNFChart]):
 
     @staticmethod
     def parse_chart(chart_data: ChartMetadata) -> list[FNFChart]:
+        print(chart_data.path)
         with open(chart_data.path) as p:
             j: SongFileJSON = json.load(p)
 
@@ -145,7 +157,7 @@ class FNFV2Parser(Parser[FNFChart]):
         for note in difficulty:
             player, lane, note_type = lanemap[note["d"]]
             time = note["t"] if metadata["timeFormat"] == "s" else note["t"] / 1000
-            n = (FNFNote(charts[player], time, lane, note["l"] if metadata["timeFormat"] == "s" else note["l"] / 1000, note_type))
+            n = (FNFNote(charts[player], time, lane, note.get("l", 0) if metadata["timeFormat"] == "s" else note.get("l", 0) / 1000, note_type))
             if "k" in note:
                 n.extra_data = (note["k"], )
             charts[player].notes.append(n)
