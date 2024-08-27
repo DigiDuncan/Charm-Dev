@@ -2,6 +2,7 @@
 # The sublist can manage its on info, but it should be to update the styling of the song element and chart element.
 from pyglet.math import Vec2
 from arcade import Rect, LRBT
+from charm.lib.charm import CharmColors
 from charm.lib.mini_mint import Element, VerticalElementList, Padding, padded_sub_rect, Animation
 from charm.lib.anim import ease_expoout, ease_quadinout
 
@@ -39,7 +40,7 @@ class ChartElement(Element[Element]):
     def _calc_layout(self) -> None:
         self._sub_region = padded_sub_rect(self.bounds, self._padding)
         if self._text_obj is None:
-            self._text_obj = Text('', 0.0, 0.0, (0, 0, 0, 255), anchor_x='center', anchor_y='center')
+            self._text_obj = Text('', 0.0, 0.0, (0, 0, 0, 255), anchor_x='center', anchor_y='center', font_name='bananaslip plus')
 
         if self._chart is None:
             return
@@ -82,7 +83,7 @@ class SongElement(Element[Element]):
     def _calc_layout(self) -> None:
         self._sub_region = padded_sub_rect(self.bounds, self._padding)
         if self._text_obj is None:
-            self._text_obj = Text('', 0.0, 0.0, (0, 0, 0, 255), anchor_x='left', anchor_y='center')
+            self._text_obj = Text('', 0.0, 0.0, (0, 0, 0, 255), anchor_x='left', anchor_y='center', font_name='bananaslip plus')
 
         if self._song_metadata is None:
             return
@@ -93,7 +94,7 @@ class SongElement(Element[Element]):
 
 
     def _display(self) -> None:
-        draw.draw_rect_filled(self._sub_region, (255, 255, 255, 255))
+        draw.draw_rect_filled(self._sub_region, CharmColors.FADED_PURPLE)
         self._text_obj.draw()
 
 

@@ -159,7 +159,7 @@ class FNFParser(Parser[FNFChart]):
                     thisnote.length = 0
                 charts[note_player].notes.append(thisnote)
 
-                # TODO: Fake sustains (change this?)
+                # TODO: Fake sustains (change this!)
                 # We basically generate an invisible "sustain" note every 16th-beat. The original game does it
                 # but I wish we were doing something better than this, like just doing sustain calculation in-engine
                 # while a sustain is active.

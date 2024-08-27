@@ -38,6 +38,7 @@ parser_map: dict[TypePair, type[Parser]] = {
     TypePair('taiko', '.osu'): TaikoParser
 }
 # TODO: parse midi
+# ! TODO: Good luck Dragon, two Parsers use .json now
 
 
 def load_chartsets() -> list[ChartSet]:
