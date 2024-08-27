@@ -23,7 +23,7 @@
 
 import json
 from pathlib import Path
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal, NotRequired, TypedDict
 from charm.refactor.charts.fnf import FNFChart, FNFNote, FNFNoteType
 from charm.refactor.generic.chart import ChartMetadata
 from charm.refactor.generic.parser import Parser
@@ -38,19 +38,14 @@ class EventJSON(TypedDict):
 class NoteJSON(TypedDict):
     t: float
     d: int
-    l: float
-
-class NoteWithDataJSON(TypedDict):
-    t: float
-    d: int
-    l: float
-    k: str
+    l: NotRequired[float]
+    k: NotRequired[str]
 
 class SongFileJSON(TypedDict):
     version: str
     scrollSpeed: dict[str, float]
     events: list[EventJSON]
-    notes: dict[str, list[NoteJSON | NoteWithDataJSON]]
+    notes: dict[str, list[NoteJSON]]
 
 class PlayDataJSON(TypedDict):
     album: str
@@ -124,7 +119,6 @@ class FNFV2Parser(Parser[FNFChart]):
 
     @staticmethod
     def parse_chart(chart_data: ChartMetadata) -> list[FNFChart]:
-        print(chart_data.path)
         with open(chart_data.path) as p:
             j: SongFileJSON = json.load(p)
 

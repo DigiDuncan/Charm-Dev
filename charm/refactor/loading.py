@@ -2,7 +2,7 @@
 # -- CHARTSET AND CHART LOADING --
 #
 #   Before the unified menu can show the full list
-#   charm needs to find all of the songs and charts.
+#   Charm needs to find all of the songs and charts.
 #   To save time only the song metadata, and bare minimum
 #   for each chart is found.
 #
@@ -17,6 +17,11 @@
 #   FNF makes things harder again because there are also 'erect' versions
 #   of some charts which currently means two chartsets from one folder.
 #   This breaks a core assumption of Charm.
+#   * UPDATE:
+#   I have un-interwined Erect remixes from their sibling songs in our test data, for now.
+#   It may make sense to just tell players that they have to do this;
+#   it's not that hard, and it means we don't have to suddenly support
+#   "many-chartsets, one-folder" before MVP.
 
 from typing import NamedTuple
 from collections.abc import Callable
@@ -83,4 +88,4 @@ def load_chart(chart_metadata: ChartMetadata) -> list[Chart]:
     for parser in parsers:
         if parser.is_parsable_chart(chart_metadata.path):
             return parser.parse_chart(chart_metadata)
-    raise ChartUnparseableError(message=f'chart: {chart_metadata} cannot be parsed by any parser for gamemode {chart_metadata.gamemode}')
+    raise ChartUnparseableError(f'chart: {chart_metadata} cannot be parsed by any parser for gamemode {chart_metadata.gamemode}')

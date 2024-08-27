@@ -35,6 +35,7 @@ class UnifiedSongMenuView(DigiView):
         super().on_resize(width, height)
 
     def on_show_view(self) -> None:
+        super().on_show_view()
         self.window.theme_song.volume = 0
 
     def on_mouse_press(self, x: int, y: int, button: int, modifiers: int) -> bool | None:
