@@ -6,6 +6,10 @@ from charm.refactor.generic.parser import Parser
 
 class HeroParser(Parser[HeroChart]):
     @staticmethod
+    def is_parseable(path: Path) -> bool:
+        return path.suffix == ".chart"
+
+    @staticmethod
     def parse_metadata(path: Path) -> list[ChartMetadata]:
         return []
 

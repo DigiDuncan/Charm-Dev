@@ -3,6 +3,11 @@ from charm.refactor.generic.chart import Chart, ChartMetadata
 
 class Parser[T: Chart]:
     @staticmethod
+    def is_parseable(path: Path) -> bool:
+        """Does this folder contain a parseable ChartSet?"""
+        raise NotImplementedError
+
+    @staticmethod
     def parse_metadata(path: Path) -> list[ChartMetadata]:
         """
         Without detailing the note or event data find all of the charts of this gamemode

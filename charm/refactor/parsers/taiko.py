@@ -6,6 +6,10 @@ from charm.refactor.parsers._osu import OsuHitCircle, OsuSlider, OsuSpinner, Raw
 
 class TaikoParser(Parser[TaikoChart]):
     @staticmethod
+    def is_parseable(path: Path) -> bool:
+        return path.suffix == ".osu"
+
+    @staticmethod
     def parse_metadata(path: Path) -> list[ChartMetadata]:
         return []
 

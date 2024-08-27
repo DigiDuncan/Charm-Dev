@@ -81,6 +81,25 @@ class MetadataJSON(TypedDict):
 
 class FNFV2Parser(Parser[FNFChart]):
     @staticmethod
+    def is_parseable(path: Path) -> bool:
+        if path.suffix != ".json":
+            return 0
+        else:
+            with open(p, encoding = "utf-8") as f:
+                try:
+                    j = json.load(f)
+                except json.JSONDecodeError:
+                    return False
+                if "version" not in j:
+                    return False
+                else:
+                    try:
+                        v = int(j["version"].split(".")[0])
+                        return v >= 2
+                    except ValueError:
+                        return False
+
+    @staticmethod
     def parse_metadata(path: Path) -> list[ChartMetadata]:
         stem = path.stem
         chart_path = path / (stem + "-chart.json")

@@ -23,6 +23,10 @@ sm_name_map = {
 
 class SMParser(Parser[FourKeyChart]):
     @staticmethod
+    def is_parseable(path: Path) -> bool:
+        return path.suffix == ".sm" or path.suffix == ".ssc"
+
+    @staticmethod
     def parse_metadata(path: Path) -> list[ChartMetadata]:
         return []
 

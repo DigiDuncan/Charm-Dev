@@ -32,6 +32,25 @@ class SongFileJson(TypedDict):
 
 class FNFParser(Parser[FNFChart]):
     @staticmethod
+    def is_parseable(path: Path) -> bool:
+        if path.suffix != ".json":
+            return 0
+        else:
+            with open(p, encoding = "utf-8") as f:
+                try:
+                    j = json.load(f)
+                except json.JSONDecodeError:
+                    return False
+                if "version" not in j:
+                    return True
+                else:
+                    try:
+                        v = int(j["version"].split(".")[0])
+                        return v < 2
+                    except ValueError:
+                        return True
+
+    @staticmethod
     def parse_metadata(path: Path) -> list[ChartMetadata]:
         stem = path.stem
         charts = path.glob(f"./{stem}*.json")
