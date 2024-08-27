@@ -42,7 +42,7 @@ def shows_errors[S: DigiView, **P](fn: Callable[Concatenate[S, P], None]) -> Cal
                 "warn": logger.warn,
                 "info": logger.info
             }.get(e.icon_name, logger.info)
-            logger_fn(f"{e.title}: {e.message}")
+            logger_fn(f"{e.title}: {e.message}{' (' + str(e.repeat) + ')' if e.repeat > 1 else ''}")
             if e.repeat == 1:
                 logger.debug(traceback.format_exc())
     return wrapper
