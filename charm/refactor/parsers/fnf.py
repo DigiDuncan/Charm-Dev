@@ -4,7 +4,7 @@ import json
 import logging
 import math
 from pathlib import Path
-from typing import TypedDict
+from typing import NotRequired, TypedDict
 
 from charm.lib.errors import ChartPostReadParseError, UnknownLanesError
 from charm.lib.types import Milliseconds
@@ -26,6 +26,7 @@ class SongJson(TypedDict):
     bpm: float
     speed: float
     notes: list[NoteJson]
+    events: NotRequired[list[tuple[Milliseconds, list[tuple[str, str, str]]]]]
 
 class SongFileJson(TypedDict):
     song: SongJson
@@ -216,7 +217,7 @@ class FNFParser(Parser[FNFChart]):
         # Pysch Engine events look like this
         if "events" in songdata:
             es = songdata["events"]
-            for e in es:  # * HEY DRAGON CHECK THIS OUT
+            for e in es:
                 time = e[0] / 1000
                 subevents = e[1]
                 for s in subevents:
