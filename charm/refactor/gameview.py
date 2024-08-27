@@ -1,7 +1,7 @@
 from charm.lib.digiview import DigiView, shows_errors, disable_when_focus_lost
 
 from charm.lib.charm import GumWrapper
-from charm.views.results import ResultsView
+from charm.refactor.results import ResultsView
 from charm.lib.keymap import keymap
 
 from charm.refactor.generic.display import Display
