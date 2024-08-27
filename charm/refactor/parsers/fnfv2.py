@@ -79,12 +79,12 @@ class MetadataJSON(TypedDict):
     generatedBy: str
     version: str
 
-class FNFParser(Parser[FNFChart]):
+class FNFV2Parser(Parser[FNFChart]):
     @staticmethod
     def parse_metadata(path: Path) -> list[ChartMetadata]:
         stem = path.stem
-        chart_path = path.parent / (stem + "-chart.json")
-        meta_path = path.parent / (stem + "-metadata.json")
+        chart_path = path / (stem + "-chart.json")
+        meta_path = path / (stem + "-metadata.json")
         with open(meta_path) as m:
             metadata: MetadataJSON = json.load(m)
         metadatas = []
@@ -97,7 +97,7 @@ class FNFParser(Parser[FNFChart]):
         with open(chart_data.path) as p:
             j: SongFileJSON = json.load(p)
 
-        fnf_metadata_path = chart_data.path.parent / (chart_data.path.stem + "-metadata.json")
+        fnf_metadata_path = chart_data.path.parent / (chart_data.path.parent.stem + "-metadata.json")
         with open(fnf_metadata_path) as m:
             metadata: MetadataJSON = json.load(m)
 
@@ -125,7 +125,8 @@ class FNFParser(Parser[FNFChart]):
         difficulty = j["notes"][chart_data.difficulty]
         for note in difficulty:
             player, lane, note_type = lanemap[note["d"]]
-            n = (FNFNote(charts[player], note["t"], lane, note["l"], note_type))
+            time = note["t"] if metadata["timeFormat"] == "s" else note["t"] / 1000
+            n = (FNFNote(charts[player], time, lane, note["l"] if metadata["timeFormat"] == "s" else note["l"] / 1000, note_type))
             if "k" in note:
                 n.extra_data = (note["k"], )
             charts[player].notes.append(n)
