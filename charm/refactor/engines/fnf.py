@@ -6,7 +6,7 @@ from charm.lib.types import Range4, Seconds
 from charm.lib.utils import clamp
 from charm.refactor.charts.four_key import FourKeyNoteType, FourKeyNote, FourKeyChart
 from charm.refactor.generic.engine import DigitalKeyEvent, Engine, Judgement
-
+from charm.refactor.generic.results import Results
 
 
 logger = logging.getLogger("charm")
@@ -80,7 +80,6 @@ class FNFEngine(Engine[FourKeyChart]):
             return
         key = cast(Literal[0,1,2,3], keymap.fourkey.actions.index(action))
         self.current_events.append(DigitalKeyEvent(self.chart_time, key, "up"))
-
 
     def calculate_score(self) -> None:
         # Get all non-scored notes within the current window
@@ -177,3 +176,19 @@ class FNFEngine(Engine[FourKeyChart]):
             self.max_streak = max(self.streak, self.max_streak)
             self.streak = 0
             self.last_note_missed = True
+
+    def generate_results(self) -> Results:
+        return Results(
+            self.chart,
+            self.hit_window,
+            self.judgements,
+            self.all_judgements,
+            self.score,
+            self.hits,
+            self.misses,
+            self.accuracy,
+            self.grade,
+            self.fc_type,
+            self.streak,
+            self.max_streak
+        )

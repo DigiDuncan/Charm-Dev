@@ -39,7 +39,7 @@ class FNFDisplay(Display[FNFEngine, FourKeyChart]):
         self.player_chart, self.opp_chart = charts
 
         # TODO: make more flexible post mvp
-        self._enemy_engine: Engine = AutoEngine(charts[1], 0.166)
+        self._enemy_engine: Engine = AutoEngine(charts[1], 0.0)
 
         # NOTE: change highways to work of their center position not bottom left
         # TODO: place highways at true ideal locations
