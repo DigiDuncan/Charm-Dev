@@ -5,10 +5,11 @@ from dataclasses import dataclass
 import itertools
 import logging
 from pathlib import Path
+import re
 from typing import NotRequired, TypedDict
 
 from nindex.index import Index
-from charm.lib.errors import MetadataParseError, NoMetadataError
+from charm.lib.errors import MetadataParseError, NoChartsError, NoMetadataError
 from charm.lib.types import Seconds
 from charm.refactor.charts.hero import HeroChart, HeroNote, Ticks
 from charm.refactor.generic.chart import ChartMetadata, Event, Note
@@ -221,7 +222,21 @@ class HeroParser(Parser[HeroChart]):
 
     @staticmethod
     def parse_metadata(path: Path) -> list[ChartMetadata]:
-        return []
+        metadatas = []
+        if not (path / "notes.chart").exists():
+            raise NoChartsError(path.stem)
+        with open(path / "notes.chart", encoding = "utf-8") as f:
+            chartfile = f.readlines()
+
+        for line in chartfile:
+            line = line.strip().strip("\uffef").strip("\ufeff")  # god dang ffef
+            if m := re.match(RE_HEADER, line):
+                header = m.group(1)
+                if header in DIFF_INST_MAP:
+                    diff, inst = DIFF_INST_MAP[header]
+                    metadatas.append(ChartMetadata("hero", diff, path, inst))
+
+        return metadatas
 
     @staticmethod
     def parse_chart(chart_data: ChartMetadata) -> list[HeroChart]:
