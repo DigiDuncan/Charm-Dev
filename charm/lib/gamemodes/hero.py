@@ -3,7 +3,7 @@ from __future__ import annotations
 from importlib.resources import files
 from collections import defaultdict
 from functools import cache
-from typing import Literal, cast, TypedDict, Any
+from typing import Literal, NotRequired, cast, TypedDict, Any
 from collections.abc import Generator
 from dataclasses import dataclass
 from pathlib import Path
@@ -267,12 +267,12 @@ class HeroChord:
 
 
 class IndexDict[T](TypedDict):
-    bpm: Index[T, BPMChangeTickEvent]
-    time_sig: Index[T, TSEvent]
-    section: Index[T, SectionEvent]
-    beat: Index[T, BeatEvent]
-    note: Index[T, Note]
-    chord: Index[T, HeroChord]
+    bpm: NotRequired[Index[T, BPMChangeTickEvent]]
+    time_sig: NotRequired[Index[T, TSEvent]]
+    section: NotRequired[Index[T, SectionEvent]]
+    beat: NotRequired[Index[T, BeatEvent]]
+    note: NotRequired[Index[T, Note]]
+    chord: NotRequired[Index[T, HeroChord]]
 
 
 class HeroChart(Chart):
