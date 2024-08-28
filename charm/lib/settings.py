@@ -5,7 +5,7 @@ MixerNames = Literal["default", "master", "music", "sound", "menu_music"]
 
 @dataclass
 class Volume:
-    master = 1.0
+    master = 0.4
     music = 1.0
     menu_music = 1.0
     sound = 1.0
