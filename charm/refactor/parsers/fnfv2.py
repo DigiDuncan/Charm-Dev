@@ -22,18 +22,55 @@
 # Here we go.
 
 import json
+import logging
 from pathlib import Path
 from typing import Any, Literal, NotRequired, TypedDict
-from charm.refactor.charts.fnf import FNFChart, FNFNote, FNFNoteType
-from charm.refactor.generic.chart import ChartMetadata
+from charm.refactor.charts.fnf import CameraFocusEvent, CameraZoomEvent, FNFChart, FNFNote, FNFNoteType, PlayAnimationEvent
+from charm.refactor.generic.chart import ChartMetadata, Event
 from charm.refactor.generic.parser import Parser
+
+logger = logging.getLogger("charm")
 
 TimeFormat = Literal["s", "ms"]
 
-class EventJSON(TypedDict):
+class GenericEventJSON(TypedDict):
     t: float
     e: str
     v: dict[str, Any]
+
+class FocusCameraEventDataJSON(TypedDict):
+    char: int
+    x: float
+    y: float
+    ease: NotRequired[str]
+    duration: NotRequired[float]
+
+class FocusCameraEventJSON(TypedDict):
+    t: float
+    e: Literal["FocusCamera"]
+    v: FocusCameraEventDataJSON | int
+
+class ZoomCameraEventDataJSON(TypedDict):
+    zoom: float
+    ease: str
+    duration: NotRequired[float]
+
+class ZoomCameraEventJSON(TypedDict):
+    t: float
+    e: Literal["ZoomCamera"]
+    v: ZoomCameraEventDataJSON
+
+class PlayAnimationEventDataJSON(TypedDict):
+    target: str
+    anim: str
+    force: NotRequired[bool]
+
+class PlayAnimationEventJSON(TypedDict):
+    t: float
+    e: Literal["PlayAnimation"]
+    v: PlayAnimationEventDataJSON
+
+EventJSON = GenericEventJSON | FocusCameraEventJSON | ZoomCameraEventJSON
 
 class NoteJSON(TypedDict):
     t: float
@@ -133,6 +170,8 @@ class FNFV2Parser(Parser[FNFChart]):
             FNFChart(p2_metadata, [], [], metadata["timeChanges"][0]["bpm"])
         ]
 
+        events: list[Event] = []
+
         # Lanemap: (player, lane, type)
         fnf_overrides = None
         override_path = chart_data.path.parent / "fnf.json"
@@ -160,5 +199,30 @@ class FNFV2Parser(Parser[FNFChart]):
             # They don't work right now because I kinda just want to get rid of the hacked sustains ASAP
             # And rewriting how the old ones work in this new parser adds so much complexity that I'd rather
             # not deal with right now.
+
+        # !: TYPING HERE SUCKS!
+        # I don't even know why, I think there's issue with how TypedDict works.
+        # If you know how to make this better, don't even ask, just do it.
+        # As long as it's readable and has good DX I don't care at this point.
+        # Or just make this block type: ignore lol
+
+        for event in j["events"]:
+            time = event["t"] if metadata["timeFormat"] == "s" else event["t"] / 1000
+            if event["e"] == "FocusCamera":
+                char = event["v"] if isinstance(event["v"], int) else int(event["v"]["char"])
+                x = event["v"].get("x", 0) if isinstance(event["v"], dict) else 0
+                y = event["v"].get("y", 0) if isinstance(event["v"], dict) else 0
+                events.append(CameraFocusEvent(time, char, x, y))
+            elif event["e"] == "ZoomCamera":
+                duration = event["v"].get("duration", 0) if metadata["timeFormat"] == "s" else event["v"].get("duration", 0) / 1000
+                events.append(CameraZoomEvent(time, event["v"]["zoom"], event["v"].get("ease", "INSTANT"), duration))
+            elif event["e"] == "PlayAnimation":
+                events.append(PlayAnimationEvent(time, event["v"]["target"], event["v"]["anim"], event["v"].get("force", False)))
+
+        for c in charts:
+            c.events = events
+            c.notes.sort()
+            c.events.sort()
+            logger.debug(f"Parsed chart {c.metadata.instrument} with {len(c.notes)} notes.")
 
         return charts

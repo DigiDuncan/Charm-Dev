@@ -26,6 +26,18 @@ class CameraZoomEvent(Event):
     def __str__(self) -> str:
         return self.__repr__()
 
+@dataclass
+class PlayAnimationEvent(Event):
+    target: str
+    anim: str
+    force: bool = False
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}@{self.time:.3f} {self.target}/{self.anim} force:{self.force}>"
+
+    def __str__(self) -> str:
+        return self.__repr__()
+
 class FNFNoteType(StrEnum):
     NORMAL = "normal"
     BOMB = "bomb"

@@ -65,6 +65,7 @@ class GameView(DigiView):
         self.postsetup()
 
     def on_show_view(self) -> None:
+        super().on_show_view()
         self.window.theme_song.volume = 0
         self.unpause(force=True)
 
