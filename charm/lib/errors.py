@@ -59,13 +59,16 @@ class CharmError(Exception):
 
 class GenericError(CharmError):
     def __init__(self, error: Exception):
-        super().__init__(title=error.__class__.__name__, message=(error))
+        super().__init__(title=error.__class__.__name__, message=str(error))
 
 
 class TestError(CharmError):
     def __init__(self, message: str):
         super().__init__(title="Test", message=message)
 
+class TODOError(CharmError):
+    def __init__(self, person: str):
+        super().__init__(title="TODO", message=f"{person} has to finish implementing/fixing this!", icon = "help")
 
 class NoChartsError(CharmError):
     def __init__(self, song_name: str):
