@@ -26,7 +26,8 @@ import logging
 from pathlib import Path
 from typing import Any, Literal, NotRequired, TypedDict
 from charm.refactor.charts.fnf import CameraFocusEvent, CameraZoomEvent, FNFChart, FNFNote, FNFNoteType, PlayAnimationEvent
-from charm.refactor.generic.chart import ChartMetadata, Event
+from charm.refactor.generic.metadata import ChartMetadata, ChartSetMetadata
+from charm.refactor.generic.chart import Event
 from charm.refactor.generic.parser import Parser
 
 logger = logging.getLogger("charm")
@@ -142,9 +143,13 @@ class FNFV2Parser(Parser[FNFChart]):
                         return False
 
     @staticmethod
+    def parse_chartset_metadata(path: Path) -> ChartSetMetadata:
+        pass
+
+    @staticmethod
     def parse_chart_metadata(path: Path) -> list[ChartMetadata]:
         #! WARNING: This is currently case sensitive so be careful!!!
-        stem = path.stem
+        stem = path.name
         chart_path = path / (stem + "-chart.json")
         meta_path = path / (stem + "-metadata.json")
         with open(meta_path) as m:

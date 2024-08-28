@@ -1,11 +1,37 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from pathlib import Path
 
 from charm.lib.types import Seconds
 
+# ?: I removed the reference to the Chart's parent ChartSet here, because during the parsing
+# phase we don't necessarily know what ChartSet we're attaching ourselves to.
+# Should we attached the ChartSet later in a finalization step?
+
+class ChartMetadata:
+    """Chart metadata needed to later parse the chart fully"""
+    def __init__(self, gamemode: str, difficulty: str, path: Path, instrument: str | None = None) -> None:
+        self.gamemode = gamemode
+        self.difficulty = difficulty
+        self.instrument = instrument
+        self.path = path
+
+    def __hash__(self) -> int:
+        return hash((self.gamemode, self.difficulty, self.instrument, str(self.path)))
+
+    def __eq__(self, other: ChartMetadata) -> bool:
+        return (self.path, self.gamemode, self.difficulty, self.instrument) == (other.path, other.gamemode, other.difficulty, other.instrument)
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} {self.gamemode}/{self.instrument}/{self.difficulty}>"
+
+    def __str__(self) -> str:
+        return self.__repr__()
+
 
 @dataclass
-class Metadata:
+class ChartSetMetadata:
     """For menu sorting/display."""
     path: Path
     title: str

@@ -1,5 +1,6 @@
 from pathlib import Path
-from charm.refactor.generic.chart import Chart, ChartMetadata
+from charm.refactor.generic.chart import Chart
+from charm.refactor.generic.metadata import ChartMetadata, ChartSetMetadata
 
 class Parser[T: Chart]:
     @staticmethod
@@ -11,6 +12,10 @@ class Parser[T: Chart]:
     def is_parsable_chart(path: Path) -> bool:
         """Is this chart parsable by this Parser"""
         return False
+
+    @staticmethod
+    def parse_chartset_metadata(path: Path) -> ChartSetMetadata:
+        raise NotImplementedError
 
     @staticmethod
     def parse_chart_metadata(path: Path) -> list[ChartMetadata]:

@@ -63,7 +63,7 @@ class FNFParser(Parser[FNFChart]):
 
     @staticmethod
     def parse_chart_metadata(path: Path) -> list[ChartMetadata]:
-        stem = path.stem.casefold()
+        stem = path.name.casefold()
         chart_paths = path.glob(f"./{stem}*.json")
         chart_metadatas = []
         for chart_path in chart_paths:

@@ -1,14 +1,13 @@
 from pathlib import Path
 
-from charm.refactor.generic.chart import ChartMetadata
-from charm.refactor.generic.metadata import Metadata
+from charm.refactor.generic.metadata import ChartSetMetadata, ChartMetadata
 
 
 class ChartSet:
     """A list of charts, with some helpful metadata."""
-    def __init__(self, path: Path, charts: list[ChartMetadata] = None):
+    def __init__(self, path: Path, metadata: ChartSetMetadata, charts: list[ChartMetadata] = None):
         self.path: Path = path
-        self.metadata = Metadata(path=path, title=path.stem.replace("-", " ").title())
+        self.metadata: ChartSetMetadata = metadata
         self.charts: list[ChartMetadata] = charts or []
 
     def __repr__(self) -> str:
