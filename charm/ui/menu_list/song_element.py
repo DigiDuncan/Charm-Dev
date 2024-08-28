@@ -40,7 +40,7 @@ class ChartElement(Element[Element]):
     def _calc_layout(self) -> None:
         self._sub_region = padded_sub_rect(self.bounds, self._padding)
         if self._text_obj is None:
-            self._text_obj = Text('', 0.0, 0.0, (0, 0, 0, 255), anchor_x='center', anchor_y='center', font_name='bananaslip plus')
+            self._text_obj = Text('', 0.0, 0.0, (0, 0, 0, 255), anchor_x='center', anchor_y='center', font_name='bananaslip plus', font_size = 18)
 
         if self._chart is None:
             return
@@ -83,7 +83,7 @@ class SongElement(Element[Element]):
     def _calc_layout(self) -> None:
         self._sub_region = padded_sub_rect(self.bounds, self._padding)
         if self._text_obj is None:
-            self._text_obj = Text('', 0.0, 0.0, (0, 0, 0, 255), anchor_x='left', anchor_y='center', font_name='bananaslip plus')
+            self._text_obj = Text('', 0.0, 0.0, (0, 0, 0, 255), anchor_x='left', anchor_y='center', font_name='bananaslip plus', font_size = 36)
 
         if self._song_metadata is None:
             return
