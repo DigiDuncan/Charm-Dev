@@ -26,9 +26,10 @@
 from typing import NamedTuple
 from collections.abc import Callable
 from pathlib import Path
+import os
 
 from charm.lib.paths import songspath
-from charm.lib.errors import ChartUnparseableError
+from charm.lib.errors import ChartUnparseableError, TODOError
 
 from charm.refactor.generic.chartset import ChartSet
 from charm.refactor.generic.chart import Chart, ChartMetadata
@@ -55,6 +56,10 @@ gamemode_parsers: dict[str, tuple[type[Parser], ...]] = {
     'hero': (HeroParser,),
     'taiko': (TaikoParser,)
 }
+
+
+def load_path_chartsets(path: Path) -> list[ChartSet]:
+    raise TODOError('DragonMoffon')
 
 
 def load_gamemode_chartsets(gamemode: str) -> list[ChartSet]:

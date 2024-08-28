@@ -1,17 +1,15 @@
 from __future__ import annotations
 
 import configparser
-from dataclasses import dataclass
+from collections import defaultdict
 import itertools
 import logging
 from pathlib import Path
 import re
-from typing import NotRequired, TypedDict
 
-from nindex.index import Index
-from charm.lib.errors import MetadataParseError, NoChartsError, NoMetadataError
+from charm.lib.errors import MetadataParseError, NoChartsError, NoMetadataError, ChartParseError, ChartPostReadParseError
 from charm.lib.types import Seconds
-from charm.refactor.charts.hero import HeroChart, HeroNote, Ticks
+from charm.refactor.charts.hero import HeroChart, HeroNote, HeroChord, Ticks, BPMChangeTickEvent, TextEvent, SoloEvent
 from charm.refactor.generic.chart import ChartMetadata, Event, Note
 from charm.refactor.generic.metadata import ChartSetMetadata
 from charm.refactor.generic.parser import Parser
@@ -39,149 +37,6 @@ SPECIAL_HEADERS = ["Song", "SyncTrack", "Events"]
 DIFF_INST_MAP: dict[str, tuple[str, str]] = {(a + b): (a, b) for a, b in itertools.product(DIFFICULTIES, INSTRUMENTS)}
 VALID_HEADERS = list(DIFF_INST_MAP.keys()) + SPECIAL_HEADERS
 
-@dataclass
-class TickEvent(Event):
-    tick: int
-
-    def __lt__(self, other: TickEvent) -> bool:
-        return self.tick < other.tick
-
-@dataclass
-class TSEvent(TickEvent):
-    numerator: int
-    denominator: int = 4
-
-    @property
-    def time_sig(self) -> tuple[int, int]:
-        return (self.numerator, self.denominator)
-
-@dataclass
-class TextEvent(TickEvent):
-    text: str
-
-@dataclass
-class SectionEvent(TickEvent):
-    name: str
-
-@dataclass
-class RawLyricEvent(TickEvent):
-    text: str
-
-@dataclass
-class StarpowerEvent(TickEvent):
-    tick_length: Ticks
-    length: Seconds
-
-@dataclass
-class SoloEvent(TickEvent):
-    tick_length: Ticks
-    length: Seconds
-
-@dataclass
-class BPMChangeTickEvent(TickEvent):
-    new_bpm: float
-
-@dataclass
-class BeatEvent(TickEvent):
-    id: int
-    major: bool = True
-
-@dataclass
-class RawBPMEvent:
-    """Only used for parsing, and shouldn't be in a Song post-parse."""
-    ticks: Ticks
-    mbpm: int
-
-class IndexDict[T](TypedDict):
-    bpm: NotRequired[Index[T, BPMChangeTickEvent]]
-    time_sig: NotRequired[Index[T, TSEvent]]
-    section: NotRequired[Index[T, SectionEvent]]
-    beat: NotRequired[Index[T, BeatEvent]]
-    note: NotRequired[Index[T, Note]]
-    chord: NotRequired[Index[T, HeroChord]]
-
-class HeroChord:
-    """A data object to hold notes and have useful functions for manipulating and reading them."""
-    def __init__(self, notes: list[HeroNote] | None = None) -> None:
-        self.notes = notes if notes else []
-
-    @property
-    def frets(self) -> tuple[int, ...]:
-        return tuple(set(n.lane for n in self.notes))
-
-    @property
-    def tick(self) -> Ticks | None:
-        return self.notes[0].tick
-
-    @property
-    def tick_length(self) -> Ticks:
-        return max([n.tick_length for n in self.notes if n.tick_length is not None])
-
-    @property
-    def tick_end(self) -> Ticks | None:
-        return self.tick + self.tick_length if self.tick is not None else None
-
-    @property
-    def time(self) -> Seconds:
-        return self.notes[0].time
-
-    @property
-    def length(self) -> Seconds:
-        return max([n.length for n in self.notes])
-
-    @property
-    def end(self) -> Seconds:
-        return self.time + self.length
-
-    @property
-    def type(self) -> str:
-        return self.notes[0].type
-
-    @type.setter
-    def type(self, v: str) -> None:
-        for n in self.notes:
-            n.type = v
-
-    @property
-    def hit(self) -> bool:
-        return self.notes[0].hit
-
-    @hit.setter
-    def hit(self, v: bool) -> None:
-        for n in self.notes:
-            n.hit = v
-
-    @property
-    def hit_time(self) -> Seconds | None:
-        return self.notes[0].hit_time
-
-    @hit_time.setter
-    def hit_time(self, v: Seconds) -> None:
-        for n in self.notes:
-            n.hit_time = v
-
-    @property
-    def missed(self) -> bool:
-        return self.notes[0].missed
-
-    @missed.setter
-    def missed(self, v: bool) -> None:
-        for n in self.notes:
-            n.missed = v
-
-    @property
-    def valid_shapes(self) -> list[list[bool]]:
-        if 7 in self.frets:
-            return [[False] * 5]
-        if len(self.frets) > 1:
-            return [[n in self.frets for n in range(5)]]
-        b = [False, True]
-        max_fret = max(self.frets)
-        valid_shape_list = [list(v) for v in itertools.product(b, repeat = max_fret)]
-        append_part = [True] + ([False] * (4 - max_fret))
-        final_list = [v + append_part for v in valid_shape_list]
-        return final_list
-
 def tick_to_seconds(current_tick: Ticks, sync_track: list[BPMChangeTickEvent], resolution: int = 192, offset: float = 0) -> Seconds:
     """Takes a tick (and an associated sync_track,) and returns its position in seconds as a float."""
     if current_tick == 0:
@@ -193,6 +48,59 @@ def tick_to_seconds(current_tick: Ticks, sync_track: list[BPMChangeTickEvent], r
     bps = last_bpm_event.new_bpm / 60
     seconds = tick_delta / (resolution * bps)
     return seconds + offset + last_bpm_event.time
+
+
+def create_chart_chords(chart: HeroChart) -> None:
+    """
+    Turn lists of notes (in `self.notes`) into `HeroChord`s (in `self.chords`)
+    A chord is defined as all notes occuring at the same tick.
+    While this could be a method on HeroChart I am keeping it
+    seperate to keep parsing of hero charts all in one file ~Dragon
+    """
+    c = defaultdict(list)
+    for note in chart.notes:
+        c[note.tick].append(note)
+    chord_lists = list(c.values())
+    chords = []
+    for cl in chord_lists:
+        chords.append(HeroChord(cl))
+    chart.chords = chords
+
+def calculate_chart_note_flags(chart: HeroChart) -> None:
+    """Turn notes that aren't really notes but flags into properties on the notes."""
+    for c in chart.chords:
+        forced = False
+        tap = False
+        for n in c.notes:
+            if n.lane == 5:  # HOPO force
+                forced = True
+            elif n.lane == 6:  # Tap
+                tap = True
+        for n in c.notes:
+            # Tap overrides HOPO, intentionally.
+            if tap:
+                n.type = "tap"
+            elif forced:
+                n.type = "forced"
+        c = HeroChord([n for n in c.notes if n.lane not in [5, 6]])
+
+def calculate_chart_hopos(chart: HeroChart) -> None:
+    # TODO: requires the chart's NIndex
+    pass
+
+def parse_chart_text_events(chart: HeroChart) -> None:
+    current_solo = None
+    for e in chart.events_by_type(TextEvent):
+        if e.text == "solo":
+            current_solo = e
+        elif e.text == "soloend":
+            if current_solo is None:
+                raise ChartPostReadParseError("`solo_end` without `solo` event!")
+            tick_length = e.tick - current_solo.tick
+            length = e.time - current_solo.time
+            chart.events.append(SoloEvent(current_solo.time, current_solo.tick, tick_length, length))
+            current_solo = None
+        chart.events.remove(e)
 
 class HeroParser(Parser[HeroChart]):
     @staticmethod
@@ -240,4 +148,132 @@ class HeroParser(Parser[HeroChart]):
 
     @staticmethod
     def parse_chart(chart_data: ChartMetadata) -> list[HeroChart]:
-        raise NotImplementedError
+        if not (chart_data.path).exists():
+            raise NoChartsError(chart_data.path.stem)
+        with open(chart_data.path, encoding = "utf-8") as f:
+            chartfile = f.readlines()
+
+        target_header = f"{chart_data.difficulty}{chart_data.instrument}"
+        reached_target_chart = False
+
+        resolution: Ticks = 192
+        offset: Seconds = 0
+
+        chart = HeroChart(chart_data, [], [], 0)
+
+        current_header = None
+        sync_track: list[BPMChangeTickEvent] = []
+
+        for line_num, line in enumerate(chartfile):
+            line = line.strip().strip("\uffef").strip("\ufeff")  # god dang ffef
+
+            # Screw curly braces
+            if line == "{" or line == "}":
+                continue
+
+            # Parse headers
+            if m := re.match(RE_HEADER, line):
+                header = m.group(1)
+                if header not in VALID_HEADERS:
+                    raise ChartParseError(line_num, f"{header} is not a valid header.")
+                if current_header is None and header != "Song":
+                    raise ChartParseError(line_num, "First header must be Song.")
+                current_header = header
+                continue
+
+            match current_header:
+                case "song":
+                    continue
+                case "SyncTrack":
+                    if m := re.match(RE_A, line):
+                        # ignore anchor events [only used for charting]
+                        continue
+                    # BPM Events
+                    elif m := re.match(RE_B, line):
+                        tick, mbpm = (int(i) for i in m.groups())
+                        if not sync_track and tick != 0:
+                            raise ChartParseError(line_num, "Chart has no BPM event at tick 0.")
+                        if not sync_track:
+                            sync_event = BPMChangeTickEvent(0, tick, mbpm / 1000)
+                        else:
+                            seconds = tick_to_seconds(tick, sync_track, resolution, offset)
+                            sync_event = BPMChangeTickEvent(seconds, tick, mbpm / 1000)
+                        chart.events.append(sync_event)
+                        sync_track.append(sync_event)
+                    # Time Sig events
+                    elif m := re.match(RE_TS, line):
+                        tick, num, denom = m.groups()
+                        tick = int(tick)
+                        denom = 4 if denom is None else int(denom) ** 2
+                        seconds = tick_to_seconds(tick, sync_track, resolution, offset)
+                        chart.events.append(TSEvent(seconds, tick, int(num), int(denom)))
+                    else:
+                        raise ChartParseError(line_num, f"Non-sync event in SyncTrack: {line!r}")
+                case "Events":
+                    # Section events
+                    if m := re.match(RE_SECTION, line):
+                        tick, name = m.groups()
+                        tick = int(tick)
+                        seconds = tick_to_seconds(tick, sync_track, resolution, offset)
+                        chart.events.append(SectionEvent(seconds, tick, name))
+                    # Lyric events
+                    elif m := re.match(RE_LYRIC, line):
+                        tick, text = m.groups()
+                        tick = int(tick)
+                        seconds = tick_to_seconds(tick, sync_track, resolution, offset)
+                        chart.events.append(RawLyricEvent(seconds, tick, text))
+                    # Misc. events
+                    elif m := re.match(RE_E, line):
+                        tick, text = m.groups()
+                        tick = int(tick)
+                        seconds = tick_to_seconds(tick, sync_track, resolution, offset)
+                        chart.events.append(TextEvent(seconds, tick, text))
+                    else:
+                        raise ChartParseError(line_num, f"Non-event in Events: {line!r}")
+                case _:
+                    if current_header != target_header:
+                        if reached_target_chart:
+                            break
+                        continue
+                    reached_target_chart = True
+                    # Track events
+                    if m := re.match(RE_TRACK_E, line):
+                        tick, text = m.groups()
+                        tick = int(tick)
+                        seconds = tick_to_seconds(tick, sync_track, resolution, offset)
+                        chart.events.append(TextEvent(seconds, tick, text))
+                    # Note events
+                    elif m := re.match(RE_N, line):
+                        tick, lane, length = m.groups()
+                        tick = int(tick)
+                        length = int(length)
+                        seconds = tick_to_seconds(tick, sync_track, resolution, offset)
+                        end = tick_to_seconds(tick + length, sync_track, resolution, offset)
+                        sec_length = round(end - seconds, 5)  # accurate to 1/100ms
+                        chart.notes.append(HeroNote(chart, seconds, int(lane), sec_length, tick = tick, tick_length = length))  # TODO: Note flags.
+                    # Special events
+                    elif m := re.match(RE_S, line):
+                        tick, s_type, length = m.groups()
+                        tick = int(tick)
+                        length = int(length)
+                        seconds = tick_to_seconds(tick, sync_track, resolution, offset)
+                        end = tick_to_seconds(tick + length, sync_track, resolution, offset)
+                        sec_length = round(end - seconds, 5)  # accurate to 1/100ms
+                        if s_type == "2":
+                            chart.events.append(StarpowerEvent(seconds, tick, length, sec_length))
+                    # Ignoring non-SP events for now...
+                    else:
+                        raise ChartParseError(line_num, f"Non-chart event in {current_header}: {line!r}")
+
+        create_chart_chords(chart)
+        calculate_chart_note_flags(chart)
+        parse_chart_text_events(chart)
+        chart.events.sort()
+        #TODO: NIndex time signature
+        calculate_chart_hopos(chart)
+        # TODO: calculate chart beats
+        # TODO: process chart lyrics
+
+        #TODO: NIndex rest of the chart properties
+
+        return [chart]
