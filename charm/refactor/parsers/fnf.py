@@ -10,7 +10,8 @@ from charm.lib.errors import ChartPostReadParseError, UnknownLanesError
 from charm.lib.types import Milliseconds
 from charm.objects.lyric_animator import LyricEvent
 from charm.refactor.charts.fnf import CameraFocusEvent, FNFChart, FNFNote, FNFNoteType
-from charm.refactor.generic.chart import BPMChangeEvent, Event, ChartMetadata
+from charm.refactor.generic.chart import BPMChangeEvent, Event
+from charm.refactor.generic.metadata import ChartMetadata, ChartSetMetadata
 from charm.refactor.generic.parser import Parser
 
 logger = logging.getLogger("charm")
@@ -60,6 +61,9 @@ class FNFParser(Parser[FNFChart]):
                         return v < 2
                     except ValueError:
                         return True
+    @staticmethod
+    def parse_chartset_metadata(path: Path) -> ChartSetMetadata:
+        return ChartSetMetadata(path, path.name.replace('-', ' ').title())
 
     @staticmethod
     def parse_chart_metadata(path: Path) -> list[ChartMetadata]:

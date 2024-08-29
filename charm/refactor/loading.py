@@ -59,7 +59,6 @@ def read_charm_metadata(metadata_src: Path) -> ChartSetMetadata:
     raise TODOError('Digi or Dragon')
 
 def load_path_chartsets(parsers: tuple[type[Parser], ...], path: Path, metadata: ChartSetMetadata) -> Generator[ChartSet, Any, Any]:
-    print(path)
     directory_charm_data = None if not (path / 'charm.toml').exists() else read_charm_metadata(path / 'charm.toml')
     directory_metadata = ChartSetMetadata(path)
     charts = []
@@ -70,7 +69,7 @@ def load_path_chartsets(parsers: tuple[type[Parser], ...], path: Path, metadata:
         parser_metadata = parser.parse_chartset_metadata(path)
         directory_metadata = directory_metadata.update(parser_metadata)
         charts.extend(parser.parse_chart_metadata(path))
-    print(charts)
+
     if charts:
         metadata = metadata.update(directory_metadata)
         if directory_charm_data is not None:
@@ -94,7 +93,7 @@ def load_gamemode_chartsets(gamemode: str) -> list[ChartSet]:
 
 
 def load_chartsets() -> list[ChartSet]:
-    gamemodes = ('hero',)
+    gamemodes = ('fnf', '4k', 'hero', 'taiko')
     chartsets = []
     for gamemode in gamemodes:
         chartsets.extend(load_gamemode_chartsets(gamemode))

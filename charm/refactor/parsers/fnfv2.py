@@ -144,7 +144,16 @@ class FNFV2Parser(Parser[FNFChart]):
 
     @staticmethod
     def parse_chartset_metadata(path: Path) -> ChartSetMetadata:
-        pass
+        with open(path / f'{path.name}-metadata.json') as data_file:
+            metadata = json.load(data_file) # TODO: Give TypedDict
+        play_data = metadata.get('playData', {}) # TODO: Give TypedDict
+        return ChartSetMetadata(
+            path,
+            title=metadata.get('songName', None),
+            artist=metadata.get('artist', None),
+            album=play_data.get('album', None),
+            charter=metadata.get('charter', None)
+        )
 
     @staticmethod
     def parse_chart_metadata(path: Path) -> list[ChartMetadata]:
