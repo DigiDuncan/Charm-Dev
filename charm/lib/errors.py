@@ -79,6 +79,9 @@ class NoMetadataError(CharmError):
     def __init__(self, song_name: str):
         super().__init__(title="No metadata found!", message=f"No metadata found for song '{song_name}'")
 
+class MissingGamemodeError(CharmError):
+    def __init__(self, *, gamemode: str):
+        super().__init__(title="Gamemode not found!", message=f"{gamemode} has failed to initialise", icon="error")
 
 class ChartParseError(CharmError):
     def __init__(self, line_num: int, message: str):

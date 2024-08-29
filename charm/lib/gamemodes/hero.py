@@ -320,7 +320,7 @@ class HeroChart(Chart):
                     n.type = "tap"
                 elif forced:
                     n.type = "forced"
-            c = HeroChord([n for n in c.notes if n.lane not in [5, 6]])
+            c.notes = [n for n in c.notes if n.lane not in {5, 6}]
 
     def calculate_hopos(self) -> None:
         # This is basically ripped from Charm-Legacy.

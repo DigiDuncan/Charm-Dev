@@ -22,16 +22,14 @@
 #   It may make sense to just tell players that they have to do this;
 #   it's not that hard, and it means we don't have to suddenly support
 #   "many-chartsets, one-folder" before MVP.
-
-from typing import NamedTuple
-from collections.abc import Callable
+from typing import NamedTuple, Any
+from collections.abc import Callable, Generator
 from pathlib import Path
-import os
 
 from charm.lib.paths import songspath
-from charm.lib.errors import ChartUnparseableError, TODOError
+from charm.lib.errors import ChartUnparseableError, TODOError, MissingGamemodeError
 
-from charm.refactor.generic.chartset import ChartSet
+from charm.refactor.generic.chartset import ChartSet, ChartSetMetadata
 from charm.refactor.generic.chart import Chart, ChartMetadata
 
 # -- PARSERS --
@@ -57,31 +55,46 @@ gamemode_parsers: dict[str, tuple[type[Parser], ...]] = {
     'taiko': (TaikoParser,)
 }
 
+def read_charm_metadata(metadata_src: Path) -> ChartSetMetadata:
+    raise TODOError('Digi or Dragon')
 
-def load_path_chartsets(path: Path) -> list[ChartSet]:
-    raise TODOError('DragonMoffon')
+def load_path_chartsets(parsers: tuple[type[Parser], ...], path: Path, metadata: ChartSetMetadata) -> Generator[ChartSet, Any, Any]:
+    print(path)
+    directory_charm_data = None if not (path / 'charm.toml').exists() else read_charm_metadata(path / 'charm.toml')
+    directory_metadata = ChartSetMetadata(path)
+    charts = []
+
+    for parser in parsers:
+        if not parser.is_possible_chartset(path):
+            continue
+        parser_metadata = parser.parse_chartset_metadata(path)
+        directory_metadata = directory_metadata.update(parser_metadata)
+        charts.extend(parser.parse_chart_metadata(path))
+    print(charts)
+    if charts:
+        metadata = metadata.update(directory_metadata)
+        if directory_charm_data is not None:
+            metadata = metadata.update(directory_charm_data)
+        yield ChartSet(path, metadata, charts)
+    metadata = metadata if directory_charm_data is None else metadata.update(directory_charm_data)
+
+    for d in path.iterdir():
+        if not d.is_dir():
+            continue
+        yield from load_path_chartsets(parsers, d, metadata)
 
 
 def load_gamemode_chartsets(gamemode: str) -> list[ChartSet]:
     parsers = gamemode_parsers[gamemode]
-    all_gamemode_paths = (p for p in (songspath / gamemode).glob("**/*") if p.is_dir())
-    chartsets = []
-    for d in all_gamemode_paths:
-        charts = []
-        for parser in parsers:
-            if not parser.is_possible_chartset(d):
-                continue
-            charts.extend(parser.parse_chart_metadata(d))
-        if charts:
-            chartset = ChartSet(d)
-            chartset.charts = charts
-            # TODO: Lyric events?
-            chartsets.append(chartset)
-    return chartsets
+    root = songspath / gamemode
+    if not root.exists():
+        raise MissingGamemodeError(gamemode=gamemode)
+    metadata = ChartSetMetadata(root)
+    return list(load_path_chartsets(parsers, root, metadata))
 
 
 def load_chartsets() -> list[ChartSet]:
-    gamemodes = ('fnf', '4k', 'hero', 'taiko')
+    gamemodes = ('hero',)
     chartsets = []
     for gamemode in gamemodes:
         chartsets.extend(load_gamemode_chartsets(gamemode))
@@ -91,6 +104,7 @@ def load_chartsets() -> list[ChartSet]:
 def load_chart(chart_metadata: ChartMetadata) -> list[Chart]:
     parsers = gamemode_parsers[chart_metadata.gamemode]
     for parser in parsers:
+        print(parser)
         if parser.is_parsable_chart(chart_metadata.path):
             return parser.parse_chart(chart_metadata)
     raise ChartUnparseableError(f'chart: {chart_metadata} cannot be parsed by any parser for gamemode {chart_metadata.gamemode}')

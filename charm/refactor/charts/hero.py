@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import itertools
-from typing import NotRequired, TypedDict
+from typing import NamedTuple
 from dataclasses import dataclass
 from enum import StrEnum
 from nindex.index import Index
@@ -9,7 +9,6 @@ from nindex.index import Index
 from charm.refactor.generic.chart import Chart, Event, Note
 from charm.refactor.generic.metadata import ChartMetadata
 from charm.lib.types import Seconds
-
 
 
 Ticks = int
@@ -21,8 +20,8 @@ class HeroNoteType(StrEnum):
 
 @dataclass
 class HeroNote(Note[HeroNoteType]):
-    tick: int | None = None
-    tick_length: Ticks | None = None
+    tick: int = None
+    tick_length: Ticks = None
 
 class HeroChord:
     """A data object to hold notes and have useful functions for manipulating and reading them."""
@@ -159,16 +158,44 @@ class RawBPMEvent:
     ticks: Ticks
     mbpm: int
 
-class IndexDict[T](TypedDict):
-    bpm: NotRequired[Index[T, BPMChangeTickEvent]]
-    time_sig: NotRequired[Index[T, TSEvent]]
-    section: NotRequired[Index[T, SectionEvent]]
-    beat: NotRequired[Index[T, BeatEvent]]
-    note: NotRequired[Index[T, Note]]
-    chord: NotRequired[Index[T, HeroChord]]
+class ChartNIndexCollection(NamedTuple):
+    bpm_time: Index[Seconds, BPMChangeTickEvent]
+    bpm_tick: Index[Ticks, BPMChangeTickEvent]
+    time_sig_time: Index[Seconds, TSEvent]
+    time_sig_tick: Index[Ticks, TSEvent]
+    section_time: Index[Seconds, SectionEvent]
+    section_tick: Index[Ticks, SectionEvent]
+    beat_time: Index[Seconds, BeatEvent]
+    note_time: Index[Seconds, HeroNote]
+    note_tick: Index[Ticks, HeroNote]
+    chord_time: Index[Seconds, HeroChord]
+    chort_tick: Index[Ticks, HeroChord]
 
 class HeroChart(Chart[HeroNote]):
 
     def __init__(self, metadata: ChartMetadata, notes: list[HeroNote], events: list[Event], bpm: float) -> None:
         super().__init__(metadata, notes, events, bpm)
-        self.chords: list[HeroChord]
+        self.chords: list[HeroChord] = []
+        self.indices: ChartNIndexCollection = None
+
+    def calculate_indices(self) -> None:
+        # !: This assumes that the events, notes, and chords are all time sorted :3
+        bpm = self.events_by_type(BPMChangeTickEvent)
+        ts = self.events_by_type(TSEvent)
+        section = self.events_by_type(SectionEvent)
+        beat = self.events_by_type(BeatEvent)
+        note = self.notes
+        chord = self.chords
+        self.indices = ChartNIndexCollection(
+            Index[Seconds, BPMChangeTickEvent](bpm, 'time'),
+            Index[Ticks, BPMChangeTickEvent](bpm, 'tick'),
+            Index[Seconds, TSEvent](ts, 'time'),
+            Index[Ticks, TSEvent](ts, 'tick'),
+            Index[Seconds, SectionEvent](section, 'time'),
+            Index[Ticks, SectionEvent](section, 'tick'),
+            Index[Seconds, BeatEvent](beat, 'time'),
+            Index[Seconds, HeroNote](note, 'time'),
+            Index[Ticks, HeroNote](note, 'tick'),
+            Index[Seconds, HeroChord](chord, 'time'),
+            Index[Ticks, HeroChord](chord, 'tick')
+        )

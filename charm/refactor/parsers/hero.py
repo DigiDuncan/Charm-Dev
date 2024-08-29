@@ -6,11 +6,27 @@ import itertools
 import logging
 from pathlib import Path
 import re
+from nindex import Index
 
 from charm.lib.errors import MetadataParseError, NoChartsError, NoMetadataError, ChartParseError, ChartPostReadParseError
 from charm.lib.types import Seconds
-from charm.refactor.charts.hero import HeroChart, HeroNote, HeroChord, Ticks, BPMChangeTickEvent, TextEvent, SoloEvent
-from charm.refactor.generic.chart import ChartMetadata, Event, Note
+from charm.lib.utils import nuke_smart_quotes
+from charm.refactor.charts.hero import (
+    HeroChart,
+    HeroNote,
+    HeroChord,
+    Ticks,
+    BPMChangeTickEvent,
+    TextEvent,
+    SoloEvent,
+    TSEvent,
+    SectionEvent,
+    RawLyricEvent,
+    StarpowerEvent,
+    BeatEvent
+)
+from charm.objects.lyric_animator import LyricEvent
+from charm.refactor.generic.chart import ChartMetadata
 from charm.refactor.generic.metadata import ChartSetMetadata
 from charm.refactor.generic.parser import Parser
 
@@ -41,7 +57,7 @@ def tick_to_seconds(current_tick: Ticks, sync_track: list[BPMChangeTickEvent], r
     """Takes a tick (and an associated sync_track,) and returns its position in seconds as a float."""
     if current_tick == 0:
         return 0
-    bpm_events = [b for b in sync_track if b.tick <= current_tick]
+    bpm_events = sorted(b for b in sync_track if b.tick <= current_tick)
     bpm_events.sort(key=lambda x: x.tick)
     last_bpm_event = bpm_events[-1]
     tick_delta = current_tick - last_bpm_event.tick
@@ -49,6 +65,43 @@ def tick_to_seconds(current_tick: Ticks, sync_track: list[BPMChangeTickEvent], r
     seconds = tick_delta / (resolution * bps)
     return seconds + offset + last_bpm_event.time
 
+def process_chart_lyric_events(chart: HeroChart) -> None:
+    """Takes a Song and generates a LyricAnimator-compatible list of LyricEvents."""
+    end_time = None
+    current_full_string = ""
+    unprocessed_lyrics: list[LyricEvent] = []
+    processsed_lyrics: list[LyricEvent] = []
+    for e in chart.events:
+        if isinstance(e, TextEvent):
+            if e.text == "phrase_start" or "phrase_end":
+                if e.text == "phrase_start":
+                    end_time = None
+                if unprocessed_lyrics:
+                    for unprocessed_lyric in unprocessed_lyrics:
+                        unprocessed_lyric.end_time = e.time if end_time is None else end_time
+                        unprocessed_lyric.text = current_full_string
+                    processsed_lyrics.extend(unprocessed_lyrics)
+                    unprocessed_lyrics = []
+                    current_full_string = ""
+        elif isinstance(e, RawLyricEvent):
+            text = e.text.strip()
+            for c in ["+", "#", "^", "*", "%", "$", "/"]:
+                text = text.replace(c, "")
+            if text.endswith("-"):
+                text = text.removesuffix("-")
+            elif text.endswith("="):
+                text = text.removesuffix("=") + "-"
+            else:
+                text = text + " "
+            text = text.replace("=", "-")
+            text = text.replace("§", "_")
+            text = re.sub("<.+>", "", text)  # TODO: Get formatting working for real.
+            current_full_string += text
+            unprocessed_lyrics.append(LyricEvent(e.time, 0, "", karaoke = current_full_string))
+    for p in processsed_lyrics:
+        p.text = nuke_smart_quotes(p.text)
+        p.karaoke = nuke_smart_quotes(p.karaoke)
+    chart.events.extend(processsed_lyrics)
 
 def create_chart_chords(chart: HeroChart) -> None:
     """
@@ -82,17 +135,14 @@ def calculate_chart_note_flags(chart: HeroChart) -> None:
                 n.type = "tap"
             elif forced:
                 n.type = "forced"
-        c = HeroChord([n for n in c.notes if n.lane not in [5, 6]])
-
-def calculate_chart_hopos(chart: HeroChart) -> None:
-    # TODO: requires the chart's NIndex
-    pass
+        c.notes = [n for n in c.notes if n.lane not in {5, 6}]
 
 def parse_chart_text_events(chart: HeroChart) -> None:
     current_solo = None
     for e in chart.events_by_type(TextEvent):
         if e.text == "solo":
             current_solo = e
+            chart.events.remove(e)
         elif e.text == "soloend":
             if current_solo is None:
                 raise ChartPostReadParseError("`solo_end` without `solo` event!")
@@ -100,12 +150,69 @@ def parse_chart_text_events(chart: HeroChart) -> None:
             length = e.time - current_solo.time
             chart.events.append(SoloEvent(current_solo.time, current_solo.tick, tick_length, length))
             current_solo = None
-        chart.events.remove(e)
+            chart.events.remove(e)
+
+def calculate_chart_hopos(chart: HeroChart, time_sig_ticks: Index[Ticks, TSEvent], resolution: float) -> None:
+            # This is basically ripped from Charm-Legacy.
+        # https://github.com/DigiDuncan/Charm-Legacy/blob/3187a8f2fa8c8876c2706b731bff6913dc0bad60/charm/song.py#L179
+        for last_chord, current_chord in zip(chart.chords[:-1], chart.chords[1:], strict = True):  # python zip pattern, wee
+            timesig = time_sig_ticks.lteq(last_chord.tick)
+            if timesig is None:
+                timesig = TSEvent(0, 0, 4, 4)
+
+            ticks_per_quarternote = resolution
+            ticks_per_wholenote = ticks_per_quarternote * 4
+            # Why can the time signature be X/0? What? What is that supposed to parse as? :amtired:
+            beats_per_wholenote = timesig.denominator if timesig.denominator != 0 else 0.5
+            ticks_per_beat = ticks_per_wholenote / beats_per_wholenote
+
+            chord_distance = current_chord.tick - last_chord.tick
+
+            hopo_cutoff = ticks_per_beat / (192 / 66)  # Why? Where does this number come from?
+                                                       # It's like 1/81th more than 1/3? Why?
+                                                       # This value was scraped from Moonscraper so I trust it.
+
+            if current_chord.frets == last_chord.frets:
+                # You can't have two HOPO chords of the same fretting.
+                if current_chord.type == "forced":
+                    current_chord.type = "normal"
+            elif chord_distance <= hopo_cutoff:
+                if current_chord.type == "forced":
+                    current_chord.type = "normal"
+                elif current_chord.type == "normal":
+                    current_chord.type = "hopo"
+            else:
+                if current_chord.type == "forced":
+                    current_chord.type = "hopo"
+
+def create_chart_beat_events(chart: HeroChart, time_sig_seconds: Index[Seconds, TSEvent]) -> None:
+    beats = []
+    current_time = 0
+    last_note = chart.notes[-1]
+    bpm_events = chart.events_by_type(BPMChangeTickEvent)
+    bpm_events.append(BPMChangeTickEvent(last_note.time, last_note.tick, bpm_events[-1].new_bpm))
+    current_id = 0
+    for current_bpm_event, next_bpm_event in itertools.pairwise(bpm_events):
+        current_beat = 0
+        ts: TSEvent = time_sig_seconds.lteq(current_time)
+        ts_num, ts_denom = ts.numerator, ts.denominator
+        seconds_per_beat = (1 / (current_bpm_event.new_bpm / 60)) / ts_denom
+        while current_time < next_bpm_event.time:
+            beats.append(BeatEvent(current_time, current_id, current_id, True if current_beat % ts_num == 0 else False))
+            current_time += seconds_per_beat
+            current_beat += 1
+    chart.events.extend(beats)
 
 class HeroParser(Parser[HeroChart]):
     @staticmethod
-    def is_parseable(path: Path) -> bool:
-        return path.suffix == ".chart"
+    def is_possible_chartset(path: Path) -> bool:
+        """Does this folder contain a parseable ChartSet?"""
+        return len(tuple(path.glob('./*.chart'))) > 0
+
+    @staticmethod
+    def is_parsable_chart(path: Path) -> bool:
+        """Is this chart parsable by this Parser"""
+        return path.name == 'notes.chart'
 
     @staticmethod
     def parse_chartset_metadata(path: Path) -> ChartSetMetadata:
@@ -113,9 +220,10 @@ class HeroParser(Parser[HeroChart]):
             raise NoMetadataError(path.stem)
         parser = configparser.ConfigParser()
         parser.read((path / "song.ini").absolute())
-        if "song" not in parser:
+        if "song" not in parser and "Song" not in parser:
             raise MetadataParseError("Song header not found in metadata!")
-        song = parser["song"]
+        song_header = "song" if "song" in parser else "Song"
+        song = parser[song_header]
         return ChartSetMetadata(
             path=path,
             title=song["name"],
@@ -129,7 +237,7 @@ class HeroParser(Parser[HeroChart]):
         )
 
     @staticmethod
-    def parse_metadata(path: Path) -> list[ChartMetadata]:
+    def parse_chart_metadata(path: Path) -> list[ChartMetadata]:
         metadatas = []
         if not (path / "notes.chart").exists():
             raise NoChartsError(path.stem)
@@ -142,7 +250,7 @@ class HeroParser(Parser[HeroChart]):
                 header = m.group(1)
                 if header in DIFF_INST_MAP:
                     diff, inst = DIFF_INST_MAP[header]
-                    metadatas.append(ChartMetadata("hero", diff, path, inst))
+                    metadatas.append(ChartMetadata("hero", diff, path / "notes.chart", inst))
 
         return metadatas
 
@@ -183,7 +291,10 @@ class HeroParser(Parser[HeroChart]):
 
             match current_header:
                 case "song":
-                    continue
+                    split = line.split('=')
+                    if split[0].strip() != 'Resolution':
+                        continue
+                    resolution = int(split[-1].strip())
                 case "SyncTrack":
                     if m := re.match(RE_A, line):
                         # ignore anchor events [only used for charting]
@@ -264,16 +375,18 @@ class HeroParser(Parser[HeroChart]):
                     # Ignoring non-SP events for now...
                     else:
                         raise ChartParseError(line_num, f"Non-chart event in {current_header}: {line!r}")
-
+        chart.notes.sort()
+        chart.events.sort()
+        process_chart_lyric_events(chart)
         create_chart_chords(chart)
         calculate_chart_note_flags(chart)
         parse_chart_text_events(chart)
+        # We will recalc this later, but we don't need to sort or index the others yet so do only what we must.
+        ts_events = chart.events_by_type(TSEvent)
+        calculate_chart_hopos(chart, Index[Ticks, TSEvent](ts_events, "tick"), resolution)
+        create_chart_beat_events(chart, Index[Seconds, TSEvent](ts_events, "time"))
+        # The chart events are messed up before now. There are a bunch of sorted events with unsorted events tacked on the end
+        # If this ever needs changing I am so sorry.
         chart.events.sort()
-        #TODO: NIndex time signature
-        calculate_chart_hopos(chart)
-        # TODO: calculate chart beats
-        # TODO: process chart lyrics
-
-        #TODO: NIndex rest of the chart properties
-
+        chart.calculate_indices()
         return [chart]

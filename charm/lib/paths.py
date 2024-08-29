@@ -18,12 +18,12 @@ scorespath = datadir / "scores.db"
 
 fnfpath = songspath / "fnf"
 fourkeypath = songspath / "4k"
-osupath = songspath / "osu"
-chpath = songspath / "ch"
+taikopath = songspath / "taiko"
+heropath = songspath / "hero"
 
 datadir.mkdir(parents=True, exist_ok=True)
 songspath.mkdir(parents=True, exist_ok=True)
 fnfpath.mkdir(parents=True, exist_ok=True)
 fourkeypath.mkdir(parents=True, exist_ok=True)
-osupath.mkdir(parents=True, exist_ok=True)
-chpath.mkdir(parents=True, exist_ok=True)
+taikopath.mkdir(parents=True, exist_ok=True)
+heropath.mkdir(parents=True, exist_ok=True)
