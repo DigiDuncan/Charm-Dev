@@ -1,13 +1,19 @@
 from typing import TypedDict
 
-from charm.refactor.generic.engine import Engine
+from charm.refactor.generic.engine import Engine, AutoEngine
 from charm.refactor.generic.display import Display
 
 # -- ENGINES --
 from charm.refactor.engines.fnf import FNFEngine
+from charm.refactor.engines.four_key import FourKeyEngine
+from charm.refactor.engines.hero import HeroEngine
+from charm.refactor.engines.taiko import TaikoEngine
 
 # -- DISPLAYS --
 from charm.refactor.displays.fnf import FNFDisplay
+from charm.refactor.displays.four_key import FourKeyDisplay
+from charm.refactor.displays.hero import HeroDisplay
+from charm.refactor.displays.taiko import TaikoDisplay
 
 
 # ?: Add other gamemode properties?
@@ -18,5 +24,8 @@ class GameModeDefinition(TypedDict):
 
 
 GAMEMODES: dict[str, GameModeDefinition] = {
-    'fnf': GameModeDefinition(engines=FNFEngine, display=FNFDisplay)
+    'fnf': GameModeDefinition(engines=AutoEngine, display=FNFDisplay),
+    '4k': GameModeDefinition(engines=AutoEngine, display=FourKeyDisplay),
+    'hero': GameModeDefinition(engines=AutoEngine, display=HeroDisplay),
+    'taiko': GameModeDefinition(engines=AutoEngine, display=TaikoDisplay)
 }

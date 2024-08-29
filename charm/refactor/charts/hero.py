@@ -109,9 +109,6 @@ class HeroChord:
 class TickEvent(Event):
     tick: int
 
-    def __lt__(self, other: TickEvent) -> bool:
-        return self.tick < other.tick
-
 @dataclass
 class TSEvent(TickEvent):
     numerator: int
