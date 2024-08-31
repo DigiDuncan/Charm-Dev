@@ -1,0 +1,15 @@
+version = 0
+
+[metadata]
+title = "Unknown Title"
+artist = "Unknown Artist"
+album = "Unknown Album"
+length = 60.0
+genre = "Unknown Genre"
+year = 2024
+difficulty = 5
+charter = "DigiDuncan"
+album_art = "album.png"
+preview_start = 0
+preview_end = 60.0
+source = "Charm"

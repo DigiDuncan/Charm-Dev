@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import dataclasses
 from pathlib import Path
 
 from charm.lib.types import Seconds
@@ -45,6 +46,7 @@ class ChartSetMetadata:
     preview_start: Seconds | None = None
     preview_end: Seconds | None = None
     source: str | None = None
+    album_art: str | None = None
     hash: str | None = None
     gamemode: str | None = None
 
@@ -59,20 +61,8 @@ class ChartSetMetadata:
         return self.__repr__()
 
     def update(self, other: ChartSetMetadata) -> ChartSetMetadata:
-        #! Hard codded so much lorde
-        return ChartSetMetadata(
-            other.path if other.path is not None else self.path,
-            other.title if other.title is not None else self.title,
-            other.artist if other.artist is not None else self.artist,
-            other.album if other.album is not None else self.album,
-            other.length if other.length is not None else self.length,
-            other.genre if other.genre is not None else self.genre,
-            other.year if other.year is not None else self.year,
-            other.difficulty if other.difficulty is not None else self.difficulty,
-            other.charter if other.charter is not None else self.charter,
-            other.preview_start if other.preview_start is not None else self.preview_start,
-            other.preview_end if other.preview_end is not None else self.preview_end,
-            other.source if other.source is not None else self.source,
-            other.hash if other.hash is not None else self.hash,
-            other.gamemode if other.gamemode is not None else self.gamemode
-        )
+        k = {}
+        for field in dataclasses.fields(self):
+            o = getattr(other, field.name)
+            k[field.name] = o if o is not None else getattr(self, field.name)
+        return ChartSetMetadata(**k)

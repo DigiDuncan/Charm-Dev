@@ -22,12 +22,14 @@
 #   It may make sense to just tell players that they have to do this;
 #   it's not that hard, and it means we don't have to suddenly support
 #   "many-chartsets, one-folder" before MVP.
+import logging
+import tomllib
 from typing import NamedTuple, Any
 from collections.abc import Callable, Generator
 from pathlib import Path
 
 from charm.lib.paths import songspath
-from charm.lib.errors import ChartUnparseableError, TODOError, MissingGamemodeError
+from charm.lib.errors import ChartUnparseableError, MissingGamemodeError
 
 from charm.refactor.generic.chartset import ChartSet, ChartSetMetadata
 from charm.refactor.generic.chart import Chart, ChartMetadata
@@ -41,7 +43,11 @@ from charm.refactor.parsers.sm import SMParser
 from charm.refactor.parsers.hero import HeroParser
 from charm.refactor.parsers.taiko import TaikoParser
 
+logger = logging.getLogger("charm")
+
 ParserChooser = Callable[[Path], bool]
+CHARM_TOML_METADATA_FIELDS = ["title", "artist", "album", "length", "genre", "year", "difficulty",
+                              "charter", "preview_start", "preview_end", "source"]
 
 class TypePair(NamedTuple):
     gamemode: str
@@ -56,7 +62,13 @@ gamemode_parsers: dict[str, tuple[type[Parser], ...]] = {
 }
 
 def read_charm_metadata(metadata_src: Path) -> ChartSetMetadata:
-    raise TODOError('Digi or Dragon')
+    with open(metadata_src, "rb", encoding = "utf-8") as f:
+        t = tomllib.load(f)
+        # Assuming there should be a TOML table called "metadata", pretend it's there but empty if missing
+        d = t.get("metadata", {})
+        m = {k: v for k, v in d.items() if k in CHARM_TOML_METADATA_FIELDS}
+        m["path"] = metadata_src.parent
+        return ChartSetMetadata(**m)
 
 def load_path_chartsets(parsers: tuple[type[Parser], ...], path: Path, metadata: ChartSetMetadata) -> Generator[ChartSet, Any, Any]:
     directory_charm_data = None if not (path / 'charm.toml').exists() else read_charm_metadata(path / 'charm.toml')
@@ -103,7 +115,7 @@ def load_chartsets() -> list[ChartSet]:
 def load_chart(chart_metadata: ChartMetadata) -> list[Chart]:
     parsers = gamemode_parsers[chart_metadata.gamemode]
     for parser in parsers:
-        print(parser)
+        logger.debug(f"Parsing with {parser}")
         if parser.is_parsable_chart(chart_metadata.path):
             return parser.parse_chart(chart_metadata)
     raise ChartUnparseableError(f'chart: {chart_metadata} cannot be parsed by any parser for gamemode {chart_metadata.gamemode}')
