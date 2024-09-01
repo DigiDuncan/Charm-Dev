@@ -61,6 +61,7 @@ class FNFParser(Parser[FNFChart]):
                         return v < 2
                     except ValueError:
                         return True
+
     @staticmethod
     def parse_chartset_metadata(path: Path) -> ChartSetMetadata:
         return ChartSetMetadata(path, path.name.replace('-', ' ').title())
