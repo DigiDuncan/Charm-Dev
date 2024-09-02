@@ -23,7 +23,7 @@ class TaikoSongTestView(DigiView):
     def __init__(self, back: DigiView):
         super().__init__(fade_in=1, back=back)
         self.name = "Freedom Dive"
-        self.song_path = paths.songspath / "osu" / self.name
+        self.song_path = paths.songspath / "taiko" / self.name
         self.tracks: TrackCollection = None
         self.highway: TaikoHighway = None
         self.engine: FourKeyEngine = None

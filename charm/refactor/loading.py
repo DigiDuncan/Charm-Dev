@@ -17,7 +17,7 @@
 #   FNF makes things harder again because there are also 'erect' versions
 #   of some charts which currently means two chartsets from one folder.
 #   This breaks a core assumption of Charm.
-#   * UPDATE:
+# * UPDATE:
 #   I have un-interwined Erect remixes from their sibling songs in our test data, for now.
 #   It may make sense to just tell players that they have to do this;
 #   it's not that hard, and it means we don't have to suddenly support

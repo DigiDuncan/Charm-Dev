@@ -8,8 +8,7 @@ from charm.refactor.parsers._osu import OsuHitCircle, OsuSlider, OsuSpinner, Raw
 class TaikoParser(Parser[TaikoChart]):
     @staticmethod
     def is_possible_chartset(path: Path) -> bool:
-        valid_files = list(path.glob(f'./{path.stem}*.osu'))
-        return len(valid_files) > 0
+        return len(tuple(path.glob('./*.osu'))) > 0
 
     @staticmethod
     def is_parsable_chart(path: Path) -> bool:
@@ -17,15 +16,19 @@ class TaikoParser(Parser[TaikoChart]):
 
     @staticmethod
     def parse_chartset_metadata(path: Path) -> ChartSetMetadata:
-        first_chart = next(iter(path.glob(f'./{path.stem}*.osu')))  # ?: I'm a tad worried this won't work out in the end.
+        first_chart = next(iter(path.glob('./*.osu')))
         raw_chart = RawOsuChart.parse(first_chart)
         metadata = raw_chart.metadata
         return ChartSetMetadata(path, metadata.title, metadata.artist, charter = metadata.charter, source = metadata.source)
 
     @staticmethod
     def parse_chart_metadata(path: Path) -> list[ChartMetadata]:
-        raw_chart = RawOsuChart.parse(path)
-        return [ChartMetadata("taiko", raw_chart.metadata.difficulty, path)]
+        charts = path.glob('./*.osu')
+        metadatas = []
+        for chart in charts:
+            raw_chart = RawOsuChart.parse(chart)
+            metadatas.append(ChartMetadata("taiko", raw_chart.metadata.difficulty, chart))
+        return metadatas
 
     @staticmethod
     def parse_chart(chart_data: ChartMetadata) -> list[TaikoChart]:
