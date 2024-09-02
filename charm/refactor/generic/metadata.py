@@ -31,7 +31,7 @@ class ChartMetadata:
         return self.__repr__()
 
 
-@dataclass
+@dataclass(eq=True)
 class ChartSetMetadata:
     """For menu sorting/display."""
     path: Path
@@ -47,7 +47,7 @@ class ChartSetMetadata:
     preview_end: Seconds | None = None
     source: str | None = None
     album_art: str | None = None
-    hash: str | None = None
+    hash: str | None = None  # ! Unused will hopefully become the cross device hash
     gamemode: str | None = None
 
     @property
@@ -59,6 +59,9 @@ class ChartSetMetadata:
 
     def __str__(self) -> str:
         return self.__repr__()
+
+    def __hash__(self) -> int:
+        return hash(str(self.path))
 
     def update(self, other: ChartSetMetadata) -> ChartSetMetadata:
         k = {}

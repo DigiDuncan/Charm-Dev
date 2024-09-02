@@ -62,7 +62,7 @@ gamemode_parsers: dict[str, tuple[type[Parser], ...]] = {
 }
 
 def read_charm_metadata(metadata_src: Path) -> ChartSetMetadata:
-    with open(metadata_src, "rb", encoding = "utf-8") as f:
+    with open(metadata_src, "rb") as f:
         t = tomllib.load(f)
         # Assuming there should be a TOML table called "metadata", pretend it's there but empty if missing
         d = t.get("metadata", {})
@@ -115,7 +115,7 @@ def load_chartsets() -> list[ChartSet]:
 def load_chart(chart_metadata: ChartMetadata) -> list[Chart]:
     parsers = gamemode_parsers[chart_metadata.gamemode]
     for parser in parsers:
-        logger.debug(f"Parsing with {parser}")
         if parser.is_parsable_chart(chart_metadata.path):
+            logger.debug(f"Parsing with {parser}")
             return parser.parse_chart(chart_metadata)
     raise ChartUnparseableError(f'chart: {chart_metadata} cannot be parsed by any parser for gamemode {chart_metadata.gamemode}')

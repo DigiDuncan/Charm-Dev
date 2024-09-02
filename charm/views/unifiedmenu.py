@@ -6,7 +6,7 @@ from charm.lib.keymap import keymap
 
 # -- UI --
 from charm.lib.mini_mint import Animator, Element
-from charm.ui.menu_list import SongMenuListElement
+from charm.ui.menu_list import UnifiedChartsetMenuElement
 
 # -- TEMP --
 from charm.refactor.loading import load_chartsets, load_chart
@@ -20,9 +20,9 @@ class UnifiedSongMenuView(DigiView):
         super().__init__(fade_in=1, back=back)
         self.animator: Animator = Animator()
         Element.Animator = self.animator
-        self.element = SongMenuListElement(right_fraction=0.6)
+        self.element = UnifiedChartsetMenuElement(right_fraction=0.6)
         self.element.bounds = self.window.rect
-        self.element.set_songs(load_chartsets())
+        self.element.set_chartsets(load_chartsets())
 
     @shows_errors
     def setup(self) -> None:
@@ -44,8 +44,8 @@ class UnifiedSongMenuView(DigiView):
         if self.element.bounds.point_in_bounds((x, y)):
             for child in self.element.element_list.children:
                 if child.bounds.point_in_bounds((x, y)) and child.song is not None:
-                    self.element.select_song(child.song)
-                    self.element.highlighted_song_idx = self.element.songs.index(child.song)
+                    self.element.select_set(child.song)
+                    self.element.highlighted_set_idx = self.element.chartsets.index(child.song)
 
     @shows_errors
     @disable_when_focus_lost(keyboard=True)
@@ -58,9 +58,9 @@ class UnifiedSongMenuView(DigiView):
         elif keymap.navup.pressed:
             self.element.up_scroll()
         elif keymap.start.pressed:
-            if self.element.current_selected_song is not None:
-                chartset = self.element.current_selected_song
-                chartdata = self.element.current_selected_song.charts[self.element.highlighted_chart_idx]
+            if self.element.current_selected_chartset is not None:
+                chartset = self.element.current_selected_chartset
+                chartdata = self.element.current_selected_chartset.charts[self.element.highlighted_chart_idx]
                 charts = load_chart(chartdata)
 
                 game_view = GameView(back=self)

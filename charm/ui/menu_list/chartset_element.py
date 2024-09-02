@@ -5,10 +5,10 @@ from arcade import Rect, LRBT
 from charm.lib.charm import CharmColors
 from charm.lib.mini_mint import Element, VerticalElementList, Padding, padded_sub_rect, Animation
 from charm.lib.anim import ease_expoout, ease_quadinout
+from charm.refactor.generic import ChartSet, ChartSetMetadata, Chart, ChartMetadata
 
 # -- TEMP --
 from arcade import draw
-from charm.ui.menu_list.song_stub import Song, Chart, Metadata
 from arcade import Text
 
 
@@ -18,10 +18,10 @@ class ChartElement(Element[Element]):
         super().__init__(min_size=Vec2(0.0, min_height))
         self._padding: Padding = padding
         self._sub_region: Rect = padded_sub_rect(self.bounds, self._padding)
-        self._chart: Chart = None
+        self._chart: ChartMetadata = None
         self._text_obj: Text = None
 
-    def set_chart(self, new_chart: Chart):
+    def set_chart(self, new_chart: ChartMetadata):
         self._chart = new_chart
         self.invalidate_layout()
 
@@ -54,18 +54,18 @@ class ChartElement(Element[Element]):
 
 
 
-class SongElement(Element[Element]):
-    # displays info about a specific song and are spawned by the SongListElement directly
+class ChartsetDisplayElement(Element[Element]):
+    # displays info about a specific chartset and are spawned by the ChartsetElement directly
 
     def __init__(self, padding: Padding = Padding(0, 0, 5, 5)):
         super().__init__()
         self._padding: Padding = padding
         self._sub_region: Rect = padded_sub_rect(self.bounds, self._padding)
-        self._song_metadata: Metadata = None
+        self._metadata: ChartSetMetadata = None
         self._text_obj: Text = None
 
-    def set_metadata(self, new_data: Metadata):
-        self._song_metadata = new_data
+    def set_metadata(self, new_data: ChartSetMetadata) -> None:
+        self._metadata = new_data
         self.invalidate_layout()
 
     @property
@@ -85,10 +85,10 @@ class SongElement(Element[Element]):
         if self._text_obj is None:
             self._text_obj = Text('', 0.0, 0.0, (0, 0, 0, 255), anchor_x='left', anchor_y='center', font_name='bananaslip plus', font_size = 36)
 
-        if self._song_metadata is None:
+        if self._metadata is None:
             return
 
-        self._text_obj.text = f'{self._song_metadata.title}' if self._sub_region.height > 15.0 else ''
+        self._text_obj.text = f'{self._metadata.title}' if self._sub_region.height > 15.0 else ''
         self._text_obj.x = self._sub_region.left + 5  # TODO: Make this a variable
         self._text_obj.y = self._sub_region.center_y
 
@@ -98,15 +98,15 @@ class SongElement(Element[Element]):
         self._text_obj.draw()
 
 
-class SongListElement(Element[SongElement | VerticalElementList]):
+class ChartsetElement(Element[ChartsetDisplayElement | VerticalElementList]):
     # Holds a SongElement and a sublist of ChartElements and manages how and when the sublist appears
-    def __init__(self, min_height: float, song: Song = None):
+    def __init__(self, min_height: float, chartset: ChartSet = None):
         super().__init__(Vec2(0.0, min_height))
-        self._song: Song = None
+        self._chartset: ChartSet = None
         self._min_height: float = min_height
 
-        self._song_element: SongElement = SongElement()
-        self.add_child(self._song_element)
+        self._chartset_element: ChartsetDisplayElement = ChartsetDisplayElement()
+        self.add_child(self._chartset_element)
 
         self._list_element: VerticalElementList[ChartElement] = VerticalElementList(strict=True)
         self.add_child(self._list_element)
@@ -117,19 +117,20 @@ class SongListElement(Element[SongElement | VerticalElementList]):
 
         self.visible = False
 
-        self.song = song
+        self.chartset = chartset
+
 
     def grow(self, fraction: float, elapsed: float) -> None:
-        new_size = Vec2(0.0, 145.0 + fraction * (45.0 * (len(self._song.charts) - 1)))
+        new_size = Vec2(0.0, 145.0 + fraction * (45.0 * (len(self._chartset.charts) - 1)))
         # TODO: make this better v
         if elapsed >= 0.3:
-            new_size = Vec2(0.0, 145.0 + (45.0 * (len(self._song.charts) - 1)))
+            new_size = Vec2(0.0, 145.0 + (45.0 * (len(self._chartset.charts) - 1)))
         self.minimum_size = new_size
 
         self.invalidate_layout()
 
     def shrink(self, fraction: float, elapsed: float):
-        new_size = Vec2(0.0, 100.0 + (1 - fraction) * (45.0 * len(self._song.charts)))
+        new_size = Vec2(0.0, 100.0 + (1 - fraction) * (45.0 * len(self._chartset.charts)))
         if elapsed >= 0.3:
             new_size = Vec2(0.0, 100.0)
         self.minimum_size = new_size
@@ -141,7 +142,7 @@ class SongListElement(Element[SongElement | VerticalElementList]):
         self.invalidate_layout()
 
     def select(self) -> None:
-        if self._selected or self._song is None or not self._song.charts:
+        if self._selected or self._chartset is None or not self._chartset.charts:
             return
 
         self._selected = True
@@ -153,7 +154,7 @@ class SongListElement(Element[SongElement | VerticalElementList]):
         self._list_element.empty()
         self._list_element.visible = True
 
-        for chart in self._song.charts:
+        for chart in self._chartset.charts:
             elem = ChartElement()
             elem.set_chart(chart)
             self._list_element.add_child(elem)
@@ -178,27 +179,27 @@ class SongListElement(Element[SongElement | VerticalElementList]):
             return
         self.select()
 
-    def get_chart_element_from_idx(self, idx: int):
-        # TODO
-        pass
+    def get_chart_element_from_idx(self, idx: int) -> ChartElement:
+        return self._list_element.children[idx]
 
     @property
-    def song(self) -> Song:
-        return self._song
+    def chartset(self) -> ChartSet:
+        return self._chartset
 
-    @song.setter
-    def song(self, song: Song):
-        if song == self._song:
+    @chartset.setter
+    def chartset(self, new_set: ChartSet) -> None:
+        if new_set == self._chartset:
             return
 
-        self.visible = song is not None
-        self._song = song
-        self._song_element.set_metadata(song.metadata)
+        self.visible = new_set is not None
+        self._chartset = new_set
+        if new_set is not None:
+            self._chartset_element.set_metadata(new_set.metadata)
         self.invalidate_layout()
 
     def _calc_layout(self) -> None:
         l, r, b, t = self.bounds.lrbt
-        self._song_element.bounds = LRBT(l, r, t - self._min_height, t)
+        self._chartset_element.bounds = LRBT(l, r, t - self._min_height, t)
 
         if (self._anim is None and not self._selected) or self.bounds.height < self._min_height + 40.0:
             self._list_element.empty()
