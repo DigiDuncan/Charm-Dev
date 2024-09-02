@@ -8,8 +8,7 @@ from charm.lib.anim import ease_expoout, ease_quadinout
 from charm.refactor.generic import ChartSet, ChartSetMetadata, Chart, ChartMetadata
 
 # -- TEMP --
-from arcade import draw
-from arcade import Text
+from arcade import draw, Text
 
 
 class ChartElement(Element[Element]):
