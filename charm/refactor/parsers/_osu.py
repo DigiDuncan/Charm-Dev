@@ -387,7 +387,7 @@ class RawOsuChart:
                         case "Tags":
                             chart.metadata.tags = m.group(2).split(" ")
                         case _:
-                            logger.debug(f"Unknown Metadata metadata '{m.group(2)}' (Line {line_num}).")
+                            logger.debug(f"Unknown Metadata metadata '{m.group(1)}' (Line {line_num}).")
             elif current_header == "Difficulty":
                 if m := re.match(RE_KV_TYPE_1, line):
                     match m.group(1):
@@ -410,7 +410,7 @@ class RawOsuChart:
             # ## HERE BEGINS REGEX HELL ## #
             elif current_header == "TimingPoints":
                 if m := re.match(RE_TIMING_POINT, line):
-                    uninherited = bool(int(m.group(7)))
+                    uninherited = bool(int(m.group(7))) or not chart.timing_points
                     time = int(float(m.group(1))) / 1000
                     beat_length = float(m.group(2))
                     meter = int(m.group(3))
