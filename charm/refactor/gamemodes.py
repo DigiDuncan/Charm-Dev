@@ -25,7 +25,7 @@ class GameModeDefinition(TypedDict):
 
 GAMEMODES: dict[str, GameModeDefinition] = {
     'fnf': GameModeDefinition(engines=FNFEngine, display=FNFDisplay), # TODO: Doesn't work with Auto Engine
-    '4k': GameModeDefinition(engines=AutoEngine, display=FourKeyDisplay),
+    '4k': GameModeDefinition(engines=FourKeyEngine, display=FourKeyDisplay),
     'hero': GameModeDefinition(engines=AutoEngine, display=HeroDisplay),
     'taiko': GameModeDefinition(engines=AutoEngine, display=TaikoDisplay)
 }

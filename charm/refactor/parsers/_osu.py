@@ -410,6 +410,7 @@ class RawOsuChart:
             # ## HERE BEGINS REGEX HELL ## #
             elif current_header == "TimingPoints":
                 if m := re.match(RE_TIMING_POINT, line):
+                    # The first timing point has to be uninherited by nature.
                     uninherited = bool(int(m.group(7))) or not chart.timing_points
                     time = int(float(m.group(1))) / 1000
                     beat_length = float(m.group(2))

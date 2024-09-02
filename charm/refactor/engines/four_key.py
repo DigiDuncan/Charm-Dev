@@ -161,7 +161,8 @@ class FourKeyEngine(Engine[FourKeyChart]):
             self.last_note_missed = True
 
     def score_sustains(self) -> None:
-        raise NotImplementedError
+        pass
+        # raise NotImplementedError
 
     def generate_results(self) -> Results:
         return Results(
