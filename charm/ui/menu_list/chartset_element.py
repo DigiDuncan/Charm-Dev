@@ -119,7 +119,6 @@ class ChartsetElement(Element[ChartsetDisplayElement | VerticalElementList]):
 
         self.chartset = chartset
 
-
     def grow(self, fraction: float, elapsed: float) -> None:
         new_size = Vec2(0.0, 145.0 + fraction * (45.0 * (len(self._chartset.charts) - 1)))
         # TODO: make this better v

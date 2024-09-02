@@ -41,6 +41,7 @@ class UnifiedSongMenuView(DigiView):
     def on_mouse_press(self, x: int, y: int, button: int, modifiers: int) -> bool | None:
         # TODO: Move this to the actual song element list, and also allow for using the mouse to
         # highlight/select a song or chart.
+        return
         if self.element.bounds.point_in_bounds((x, y)):
             for child in self.element.element_list.children:
                 if child.bounds.point_in_bounds((x, y)) and child.song is not None:
@@ -70,6 +71,12 @@ class UnifiedSongMenuView(DigiView):
                 self.window.show_view(game_view)
             else:
                 self.element.select_currently_highlighted()
+
+    def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int) -> bool | None:
+        if scroll_y > 0:
+            self.element.up_scroll(int(abs(scroll_y)))
+        elif scroll_y < 0:
+            self.element.down_scroll(int(abs(scroll_y)))
 
     @shows_errors
     def on_update(self, delta_time: float) -> None:
