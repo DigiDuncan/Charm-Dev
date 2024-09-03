@@ -203,8 +203,12 @@ class ChartsetElement(Element[ChartsetDisplayElement | VerticalElementList]):
         l, r, b, t = self.bounds.lrbt
         self._chartset_element.bounds = LRBT(l, r, t - self._min_height, t)
 
-        if (self._anim is None and not self._selected) or self.bounds.height < self._min_height + 40.0:
+        if (self._anim is None and not self._selected):
             self._list_element.empty()
+
+        if self.bounds.height < self._min_height + 40.0:
             self._list_element.visible = False
-        self._list_element.visible = True
+        else:
+            self._list_element.visible = True
+
         self._list_element.bounds = LRBT(l, r, b, t - self._min_height)
