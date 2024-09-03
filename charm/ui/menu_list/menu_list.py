@@ -79,7 +79,7 @@ class UnifiedChartsetMenuElement(Element[VerticalElementList]):
 
         # TODO: THIS MAKES THE ASSUMPTION THE SONG INDEX IS ALWAYS VALID
         # If this breaks sowwy :3
-        start_idx = int(self.set_scroll)
+        start_idx = max(0, int(self.set_scroll))
 
         shown_sets = self.shown_sets
         next_songs = {}
@@ -142,7 +142,8 @@ class UnifiedChartsetMenuElement(Element[VerticalElementList]):
         self._place_chartset_elements()
 
         # Idx scroll
-        idx_scroll = (self.set_scroll % 1.0) * self.min_element_size
+        scroll_size = self.min_element_size if not self.element_list.children else self.element_list.children[half_count].minimum_size.y
+        idx_scroll = (max(0.0, self.set_scroll) % 1.0) * scroll_size
 
         # Sub scroll
         if self.current_selected_chartset and self.current_selected_chartset.metadata in self.shown_sets and self.shown_sets[self.current_selected_chartset.metadata]._list_element.children:
@@ -153,6 +154,7 @@ class UnifiedChartsetMenuElement(Element[VerticalElementList]):
         else:
             self.chart_scroll_animation.target_x = 0.0
         sub_scroll = self.chart_scroll
+        # print(sub_scroll)
 
         # The menu list works with the children's minimum size to figure out the needed offset
         centering_offset = sum(child.minimum_size.y for child in self.element_list.children[:half_count]) - (half_count * self.min_element_size)
@@ -258,17 +260,26 @@ class UnifiedChartsetMenuElement(Element[VerticalElementList]):
         self._up_scroll(count=count)
 
     def _display(self) -> None:
+        # If the highlighed chartset has an element on screen draw a small marker
         if self.chartsets[self.highlighted_set_idx].metadata in self.shown_sets:
             element = self.shown_sets[self.chartsets[self.highlighted_set_idx].metadata]
             draw_rect_filled(XYWH(element._chartset_element.bounds.right + 15, element._chartset_element.bounds.center_y, 12, 12), (255, 151, 135, 255))
 
-        if self.current_selected_chartset is None or self.current_selected_chartset.metadata not in self.shown_sets:
+        # If we haven't selected a chartset then we are done
+        if self.current_selected_chartset is None:
             return
 
+        # Detail the currently selected chartsets information
+        draw_text(f"Chartset Metadata {self.current_selected_chartset.metadata}", self.bounds.right - 5.0, self.bounds.y, anchor_x='right', color=(0, 0, 0, 255))
+
+        # If the current chart set ins't on screen we are done
+        if self.current_selected_chartset.metadata not in self.shown_sets:
+            return
+
+        # try to mark the currently highlighted chart within the chartset.
+        # For the first frame after being selected the sub elements may not exsist so we catch that error and ignore it.
         try:
             element = self.shown_sets[self.current_selected_chartset.metadata].get_chart_element_from_idx(self.highlighted_chart_idx)
             draw_rect_filled(XYWH(element.bounds.right + 15, element.bounds.center_y, 8, 8), (255, 151, 135, 255))
-
-            draw_text(f"Chartset Metadata {self.current_selected_chartset.metadata}", self.bounds.right - 5.0, self.bounds.y, anchor_x='right', color=(0, 0, 0, 255))
         except ValueError:
             pass

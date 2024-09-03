@@ -2,8 +2,9 @@
 # The sublist can manage its on info, but it should be to update the styling of the song element and chart element.
 from pyglet.math import Vec2
 from arcade import Rect, LRBT
+from arcade.clock import GLOBAL_CLOCK
 from charm.lib.charm import CharmColors
-from charm.lib.mini_mint import Element, VerticalElementList, Padding, padded_sub_rect, Animation
+from charm.lib.mini_mint import Element, VerticalElementList, Padding, padded_sub_rect, Animation, ProceduralAnimation
 from charm.lib.anim import ease_expoout, ease_quadinout
 from charm.refactor.generic import ChartSet, ChartSetMetadata, Chart, ChartMetadata
 
@@ -96,8 +97,9 @@ class ChartsetDisplayElement(Element[Element]):
         draw.draw_rect_filled(self._sub_region, CharmColors.FADED_PURPLE)
         self._text_obj.draw()
 
-
-CHARTSET_ELEMENT_OPENING_SPEED = 0.5
+CHARTSET_ELEMENT_FREQUENCY = 3.0
+CHARTSET_ELEMENT_DAMPENING = 1.2
+CHARTSET_ELEMENT_RESPONSE = 1.0
 
 class ChartsetElement(Element[ChartsetDisplayElement | VerticalElementList]):
     # Holds a SongElement and a sublist of ChartElements and manages how and when the sublist appears
@@ -106,39 +108,24 @@ class ChartsetElement(Element[ChartsetDisplayElement | VerticalElementList]):
         self._chartset: ChartSet = None
         self._min_height: float = min_height
 
-        self._chartset_element: ChartsetDisplayElement = ChartsetDisplayElement()
-        self.add_child(self._chartset_element)
-
         self._list_element: VerticalElementList[ChartElement] = VerticalElementList(strict=True)
         self.add_child(self._list_element)
 
+        self._chartset_element: ChartsetDisplayElement = ChartsetDisplayElement()
+        self.add_child(self._chartset_element)
+
+        self._animation: ProceduralAnimation = None
+
         self._selected: bool = False
-        self._decay: float = 16.0
-        self._anim: Animation = None
-
         self.visible = False
-
         self.chartset = chartset
 
-    def grow(self, fraction: float, elapsed: float) -> None:
-        new_size = Vec2(0.0, 145.0 + fraction * (45.0 * (len(self._chartset.charts) - 1)))
-        # TODO: make this better v
-        if elapsed >= 0.3:
-            new_size = Vec2(0.0, 145.0 + (45.0 * (len(self._chartset.charts) - 1)))
-        self.minimum_size = new_size
-
+    def grow(self, new_size: float, size_change: float):
+        self.minimum_size = Vec2(0.0, new_size)
         self.invalidate_layout()
 
-    def shrink(self, fraction: float, elapsed: float):
-        new_size = Vec2(0.0, 100.0 + (1 - fraction) * (45.0 * len(self._chartset.charts)))
-        if elapsed >= CHARTSET_ELEMENT_OPENING_SPEED:
-            new_size = Vec2(0.0, 100.0)
-        self.minimum_size = new_size
-
-        self.invalidate_layout()
-
-    def cleanup(self, animiation: Animation):
-        self._anim = None
+    def cleanup(self, animation: ProceduralAnimation):
+        self._animation = None
         self.invalidate_layout()
 
     def select(self) -> None:
@@ -147,9 +134,8 @@ class ChartsetElement(Element[ChartsetDisplayElement | VerticalElementList]):
 
         self._selected = True
 
-        if self._anim is not None:
-            Element.Animator.kill_animation(self._anim)
-            self._anim = None
+        if self._animation is not None:
+            Element.Animator.kill_procedural_animation(self._animation)
 
         self._list_element.empty()
         self._list_element.visible = True
@@ -159,7 +145,14 @@ class ChartsetElement(Element[ChartsetDisplayElement | VerticalElementList]):
             elem.set_chart(chart)
             self._list_element.add_child(elem)
 
-        self._anim = self.start_animation(self.grow, CHARTSET_ELEMENT_OPENING_SPEED, function=ease_expoout, cleanup=self.cleanup)
+        target_height = self._min_height + 45.0 * len(self.chartset.charts)
+        self._animation = Element.Animator.start_procedural_animation(
+            self.grow,
+            target_height, 0.0,
+            target_height, self.bounds.height, 0.0,
+            CHARTSET_ELEMENT_FREQUENCY, CHARTSET_ELEMENT_DAMPENING, CHARTSET_ELEMENT_RESPONSE,
+            GLOBAL_CLOCK.time, True, self.cleanup
+        )
 
     def deselect(self) -> None:
         if not self._selected:
@@ -167,11 +160,17 @@ class ChartsetElement(Element[ChartsetDisplayElement | VerticalElementList]):
 
         self._selected = False
 
-        if self._anim is not None:
-            Element.Animator.kill_animation(self._anim)
-            self._anim = None
+        if self._animation is not None:
+            Element.Animator.kill_procedural_animation(self._animation)
 
-        self._anim = self.start_animation(self.shrink, CHARTSET_ELEMENT_OPENING_SPEED, function=ease_expoout, cleanup=self.cleanup)
+        target_height = self._min_height
+        self._animation = Element.Animator.start_procedural_animation(
+            self.grow,
+            target_height, 0.0,
+            target_height, self.bounds.height, 0.0,
+            CHARTSET_ELEMENT_FREQUENCY, CHARTSET_ELEMENT_DAMPENING, CHARTSET_ELEMENT_RESPONSE,
+            GLOBAL_CLOCK.time, True, self.cleanup
+        )
 
     def toggle(self) -> None:
         if self._selected:
@@ -203,10 +202,10 @@ class ChartsetElement(Element[ChartsetDisplayElement | VerticalElementList]):
         l, r, b, t = self.bounds.lrbt
         self._chartset_element.bounds = LRBT(l, r, t - self._min_height, t)
 
-        if (self._anim is None and not self._selected):
-            self._list_element.empty()
+        if not self._selected and self._animation is None:
+                self._list_element.empty()
 
-        if self.bounds.height < self._min_height + 40.0:
+        if self.bounds.height < self._min_height + 25.0:
             self._list_element.visible = False
         else:
             self._list_element.visible = True

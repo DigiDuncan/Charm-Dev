@@ -107,7 +107,7 @@ class Animator:
             ndx = animator.dy
             animation.callback(nx, ndx)
 
-            if nx == animation.target_x and ndx == animation.target_dx and animation.settling:
+            if abs(nx - animation.target_x) < 0.05 and abs(ndx - animation.target_dx) < 0.05 and animation.settling:
                 if animation.cleanup is not None:
                     animation.cleanup(animation)
                 self.active_procedural_animators.pop(animation)
