@@ -12,6 +12,8 @@ from arcade.math import clamp
 from arcade.clock import GLOBAL_CLOCK, GLOBAL_FIXED_CLOCK
 
 from charm.lib.anim import EasingFunction, ease_linear, perc, smerp
+from charm.lib.procedural_animators import ProceduralAnimator, SecondOrderAnimatorBase, Animatable
+from charm.lib.pool import Pool
 
 DRAGON_PEACH = color.Color(255, 140, 120)
 
@@ -32,7 +34,7 @@ def padded_sub_rect(rect: Rect, padding: Padding) -> Rect:
 # An alias for Vec2 which generally denotes a vector within the range 0.0 -> 1.0
 Anchor = Vec2
 
-@dataclass
+@dataclass(eq=True)
 class Animation:
     callback: Callable[[float, float]]
     duration: float
@@ -44,13 +46,24 @@ class Animation:
     function: EasingFunction = ease_linear
     cleanup: Callable[[Animation]] | None = None
 
-@dataclass
-class ProceduralAnimation:
+@dataclass(eq=True)
+class ProceduralAnimation[A: Animatable]:
     callback: Callable[[float, float]]
-    start_time: float
-    elapsed: float
-    driver: Callable[[float, float, float, float]]
-    target: float
+    target_x: A
+    target_dx: A
+    initial_x: A
+    initial_y: A
+    initial_dy: A
+    frequency: float = 1.0
+    damping: float = 0.75
+    response: float = 1.0
+    start_time: float = 0.0
+    elapsed: float = 0.0
+    settling: bool = False  # Whether the procedural animator will stop once the target_x and target_dx have been reached.
+    cleanup: Callable[[ProceduralAnimation]] | None = None
+
+    def __hash__(self) -> int:
+        return hash((self.callback, self.start_time, self.frequency, self.response, self.damping, self.settling))
 
 class Animator:
     """
@@ -60,10 +73,13 @@ class Animator:
 
     def __init__(self) -> None:
         self.animations: list[Animation] = []
+        self.procedural_animations: list[ProceduralAnimation] = []
+        self.active_procedural_animators: dict[ProceduralAnimation, SecondOrderAnimatorBase] = {}
 
     def update(self, delta_time: float) -> None:
+        time = GLOBAL_CLOCK.time
         for animation in self.animations[:]:
-            if GLOBAL_CLOCK.time < animation.start_time:
+            if time < animation.start_time:
                 continue
 
             elapsed = animation.elapsed = GLOBAL_CLOCK.time_since(animation.start_time)
@@ -75,6 +91,27 @@ class Animator:
                 self.animations.remove(animation)
                 if animation.cleanup is not None:
                     animation.cleanup(animation)
+
+        for animation in self.procedural_animations[:]:
+            if time < animation.start_time:
+                continue
+
+            elapsed = animation.elapsed = GLOBAL_CLOCK.time_since(animation.start_time)
+
+            if animation not in self.active_procedural_animators:
+                animator = ProceduralAnimator(animation.frequency, animation.damping, animation.response, animation.initial_x, animation.initial_y, animation.initial_dy)
+                self.active_procedural_animators[animation] = animator
+                continue
+            animator = self.active_procedural_animators[animation]
+            nx = animator.update(delta_time, animation.target_x)
+            ndx = animator.dy
+            animation.callback(nx, ndx)
+
+            if nx == animation.target_x and ndx == animation.target_dx and animation.settling:
+                if animation.cleanup is not None:
+                    animation.cleanup(animation)
+                self.active_procedural_animators.pop(animation)
+                self.procedural_animations.remove(animation)
 
     def fixed_update(self, delta_time: float) -> None:
         pass
@@ -93,12 +130,16 @@ class Animator:
         if do_cleanup and animation.cleanup is not None:
             animation.cleanup(animation)
 
-
     def start_animation(self, callback: Callable[[float, float]], duration: float, *,
                         elapsed: float = 0.0, delay: float = 0.0, inset: float = 0.0, cutoff: float = 0.0,
                         function: EasingFunction = ease_linear, cleanup: Callable[[Animation]] | None = None) -> Animation:
         new_animation = Animation(callback, duration, GLOBAL_CLOCK.time + delay, elapsed, inset, delay, cutoff, function, cleanup)
         self.animations.append(new_animation)
+        return new_animation
+
+    def start_procedural_animation[A: Animatable](self, callback: Callable[[float, float]], target_x: A,target_dx: A, initial_x: A, initial_y: A, initial_dy: A, frequency: float = 1.0, damping: float = 0.75, response: float = 1.0, start_time: float = 0.0) -> ProceduralAnimation:
+        new_animation = ProceduralAnimation(callback, target_x, target_dx, initial_x, initial_y, initial_dy, frequency, response, damping, start_time)
+        self.procedural_animations.append(new_animation)
         return new_animation
 
     # TODO: add fixed update logic

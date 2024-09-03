@@ -7,7 +7,7 @@ from charm.ui.menu_list.chartset_element import ChartsetElement
 from charm.refactor.generic import ChartSet, Chart, ChartMetadata, ChartSetMetadata
 
 # -- TEMP --
-from arcade import draw_text
+from arcade import draw_text, draw_rect_filled, XYWH
 
 
 class UnifiedChartsetMenuElement(Element[VerticalElementList]):
@@ -22,12 +22,25 @@ class UnifiedChartsetMenuElement(Element[VerticalElementList]):
 
         self.chartsets: list[ChartSet] = []
 
-        self.highlighted_set_idx: int = 0
+        self._highlighted_set_idx: int = 0
         self.set_scroll: float = 0.0
-        self.highlighted_chart_idx: int = 0
+        self._highlighted_chart_idx: int = 0
         self.chart_scroll: float = 0.0
         self.current_selected_chartset: ChartSet = None
         self.current_selected_chart: ChartMetadata = None
+
+        self.set_scroll_animation = Element.Animator.start_procedural_animation(
+            self.update_set_scroll,
+            self.set_scroll, 0.0,
+            self.highlighted_set_idx, self.highlighted_set_idx, 0.0,
+            1.0, 0.75, 1.0
+        )
+        self.chart_scroll_animation = Element.Animator.start_procedural_animation(
+            self.update_chart_scroll,
+            self.chart_scroll, 0.0,
+            self.highlighted_chart_idx, self.highlighted_chart_idx, 0.0,
+            1.0, 0.75, 1.0
+        )
 
         self.shown_sets: dict[ChartSetMetadata, ChartsetElement] = {}
 
@@ -100,10 +113,15 @@ class UnifiedChartsetMenuElement(Element[VerticalElementList]):
 
         self.shown_sets = next_songs
 
-    def _calc_layout(self) -> None:
-        self.set_scroll = self.highlighted_set_idx
-        self.chart_scroll =  self.highlighted_chart_idx
+    def update_set_scroll(self, new_scroll, delta_scroll):
+        self.set_scroll = new_scroll
+        self.invalidate_layout()
 
+    def update_chart_scroll(self, new_scroll, delta_scroll):
+        self.chart_scroll = new_scroll
+        self.invalidate_layout()
+
+    def _calc_layout(self) -> None:
         v = self.bounds.height
         vh = v / 2.0
 
@@ -117,15 +135,39 @@ class UnifiedChartsetMenuElement(Element[VerticalElementList]):
         self._place_chartset_elements()
 
         # Idx scroll
+        idx_scroll = (self.set_scroll % 1.0) * self.min_element_size
 
         # Sub scroll
-        # TODO: The 45.0 here is hard coded which is gross af. so is that 20.0 initial offset, both should depend on the size of the chart elements.
-        sub_scroll = (self.current_selected_chartset is not None and (self.min_element_size / 2 + 20.0)) + 45.0 * self.chart_scroll
+        if self.current_selected_chartset and self.current_selected_chartset.metadata in self.shown_sets and self.shown_sets[self.current_selected_chartset.metadata]._list_element.children:
+            element = self.shown_sets[self.current_selected_chartset.metadata]
+            core = element._chartset_element.bounds.y
+            target = element._list_element.children[self._highlighted_chart_idx].bounds.y
+            self.chart_scroll_animation.target_x = (core - target)
+        else:
+            self.chart_scroll_animation.target_x = 0.0
+        sub_scroll = self.chart_scroll
 
         # The menu list works with the children's minimum size to figure out the needed offset
         centering_offset = sum(child.minimum_size.y for child in self.element_list.children[:half_count]) - (half_count * self.min_element_size)
 
-        self.element_list.bounds = LRBT(lef, rig, bot + centering_offset + sub_scroll, top + centering_offset + sub_scroll)
+        self.element_list.bounds = LRBT(lef, rig, bot + centering_offset + sub_scroll + idx_scroll, top + centering_offset + sub_scroll + idx_scroll)
+
+    @property
+    def highlighted_set_idx(self):
+        return self._highlighted_set_idx
+
+    @highlighted_set_idx.setter
+    def highlighted_set_idx(self, new_idx: int):
+        self._highlighted_set_idx = new_idx
+        self.set_scroll_animation.target_x = new_idx
+
+    @property
+    def highlighted_chart_idx(self):
+        return self._highlighted_chart_idx
+
+    @highlighted_chart_idx.setter
+    def highlighted_chart_idx(self, new_idx: int):
+        self._highlighted_chart_idx = new_idx
 
     def select_set(self, chartset: ChartSet):
         if self.current_selected_chartset is not None and self.current_selected_chartset.metadata in self.shown_sets:
@@ -209,7 +251,17 @@ class UnifiedChartsetMenuElement(Element[VerticalElementList]):
         self._up_scroll(count=count)
 
     def _display(self) -> None:
-        if self.current_selected_chartset is None:
+        if self.chartsets[self.highlighted_set_idx].metadata in self.shown_sets:
+            element = self.shown_sets[self.chartsets[self.highlighted_set_idx].metadata]
+            draw_rect_filled(XYWH(element._chartset_element.bounds.right + 15, element._chartset_element.bounds.center_y, 12, 12), (255, 151, 135, 255))
+
+        if self.current_selected_chartset is None or self.current_selected_chartset.metadata not in self.shown_sets:
             return
 
-        draw_text(f"Chartset Metadata {self.current_selected_chartset.metadata}", self.bounds.right - 5.0, self.bounds.y, anchor_x='right', color=(0, 0, 0, 255))
+        try:
+            element = self.shown_sets[self.current_selected_chartset.metadata].get_chart_element_from_idx(self.highlighted_chart_idx)
+            draw_rect_filled(XYWH(element.bounds.right + 15, element.bounds.center_y, 8, 8), (255, 151, 135, 255))
+
+            draw_text(f"Chartset Metadata {self.current_selected_chartset.metadata}", self.bounds.right - 5.0, self.bounds.y, anchor_x='right', color=(0, 0, 0, 255))
+        except ValueError:
+            pass

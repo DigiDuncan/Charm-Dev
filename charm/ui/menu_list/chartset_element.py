@@ -97,6 +97,8 @@ class ChartsetDisplayElement(Element[Element]):
         self._text_obj.draw()
 
 
+CHARTSET_ELEMENT_OPENING_SPEED = 0.5
+
 class ChartsetElement(Element[ChartsetDisplayElement | VerticalElementList]):
     # Holds a SongElement and a sublist of ChartElements and manages how and when the sublist appears
     def __init__(self, min_height: float, chartset: ChartSet = None):
@@ -129,7 +131,7 @@ class ChartsetElement(Element[ChartsetDisplayElement | VerticalElementList]):
 
     def shrink(self, fraction: float, elapsed: float):
         new_size = Vec2(0.0, 100.0 + (1 - fraction) * (45.0 * len(self._chartset.charts)))
-        if elapsed >= 0.3:
+        if elapsed >= CHARTSET_ELEMENT_OPENING_SPEED:
             new_size = Vec2(0.0, 100.0)
         self.minimum_size = new_size
 
@@ -157,7 +159,7 @@ class ChartsetElement(Element[ChartsetDisplayElement | VerticalElementList]):
             elem.set_chart(chart)
             self._list_element.add_child(elem)
 
-        self._anim = self.start_animation(self.grow, 0.3, function=ease_expoout, cleanup=self.cleanup)
+        self._anim = self.start_animation(self.grow, CHARTSET_ELEMENT_OPENING_SPEED, function=ease_expoout, cleanup=self.cleanup)
 
     def deselect(self) -> None:
         if not self._selected:
@@ -169,7 +171,7 @@ class ChartsetElement(Element[ChartsetDisplayElement | VerticalElementList]):
             Element.Animator.kill_animation(self._anim)
             self._anim = None
 
-        self._anim = self.start_animation(self.shrink, 0.3, function=ease_expoout, cleanup=self.cleanup)
+        self._anim = self.start_animation(self.shrink, CHARTSET_ELEMENT_OPENING_SPEED, function=ease_expoout, cleanup=self.cleanup)
 
     def toggle(self) -> None:
         if self._selected:
@@ -178,6 +180,8 @@ class ChartsetElement(Element[ChartsetDisplayElement | VerticalElementList]):
         self.select()
 
     def get_chart_element_from_idx(self, idx: int) -> ChartElement:
+        if not self._list_element.children or idx >= len(self._list_element.children):
+            raise ValueError(f"Invalid Index {idx} for element {self}")
         return self._list_element.children[idx]
 
     @property
