@@ -1,4 +1,5 @@
 from importlib.resources import files
+import sys
 
 import PIL, PIL.Image, PIL.ImageDraw  # noqa: E401
 import arcade
@@ -7,6 +8,7 @@ from arcade import Sprite, Texture, color as colors
 import charm.data.images.errors
 from charm.lib.utils import img_from_path
 
+MAX_REPEATS = 50
 
 class CharmError(Exception):
     _icon_textures: dict[str, Texture] = {}
@@ -15,7 +17,7 @@ class CharmError(Exception):
         self.title = title
         self.message = message
         self.icon_name = icon
-        self.repeat = repeat
+        self._repeat = repeat
         super().__init__(message)
         try:
             window = arcade.get_window()
@@ -31,6 +33,16 @@ class CharmError(Exception):
         self._icon = CharmError._icon_textures[icon]
         self.sprite = self.get_sprite()
         self.sprite.position = (window.width / 2, window.height / 2)
+
+    @property
+    def repeat(self) -> int:
+        return self._repeat
+
+    @repeat.setter
+    def repeat(self, i: int) -> None:
+        self._repeat = i
+        if i > MAX_REPEATS:
+            arcade.get_window().close()
 
     def redraw(self) -> None:
         window = arcade.get_window()
@@ -66,9 +78,11 @@ class TestError(CharmError):
     def __init__(self, message: str):
         super().__init__(title="Test", message=message)
 
+
 class TODOError(CharmError):
     def __init__(self, person: str):
         super().__init__(title="TODO", message=f"{person} has to finish implementing/fixing this!", icon = "help")
+
 
 class NoChartsError(CharmError):
     def __init__(self, song_name: str):
@@ -79,9 +93,11 @@ class NoMetadataError(CharmError):
     def __init__(self, song_name: str):
         super().__init__(title="No metadata found!", message=f"No metadata found for song '{song_name}'")
 
+
 class MissingGamemodeError(CharmError):
     def __init__(self, *, gamemode: str):
         super().__init__(title="Gamemode not found!", message=f"{gamemode} has failed to initialise", icon="error")
+
 
 class ChartParseError(CharmError):
     def __init__(self, line_num: int, message: str):
@@ -92,9 +108,11 @@ class MetadataParseError(CharmError):
     def __init__(self, message: str):
         super().__init__(title="Metadata parsing error!", message=message)
 
+
 class ChartUnparseableError(CharmError):
     def __init__(self, message: str):
         super().__init__(title="Chart is unparsable", message=message, icon="error")
+
 
 class ChartPostReadParseError(CharmError):
     def __init__(self, message: str):
