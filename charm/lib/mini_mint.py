@@ -130,6 +130,22 @@ class Animator:
         if do_cleanup and animation.cleanup is not None:
             animation.cleanup(animation)
 
+    def kill_procedural_animation(self, animation: ProceduralAnimation, *, do_final_callback: bool = True, do_cleanup: bool = True):
+        if animation not in self.procedural_animations:
+            return
+        self.procedural_animations.remove(animation)
+
+        if animation not in self.active_procedural_animators:
+            return
+
+        animator = self.active_procedural_animators[animation]
+        if do_final_callback:
+            animation.callback(animator.y, animator.dy)
+
+        if do_cleanup and animation.cleanup is not None:
+            animation.cleanup(animation)
+        self.active_procedural_animators.pop(animation)
+
     def start_animation(self, callback: Callable[[float, float]], duration: float, *,
                         elapsed: float = 0.0, delay: float = 0.0, inset: float = 0.0, cutoff: float = 0.0,
                         function: EasingFunction = ease_linear, cleanup: Callable[[Animation]] | None = None) -> Animation:
@@ -137,8 +153,8 @@ class Animator:
         self.animations.append(new_animation)
         return new_animation
 
-    def start_procedural_animation[A: Animatable](self, callback: Callable[[float, float]], target_x: A,target_dx: A, initial_x: A, initial_y: A, initial_dy: A, frequency: float = 1.0, damping: float = 0.75, response: float = 1.0, start_time: float = 0.0) -> ProceduralAnimation:
-        new_animation = ProceduralAnimation(callback, target_x, target_dx, initial_x, initial_y, initial_dy, frequency, response, damping, start_time)
+    def start_procedural_animation[A: Animatable](self, callback: Callable[[float, float]], target_x: A,target_dx: A, initial_x: A, initial_y: A, initial_dy: A, frequency: float = 1.0, damping: float = 0.75, response: float = 1.0, start_time: float = 0.0, settling: bool = False, cleanup: Callable[[ProceduralAnimation]] | None = None) -> ProceduralAnimation:
+        new_animation = ProceduralAnimation(callback, target_x, target_dx, initial_x, initial_y, initial_dy, frequency, response, damping, start_time, 0.0, settling, cleanup)
         self.procedural_animations.append(new_animation)
         return new_animation
 

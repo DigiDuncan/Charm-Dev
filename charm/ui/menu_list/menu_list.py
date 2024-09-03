@@ -9,6 +9,13 @@ from charm.refactor.generic import ChartSet, Chart, ChartMetadata, ChartSetMetad
 # -- TEMP --
 from arcade import draw_text, draw_rect_filled, XYWH
 
+# -- PROCEDURAL ANIMATION CONSTANTS --
+CHARTSET_FREQUENCY = 2.0
+CHARTSET_DAMPING = 0.75
+CHARTSET_RESPONSE = 0.8
+CHART_FREQUENCY = 2.0
+CHART_DAMPING = 0.75
+CHART_RESPONSE = 0.8
 
 class UnifiedChartsetMenuElement(Element[VerticalElementList]):
 
@@ -33,13 +40,13 @@ class UnifiedChartsetMenuElement(Element[VerticalElementList]):
             self.update_set_scroll,
             self.set_scroll, 0.0,
             self.highlighted_set_idx, self.highlighted_set_idx, 0.0,
-            1.0, 0.75, 1.0
+            CHARTSET_FREQUENCY, CHARTSET_DAMPING, CHARTSET_RESPONSE
         )
         self.chart_scroll_animation = Element.Animator.start_procedural_animation(
             self.update_chart_scroll,
             self.chart_scroll, 0.0,
             self.highlighted_chart_idx, self.highlighted_chart_idx, 0.0,
-            1.0, 0.75, 1.0
+            CHART_FREQUENCY, CHART_DAMPING, CHART_RESPONSE
         )
 
         self.shown_sets: dict[ChartSetMetadata, ChartsetElement] = {}
