@@ -19,7 +19,7 @@ from charm.lib.keymap import keymap
 from charm.lib.paths import songspath
 from charm.objects.gif import GIF
 from charm.objects.songmenu import SongMenu
-from charm.views.fourkeysong import FourKeySongView
+from charm.unused.fourkeysong import FourKeySongView
 
 logger = logging.getLogger("charm")
 
