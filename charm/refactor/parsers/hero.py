@@ -398,6 +398,7 @@ class HeroParser(Parser[HeroChart]):
         create_chart_beat_events(chart, Index[Seconds, TSEvent](ts_events, "time"))
         # The chart events are messed up before now. There are a bunch of sorted events with unsorted events tacked on the end
         # If this ever needs changing I am so sorry.
+        chart.events.extend(HeroParser.calculate_countdowns(chart))
         chart.events.sort()
         chart.calculate_indices()
         return [chart]

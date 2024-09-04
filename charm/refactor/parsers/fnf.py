@@ -238,6 +238,7 @@ class FNFParser(Parser[FNFChart]):
         for c in charts:
             c.events = events
             c.notes.sort()
+            c.events.extend(FNFParser.calculate_countdowns(c))
             c.events.sort()
             logger.debug(f"Parsed chart {c.metadata.instrument} with {len(c.notes)} notes.")
 

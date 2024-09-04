@@ -112,6 +112,21 @@ class BPMChangeEvent(Event):
         return self.__repr__()
 
 
+@dataclass
+class CountdownEvent(Event):
+    """Event indicating a pause in the chart.
+
+    * `length: float`: the length of this countdown.
+    * `time: float`: event start in seconds."""
+    length: float
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}@{self.time:.3f} length:{self.length}>"
+
+    def __str__(self) -> str:
+        return self.__repr__()
+
+
 class Chart[NT: Note]:
     """A collection of notes and events, with helpful metadata."""
     def __init__(self, metadata: ChartMetadata, notes: list[NT], events: list[Event]) -> None:

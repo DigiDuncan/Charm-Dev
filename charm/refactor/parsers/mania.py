@@ -45,4 +45,7 @@ class ManiaParser(Parser[FourKeyChart]):
             elif isinstance(hit_object, OsuHold):
                 chart.notes.append(FourKeyNote(chart, hit_object.time, hit_object.get_lane(4), length = hit_object.length))
 
+        chart.events.extend(Parser.calculate_countdowns(chart))
+        chart.events.sort()
+
         return [chart]

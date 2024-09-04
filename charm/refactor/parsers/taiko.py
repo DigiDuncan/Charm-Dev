@@ -45,4 +45,8 @@ class TaikoParser(Parser[TaikoChart]):
                 chart.notes.append(TaikoNote(chart, hit_object.time, 0, hit_object.length, TaikoNoteType.DRUMROLL, large = hit_object.taiko_large))
             elif isinstance(hit_object, OsuSpinner):
                 chart.notes.append(TaikoNote(chart, hit_object.time, 0, hit_object.length, TaikoNoteType.DENDEN, large = hit_object.taiko_large))
+
+        chart.events.extend(Parser.calculate_countdowns(chart))
+        chart.events.sort()
+
         return [chart]

@@ -1,8 +1,12 @@
+import itertools
 from pathlib import Path
-from charm.refactor.generic.chart import Chart
+from charm.refactor.generic.chart import Chart, CountdownEvent, Note
 from charm.refactor.generic.metadata import ChartMetadata, ChartSetMetadata
 
-class Parser[T: Chart]:
+# should be configurable
+COUNTDOWN_GAP = 5.0
+
+class Parser[T: Chart[Note]]:
     @staticmethod
     def is_possible_chartset(path: Path) -> bool:
         """Does this folder contain a parseable ChartSet?"""
@@ -34,3 +38,12 @@ class Parser[T: Chart]:
         ! Because of FNF this method may not return only one chart.
         """
         raise NotImplementedError
+
+    @staticmethod
+    def calculate_countdowns(chart: T) -> list[CountdownEvent]:
+        countdowns = []
+        notes = [Note(chart, -3, 0, 0), *chart.notes]
+        for note1, note2 in itertools.pairwise(notes):
+            if note2.time - note1.time >= COUNTDOWN_GAP:
+                countdowns.append(CountdownEvent(note1.time, note2.time - note1.time))
+        return countdowns

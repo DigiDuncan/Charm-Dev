@@ -220,7 +220,7 @@ class Spotlight:
 
 class Countdown:
     def __init__(self, start_time: float, duration: float,
-                 x: float, y: float, width: float, height: float = 50.0,
+                 x: float, y: float, width: float, height: float = 25.0,
                  color: Color = arcade.color.WHITE,
                  units_per_second: float = 1.0, current_time: float = 0.0) -> None:
         self.start_time = start_time
@@ -228,25 +228,38 @@ class Countdown:
         self.units_per_second = units_per_second
         self.current_time = current_time
 
-        self.x = x - (width / 2)  # center align this thing, please!
+        self.time_remaining = self.duration - (self.current_time - self.start_time)
+
+        self.x = x - (width / 2)
         self.y = y
         self.width = width
         self.height = height
 
         self.color = color
 
-        self.text = Text("0", self.x, self.y + self.height + 5, self.color, 48, self.width, "center", "bananaslip plus", anchor_x = "center")
+        self.text = Text("0", self.x, self.y + self.height + 10,
+                         arcade.color.BLACK, 48,
+                         int(self.width),
+                         align = "center",
+                         font_name = "bananaslip plus",
+                         anchor_x = "center")
 
     def update(self, song_time: float) -> None:
         self.current_time = song_time
-        time_remaining = self.duration - (self.current_time - self.start_time)
-        self.text.text = str(time_remaining)
+        self.time_remaining = self.duration - (self.current_time - self.start_time)
+        self.text.text = f"{int(self.time_remaining)}" if self.time_remaining > 1 else "Ready!"
 
     def draw(self) -> None:
         progress = map_range(self.current_time, self.start_time,
                              self.start_time + self.duration,
-                             self.x, self.x + self.width)
+                             self.width, 0)
         rect = LBWH(self.x, self.y, progress, self.height)
 
-        arcade.draw_rect_filled(rect, self.color)
-        self.text.draw()
+        if self.time_remaining > 1:
+            arcade.draw_rect_filled(rect, self.color)
+            self.text.draw()
+        elif self.time_remaining > 0:
+            alpha = int(ease_linear(255, 0, perc(1, 0, self.time_remaining)))
+            arcade.draw_rect_filled(rect, self.color.replace(a = alpha))
+            self.text.color = self.text.color.replace(a = alpha)
+            self.text.draw()

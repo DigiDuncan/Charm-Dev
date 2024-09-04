@@ -4,12 +4,14 @@ from typing import TYPE_CHECKING
 
 from arcade import get_window, color, load_texture, draw_sprite, Text, Sprite, Texture
 from arcade.types import Color, Point
+from nindex.index import Index
 
 from charm.lib.types import Seconds
 
 from charm.objects.lyric_animator import LyricAnimator, LyricEvent
-from charm.lib.displayables import Spotlight, HPBar, Timer
+from charm.lib.displayables import Countdown, Spotlight, HPBar, Timer
 
+from charm.refactor.generic.chart import CountdownEvent
 from charm.refactor.generic.engine import Engine, AutoEngine
 from charm.refactor.charts.four_key import FourKeyChart
 from charm.refactor.generic.display import Display
@@ -97,6 +99,12 @@ class FNFDisplay(Display[FNFEngine, FourKeyChart]):
         self.timer.center_x = self._win.center_x
         self.timer.center_y = 20
 
+        if countdowns := self.player_chart.events_by_type(CountdownEvent):
+            self.countdowns = Index(countdowns, "time")
+            self.countdown = Countdown(countdowns[0].time, countdowns[0].length, self._player_highway.x + self._player_highway.w / 2, self._win.center_y, self._player_highway.w / 2)
+        else:
+            self.countdown: Countdown = None
+
     def pause(self) -> None:
         if not self.engine.has_died:
             self._overlay_text.text = "PAUSE"
@@ -134,6 +142,9 @@ class FNFDisplay(Display[FNFEngine, FourKeyChart]):
         if self.lyric_animator:
             self.lyric_animator.update(song_time)
 
+        if self.countdown:
+            self.countdown.update(song_time)
+
     def draw(self) -> None:
         if self.show_text:
             self._score_text.draw()
@@ -154,6 +165,9 @@ class FNFDisplay(Display[FNFEngine, FourKeyChart]):
 
         if self.lyric_animator:
             self.lyric_animator.draw()
+
+        if self.countdown:
+            self.countdown.draw()
 
         draw_sprite(self._judgement_sprite)
 
