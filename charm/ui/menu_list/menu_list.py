@@ -83,14 +83,14 @@ class UnifiedChartsetMenuElement(Element[VerticalElementList]):
 
         half_count = int(vh // self.min_element_size) + self.element_padding
 
-        start_idx = max(0, int(self.set_scroll))
+        start_idx = int(self.set_scroll)
 
         shown_sets = self.shown_sets
         next_songs = {}
 
         charset_count = len(self.chartsets)
 
-        chartset = None if start_idx < charset_count else self.chartsets[start_idx]
+        chartset = None if charset_count <= start_idx else self.chartsets[start_idx]
         if chartset is None:
             center = ChartsetElement(self.min_element_size, chartset)
         else:
