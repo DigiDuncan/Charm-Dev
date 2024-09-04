@@ -47,7 +47,7 @@ class CharmError(Exception):
     def redraw(self) -> None:
         window = arcade.get_window()
         self.sprite = self.get_sprite()
-        self.sprite.position = (window.width / 2, window.height / 2)
+        self.sprite.position = window.center
 
     def get_sprite(self) -> Sprite:
         window = arcade.get_window()

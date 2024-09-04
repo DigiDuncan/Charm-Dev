@@ -706,7 +706,7 @@ class HeroHighway(Highway):
 
         # Generators are great for ease, but it means we can't really 'scrub' backwards through the song
         # So this is a patch job at best.
-        self._note_generator: Generator[Note, Any, None] = (note for note in self.notes)
+        self._note_generator: Generator[HeroNote, Any, None] = (note for note in self.notes)
 
         self._note_pool: SpritePool[NoteSprite] = SpritePool([NoteSprite(x=-1000.0, y=-1000.0) for _ in range(1000)])
         # avoid orthographic culling TODO: make source program more accessable
@@ -759,13 +759,10 @@ class HeroHighway(Highway):
             )
             self.strikeline.append(sprite)
 
-        self._last_strikeline_note: list[HeroNote] = [None] * 5
-
         logger.debug(f"Generated highway for chart {chart.instrument}.")
 
         # TODO: Replace with better pixel_offset calculation or remove entirely
         self.last_update_time = 0
-        self._pixel_offset = 0
 
     def update(self, song_time: float) -> None:
         super().update(song_time)
@@ -821,11 +818,6 @@ class HeroHighway(Highway):
         diff_y = p[1] - old_pos[1]
         self._pos = p
         self.strikeline.move(diff_x, diff_y)
-
-    @property
-    def pixel_offset(self) -> int:
-        # TODO: Replace with better pixel_offset calculation
-        return self._pixel_offset
 
     def draw(self) -> None:
         self.window.ctx.blend_func = self.window.ctx.BLEND_DEFAULT
