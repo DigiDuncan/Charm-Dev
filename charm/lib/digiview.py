@@ -52,10 +52,8 @@ def disable_when_focus_lost[**P](*, keyboard: bool = False, mouse: bool = False)
         @functools.wraps(fn)
         def wrapped(*args: P.args, **kwargs: P.kwargs) -> None:
             if mouse and imgui.get_io().want_capture_mouse:
-                logger.info("mouse disabled")
                 return
             if keyboard and imgui.get_io().want_capture_keyboard:
-                logger.info("keyboard disabled")
                 return
             fn(*args, **kwargs)
         return wrapped
