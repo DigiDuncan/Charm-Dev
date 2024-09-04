@@ -46,7 +46,7 @@ class DigitalKeyEvent[K](EngineEvent):
         return self.__repr__()
 
 
-class Engine[CT: Chart]:
+class Engine[CT: Chart[Note]]:
     def __init__(self, chart: CT, judgements: list[Judgement] | None = None, offset: Seconds = 0):
         """The class that processes user inputs into score according to a Chart."""
         self.chart = chart
@@ -68,6 +68,9 @@ class Engine[CT: Chart]:
         # Accuracy
         self.max_notes = len(self.chart.notes)
         self.weighted_hit_notes: float = 0
+
+        # Display
+        self.last_note_hit: Note | None = None
 
         self.keystate: tuple[bool, ...] = NotImplemented
 
@@ -184,6 +187,7 @@ class AutoEngine(Engine):
                 note.hit_time = note.time
                 self.score_note(note)
                 self.current_notes.remove(note)
+                self.last_note_hit = note
 
     def score_note(self, note: Note) -> None:
         # Ignore notes we haven't done anything with yet

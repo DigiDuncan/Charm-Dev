@@ -111,6 +111,7 @@ class FNFEngine(Engine[FourKeyChart]):
                         except ValueError:
                             logger.info("Sustain pickup failed!")  # TODO: I don't know why this happens still, but it does. Often.
                         self.current_events.remove(event)
+                        self.last_note_hit = note
                         break
 
         # Make sure we can't go below min_hp or above max_hp

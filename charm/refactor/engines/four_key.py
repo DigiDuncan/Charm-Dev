@@ -110,6 +110,7 @@ class FourKeyEngine(Engine[FourKeyChart]):
                         except ValueError:
                             logger.info("Note removal failed!")
                         self.current_events.remove(event)
+                        self.last_note_hit = note
                         break
 
         for sustain in self.active_sustains:
