@@ -42,8 +42,8 @@ class Parser[T: Chart[Note]]:
     @staticmethod
     def calculate_countdowns(chart: T) -> list[CountdownEvent]:
         countdowns = []
-        notes = [Note(chart, -3, 0, 0), *chart.notes]
-        for note1, note2 in itertools.pairwise(notes):
+        for note1, note2 in itertools.pairwise(chart.notes):
             if note2.time - note1.time >= COUNTDOWN_GAP:
                 countdowns.append(CountdownEvent(note1.time, note2.time - note1.time))
+        countdowns = [CountdownEvent(-3, chart.notes[0].time + 3), *countdowns]
         return countdowns
