@@ -9,8 +9,8 @@ from charm.lib.keymap import keymap
 from charm.objects.mainmenu import MainMenu, MainMenuItem
 # from charm.views.cycletest import CycleTestView
 # from charm.views.emojitest import EmojiTestView
-from charm.views.fourkeysongmenu import FourKeySongMenuView
-from charm.views.herotest import HeroTestView
+# from charm.views.fourkeysongmenu import FourKeySongMenuView
+# from charm.views.herotest import HeroTestView
 # from charm.views.newmenu import NewMenuView
 from charm.views.spritetest import SpriteTestView
 from charm.views.taikosongtest import TaikoSongTestView
@@ -28,11 +28,11 @@ class MainMenuView(DigiView):
             MainMenuItem("Play", "songs", UnifiedSongMenuView(back=self)),
             # MainMenuItem("Playlists", "playlists", None),
             MainMenuItem("Options", "options", OptionsView(back=self)),
-            MainMenuItem("4K Songs", "songs", FourKeySongMenuView(back=self)),
+            # MainMenuItem("4K Songs", "songs", FourKeySongMenuView(back=self)),
             # MainMenuItem("Emoji Test", "test", EmojiTestView(back=self)),
             # MainMenuItem("Menu Test", "test", NewMenuView(back=self)),
             # MainMenuItem("Cycler Test", "test", CycleTestView(back=self)),
-            MainMenuItem("Hero Test", "test", HeroTestView(back=self)),
+            # MainMenuItem("Hero Test", "test", HeroTestView(back=self)),
             MainMenuItem("Taiko Test", "test", TaikoSongTestView(back=self)),
             MainMenuItem("Sprite Test", "test", SpriteTestView(back=self)),
             MainMenuItem("Scott Test", "test", VisualizerView(back=self)),
