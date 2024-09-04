@@ -64,7 +64,11 @@ class FNFParser(Parser[FNFChart]):
 
     @staticmethod
     def parse_chartset_metadata(path: Path) -> ChartSetMetadata:
-        return ChartSetMetadata(path, path.name.replace('-', ' ').title())
+        name = path.name
+        if name.endswith("-"):
+            name = name[:-1] + " Minus"
+        name = name.replace('-', ' ').title()
+        return ChartSetMetadata(path, name)
 
     @staticmethod
     def parse_chart_metadata(path: Path) -> list[ChartMetadata]:
