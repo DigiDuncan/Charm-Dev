@@ -5,13 +5,14 @@ from importlib.resources import files
 import logging
 import PIL.Image
 
-from arcade import LRBT, draw_rect_filled, draw_circle_filled, Texture
+from arcade import LRBT, draw_arc_filled, draw_arc_outline, draw_circle_outline, draw_rect_filled, draw_circle_filled, Texture, color
 
 from charm.lib.charm import load_missing_texture
+from charm.lib.gamemodes.taiko import NoteType
 from charm.lib.utils import img_from_path
 from charm.refactor.generic.chart import Chart
 from charm.refactor.generic.sprite import NoteSprite
-from charm.refactor.generic.engine import Engine
+from charm.refactor.generic.engine import AutoEngine, Engine
 from charm.refactor.generic.highway import Highway
 from charm.refactor.charts.taiko import TaikoNote
 from charm.lib.pool import SpritePool
@@ -48,6 +49,10 @@ class TaikoHighway(Highway):
         self._note_pool: SpritePool[NoteSprite] = SpritePool([NoteSprite(x=-1000.0, y=-1000.0) for _ in range(1000)])
         self._next_note: TaikoNote | None = next(self._note_generator, None)
 
+        # Auto highway viz
+        self.auto = isinstance(Engine, AutoEngine)
+        self.last_side_right = False
+        self.visible_time = 1 / 6
 
     @property
     def horizontal_viewport(self) -> float:
@@ -103,24 +108,25 @@ class TaikoHighway(Highway):
             draw_rect_filled(LRBT(self.x, self.x + self.w, self.y, self.y + self.h), self.color)
             draw_circle_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size, self.color)
 
-            # TODO: requires the Taiko Engine and the Engine 
-
-            # if self.auto and self.last_note_type and self.song_time - self.last_hit_time <= self.visible_time:
-            #     # The 6 there is really hardcoded and this function is probably very slow because it does a ton of arcade.draw* calls
-            #     if self.last_note_type == NoteType.DON:
-            #         if self.last_note_big:
-            #             arcade.draw_circle_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size * 0.75, colors.DEBIAN_RED)
-            #         elif self.last_side_right:
-            #             arcade.draw_arc_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2 * 0.75, self.note_size * 2 * 0.75, colors.DEBIAN_RED, -90, 90)
-            #         else:
-            #             arcade.draw_arc_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2 * 0.75, self.note_size * 2 * 0.75, colors.DEBIAN_RED, 90, 270)
-            #     elif self.last_note_type == NoteType.KAT:
-            #         if self.last_note_big:
-            #             arcade.draw_circle_outline(self.strikeline_y, self.y + (self.h / 2), self.note_size, colors.BRIGHT_CERULEAN, 10)
-            #         elif self.last_side_right:
-            #             arcade.draw_arc_outline(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2, self.note_size * 2, colors.BRIGHT_CERULEAN, -90, 90, 20)
-            #         else:
-            #             arcade.draw_arc_outline(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2, self.note_size * 2, colors.BRIGHT_CERULEAN, 90, 270, 20)
+            if self.engine and self.engine.last_note_hit and self.song_time - self.engine.last_note_hit.hit_time <= self.visible_time:
+                if self.engine.last_note_hit.type == NoteType.DON:
+                    if self.engine.last_note_hit.large:
+                        draw_circle_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size * 0.75, color.DEBIAN_RED)
+                    elif self.last_side_right:
+                        draw_arc_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2 * 0.75, self.note_size * 2 * 0.75, color.DEBIAN_RED, -90, 90)
+                        self.last_side_right = False
+                    else:
+                        draw_arc_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2 * 0.75, self.note_size * 2 * 0.75, color.DEBIAN_RED, 90, 270)
+                        self.last_side_right = True
+                elif self.engine.last_note_hit.type == NoteType.KAT:
+                    if self.engine.last_note_hit.large:
+                        draw_circle_outline(self.strikeline_y, self.y + (self.h / 2), self.note_size, color.BRIGHT_CERULEAN, 10)
+                    elif self.last_side_right:
+                        draw_arc_outline(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2, self.note_size * 2, color.BRIGHT_CERULEAN, -90, 90, 20)
+                        self.last_side_right = False
+                    else:
+                        draw_arc_outline(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2, self.note_size * 2, color.BRIGHT_CERULEAN, 90, 270, 20)
+                        self.last_side_right = True
 
             self._note_pool.draw()
 
