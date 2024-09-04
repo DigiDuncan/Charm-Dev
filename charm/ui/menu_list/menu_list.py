@@ -83,20 +83,22 @@ class UnifiedChartsetMenuElement(Element[VerticalElementList]):
 
         half_count = int(vh // self.min_element_size) + self.element_padding
 
-        # TODO: THIS MAKES THE ASSUMPTION THE SONG INDEX IS ALWAYS VALID
-        # If this breaks sowwy :3
         start_idx = max(0, int(self.set_scroll))
 
         shown_sets = self.shown_sets
         next_songs = {}
 
-        chartset = self.chartsets[start_idx]
-        center = shown_sets.get(chartset.metadata, None)
-        if center is None:
+        chartset = None if start_idx < len(self.chartsets) else self.chartsets[start_idx]
+        if chartset is None:
             center = ChartsetElement(self.min_element_size, chartset)
+        else:
+            center = shown_sets.get(chartset.metadata, None)
+            if center is None:
+                center = ChartsetElement(self.min_element_size, chartset)
+            next_songs[chartset.metadata] = center
+
         if chartset == self.current_selected_chartset:
             center.select()
-        next_songs[chartset.metadata] = center
         self.element_list.add_child(center)
 
         for offset in range(half_count):
