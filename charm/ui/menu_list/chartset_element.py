@@ -6,6 +6,7 @@ from arcade.clock import GLOBAL_CLOCK
 from charm.lib.charm import CharmColors
 from charm.lib.mini_mint import Element, VerticalElementList, Padding, padded_sub_rect, Animation, ProceduralAnimation
 from charm.lib.anim import ease_expoout, ease_quadinout
+from charm.lib.utils import get_font_size
 from charm.refactor.generic import ChartSet, ChartSetMetadata, Chart, ChartMetadata
 
 # -- TEMP --
@@ -83,7 +84,7 @@ class ChartsetDisplayElement(Element[Element]):
     def _calc_layout(self) -> None:
         self._sub_region = padded_sub_rect(self.bounds, self._padding)
         if self._text_obj is None:
-            self._text_obj = Text('', 0.0, 0.0, (0, 0, 0, 255), anchor_x='left', anchor_y='center', font_name='bananaslip plus', font_size = 36)
+            self._text_obj = Text('', 0.0, 0.0, (0, 0, 0, 255), anchor_x='left', anchor_y='center', font_name='bananaslip plus', font_size = get_font_size(self._metadata.title or '', 36, self.bounds.width))
 
         if self._metadata is None:
             return
