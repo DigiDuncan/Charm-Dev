@@ -37,7 +37,7 @@ class ManiaParser(Parser[FourKeyChart]):
     @staticmethod
     def parse_chart(chart_data: ChartMetadata) -> list[FourKeyChart]:
         raw_chart = RawOsuChart.parse(chart_data.path)  # SO MUCH is hidden by this function
-        chart = FourKeyChart(chart_data, [], [], 0)
+        chart = FourKeyChart(chart_data, [], [])
         chart.events.extend(raw_chart.timing_points)
         for hit_object in raw_chart.hit_objects:
             if isinstance(hit_object, OsuHitCircle):

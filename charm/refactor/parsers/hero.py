@@ -278,7 +278,7 @@ class HeroParser(Parser[HeroChart]):
         resolution: Ticks = 192
         offset: Seconds = 0
 
-        chart = HeroChart(chart_data, [], [], 0)
+        chart = HeroChart(chart_data, [], [])
 
         current_header = None
         sync_track: list[BPMChangeTickEvent] = []

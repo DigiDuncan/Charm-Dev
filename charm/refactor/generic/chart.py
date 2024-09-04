@@ -114,11 +114,10 @@ class BPMChangeEvent(Event):
 
 class Chart[NT: Note]:
     """A collection of notes and events, with helpful metadata."""
-    def __init__(self, metadata: ChartMetadata, notes: list[NT], events: list[Event], bpm: float) -> None:
+    def __init__(self, metadata: ChartMetadata, notes: list[NT], events: list[Event]) -> None:
         self.metadata: ChartMetadata = metadata
         self.notes: list[NT] = notes
         self.events: list[Event] = events
-        self.bpm: float = bpm
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {self.metadata.gamemode}/{self.metadata.instrument}/{self.metadata.difficulty}>"

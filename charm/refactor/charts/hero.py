@@ -170,8 +170,8 @@ class ChartNIndexCollection(NamedTuple):
 
 class HeroChart(Chart[HeroNote]):
 
-    def __init__(self, metadata: ChartMetadata, notes: list[HeroNote], events: list[Event], bpm: float) -> None:
-        super().__init__(metadata, notes, events, bpm)
+    def __init__(self, metadata: ChartMetadata, notes: list[HeroNote], events: list[Event]) -> None:
+        super().__init__(metadata, notes, events)
         self.chords: list[HeroChord] = []
         self.indices: ChartNIndexCollection = None
 
