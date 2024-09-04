@@ -12,8 +12,7 @@ from arcade.camera import PerspectiveProjector
 from arcade.camera.grips import rotate_around_right
 
 from charm.lib.charm import load_missing_texture
-from charm.lib.types import Seconds
-from charm.lib.utils import img_from_path, nuke_smart_quotes
+from charm.lib.utils import img_from_path
 from charm.lib.pool import Pool, SpritePool
 from charm.refactor.generic.chart import Chart
 from charm.refactor.generic.engine import Engine

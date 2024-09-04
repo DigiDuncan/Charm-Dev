@@ -1,12 +1,39 @@
 from collections.abc import Generator
 from typing import Any
+from functools import cache
+from importlib.resources import files
+import logging
+import PIL.Image
 
+from arcade import LRBT, draw_rect_filled, draw_circle_filled, Texture
+
+from charm.lib.charm import load_missing_texture
+from charm.lib.utils import img_from_path
 from charm.refactor.generic.chart import Chart
 from charm.refactor.generic.sprite import NoteSprite
 from charm.refactor.generic.engine import Engine
 from charm.refactor.generic.highway import Highway
-from charm.refactor.charts.taiko import TaikoChart, TaikoNote
+from charm.refactor.charts.taiko import TaikoNote
 from charm.lib.pool import SpritePool
+
+import charm.data.images.skins as skins
+
+logger = logging.getLogger("charm")
+
+@cache
+def load_note_texture(note_type: str, height: int) -> Texture:
+    image_name = f"{note_type}"
+    try:
+        image = img_from_path(files(skins) / "taiko" / f"{image_name}.png")
+        if image.height != height:
+            width = int((height / image.height) * image.width)
+            image = image.resize((width, height), PIL.Image.LANCZOS)
+    except Exception as e:  # noqa: BLE001
+        logger.error(f"Unable to load texture: {image_name} | {e}")
+        return load_missing_texture(height, height)
+    return Texture(image)
+
+TAIKO_LANE_COUNT = 1  #*
 
 
 class TaikoHighway(Highway):
@@ -25,3 +52,75 @@ class TaikoHighway(Highway):
     @property
     def horizontal_viewport(self) -> float:
         return self.viewport * (self.window.width / self.window.height)
+
+    @property
+    def strikeline_y(self) -> float:
+        return self.w / 10
+
+    @property
+    def note_size(self) -> int:
+        return int(self.h // TAIKO_LANE_COUNT)
+
+    @property
+    def px_per_s(self) -> float:
+        return self.w / self.viewport
+
+    def note_y(self, at: float) -> float:
+        rt = at - self.song_time
+        return (-self.px_per_s * rt) - self.strikeline_y + self.x
+
+    def update(self, song_time: float) -> None:
+        super().update(song_time)
+
+        while self._next_note is not None and self._next_note.time <= (self.song_time + self.horizontal_viewport) and self._note_pool.has_free_slot():
+            note = self._next_note
+            sprite = self._note_pool.get()
+            sprite.texture = load_note_texture(note.type, self.note_size)
+            sprite.position = -self.note_y(note.time), self.y + (self.h / 2)
+            sprite.scale = 1.5 if note.large else 1.0
+            sprite.visible = True
+            sprite.note = note
+
+            self._next_note = next(self._note_generator, None)
+
+        for sprite in self._note_pool.given_items:
+            sprite.center_x = -self.note_y(sprite.note.time)
+            if sprite.note.hit or sprite.note.time <= (song_time - 0.1):
+                sprite.visible = False
+                sprite.position = -1000.0, -1000.0
+                self._note_pool.give(sprite)
+
+    @property
+    def pos(self) -> tuple[int, int]:
+        return self._pos
+
+    @pos.setter
+    def pos(self, p: tuple[int, int]) -> None:
+        self._pos = p
+
+    def draw(self) -> None:
+        with self.static_camera.activate():
+            draw_rect_filled(LRBT(self.x, self.x + self.w, self.y, self.y + self.h), self.color)
+            draw_circle_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size, self.color)
+
+            # TODO: requires the Taiko Engine and the Engine 
+
+            # if self.auto and self.last_note_type and self.song_time - self.last_hit_time <= self.visible_time:
+            #     # The 6 there is really hardcoded and this function is probably very slow because it does a ton of arcade.draw* calls
+            #     if self.last_note_type == NoteType.DON:
+            #         if self.last_note_big:
+            #             arcade.draw_circle_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size * 0.75, colors.DEBIAN_RED)
+            #         elif self.last_side_right:
+            #             arcade.draw_arc_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2 * 0.75, self.note_size * 2 * 0.75, colors.DEBIAN_RED, -90, 90)
+            #         else:
+            #             arcade.draw_arc_filled(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2 * 0.75, self.note_size * 2 * 0.75, colors.DEBIAN_RED, 90, 270)
+            #     elif self.last_note_type == NoteType.KAT:
+            #         if self.last_note_big:
+            #             arcade.draw_circle_outline(self.strikeline_y, self.y + (self.h / 2), self.note_size, colors.BRIGHT_CERULEAN, 10)
+            #         elif self.last_side_right:
+            #             arcade.draw_arc_outline(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2, self.note_size * 2, colors.BRIGHT_CERULEAN, -90, 90, 20)
+            #         else:
+            #             arcade.draw_arc_outline(self.strikeline_y, self.y + (self.h / 2), self.note_size * 2, self.note_size * 2, colors.BRIGHT_CERULEAN, 90, 270, 20)
+
+            self._note_pool.draw()
+
