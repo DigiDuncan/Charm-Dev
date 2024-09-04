@@ -29,7 +29,7 @@ from collections.abc import Callable, Generator
 from pathlib import Path
 
 from charm.lib.paths import songspath
-from charm.lib.errors import ChartUnparseableError, MissingGamemodeError
+from charm.lib.errors import ChartUnparseableError, MissingGamemodeError, NoChartsError, NoMetadataError
 
 from charm.refactor.generic.chartset import ChartSet, ChartSetMetadata
 from charm.refactor.generic.chart import Chart, ChartMetadata
@@ -75,12 +75,20 @@ def load_path_chartsets(parsers: tuple[type[Parser], ...], path: Path, metadata:
     directory_metadata = ChartSetMetadata(path)
     charts = []
 
+    logger.debug(f"Parsing {directory_metadata.path}")
+
     for parser in parsers:
         if not parser.is_possible_chartset(path):
             continue
-        parser_metadata = parser.parse_chartset_metadata(path)
+        try:
+            parser_metadata = parser.parse_chartset_metadata(path)
+        except NoMetadataError:
+            continue
         directory_metadata = directory_metadata.update(parser_metadata)
-        charts.extend(parser.parse_chart_metadata(path))
+        try:
+            charts.extend(parser.parse_chart_metadata(path))
+        except NoChartsError:
+            continue
 
     if charts:
         metadata = metadata.update(directory_metadata)

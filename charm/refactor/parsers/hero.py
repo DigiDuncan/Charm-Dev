@@ -218,21 +218,32 @@ class HeroParser(Parser[HeroChart]):
     def parse_chartset_metadata(path: Path) -> ChartSetMetadata:
         if not (path / "song.ini").exists():
             raise NoMetadataError(path.stem)
-        parser = configparser.ConfigParser()
-        parser.read((path / "song.ini").absolute())
+        parser = configparser.ConfigParser(interpolation = None)
+        parser.read((path / "song.ini").absolute(), encoding = "utf-8")
         if "song" not in parser and "Song" not in parser:
             raise MetadataParseError("Song header not found in metadata!")
         song_header = "song" if "song" in parser else "Song"
         song = parser[song_header]
+
+        try:
+            length = song.getfloat("song_length") / 1000
+        except (ValueError, TypeError):
+            length = None
+
+        try:
+            year = song.getint("year")
+        except ValueError:
+            year = None
+
         return ChartSetMetadata(
             path=path,
-            title=song["name"],
-            artist=song["artist"],
-            album=song["album"],
-            length=song.getfloat("song_length") / 1000,
-            genre=song["genre"],
-            year=song.getint("year"),
-            charter=song["charter"],
+            title=song.get("name", None),
+            artist=song.get("artist", None),
+            album=song.get("album", None),
+            length=length,
+            genre=song.get("genre", None),
+            year=year,
+            charter=song.get("charter", None),
             gamemode="hero"
         )
 
