@@ -66,14 +66,14 @@ def get_album_art_path_from_metadata(metadata: ChartSetMetadata) -> str | None:
     art_path = None
     # Clone Hero-style (also probably the recommended format.)
     art_paths = [
-        metadata.path / "album.jpg",
         metadata.path / "album.png",
+        metadata.path / "album.jpg",
         metadata.path / "album.gif"
     ]
     # Stepmania-style
     art_paths.extend(metadata.path.glob("*jacket.png"))
-    art_paths.extend(metadata.path.glob("*jacket.gif"))
     art_paths.extend(metadata.path.glob("*jacket.jpg"))
+    art_paths.extend(metadata.path.glob("*jacket.gif"))
     for p in art_paths:
         if p.is_file():
             art_path = p
