@@ -61,6 +61,26 @@ gamemode_parsers: dict[str, tuple[type[Parser], ...]] = {
     'taiko': (TaikoParser,)
 }
 
+def get_album_art_path_from_metadata(metadata: ChartSetMetadata) -> str | None:
+    # Iterate through frankly too many possible paths for the album art location.
+    art_path = None
+    # Clone Hero-style (also probably the recommended format.)
+    art_paths = [
+        metadata.path / "album.jpg",
+        metadata.path / "album.png",
+        metadata.path / "album.gif"
+    ]
+    # Stepmania-style
+    art_paths.extend(metadata.path.glob("*jacket.png"))
+    art_paths.extend(metadata.path.glob("*jacket.gif"))
+    art_paths.extend(metadata.path.glob("*jacket.jpg"))
+    for p in art_paths:
+        if p.is_file():
+            art_path = p
+            break
+
+    return art_path if art_path is None else art_path.name
+
 def read_charm_metadata(metadata_src: Path) -> ChartSetMetadata:
     with open(metadata_src, "rb") as f:
         t = tomllib.load(f)
@@ -94,6 +114,9 @@ def load_path_chartsets(parsers: tuple[type[Parser], ...], path: Path, metadata:
         metadata = metadata.update(directory_metadata)
         if directory_charm_data is not None:
             metadata = metadata.update(directory_charm_data)
+        # Album art injection
+        if metadata.album_art is None:
+            metadata.album_art = get_album_art_path_from_metadata(metadata)
         yield ChartSet(path, metadata, charts)
     metadata = metadata if directory_charm_data is None else metadata.update(directory_charm_data)
 
