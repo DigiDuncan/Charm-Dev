@@ -88,7 +88,9 @@ class UnifiedChartsetMenuElement(Element[VerticalElementList]):
         shown_sets = self.shown_sets
         next_songs = {}
 
-        chartset = None if start_idx < len(self.chartsets) else self.chartsets[start_idx]
+        charset_count = len(self.chartsets)
+
+        chartset = None if start_idx < charset_count else self.chartsets[start_idx]
         if chartset is None:
             center = ChartsetElement(self.min_element_size, chartset)
         else:
@@ -102,7 +104,8 @@ class UnifiedChartsetMenuElement(Element[VerticalElementList]):
         self.element_list.add_child(center)
 
         for offset in range(half_count):
-            above_song = None if start_idx - offset - 1 < 0 else self.chartsets[start_idx - offset - 1]
+            above_idx = start_idx - offset - 1
+            above_song = None if (charset_count <= above_idx or above_idx < 0) else self.chartsets[above_idx]
             if above_song:
                 above_element = shown_sets.get(above_song.metadata, None)
                 if above_element is None:
@@ -114,7 +117,8 @@ class UnifiedChartsetMenuElement(Element[VerticalElementList]):
             if above_song == self.current_selected_chartset and above_element.chartset is not None:
                 above_element.select()
 
-            post_song = None if start_idx + offset + 1 >= len(self.chartsets) else self.chartsets[start_idx + offset + 1]
+            post_idx = start_idx + offset + 1
+            post_song = None if (0 > post_idx or post_idx >= len(self.chartsets)) else self.chartsets[post_idx]
             if post_song:
                 post_element = shown_sets.get(post_song.metadata, None)
                 if post_element is None:
