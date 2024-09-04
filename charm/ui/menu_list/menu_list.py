@@ -62,6 +62,9 @@ class UnifiedChartsetMenuElement(Element[VerticalElementList]):
 
         self.layout(force=True)
 
+        # -- TEMP --
+        self.album_art_texture: Texture = None
+
     def set_chartsets(self, chartsets: list[ChartSet]) -> None:
         self.chartsets = chartsets
         self.highlighted_set_idx = 0
@@ -193,6 +196,25 @@ class UnifiedChartsetMenuElement(Element[VerticalElementList]):
             self.shown_sets[chartset.metadata].select()
         #TODO: If the song element doesn't exist, delay the opening, or track that it needs to happen at creation
 
+        if chartset.metadata.album_art:
+            _img = PIL.Image.open(chartset.metadata.path / chartset.metadata.album_art)
+        else:
+            _img = img_from_path(files(charm.data.images) / "no_image_found.png")
+        self.album_art_texture = Texture(_img)
+
+    def deselect_set(self, chartset: ChartSet):
+        if chartset != self.current_selected_chartset:
+            return
+
+        self.album_art_texture = None
+
+        # We are outside the chartsets list of charts, so lets close it
+        if self.current_selected_chartset.metadata in self.shown_sets:
+            self.shown_sets[self.current_selected_chartset.metadata].deselect()
+        self.current_selected_chartset = None
+        self.current_selected_chart = None
+        self.highlighted_chart_idx = 0
+
     def select_chart(self, chart: ChartMetadata):
         self.current_selected_chart = chart
         self.invalidate_layout()
@@ -214,14 +236,7 @@ class UnifiedChartsetMenuElement(Element[VerticalElementList]):
         if self.highlighted_chart_idx < len(self.current_selected_chartset.charts):
             return
 
-        # We are outside the chartsets list of charts, so lets close it
-        if self.current_selected_chartset.metadata in self.shown_sets:
-            self.shown_sets[self.current_selected_chartset.metadata].deselect()
-        self.current_selected_chart = None
-        self.current_selected_chartset = None
-        self.highlighted_chart_idx = 0
-        # TODO: Toggle the current song element
-
+        self.deselect_set(self.current_selected_chartset)
         self._down_scroll(count=1)
 
     def _down_scroll(self, count: int):
@@ -243,12 +258,7 @@ class UnifiedChartsetMenuElement(Element[VerticalElementList]):
             return
 
         # We are outside the chartsets list of charts, so lets close it
-        if self.current_selected_chartset.metadata in self.shown_sets:
-            self.shown_sets[self.current_selected_chartset.metadata].deselect()
-        self.current_selected_chart = None
-        self.current_selected_chartset = None
-        self.highlighted_chart_idx = 0
-        # TODO: Toggle the current song element
+        self.deselect_set(self.current_selected_chartset)
 
     def _up_scroll(self, count: int):
         if not self.chartsets:
@@ -291,18 +301,11 @@ class UnifiedChartsetMenuElement(Element[VerticalElementList]):
 
         # If source...
         if metadata.source:
-            draw_text(f"from {metadata.source}", FIVE_SIXTH_W, win.center_y - 96, anchor_x='center', color=(0, 0, 0, 255), font_name="bananaslip plus", font_size=get_font_size(metadata.source, 16, ONE_THIRD_W), italic = True)
+            draw_text(f"from {metadata.source}", FIVE_SIXTH_W, win.center_y - 96, anchor_x='center', color=(0, 0, 0, 255), font_name="bananaslip plus", font_size=get_font_size(f"from {metadata.source}", 16, ONE_THIRD_W), italic = True)
 
         # The worst way to get album art
-        if metadata.album_art:
-            _img = PIL.Image.open(metadata.path / metadata.album_art)
-        else:
-            _img = img_from_path(files(charm.data.images) / "no_image_found.png")
-        _img = _img.convert("RGBA")
-        if (_img.width != 200 or _img.height != 200):
-            _img = _img.resize((200, 200))
-        _tex = Texture(_img)
-        draw_texture_rect(_tex, XYWH(FIVE_SIXTH_W, win.center_y + 125, 200, 200))
+        if self.album_art_texture is not None:
+            draw_texture_rect(self.album_art_texture, XYWH(FIVE_SIXTH_W, win.center_y + 135, 200, 200))
 
         ### DIGI: END METADATA DISPLAY HACK ###
 

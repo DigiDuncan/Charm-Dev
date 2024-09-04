@@ -47,7 +47,7 @@ logger = logging.getLogger("charm")
 
 ParserChooser = Callable[[Path], bool]
 CHARM_TOML_METADATA_FIELDS = ["title", "artist", "album", "length", "genre", "year", "difficulty",
-                              "charter", "preview_start", "preview_end", "source"]
+                              "charter", "preview_start", "preview_end", "source", "album_art"]
 
 class TypePair(NamedTuple):
     gamemode: str
