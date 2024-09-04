@@ -51,6 +51,6 @@ class FNFNote(Note[FNFNoteType]):
     pass
 
 class FNFChart(Chart[FNFNote]):
-    def __init__(self, metadata: ChartMetadata, notes: list[FNFNote], events: list[Event], bpm: float) -> None:
-        super().__init__(metadata, notes, events, bpm)
+    def __init__(self, metadata: ChartMetadata, notes: list[FNFNote], events: list[Event]) -> None:
+        super().__init__(metadata, notes, events)
         self.speed = 1.0

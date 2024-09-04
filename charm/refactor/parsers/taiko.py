@@ -33,7 +33,7 @@ class TaikoParser(Parser[TaikoChart]):
     @staticmethod
     def parse_chart(chart_data: ChartMetadata) -> list[TaikoChart]:
         raw_chart = RawOsuChart.parse(chart_data.path)  # SO MUCH is hidden by this function
-        chart = TaikoChart(chart_data, [], [], 0)
+        chart = TaikoChart(chart_data, [], [])
         chart.events.extend(raw_chart.timing_points)
         for hit_object in raw_chart.hit_objects:
             if isinstance(hit_object, OsuHitCircle):

@@ -180,8 +180,8 @@ class FNFV2Parser(Parser[FNFChart]):
         p1_metadata = ChartMetadata(chart_data.gamemode, chart_data.difficulty, chart_data.path, "1")
         p2_metadata = ChartMetadata(chart_data.gamemode, chart_data.difficulty, chart_data.path, "2")
         charts = [
-            FNFChart(p1_metadata, [], [], metadata["timeChanges"][0]["bpm"]),
-            FNFChart(p2_metadata, [], [], metadata["timeChanges"][0]["bpm"])
+            FNFChart(p1_metadata, [], []),
+            FNFChart(p2_metadata, [], [])
         ]
 
         events: list[Event] = []

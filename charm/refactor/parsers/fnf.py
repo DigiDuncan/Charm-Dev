@@ -100,14 +100,11 @@ class FNFParser(Parser[FNFChart]):
         p1_metadata = ChartMetadata(chart_data.gamemode, chart_data.difficulty, chart_data.path, "1")
         p2_metadata = ChartMetadata(chart_data.gamemode, chart_data.difficulty, chart_data.path, "2")
         charts = [
-            FNFChart(p1_metadata, [], [], bpm),
-            FNFChart(p2_metadata, [], [], bpm)
+            FNFChart(p1_metadata, [], []),
+            FNFChart(p2_metadata, [], [])
         ]
         charts[0].speed = speed
         charts[1].speed = speed
-
-        for chart in charts:
-            chart.bpm = bpm
 
         song_sections = songdata["song"]  # noqa: F841 -- currently unused, what's in here?
 

@@ -107,6 +107,7 @@ def load_path_chartsets(parsers: tuple[type[Parser], ...], path: Path, metadata:
         directory_metadata = directory_metadata.update(parser_metadata)
         try:
             charts.extend(parser.parse_chart_metadata(path))
+            break
         except NoChartsError:
             continue
 
