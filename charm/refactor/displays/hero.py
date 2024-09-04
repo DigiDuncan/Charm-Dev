@@ -16,7 +16,7 @@ class HeroDisplay(Display[HeroEngine, HeroChart]):
         self._win: "DigiWindow" = get_window()  # type: ignore | aaa shut up Arcade
         self.chart = charts[0]
 
-        self.highway: HeroHighway = HeroHighway(self.chart, engine, (0, 0))
+        self.highway: HeroHighway = HeroHighway(self.chart, engine, (0, 0), (self._win.width // 4, self._win.height))
         self.highway.x = self._win.center_x - self.highway.w // 2
 
         # Timer
