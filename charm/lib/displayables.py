@@ -1,5 +1,9 @@
-from arcade import Sprite, SpriteCircle, Text, LRBT, XYWH, color as colors, \
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Protocol
+from arcade import LBWH, Sprite, SpriteCircle, Text, LRBT, XYWH, color as colors, \
     draw_rect_filled, draw_rect_outline, draw_sprite, get_window
+import arcade
 from arcade.types import Color
 from arcade.color import BLACK
 
@@ -7,6 +11,16 @@ from charm.lib.anim import ease_circout, lerp, ease_linear, LerpData, perc
 from charm.lib.charm import CharmColors
 from charm.lib.generic.engine import Engine
 from charm.lib.utils import map_range, px_to_pt
+
+if TYPE_CHECKING:
+    from charm.lib.gamemodes.fnf import CameraFocusEvent
+
+class Displayable(Protocol):
+    def update(self, song_time: float):
+        ...
+
+    def draw(self):
+        ...
 
 class HPBar:
     def __init__(self, x: float, y: float,
@@ -24,6 +38,9 @@ class HPBar:
 
         self.center_sprite.center_x = x
         self.center_sprite.center_y = y
+
+    def update(self, song_time: float):
+        pass
 
     def draw(self) -> None:
         hp_min = self.x - self.width // 2
@@ -86,7 +103,7 @@ class Timer:
 
     @property
     def current_minutes(self) -> int:
-        return (self.current_time + self.current_time_offset) // 60
+        return int((self.current_time + self.current_time_offset) // 60)
 
     @property
     def total_seconds(self) -> float:
@@ -94,7 +111,7 @@ class Timer:
 
     @property
     def total_minutes(self) -> int:
-        return (self.total_time + self.total_time_offset) // 60
+        return int((self.total_time + self.total_time_offset) // 60)
 
     @property
     def display_string(self) -> str:
@@ -141,11 +158,11 @@ class Timer:
                 self.current_time += delta_time
         self._label.text = self.display_string
 
-        for lerp in [v for v in self._current_time_lerps if v.end_time > self._clock]:
-            self.current_time_offset = ease_linear(lerp.minimum, lerp.maximum, perc(lerp.start_time, lerp.end_time, self._clock))
+        for l in [v for v in self._current_time_lerps if v.end_time > self._clock]:
+            self.current_time_offset = ease_linear(l.minimum, l.maximum, perc(l.start_time, l.end_time, self._clock))
 
-        for lerp in [v for v in self._total_time_lerps if v.end_time > self._clock]:
-            self.total_time_offset = ease_linear(lerp.minimum, lerp.maximum, perc(lerp.start_time, lerp.end_time, self._clock))
+        for l in [v for v in self._total_time_lerps if v.end_time > self._clock]:
+            self.total_time_offset = ease_linear(l.minimum, l.maximum, perc(l.start_time, l.end_time, self._clock))
 
     def draw(self) -> None:
         draw_rect_filled(XYWH(self.center_x, self.center_y, self.width, self.height), self.bar_bg_color)
@@ -154,7 +171,7 @@ class Timer:
         self._label.draw()
 
 class Spotlight:
-    def __init__(self, camera_events: list["CameraFocusEvent"]) -> None:
+    def __init__(self, camera_events: list[CameraFocusEvent]) -> None:
         self.camera_events = camera_events
         self.window = get_window()
 
@@ -200,3 +217,36 @@ class Spotlight:
             self.spotlight_position_right, self.spotlight_position_right + self.window.center_x, 0, self.window.height),
             colors.BLACK[:3] + (127,)
         )
+
+class Countdown:
+    def __init__(self, start_time: float, duration: float,
+                 x: float, y: float, width: float, height: float = 50.0,
+                 color: Color = arcade.color.WHITE,
+                 units_per_second: float = 1.0, current_time: float = 0.0) -> None:
+        self.start_time = start_time
+        self.duration = duration
+        self.units_per_second = units_per_second
+        self.current_time = current_time
+
+        self.x = x - (width / 2)  # center align this thing, please!
+        self.y = y
+        self.width = width
+        self.height = height
+
+        self.color = color
+
+        self.text = Text("0", self.x, self.y + self.height + 5, self.color, 48, self.width, "center", "bananaslip plus", anchor_x = "center")
+
+    def update(self, song_time: float) -> None:
+        self.current_time = song_time
+        time_remaining = self.duration - (self.current_time - self.start_time)
+        self.text.text = str(time_remaining)
+
+    def draw(self) -> None:
+        progress = map_range(self.current_time, self.start_time,
+                             self.start_time + self.duration,
+                             self.x, self.x + self.width)
+        rect = LBWH(self.x, self.y, progress, self.height)
+
+        arcade.draw_rect_filled(rect, self.color)
+        self.text.draw()

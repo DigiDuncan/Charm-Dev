@@ -14,6 +14,7 @@ from collections.abc import Iterable
 from importlib.resources import files
 
 from arcade import Texture
+from arcade.types import HasAddSubMul
 import pyglet.image
 import PIL.Image
 
@@ -65,15 +66,17 @@ def img_from_path(path: Path) -> PIL.Image.Image:
         image.load()
     return image
 
+L = TypeVar("L", bound=HasAddSubMul)
 
-def map_range(x: float, n1: float, m1: float, n2: float = -1, m2: float = 1) -> float:
-    """Scale a float `x` that is currently somewhere between `n1` and `m1` to now be in an
+def map_range(x: L, n1: L, m1: L, n2: L = -1, m2: L = 1) -> L:
+    """Scale a value `x` that is currently somewhere between `n1` and `m1` to now be in an
     equivalent position between `n2` and `m2`."""
     # Make the range start at 0.
     old_max = m1 - n1
     old_x = x - n1
     percentage = old_x / old_max
 
+    # Shmoove it over.
     new_max = m2 - n2
     new_pos = new_max * percentage
     ans = new_pos + n2

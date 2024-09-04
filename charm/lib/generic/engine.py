@@ -92,6 +92,11 @@ class Engine:
         self.streak: int = 0
         self.max_streak: int = 0
 
+        # HP
+        self.hp: float = 1.0
+        self.min_hp: float = 0.0
+        self.max_hp: float = 1.0
+
         # Accuracy
         self.max_notes = len(self.chart.notes)
         self.weighted_hit_notes: int = 0
