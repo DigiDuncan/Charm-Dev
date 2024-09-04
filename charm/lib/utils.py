@@ -1,5 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Protocol, TypeVar
+
+import arcade
 if TYPE_CHECKING:
     from pathlib import Path
     from collections.abc import Iterator
@@ -118,6 +120,20 @@ def typewriter(s: str, cps: float, now: float, begin: float = 0) -> str:
     seconds = now - begin
     chars = int(max(0, (seconds * cps)))
     return s[:chars]
+
+
+_string_sizes = {}
+def get_font_size(s: str, max_font_size: int, w: float | None = None, font: str = "bananaslip plus") -> int:
+    if w is None:
+        w = arcade.get_window().width
+    if (s, w, font) in _string_sizes:
+        return _string_sizes[(s, w, font)]
+    font_size = max_font_size
+    _test_label = arcade.Text(s, 0, 0, font_size = font_size, font_name = font)
+    if _test_label.content_width > w:
+        font_size = int(font_size / (_test_label.content_width / w))
+    _string_sizes[(s, w, font)] = font_size
+    return font_size
 
 
 def get_album_art(metadata: Metadata, size: int = 200) -> Texture:

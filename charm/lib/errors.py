@@ -1,5 +1,5 @@
 from importlib.resources import files
-import sys
+from typing import ClassVar
 
 import PIL, PIL.Image, PIL.ImageDraw  # noqa: E401
 import arcade
@@ -11,7 +11,7 @@ from charm.lib.utils import img_from_path
 MAX_REPEATS = 50
 
 class CharmError(Exception):
-    _icon_textures: dict[str, Texture] = {}
+    _icon_textures: ClassVar[dict[str, Texture]] = {}
 
     def __init__(self, *, title: str, message: str, icon: str = "error", repeat: int = 1):
         self.title = title

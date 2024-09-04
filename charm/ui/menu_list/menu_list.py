@@ -1,5 +1,3 @@
-from arcade import LRBT
-
 from charm.lib.mini_mint import Element, VerticalElementList
 
 from charm.ui.menu_list.chartset_element import ChartsetElement
@@ -7,7 +5,12 @@ from charm.ui.menu_list.chartset_element import ChartsetElement
 from charm.refactor.generic import ChartSet, Chart, ChartMetadata, ChartSetMetadata
 
 # -- TEMP --
-from arcade import draw_text, draw_rect_filled, XYWH
+from importlib.resources import files
+from arcade import draw_text, draw_rect_filled, XYWH, LBWH, LRBT, get_window, draw_texture_rect, Texture
+from arcade.types import Color
+from charm.lib.utils import get_font_size, img_from_path
+import PIL.Image
+import charm.data.images
 
 # -- PROCEDURAL ANIMATION CONSTANTS --
 CHARTSET_FREQUENCY = 2.0
@@ -269,8 +272,39 @@ class UnifiedChartsetMenuElement(Element[VerticalElementList]):
         if self.current_selected_chartset is None:
             return
 
-        # Detail the currently selected chartsets information
-        draw_text(f"Chartset Metadata {self.current_selected_chartset.metadata}", self.bounds.right - 5.0, self.bounds.y, anchor_x='right', color=(0, 0, 0, 255))
+        ### DIGI: BEGIN METADATA DISPLAY HACK ###
+
+        win = get_window()
+        metadata = self.current_selected_chartset.metadata
+        WIDTH = win.width
+        HEIGHT = win.height
+        ONE_THIRD_W = WIDTH / 3
+        FIVE_SIXTH_W = WIDTH * (5 / 6)
+
+        # Background
+        draw_rect_filled(LBWH(ONE_THIRD_W * 2, 0, ONE_THIRD_W, HEIGHT), Color(0, 0, 0, 64))
+
+        # Title | Artist | Album
+        draw_text(metadata.title or "???", FIVE_SIXTH_W, win.center_y, anchor_x='center', color=(0, 0, 0, 255), font_name="bananaslip plus", font_size=get_font_size(metadata.title or "???", 24, ONE_THIRD_W))
+        draw_text(metadata.artist or "Unknown Artist", FIVE_SIXTH_W, win.center_y - 32, anchor_x='center', color=(0, 0, 0, 255), font_name="bananaslip plus", font_size=get_font_size(metadata.artist or "Unknown Artist", 16, ONE_THIRD_W))
+        draw_text(metadata.album or "Unknown Artist", FIVE_SIXTH_W, win.center_y - 64, anchor_x='center', color=(0, 0, 0, 255), font_name="bananaslip plus", font_size=get_font_size(metadata.album or "Unknown Album", 16, ONE_THIRD_W))
+
+        # If source...
+        if metadata.source:
+            draw_text(f"from {metadata.source}", FIVE_SIXTH_W, win.center_y - 96, anchor_x='center', color=(0, 0, 0, 255), font_name="bananaslip plus", font_size=get_font_size(metadata.source, 16, ONE_THIRD_W), italic = True)
+
+        # The worst way to get album art
+        if metadata.album_art:
+            _img = PIL.Image.open(metadata.path / metadata.album_art)
+        else:
+            _img = img_from_path(files(charm.data.images) / "no_image_found.png")
+        _img = _img.convert("RGBA")
+        if (_img.width != 200 or _img.height != 200):
+            _img = _img.resize((200, 200))
+        _tex = Texture(_img)
+        draw_texture_rect(_tex, XYWH(FIVE_SIXTH_W, win.center_y + 125, 200, 200))
+
+        ### DIGI: END METADATA DISPLAY HACK ###
 
         # If the current chart set ins't on screen we are done
         if self.current_selected_chartset.metadata not in self.shown_sets:
