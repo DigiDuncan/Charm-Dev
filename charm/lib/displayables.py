@@ -91,7 +91,7 @@ class Timer:
 
     @property
     def percentage(self) -> float:
-        return self.current_time / self.total_time
+        return max(0.0, self.current_time / self.total_time)
 
     @property
     def fill_px(self) -> int:
@@ -219,16 +219,11 @@ class Spotlight:
         )
 
 class Countdown:
-    def __init__(self, start_time: float, duration: float,
+    def __init__(self,
                  x: float, y: float, width: float, height: float = 25.0,
                  color: Color = arcade.color.WHITE,
-                 units_per_second: float = 1.0, current_time: float = 0.0) -> None:
-        self.start_time = start_time
-        self.duration = duration
+                 units_per_second: float = 1.0) -> None:
         self.units_per_second = units_per_second
-        self.current_time = current_time
-
-        self.time_remaining = self.duration - (self.current_time - self.start_time)
 
         self.x = x - (width / 2)
         self.y = y
@@ -237,18 +232,36 @@ class Countdown:
 
         self.color = color
 
-        self.text = Text("0", self.x + self.width / 2.0, self.y + self.height + 10,
+        self.text = Text("", self.x + self.width / 2.0, self.y + self.height + 10,
                          arcade.color.BLACK, 48,
                          int(self.width),
                          font_name = "bananaslip plus",
                          anchor_x = "center")
 
+        self.start_time: float = None
+        self.duration: float = None
+        self.current_time = 0.0
+
+    def use(self, start_time: float, duration: float) -> None:
+        self.start_time = start_time
+        self.duration = duration
+
+    @property
+    def time_remaining(self) -> float:
+        if self.start_time is None:
+            return 0.0
+        return self.duration - (self.current_time - self.start_time)
+
     def update(self, song_time: float) -> None:
         self.current_time = song_time
-        self.time_remaining = self.duration - (self.current_time - self.start_time)
         self.text.text = f"{int(self.time_remaining)}" if self.time_remaining > 1 else "Ready!"
+        if self.time_remaining < 0.0:
+            self.start_time = None
+            self.duration = None
 
     def draw(self) -> None:
+        if self.start_time is None:
+            return
         progress = map_range(self.current_time, self.start_time,
                              self.start_time + self.duration,
                              self.width, 0)

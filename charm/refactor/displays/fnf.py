@@ -101,7 +101,7 @@ class FNFDisplay(Display[FNFEngine, FourKeyChart]):
 
         if countdowns := self.player_chart.events_by_type(CountdownEvent):
             self.countdowns = Index(countdowns, "time")
-            self.countdown = Countdown(countdowns[0].time, countdowns[0].length, self._player_highway.x + self._player_highway.w / 2, self._win.center_y, self._player_highway.w / 2)
+            self.countdown = Countdown(self._player_highway.x + self._player_highway.w / 2, self._win.center_y, self._player_highway.w / 2)
         else:
             self.countdown: Countdown = None
 
@@ -144,6 +144,10 @@ class FNFDisplay(Display[FNFEngine, FourKeyChart]):
 
         if self.countdown:
             self.countdown.update(song_time)
+            next_countdown = self.countdowns.lteq(song_time)
+            if next_countdown is not None and self.countdown.start_time != next_countdown.time:
+                self.countdown.use(next_countdown.time, next_countdown.length)
+
 
     def draw(self) -> None:
         if self.show_text:

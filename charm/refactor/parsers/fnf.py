@@ -236,7 +236,7 @@ class FNFParser(Parser[FNFChart]):
             events.extend(lyrics)
 
         for c in charts:
-            c.events = events
+            c.events = events[:]
             c.notes.sort()
             c.events.extend(FNFParser.calculate_countdowns(c))
             c.events.sort()
