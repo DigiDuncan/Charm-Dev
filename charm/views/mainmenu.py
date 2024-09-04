@@ -11,9 +11,9 @@ from charm.objects.mainmenu import MainMenu, MainMenuItem
 # from charm.views.emojitest import EmojiTestView
 # from charm.views.fourkeysongmenu import FourKeySongMenuView
 # from charm.views.herotest import HeroTestView
+#from charm.views.taikosongtest import TaikoSongTestView
 # from charm.views.newmenu import NewMenuView
 from charm.views.spritetest import SpriteTestView
-from charm.views.taikosongtest import TaikoSongTestView
 from charm.views.visualizer import VisualizerView
 from charm.views.options import OptionsView
 from charm.views.unifiedmenu import UnifiedSongMenuView
@@ -33,7 +33,7 @@ class MainMenuView(DigiView):
             # MainMenuItem("Menu Test", "test", NewMenuView(back=self)),
             # MainMenuItem("Cycler Test", "test", CycleTestView(back=self)),
             # MainMenuItem("Hero Test", "test", HeroTestView(back=self)),
-            MainMenuItem("Taiko Test", "test", TaikoSongTestView(back=self)),
+            # MainMenuItem("Taiko Test", "test", TaikoSongTestView(back=self)),
             MainMenuItem("Sprite Test", "test", SpriteTestView(back=self)),
             MainMenuItem("Scott Test", "test", VisualizerView(back=self)),
         ])
