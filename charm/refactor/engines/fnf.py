@@ -131,7 +131,6 @@ class FNFEngine(Engine[FourKeyChart]):
                 self.last_note_missed = False
             elif note.missed:
                 self.hp -= 0.05
-                logger.debug(f"HP lost (note missed, {note}), new HP {self.hp}")
                 self.last_note_missed = True
             return
 
@@ -143,7 +142,6 @@ class FNFEngine(Engine[FourKeyChart]):
         # Bomb notes penalize HP when hit
         if note.type == FourKeyNoteType.BOMB and note.hit:
             self.hp -= self.bomb_hp
-            logger.debug(f"HP lost (bomb hit, {note}), new HP {self.hp}")
             return
 
         # Score the note
@@ -156,8 +154,6 @@ class FNFEngine(Engine[FourKeyChart]):
             self.hp += self.heal_hp
         elif note.hit:
             self.hp += j.hp_change
-            if j.hp_change < 0:
-                logger.debug(f"HP lost (judgement {j} hit, {note}), new HP {self.hp}")
 
         # Judge the player
         rt = note.hit_time - note.time  # type: ignore -- the type checker is stupid, clearly this isn't ever None at this point
