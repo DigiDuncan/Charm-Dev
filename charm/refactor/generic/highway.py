@@ -1,26 +1,29 @@
 import arcade
 from arcade import Camera2D
+from arcade.camera import Projector
 
 from charm.refactor.generic.chart import Chart, Note
+from charm.refactor.generic.engine import Engine
 from charm.lib.types import Seconds
 
 
 class Highway:
-    def __init__(self, chart: Chart, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5, *, downscroll: bool = False):
+    def __init__(self, chart: Chart, engine: Engine, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5, viewport: float = 1.0, *, downscroll: bool = False, static_camera: Projector = None, highway_camera: Projector = None):
         """A time-based display of current and upcoming notes to be hit by the player."""
-        self.chart = chart
+        self.chart: Chart = chart
+        self.engine: Engine = engine
         self.notes = self.chart.notes
 
         self._pos = pos
         self.gap = gap
         self.downscroll = downscroll
-        self.viewport: float = 1
-        window = arcade.get_window()  # ???: This can't be a good idea, right?
-        self.size = size if size is not None else (window.width // 3, window.height)
+        self.viewport: float = viewport
+        self.window = arcade.get_window()  # ???: This can't be a good idea, right? ~Digi - Yeah, but its how arcade is designed ~Dragon
+        self.size = size if size is not None else (self.window.width // 3, self.window.height)
 
         # !: This isn't a valid assumption for the hero/rock gamemode.
-        self.static_camera = Camera2D()
-        self.highway_camera = Camera2D()
+        self.static_camera: Projector = static_camera or Camera2D()
+        self.highway_camera: Projector = highway_camera or Camera2D()
         self.song_time: float = 0
 
     @property

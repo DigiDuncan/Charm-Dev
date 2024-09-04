@@ -58,8 +58,7 @@ def load_note_texture(note_type: str, note_lane: int, height: int, value: int = 
 class FourKeyHighway(Highway):
     def __init__(self, chart: FourKeyChart, engine: Engine,
                  pos: tuple[int, int], size: tuple[int, int] | None = None, gap: int = 5):
-        super().__init__(chart, pos, size, gap)
-        self.engine = engine
+        super().__init__(chart, engine, pos, size, gap)
 
         # TODO: re-add the functionality of
         self.viewport = 0.75  # TODO: BPM scaling?
