@@ -3,13 +3,15 @@ from __future__ import annotations
 from importlib.resources import files
 from arcade import Sprite, Text, Texture, draw_sprite, get_window, load_texture
 from arcade import color
+from nindex.index import Index
 from charm.lib.anim import ease_circout, perc
-from charm.lib.displayables import HPBar, Timer
+from charm.lib.displayables import Countdown, HPBar, Timer
 from charm.lib.types import Point, Seconds
 from charm.objects.lyric_animator import LyricAnimator, LyricEvent
 from charm.refactor.charts.four_key import FourKeyChart
 from charm.refactor.engines.fnf import FNFEngine
 from charm.refactor.engines.four_key import FourKeyEngine
+from charm.refactor.generic.chart import CountdownEvent
 from charm.refactor.generic.display import Display
 from charm.refactor.highways.four_key import FourKeyHighway
 
@@ -64,6 +66,13 @@ class FourKeyDisplay(Display[FNFEngine | FourKeyEngine, FourKeyChart]):
         self.timer.center_x = self._win.center_x + ONE_THIRD_W
         self.timer.center_y = 60
 
+        # Countdowns
+        if countdowns := self.chart.events_by_type(CountdownEvent):
+            self.countdowns = Index(countdowns, "time")
+            self.countdown = Countdown(self._highway.x + self._highway.w / 2, self._win.center_y, self._highway.w / 2)
+        else:
+            self.countdown: Countdown = None
+
         self._overlay_text: Text = Text("PAUSE", self._win.center_x, self._win.center_y, font_size=92,
                                         anchor_x="center", color=color.BLACK,
                                         font_name="bananaslip plus")
@@ -98,6 +107,12 @@ class FourKeyDisplay(Display[FNFEngine | FourKeyEngine, FourKeyChart]):
         if self.lyric_animator:
             self.lyric_animator.update(song_time)
 
+        if self.countdown:
+            self.countdown.update(song_time)
+            next_countdown = self.countdowns.lteq(song_time)
+            if next_countdown is not None and self.countdown.start_time != next_countdown.time:
+                self.countdown.use(next_countdown.time, next_countdown.length)
+
     def draw(self) -> None:
         if self.show_text:
             self._score_text.draw()
@@ -114,6 +129,9 @@ class FourKeyDisplay(Display[FNFEngine | FourKeyEngine, FourKeyChart]):
 
         if self.lyric_animator:
             self.lyric_animator.draw()
+
+        if self.countdown:
+            self.countdown.draw()
 
         draw_sprite(self._judgement_sprite)
 
