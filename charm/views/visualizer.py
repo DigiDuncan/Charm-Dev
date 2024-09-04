@@ -81,7 +81,7 @@ class VisualizerView(DigiView):
         self.chart_available = False
         # Create an index of chart notes
         with LogSection(logger, "parsing chart"):
-            path = songspath / "fnf" / "fourth-wall"
+            path = songspath / "fnf" / "funkin-at-freddys" / "fourth-wall"
             self.songdata = FNFSong.parse(path)
         if self.songdata:
             with LogSection(logger, "indexing notes"):
