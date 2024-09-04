@@ -3,19 +3,21 @@ from typing import Self
 from pathlib import Path
 
 from arcade import Sound
+from arcade.clock import GLOBAL_CLOCK
 from charm.lib.oggsound import OGGSound
 
 from charm.lib.settings import MixerNames, settings
 
 logger = logging.getLogger("charm")
 
-
 class TrackCollection:
     def __init__(self, sounds: list[Sound], mixer: MixerNames = "music"):
+        self.start_time: float = -1.0
+        self.delay: float = 0.0
         self.mixer = mixer
         self.tracks = [s.play(volume = settings.get_volume(self.mixer)) for s in sounds]
         self.pause()
-        self.seek(0)
+        self.seek(0.0)
 
     @classmethod
     def from_path(cls, path: Path) -> Self:
@@ -27,6 +29,8 @@ class TrackCollection:
     def time(self) -> float:
         if not self.tracks:
             return 0.0
+        if self.start_time >= 0 and not self.playing and GLOBAL_CLOCK.time_since(self.start_time) <= self.delay:
+            return GLOBAL_CLOCK.time_since(self.start_time) - self.delay
         return self.tracks[0].time
 
     @property
@@ -61,6 +65,22 @@ class TrackCollection:
         if playing:
             self.play()
 
+    def start(self, delay: float = 0.0) -> None:
+        self.pause()
+        self.seek(0)
+        self.delay = delay
+        self.start_time = GLOBAL_CLOCK.time
+
+    def validate_playing(self):
+        if self.start_time < 0:
+            return
+
+        if not self.playing and GLOBAL_CLOCK.time_since(self.start_time) >= self.delay:
+            self.seek(GLOBAL_CLOCK.time_since(self.start_time) - self.delay)
+            self.start_time = -1.0
+            self.delay = 0.0
+            self.play()
+
     def play(self) -> None:
         self.sync()
         for t in self.tracks:
@@ -92,3 +112,4 @@ class TrackCollection:
         logger.debug(f"Track sync: {sync_diff:.0f}ms")
         if sync_diff > 10:
             logger.warning("Tracks are out of sync by more than 10ms!")
+

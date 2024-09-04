@@ -99,11 +99,11 @@ class Timer:
 
     @property
     def current_seconds(self) -> float:
-        return (self.current_time + self.current_time_offset) % 60
+        return max(0.0, self.current_time + self.current_time_offset) % 60
 
     @property
     def current_minutes(self) -> int:
-        return int((self.current_time + self.current_time_offset) // 60)
+        return int(max(0.0, self.current_time + self.current_time_offset) // 60)
 
     @property
     def total_seconds(self) -> float:
@@ -237,10 +237,9 @@ class Countdown:
 
         self.color = color
 
-        self.text = Text("0", self.x, self.y + self.height + 10,
+        self.text = Text("0", self.x + self.width / 2.0, self.y + self.height + 10,
                          arcade.color.BLACK, 48,
                          int(self.width),
-                         align = "center",
                          font_name = "bananaslip plus",
                          anchor_x = "center")
 

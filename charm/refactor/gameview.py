@@ -14,6 +14,8 @@ from charm.refactor.gamemodes import GAMEMODES
 from charm.lib.trackcollection import TrackCollection
 from charm.lib.settings import settings
 
+COUNTDOWN_TIME = 3.0
+
 class GameView(DigiView):
 
     def __init__(self, *, back: DigiView | None = None, fade_in: float = 0):
@@ -68,6 +70,7 @@ class GameView(DigiView):
         super().on_show_view()
         self.window.theme_song.volume = 0
         self.unpause(force=True)
+        self._tracks.start(COUNTDOWN_TIME)
 
     def go_back(self) -> None:
         self._tracks.close()
@@ -140,6 +143,7 @@ class GameView(DigiView):
         self._engine.update(self._tracks.time)
         self._engine.calculate_score()
 
+        self._tracks.validate_playing()
         if self._tracks.time >= self._tracks.duration:
             self.show_results()
 
