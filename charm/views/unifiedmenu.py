@@ -9,8 +9,8 @@ from charm.lib.mini_mint import Animator, Element
 from charm.ui.menu_list import UnifiedChartsetMenuElement
 
 # -- TEMP --
-from charm.refactor.loading import load_chartsets, load_chart
-from charm.refactor.gameview import GameView
+from charm.core.loading import load_chartsets, load_chart
+from charm.views.game import GameView
 
 logger = logging.getLogger("charm")
 

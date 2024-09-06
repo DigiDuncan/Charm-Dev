@@ -23,7 +23,7 @@ from charm.lib.oggsound import OGGSound
 from charm.lib.trackcollection import TrackCollection
 from charm.lib.utils import map_range
 from charm.objects.lyric_animator import LyricAnimator
-from charm.views.results import ResultsView
+from charm.unused.results import ResultsView
 
 logger = logging.getLogger("charm")
 

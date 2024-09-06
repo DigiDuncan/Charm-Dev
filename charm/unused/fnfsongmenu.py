@@ -15,7 +15,7 @@ from charm.lib.keymap import keymap
 from charm.objects.gif import GIF
 from charm.objects.songmenu import SongMenu
 from charm.lib.songloader import load_songs_fnf
-from charm.views.gameplay import GameView
+from charm.unused.gameplay import GameView
 
 
 class FNFSongMenuView(DigiView):

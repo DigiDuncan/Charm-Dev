@@ -14,7 +14,7 @@ from charm.objects.mainmenu import MainMenu, MainMenuItem
 #from charm.views.taikosongtest import TaikoSongTestView
 # from charm.views.newmenu import NewMenuView
 from charm.views.spritetest import SpriteTestView
-from charm.views.visualizer import VisualizerView
+from charm.views.visualizertest import VisualizerView
 from charm.views.options import OptionsView
 from charm.views.unifiedmenu import UnifiedSongMenuView
 

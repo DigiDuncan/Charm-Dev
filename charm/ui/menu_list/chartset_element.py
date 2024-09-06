@@ -7,7 +7,7 @@ from charm.lib.charm import CharmColors
 from charm.lib.mini_mint import Element, VerticalElementList, Padding, padded_sub_rect, Animation, ProceduralAnimation
 from charm.lib.anim import ease_expoout, ease_quadinout
 from charm.lib.utils import get_font_size
-from charm.refactor.generic import ChartSet, ChartSetMetadata, Chart, ChartMetadata
+from charm.core.generic import ChartSet, ChartSetMetadata, Chart, ChartMetadata
 
 # -- TEMP --
 from arcade import draw, Text

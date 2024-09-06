@@ -9,7 +9,7 @@ from arcade.color import BLACK
 
 from charm.lib.anim import ease_circout, lerp, ease_linear, LerpData, perc
 from charm.lib.charm import CharmColors
-from charm.lib.generic.engine import Engine
+from charm.core.generic.engine import Engine
 from charm.lib.utils import map_range, px_to_pt
 
 if TYPE_CHECKING:

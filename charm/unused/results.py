@@ -7,15 +7,13 @@ from pyglet.media import Player
 
 from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView, disable_when_focus_lost, shows_errors
-from charm.core.generic.results import Results, Heatmap
-
+from charm.lib.generic.results import Results, Heatmap
+from charm.lib import paths
 
 import charm.data.audio
 import charm.data.images.skins as skins
 from charm.lib.keymap import keymap
-
-# from charm.lib import paths
-# from charm.lib.scores import ScoreDB
+from charm.lib.scores import ScoreDB
 
 logger = logging.getLogger("charm")
 
@@ -70,8 +68,7 @@ class ResultsView(DigiView):
         self.heatmap.right = self.window.width - 10
 
         # Save score
-        # TODO: Part of Refactor
-        # ScoreDB(paths.scorespath).add_score(self.results.chart.hash, self.results)
+        ScoreDB(paths.scorespath).add_score(self.results.chart.hash, self.results)
 
         self.sprite_list = SpriteList()
         self.sprite_list.extend((self.grade_sprite, self.heatmap))

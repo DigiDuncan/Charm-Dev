@@ -7,7 +7,7 @@ from arcade import Sound
 from charm.lib.anim import ease_expoout
 from charm.lib.bpmanim import BPMAnimator
 from charm.lib.errors import CharmError
-from charm.lib.generic.song import BPMChangeEvent
+from charm.core.generic.chart import BPMChangeEvent
 import charm.data.audio
 
 class ThemeSong:

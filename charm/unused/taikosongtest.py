@@ -14,7 +14,7 @@ from charm.lib.keymap import keymap
 from charm.lib.logsection import LogSection
 from charm.lib.oggsound import OGGSound
 from charm.lib.trackcollection import TrackCollection
-from charm.views.results import ResultsView
+from charm.unused.results import ResultsView
 
 logger = logging.getLogger("charm")
 

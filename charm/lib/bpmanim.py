@@ -1,6 +1,6 @@
 from nindex import Index
 from charm.lib.anim import EasingFunction, ease_linear
-from charm.lib.generic.song import BPMChangeEvent
+from charm.core.generic.chart import BPMChangeEvent
 
 
 class BPMAnimator:
