@@ -20,11 +20,10 @@ from charm.lib.logsection import LogSection
 from charm.lib.paths import songspath
 from charm.lib.trackcollection import TrackCollection
 
-from charm.core.gamemodes.fnf import FNFHighway, FNFNote, FNFChart
+from charm.core.generic import AutoEngine, ChartSet, ChartMetadata, ChartSetMetadata
+from charm.core.gamemodes.fnf import FNFNote, FNFChart
+from charm.core.gamemodes.four_key import FourKeyHighway
 from charm.core.parsers.fnf import FNFParser
-from charm.core.generic.engine import AutoEngine
-from charm.core.generic import ChartSet
-from charm.core.generic.metadata import ChartMetadata, ChartSetMetadata
 
 
 logger = logging.getLogger("charm")
@@ -103,7 +102,7 @@ class VisualizerView(DigiView):
                     self.enemy_notes = nindex.Index(self.enemy_chart.notes, 'time')
                 with LogSection(logger, "generating highway"):
                     self.engine = AutoEngine(self.player_chart)
-                    self.highway = FNFHighway(self.player_chart, self.engine, (((self.window.width // 3) * 2), 0))
+                    self.highway = FourKeyHighway(self.player_chart, self.engine, (((self.window.width // 3) * 2), 0))
                     self.highway.bg_color = colors.TRANSPARENT_BLACK
 
         # Create background stars
