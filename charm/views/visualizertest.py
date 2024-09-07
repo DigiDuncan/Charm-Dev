@@ -18,11 +18,13 @@ from charm.lib.anim import ease_linear, ease_quartout, perc
 from charm.lib.digiview import DigiView, disable_when_focus_lost, shows_errors
 from charm.lib.logsection import LogSection
 from charm.lib.paths import songspath
+from charm.lib.trackcollection import TrackCollection
 
-# TODO: UPDATE!
-from charm.unused.generic.engine import AutoEngine
-from charm.unused.gamemodes.four_key import FourKeyHighway
-from charm.unused.gamemodes.fnf import FNFNote, FNFSong
+from charm.core.gamemodes.fnf import FNFHighway, FNFNote, FNFChart
+from charm.core.parsers.fnf import FNFParser
+from charm.core.generic.engine import AutoEngine
+from charm.core.generic import ChartSet
+from charm.core.generic.metadata import ChartMetadata, ChartSetMetadata
 
 
 logger = logging.getLogger("charm")
@@ -75,6 +77,7 @@ class VisualizerView(DigiView):
         with LogSection(logger, "loading song and waveform"):
             with as_file(files(charm.data.audio) / "fourth_wall.wav") as p:
                 self._song = Sound(p)
+                self.tracks = TrackCollection([self._song])
                 f = open(p, "rb")
                 self.wave = wave.open(f, "rb")
                 self.sample_count = self.wave.getnframes()
@@ -85,17 +88,23 @@ class VisualizerView(DigiView):
         # Create an index of chart notes
         with LogSection(logger, "parsing chart"):
             path = songspath / "fnf" / "funkin-at-freddys" / "fourth-wall"
-            self.songdata = FNFSong.parse(path)
-        if self.songdata:
-            with LogSection(logger, "indexing notes"):
-                self.chart_available = True
-                self.player_chart = nindex.Index(self.songdata.charts[0].notes, "time")
-                enemy_chart = self.songdata.get_chart(2, self.songdata.charts[0].difficulty)
-                self.enemy_chart = nindex.Index(enemy_chart.notes, "time")
-            with LogSection(logger, "generating highway"):
-                self.engine = AutoEngine(self.songdata.charts[0], 0.166)
-                self.highway = FourKeyHighway(self.songdata.charts[0], self.engine, (((self.window.width // 3) * 2), 0))
-                self.highway.bg_color = (0, 0, 0, 0)
+            try:
+                charts = FNFParser.parse_chart_metadata(path)
+                metadata = FNFParser.parse_chartset_metadata(path)
+                self.chartset = ChartSet(path, metadata, charts)
+            except Exception as e:
+                logger.error(e)
+                self.chartset = None
+            else:
+                with LogSection(logger, "indexing notes"):
+                    self.chart_available = True
+                    self.player_chart, self.enemy_chart = FNFParser.parse_chart(self.chartset.charts[0])
+                    self.player_notes = nindex.Index(self.player_chart.notes, 'time')
+                    self.enemy_notes = nindex.Index(self.enemy_chart.notes, 'time')
+                with LogSection(logger, "generating highway"):
+                    self.engine = AutoEngine(self.player_chart)
+                    self.highway = FNFHighway(self.player_chart, self.engine, (((self.window.width // 3) * 2), 0))
+                    self.highway.bg_color = colors.TRANSPARENT_BLACK
 
         # Create background stars
         with LogSection(logger, "creating stars"):
@@ -165,7 +174,7 @@ class VisualizerView(DigiView):
     @shows_errors
     def on_show_view(self) -> None:
         self.window.theme_song.volume = 0
-        self.song = arcade.play_sound(self._song, 1, loop=False)
+        self.tracks.start()
         super().on_show_view()
 
     @shows_errors
@@ -173,19 +182,20 @@ class VisualizerView(DigiView):
         super().on_update(delta_time)
         if not self.shown:
             return
+        self.tracks.validate_playing()
 
         # Waveform
         self.wave.rewind()
-        self.wave.setpos(min(int(self.song.time * self.sample_rate), self.sample_count - self.window.width))
+        self.wave.setpos(min(int(self.tracks.time * self.sample_rate), self.sample_count - self.window.width))
         signal_wave = self.wave.readframes(int(self.window.width))
         samples = np.frombuffer(signal_wave, dtype=np.int16)[::self.resolution * 2]
         self.pixels = [(n * self.resolution, float(s) * self.multiplier + self.y) for n, s in enumerate(samples)]
 
-        self.last_beat = self.song.time - (self.song.time % (60 / 72))  # ALSO BAD HARDCODE RN
-        enemy_note = self.enemy_chart.lt(self.song.time)
-        player_note = self.player_chart.lt(self.song.time)
+        self.last_beat = self.tracks.time - (self.tracks.time % (60 / 72))  # ALSO BAD HARDCODE RN
+        enemy_note = self.enemy_notes.lt(self.tracks.time)
+        player_note = self.player_notes.lt(self.tracks.time)
 
-        if (not self.did_harcode) and self.song.time >= BAD_HARDCODE_TIME:
+        if (not self.did_harcode) and self.tracks.time >= BAD_HARDCODE_TIME:
             # Y'know?
             self.sprite.play_animation_once("phone")
             self.did_harcode = True
@@ -198,9 +208,9 @@ class VisualizerView(DigiView):
 
         self.sprite.update_animation(delta_time)
         self.boyfriend.update_animation(delta_time)
-        self.engine.update(self.song.time)
+        self.engine.update(self.tracks.time)
         self.engine.calculate_score()
-        self.highway.update(self.song.time)
+        self.highway.update(self.tracks.time)
 
     @shows_errors
     @disable_when_focus_lost(keyboard=True)
@@ -209,14 +219,14 @@ class VisualizerView(DigiView):
         if keymap.back.pressed:
             self.go_back()
         elif keymap.pause.pressed:
-            self.song.pause() if self.song.playing else self.song.play()
+            self.tracks.pause() if self.tracks.playing else self.tracks.play()
         elif keymap.seek_zero.pressed:
-            self.song.seek(0)
+            raise NotImplementedError
         elif keymap.toggle_show_text.pressed:
             self.show_text = not self.show_text
 
     def go_back(self) -> None:
-        self.song.delete()
+        self.tracks.pause()
         super().go_back()
 
     @shows_errors
@@ -226,8 +236,8 @@ class VisualizerView(DigiView):
             return
 
         # Camera zoom
-        star_zoom = ease_quartout(1, 0.95, perc(self.last_beat, self.last_beat + self.beat_time, self.song.time))
-        cam_zoom = ease_quartout(1.05, 1, perc(self.last_beat, self.last_beat + self.beat_time, self.song.time))
+        star_zoom = ease_quartout(1, 0.95, perc(self.last_beat, self.last_beat + self.beat_time, self.tracks.time))
+        cam_zoom = ease_quartout(1.05, 1, perc(self.last_beat, self.last_beat + self.beat_time, self.tracks.time))
         self.star_camera.zoom = star_zoom
         self.window.camera.zoom = cam_zoom
         # self.highway.highway_camera.scale = 1 / cam_zoom, 1 / cam_zoom
@@ -238,24 +248,24 @@ class VisualizerView(DigiView):
         self.gradient.draw()
 
         # Scroll star camera and draw stars
-        self.star_camera.position = (self.window.center_x, 0 - (self.song.time * self.scroll_speed))
+        self.star_camera.position = (self.window.center_x, 0 - (self.tracks.time * self.scroll_speed))
         with self.star_camera.activate():
             self.stars.draw()
 
         # Note flashes
         if self.chart_available:
-            player_note = self.player_chart.lt(self.song.time)
+            player_note = self.player_notes.lt(self.tracks.time)
             if player_note:
                 player_color = colormap[player_note.lane]
                 player_time = player_note.time
-                player_opacity = ease_linear(32, 0, perc(player_time, player_time + self.beat_time, self.song.time))
+                player_opacity = ease_linear(32, 0, perc(player_time, player_time + self.beat_time, self.tracks.time))
                 player_color = player_color[:3] + (int(player_opacity),)
                 arcade.draw_rect_filled(LBWH(self.window.width / 2, 0, self.window.width / 2, self.window.height), player_color)
-            enemy_note = self.enemy_chart.lt(self.song.time)
+            enemy_note = self.enemy_notes.lt(self.tracks.time)
             if enemy_note:
                 enemy_color = colormap[enemy_note.lane]
                 enemy_time = enemy_note.time
-                enemy_opacity = ease_linear(32, 0, perc(enemy_time, enemy_time + self.beat_time, self.song.time))
+                enemy_opacity = ease_linear(32, 0, perc(enemy_time, enemy_time + self.beat_time, self.tracks.time))
                 enemy_color = enemy_color[:3] + (int(enemy_opacity),)
                 arcade.draw_rect_filled(LBWH(0, 0, self.window.width / 2, self.window.height), enemy_color)
 

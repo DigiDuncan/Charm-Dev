@@ -33,12 +33,6 @@ Bass and Five Key Keys are the same but Pro Keys, GH Live (6fret), and Drums/Pro
 We don't even support those yet so maybe it doesn't matter
 
 TODO:
-- Move HeroParser, HeroChart
-- Move HeroHighway, HeroDisplay
-- Move HeroEngine
-- Move FNFDisplay
-- Move TaikoHighway, TaikoDisplay
-
 - Restructure sustains in engines
 - Rethink Hero engine algorithm
 - Consider XKey
