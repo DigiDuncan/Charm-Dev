@@ -91,24 +91,25 @@ def find_chartset_parser(parsers: Sequence[type[Parser]], path: Path) -> type[Pa
     return valid_parsers[0]
 
 
-def load_path_chartsets(parsers: Sequence[type[Parser]], chartset_path: Path, metadata: ChartSetMetadata) -> ChartSet:
-    charm_metadata_path = (chartset_path / 'charm.toml')
-    directory_charm_data = None if not charm_metadata_path.exists() else read_charm_metadata(charm_metadata_path)
-    directory_metadata = ChartSetMetadata(chartset_path)
+def load_path_chartsets(parsers: Sequence[type[Parser]], chartset_path: Path, metadata: ChartSetMetadata, directory_metadata: ChartSetMetadata | None = None) -> ChartSet:
+    chartset_metadata = ChartSetMetadata(chartset_path)
     charts = []
 
-    logger.debug(f"Parsing {directory_metadata.path}")
+    logger.debug(f"Parsing {chartset_metadata.path}")
 
     parser = find_chartset_parser(parsers, chartset_path)
     parser_metadata = parser.parse_chartset_metadata(chartset_path)
-    directory_metadata = directory_metadata.update(parser_metadata)
+    chartset_metadata = chartset_metadata.update(parser_metadata)
     charts = parser.parse_chart_metadata(chartset_path)
 
     if not charts:
         raise NoChartsError(str(chartset_path))
-    metadata = metadata.update(directory_metadata)
-    if directory_charm_data is not None:
-        metadata = metadata.update(directory_charm_data)
+    metadata = metadata.update(chartset_metadata)
+
+
+    if directory_metadata is not None:
+        metadata = metadata.update(directory_metadata)
+
     # Album art injection
     if metadata.album_art is None:
         metadata.album_art = get_album_art_path_from_metadata(metadata)
@@ -116,11 +117,18 @@ def load_path_chartsets(parsers: Sequence[type[Parser]], chartset_path: Path, me
 
 
 def load_path_chartsets_recursive(parsers: Sequence[type[Parser]], chartset_path: Path, metadata: ChartSetMetadata) -> Iterator[ChartSet]:
+    charm_metadata_path = (chartset_path / 'charm.toml')
+    directory_metadata = None if not charm_metadata_path.exists() else read_charm_metadata(charm_metadata_path)
     try:
-        yield load_path_chartsets(parsers, chartset_path, metadata)
+        yield load_path_chartsets(parsers, chartset_path, metadata, directory_metadata)
     except CharmError as e:
         # TODO: Put error code here
         log_charmerror(e, False)
+
+    if directory_metadata is not None:
+        # When we aren't creating a chartset then we update
+        # with the directory metadata, and pass it to sub directories
+        metadata = metadata.update(directory_metadata)
 
     for d in chartset_path.iterdir():
         if not d.is_dir():
