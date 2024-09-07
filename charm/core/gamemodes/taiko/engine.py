@@ -1,6 +1,10 @@
-from charm.core.generic.engine import Engine
-from charm.core.gamemodes.taiko.chart import TaikoChart
 
+from charm.lib.types import Seconds
 
-class TaikoEngine(Engine[TaikoChart]):
-    ...
+from charm.core.generic import Engine
+from .chart import TaikoChart
+
+class TaikoEngine(Engine):
+    def __init__(self, chart: TaikoChart, offset: Seconds = 0):
+        super().__init__(chart, None, offset)
+        self.chart: TaikoChart

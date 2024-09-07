@@ -1,11 +1,14 @@
+from collections.abc import Sequence
 from pathlib import Path
-from charm.core.generic.metadata import ChartSetMetadata
-from charm.core.generic.parser import Parser
-from charm.core.generic.chart import ChartMetadata
-from charm.core.gamemodes.taiko.chart import TaikoNote, TaikoChart, TaikoNoteType
-from charm.core.parsers._osu import OsuHitCircle, OsuSlider, OsuSpinner, RawOsuChart
 
-class TaikoParser(Parser[TaikoChart]):
+from charm.core.generic import ChartSetMetadata, Parser, ChartMetadata
+from charm.core.gamemodes.taiko import TaikoNote, TaikoChart, TaikoNoteType
+from ._osu import OsuHitCircle, OsuSlider, OsuSpinner, RawOsuChart
+
+
+class TaikoParser(Parser):
+    gamemode = "taiko"
+
     @staticmethod
     def is_possible_chartset(path: Path) -> bool:
         return len(tuple(path.glob('./*.osu'))) > 0
@@ -24,14 +27,14 @@ class TaikoParser(Parser[TaikoChart]):
     @staticmethod
     def parse_chart_metadata(path: Path) -> list[ChartMetadata]:
         charts = path.glob('./*.osu')
-        metadatas = []
+        metadatas: list[ChartMetadata] = []
         for chart in charts:
             raw_chart = RawOsuChart.parse(chart)
             metadatas.append(ChartMetadata("taiko", raw_chart.metadata.difficulty, chart))
         return metadatas
 
     @staticmethod
-    def parse_chart(chart_data: ChartMetadata) -> list[TaikoChart]:
+    def parse_chart(chart_data: ChartMetadata) -> Sequence[TaikoChart]:
         raw_chart = RawOsuChart.parse(chart_data.path)  # SO MUCH is hidden by this function
         chart = TaikoChart(chart_data, [], [])
         chart.events.extend(raw_chart.timing_points)

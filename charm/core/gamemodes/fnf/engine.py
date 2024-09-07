@@ -1,16 +1,17 @@
+from typing import Literal, cast
 import logging
 import math
-from typing import Literal, cast
+
 from charm.lib.keymap import Action, keymap
 from charm.lib.types import Range4, Seconds
 from charm.lib.utils import clamp
-from charm.core.generic.engine import DigitalKeyEvent, Engine, Judgement
-from charm.core.generic.results import Results
-from charm.core.gamemodes.four_key.chart import FourKeyNoteType, FourKeyNote, FourKeyChart
+
+from charm.core.generic import DigitalKeyEvent, Engine, Judgement, Results
+from charm.core.gamemodes.four_key import FourKeyNoteType, FourKeyNote, FourKeyChart
 
 logger = logging.getLogger("charm")
 
-class FNFEngine(Engine[FourKeyChart]):
+class FNFEngine(Engine):
     def __init__(self, chart: FourKeyChart, offset: Seconds = 0):
         judgements = [
             #        ("name",  "key"    ms,       score, acc,   hp=0)
@@ -21,6 +22,8 @@ class FNFEngine(Engine[FourKeyChart]):
             Judgement("miss",  "miss",  math.inf, 0,     -1,   -0.1)
         ]
         super().__init__(chart, judgements, offset)
+        self.chart: FourKeyChart
+        self.current_notes: list[FourKeyNote]
 
         self.min_hp = 0
         self.hp = 1
@@ -34,7 +37,6 @@ class FNFEngine(Engine[FourKeyChart]):
         self.latest_judgement_time = None
         self.all_judgements: list[tuple[Seconds, Seconds, Judgement]] = []
 
-        self.current_notes: list[FourKeyNote] = self.chart.notes.copy()
         self.current_events: list[DigitalKeyEvent[Range4]] = []
 
         self.last_p1_action: Action | None = None

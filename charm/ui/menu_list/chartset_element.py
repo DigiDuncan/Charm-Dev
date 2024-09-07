@@ -4,10 +4,10 @@ from pyglet.math import Vec2
 from arcade import Rect, LRBT
 from arcade.clock import GLOBAL_CLOCK
 from charm.lib.charm import CharmColors
-from charm.lib.mini_mint import Element, VerticalElementList, Padding, padded_sub_rect, Animation, ProceduralAnimation
-from charm.lib.anim import ease_expoout, ease_quadinout
+from charm.lib.mini_mint import Element, VerticalElementList, Padding, padded_sub_rect, ProceduralAnimation
 from charm.lib.utils import get_font_size
-from charm.core.generic import ChartSet, ChartSetMetadata, Chart, ChartMetadata
+
+from charm.core.generic import ChartSet, ChartSetMetadata, ChartMetadata
 
 # -- TEMP --
 from arcade import draw, Text

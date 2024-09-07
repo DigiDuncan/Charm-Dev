@@ -1,11 +1,11 @@
 from pathlib import Path
 
-from charm.core.generic.metadata import ChartSetMetadata, ChartMetadata
+from .metadata import ChartSetMetadata, ChartMetadata
 
 
 class ChartSet:
     """A list of charts, with some helpful metadata."""
-    def __init__(self, path: Path, metadata: ChartSetMetadata, charts: list[ChartMetadata] = None):
+    def __init__(self, path: Path, metadata: ChartSetMetadata, charts: list[ChartMetadata] | None = None):
         self.path: Path = path
         self.metadata: ChartSetMetadata = metadata
         self.charts: list[ChartMetadata] = charts or []

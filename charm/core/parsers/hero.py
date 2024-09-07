@@ -6,12 +6,13 @@ import itertools
 import logging
 from pathlib import Path
 import re
+from typing import Sequence
 from nindex import Index
 
 from charm.lib.errors import MetadataParseError, NoChartsError, NoMetadataError, ChartParseError, ChartPostReadParseError
 from charm.lib.types import Seconds
 from charm.lib.utils import nuke_smart_quotes
-from charm.core.gamemodes.hero.chart import (
+from charm.core.gamemodes.hero import (
     HeroChart,
     HeroNote,
     HeroChord,
@@ -23,12 +24,12 @@ from charm.core.gamemodes.hero.chart import (
     SectionEvent,
     RawLyricEvent,
     StarpowerEvent,
-    BeatEvent
+    BeatEvent,
+    HeroNoteType
 )
 from charm.objects.lyric_animator import LyricEvent
-from charm.core.generic.chart import ChartMetadata
-from charm.core.generic.metadata import ChartSetMetadata
-from charm.core.generic.parser import Parser
+
+from charm.core.generic import ChartMetadata, ChartSetMetadata, Parser
 
 logger = logging.getLogger("charm")
 
@@ -53,6 +54,7 @@ SPECIAL_HEADERS = ["Song", "SyncTrack", "Events"]
 DIFF_INST_MAP: dict[str, tuple[str, str]] = {(a + b): (a, b) for a, b in itertools.product(DIFFICULTIES, INSTRUMENTS)}
 VALID_HEADERS = list(DIFF_INST_MAP.keys()) + SPECIAL_HEADERS
 
+
 def tick_to_seconds(current_tick: Ticks, sync_track: list[BPMChangeTickEvent], resolution: int = 192, offset: float = 0) -> Seconds:
     """Takes a tick (and an associated sync_track,) and returns its position in seconds as a float."""
     if current_tick == 0:
@@ -64,6 +66,7 @@ def tick_to_seconds(current_tick: Ticks, sync_track: list[BPMChangeTickEvent], r
     bps = last_bpm_event.new_bpm / 60
     seconds = tick_delta / (resolution * bps)
     return seconds + offset + last_bpm_event.time
+
 
 def process_chart_lyric_events(chart: HeroChart) -> None:
     """Takes a Song and generates a LyricAnimator-compatible list of LyricEvents."""
@@ -103,6 +106,7 @@ def process_chart_lyric_events(chart: HeroChart) -> None:
         p.karaoke = nuke_smart_quotes(p.karaoke)
     chart.events.extend(processsed_lyrics)
 
+
 def create_chart_chords(chart: HeroChart) -> None:
     """
     Turn lists of notes (in `self.notes`) into `HeroChord`s (in `self.chords`)
@@ -110,14 +114,15 @@ def create_chart_chords(chart: HeroChart) -> None:
     While this could be a method on HeroChart I am keeping it
     seperate to keep parsing of hero charts all in one file ~Dragon
     """
-    c = defaultdict(list)
+    c: dict[Ticks, list[HeroNote]] = defaultdict(list[HeroNote])
     for note in chart.notes:
         c[note.tick].append(note)
     chord_lists = list(c.values())
-    chords = []
+    chords: list[HeroChord] = []
     for cl in chord_lists:
         chords.append(HeroChord(cl))
     chart.chords = chords
+
 
 def calculate_chart_note_flags(chart: HeroChart) -> None:
     """Turn notes that aren't really notes but flags into properties on the notes."""
@@ -132,10 +137,11 @@ def calculate_chart_note_flags(chart: HeroChart) -> None:
         for n in c.notes:
             # Tap overrides HOPO, intentionally.
             if tap:
-                n.type = "tap"
+                n.type = HeroNoteType.TAP
             elif forced:
-                n.type = "forced"
+                n.type = HeroNoteType.FORCED
         c.notes = [n for n in c.notes if n.lane not in {5, 6}]
+
 
 def parse_chart_text_events(chart: HeroChart) -> None:
     current_solo = None
@@ -151,6 +157,7 @@ def parse_chart_text_events(chart: HeroChart) -> None:
             chart.events.append(SoloEvent(current_solo.time, current_solo.tick, tick_length, length))
             current_solo = None
             chart.events.remove(e)
+
 
 def calculate_chart_hopos(chart: HeroChart, time_sig_ticks: Index[Ticks, TSEvent], resolution: float) -> None:
             # This is basically ripped from Charm-Legacy.
@@ -185,8 +192,9 @@ def calculate_chart_hopos(chart: HeroChart, time_sig_ticks: Index[Ticks, TSEvent
                 if current_chord.type == "forced":
                     current_chord.type = "hopo"
 
+
 def create_chart_beat_events(chart: HeroChart, time_sig_seconds: Index[Seconds, TSEvent]) -> None:
-    beats = []
+    beats: list[BeatEvent] = []
     current_time = 0
     last_note = chart.notes[-1]
     bpm_events = chart.events_by_type(BPMChangeTickEvent)
@@ -203,7 +211,10 @@ def create_chart_beat_events(chart: HeroChart, time_sig_seconds: Index[Seconds, 
             current_beat += 1
     chart.events.extend(beats)
 
-class HeroParser(Parser[HeroChart]):
+
+class HeroParser(Parser):
+    gamemode = "hero"
+
     @staticmethod
     def is_possible_chartset(path: Path) -> bool:
         """Does this folder contain a parseable ChartSet?"""
@@ -249,7 +260,7 @@ class HeroParser(Parser[HeroChart]):
 
     @staticmethod
     def parse_chart_metadata(path: Path) -> list[ChartMetadata]:
-        metadatas = []
+        metadatas: list[ChartMetadata] = []
         if not (path / "notes.chart").exists():
             raise NoChartsError(path.stem)
         with open(path / "notes.chart", encoding = "utf-8") as f:
@@ -266,7 +277,7 @@ class HeroParser(Parser[HeroChart]):
         return metadatas
 
     @staticmethod
-    def parse_chart(chart_data: ChartMetadata) -> list[HeroChart]:
+    def parse_chart(chart_data: ChartMetadata) -> Sequence[HeroChart]:
         if not (chart_data.path).exists():
             raise NoChartsError(chart_data.path.stem)
         with open(chart_data.path, encoding = "utf-8") as f:
@@ -372,7 +383,7 @@ class HeroParser(Parser[HeroChart]):
                         seconds = tick_to_seconds(tick, sync_track, resolution, offset)
                         end = tick_to_seconds(tick + length, sync_track, resolution, offset)
                         sec_length = round(end - seconds, 5)  # accurate to 1/100ms
-                        chart.notes.append(HeroNote(chart, seconds, int(lane), sec_length, tick = tick, tick_length = length))  # TODO: Note flags.
+                        chart.notes.append(HeroNote(chart, seconds, int(lane), sec_length, type=HeroNoteType.STRUM, tick=tick, tick_length=length))  # TODO: Note flags.
                     # Special events
                     elif m := re.match(RE_S, line):
                         tick, s_type, length = m.groups()

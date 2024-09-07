@@ -4,23 +4,24 @@ import json
 import logging
 import math
 from pathlib import Path
-from typing import NotRequired, TypedDict
+from typing import NotRequired, Sequence, TypedDict
 
 from charm.lib.errors import ChartPostReadParseError, UnknownLanesError
-from charm.lib.types import Milliseconds
+from charm.lib.types import Milliseconds, Seconds
 from charm.objects.lyric_animator import LyricEvent
-from charm.core.gamemodes.fnf.chart import CameraFocusEvent, FNFChart, FNFNote, FNFNoteType
-from charm.core.generic.chart import BPMChangeEvent, Event
-from charm.core.generic.metadata import ChartMetadata, ChartSetMetadata
-from charm.core.generic.parser import Parser
+
+from charm.core.generic import BPMChangeEvent, Event, ChartMetadata, ChartSetMetadata, Parser
+from charm.core.gamemodes.fnf import CameraFocusEvent, FNFChart, FNFNote, FNFNoteType
 
 logger = logging.getLogger("charm")
+
 
 class NoteJson(TypedDict):
     bpm: float
     mustHitSection: bool
     sectionNotes: list[tuple[Milliseconds, int, Milliseconds]]
     lengthInSteps: int
+
 
 class SongJson(TypedDict):
     song: str
@@ -29,10 +30,14 @@ class SongJson(TypedDict):
     notes: list[NoteJson]
     events: NotRequired[list[tuple[Milliseconds, list[tuple[str, str, str]]]]]
 
+
 class SongFileJson(TypedDict):
     song: SongJson
 
-class FNFParser(Parser[FNFChart]):
+
+class FNFParser(Parser):
+    gamemode = "fnf"
+
     @staticmethod
     def is_possible_chartset(path: Path) -> bool:
         """Does this folder possibly contain a parseable ChartSet?"""
@@ -74,7 +79,7 @@ class FNFParser(Parser[FNFChart]):
     def parse_chart_metadata(path: Path) -> list[ChartMetadata]:
         stem = path.name.casefold()
         chart_paths = path.glob(f"./{stem}*.json")
-        chart_metadatas = []
+        chart_metadatas: list[ChartMetadata] = []
         for chart_path in chart_paths:
             chart_stem = chart_path.stem.casefold()
             if 'metadata' in chart_stem:
@@ -86,7 +91,7 @@ class FNFParser(Parser[FNFChart]):
         return chart_metadatas
 
     @staticmethod
-    def parse_chart(chart_data: ChartMetadata) -> list[FNFChart]:
+    def parse_chart(chart_data: ChartMetadata) -> Sequence[FNFChart]:
         with open(chart_data.path) as p:
             j: SongFileJson = json.load(p)
         fnf_overrides = None
@@ -114,11 +119,11 @@ class FNFParser(Parser[FNFChart]):
 
         last_bpm = bpm
         last_focus: int | None = None
-        section_start = 0.0
+        section_start: Seconds = 0.0
         events: list[Event] = []
         sections = songdata["notes"]
-        section_starts = []
-        unknown_lanes = []
+        section_starts: list[tuple[Seconds, float]] = []
+        unknown_lanes: list[int] = []
 
         for section in sections:
             # There's a changeBPM event but like, it always has to be paired
@@ -218,7 +223,7 @@ class FNFParser(Parser[FNFChart]):
             section_start += section_length
 
         # LYRICS
-        lyrics = []
+        lyrics: list[LyricEvent] = []
 
         # Pysch Engine events look like this
         if "events" in songdata:

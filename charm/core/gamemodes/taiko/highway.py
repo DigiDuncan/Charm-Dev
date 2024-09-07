@@ -1,8 +1,10 @@
-from collections.abc import Generator
 from typing import Any
+from collections.abc import Generator, Sequence
+
 from functools import cache
 from importlib.resources import files
 import logging
+
 import PIL.Image
 
 from arcade import LRBT, draw_arc_filled, draw_arc_outline, draw_circle_outline, draw_rect_filled, draw_circle_filled, Texture, color
@@ -10,11 +12,9 @@ from arcade import LRBT, draw_arc_filled, draw_arc_outline, draw_circle_outline,
 from charm.lib.charm import load_missing_texture
 from charm.lib.pool import SpritePool
 from charm.lib.utils import img_from_path
-from charm.core.generic.chart import Chart
-from charm.core.generic.sprite import NoteSprite
-from charm.core.generic.engine import AutoEngine, Engine
-from charm.core.generic.highway import Highway
-from charm.core.gamemodes.taiko.chart import TaikoNoteType, TaikoNote
+
+from charm.core.generic import NoteSprite, AutoEngine, Engine, Highway
+from .chart import TaikoChart, TaikoNoteType, TaikoNote
 
 import charm.data.images.skins as skins
 
@@ -37,9 +37,10 @@ TAIKO_LANE_COUNT = 1  #*
 
 
 class TaikoHighway(Highway):
-
-    def __init__(self, chart: Chart, engine: Engine, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5, viewport: float = 1):
+    def __init__(self, chart: TaikoChart, engine: Engine, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5, viewport: float = 1):
         super().__init__(chart, engine, pos, size, gap, viewport)
+        self.chart: TaikoChart
+        self.notes: Sequence[TaikoNote]
         self.color = (0, 0, 0, 128)  # TODO: eventually this will be a scrolling image.
 
         # Generators are great for ease, but it means we can't really 'scrub' backwards through the song

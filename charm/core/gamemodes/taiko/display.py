@@ -1,18 +1,22 @@
 
+from collections.abc import Sequence
+
 from arcade import get_window
 
 from charm.lib.types import Seconds
 from charm.lib.displayables import Timer
 
-from charm.core.generic.display import Display
-from charm.core.gamemodes.taiko.chart import TaikoChart
-from charm.core.gamemodes.taiko.engine import TaikoEngine
-from charm.core.gamemodes.taiko.highway import TaikoHighway
+from charm.core.generic import Display
+from .chart import TaikoChart
+from .engine import TaikoEngine
+from .highway import TaikoHighway
 
 
-class TaikoDisplay(Display[TaikoEngine, TaikoChart]):
-    def __init__(self, engine: TaikoEngine, charts: tuple[TaikoChart, ...]):
+class TaikoDisplay(Display):
+    def __init__(self, engine: TaikoEngine, charts: Sequence[TaikoChart]):
         super().__init__(engine, charts)
+        self.engine: TaikoEngine
+        self.charts: Sequence[TaikoChart]
         self._win: "DigiWindow" = get_window()  # type: ignore | aaa shut up Arcade
         self.chart = charts[0]
 

@@ -1,28 +1,31 @@
 from __future__ import annotations
+from collections.abc import Sequence
 
 from importlib.resources import files
+
 from arcade import Sprite, Text, Texture, draw_sprite, get_window, load_texture
 from arcade import color
 from nindex.index import Index
 
 from charm.lib.anim import ease_circout, perc
-from charm.lib.displayables import Countdown, HPBar, Timer
+from charm.lib.displayables import Countdown, Timer
 from charm.lib.types import Point, Seconds
 from charm.objects.lyric_animator import LyricAnimator, LyricEvent
 
-from charm.core.generic.chart import CountdownEvent
-from charm.core.generic.display import Display
-from charm.core.gamemodes.four_key.chart import FourKeyChart
-from charm.core.gamemodes.four_key.engine import FourKeyEngine
-from charm.core.gamemodes.four_key.highway import FourKeyHighway
+from charm.core.generic import CountdownEvent, Display
 from charm.core.gamemodes.fnf.engine import FNFEngine
+from .chart import FourKeyChart
+from .engine import FourKeyEngine
+from .highway import FourKeyHighway
 
 import charm.data.images.skins as skins
 
 
-class FourKeyDisplay(Display[FNFEngine | FourKeyEngine, FourKeyChart]):
-    def __init__(self, engine: FNFEngine | FourKeyEngine, charts: tuple[FourKeyChart, ...]):
+class FourKeyDisplay(Display):
+    def __init__(self, engine: FNFEngine | FourKeyEngine, charts: Sequence[FourKeyChart]):
         super().__init__(engine, charts)
+        self.engine: FNFEngine | FourKeyEngine
+        self.charts: Sequence[FourKeyChart]
         self._win: "DigiWindow" = get_window()  # type: ignore | aaa shut up Arcade
         self.chart = charts[0]
 

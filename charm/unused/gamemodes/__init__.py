@@ -1,8 +1,6 @@
 from typing import TypedDict
 
-from charm.core.generic.engine import Engine
-from charm.core.generic.display import Display
-from charm.core.generic.chart import Chart
+from charm.core.generic import Engine, Display, Chart
 
 # -- fnf --
 from charm.core.gamemodes.fnf import FNFEngine, FNFDisplay

@@ -1,27 +1,34 @@
-from .chart import Note, Event, BPMChangeEvent, Chart
+from .chart import Note, Event, BPMChangeEvent, Chart, CountdownEvent
 from .display import Display
-from .engine import Judgement, EngineEvent, DigitalKeyEvent, Engine
+from .judgement import Judgement
+from .engine import EngineEvent, DigitalKeyEvent, Engine, AutoEngine
 from .highway import Highway
 from .metadata import ChartSetMetadata, ChartMetadata
-from .results import Results, ScoreJSON
+from .results import Results, ScoreJSON, Heatmap
 from .chartset import ChartSet
 from .sprite import NoteSprite
+from .parser import Parser
+
 
 __all__ = [
     "Note",
     "Event",
     "BPMChangeEvent",
     "Chart",
+    "CountdownEvent",
     "Display",
     "Judgement",
     "EngineEvent",
     "DigitalKeyEvent",
     "Engine",
+    "AutoEngine",
     "Highway",
     "ChartSetMetadata",
     "ChartMetadata",
     "Results",
     "ScoreJSON",
+    "Heatmap",
     "ChartSet",
-    "NoteSprite"
+    "NoteSprite",
+    "Parser"
 ]

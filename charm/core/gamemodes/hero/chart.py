@@ -1,28 +1,36 @@
 from __future__ import annotations
 
-import itertools
+from collections.abc import Sequence
 from typing import NamedTuple
-from dataclasses import dataclass
 from enum import StrEnum
+from dataclasses import dataclass
 from nindex.index import Index
+import itertools
 
 from charm.lib.types import Seconds
 
-from charm.core.generic.chart import Chart, Event, Note
-from charm.core.generic.metadata import ChartMetadata
-
+from charm.core.generic import Chart, Event, Note, ChartMetadata
 
 Ticks = int
+
 
 class HeroNoteType(StrEnum):
     STRUM = "strum"
     HOPO = "hopo"
     TAP = "tap"
+    FORCED = "force"
+
 
 @dataclass
-class HeroNote(Note[HeroNoteType]):
-    tick: int = None
-    tick_length: Ticks = None
+class HeroNote(Note):
+    def __init__(self, chart: HeroChart, time: Seconds, lane: int, length: Seconds, type: HeroNoteType, tick: Ticks, tick_length: Ticks):
+        super().__init__(chart, time, lane, length, type)
+        self.chart: HeroChart
+        self.type: HeroNoteType
+        self.parent: HeroNote
+        self.tick: Ticks = tick
+        self.tick_length: Ticks = tick_length
+
 
 class HeroChord:
     """A data object to hold notes and have useful functions for manipulating and reading them."""
@@ -106,9 +114,11 @@ class HeroChord:
         final_list = [v + append_part for v in valid_shape_list]
         return final_list
 
+
 @dataclass
 class TickEvent(Event):
     tick: int
+
 
 @dataclass
 class TSEvent(TickEvent):
@@ -119,42 +129,51 @@ class TSEvent(TickEvent):
     def time_sig(self) -> tuple[int, int]:
         return (self.numerator, self.denominator)
 
+
 @dataclass
 class TextEvent(TickEvent):
     text: str
+
 
 @dataclass
 class SectionEvent(TickEvent):
     name: str
 
+
 @dataclass
 class RawLyricEvent(TickEvent):
     text: str
+
 
 @dataclass
 class StarpowerEvent(TickEvent):
     tick_length: Ticks
     length: Seconds
 
+
 @dataclass
 class SoloEvent(TickEvent):
     tick_length: Ticks
     length: Seconds
 
+
 @dataclass
 class BPMChangeTickEvent(TickEvent):
     new_bpm: float
+
 
 @dataclass
 class BeatEvent(TickEvent):
     id: int
     major: bool = True
 
+
 @dataclass
 class RawBPMEvent:
     """Only used for parsing, and shouldn't be in a Song post-parse."""
     ticks: Ticks
     mbpm: int
+
 
 class ChartNIndexCollection(NamedTuple):
     bpm_time: Index[Seconds, BPMChangeTickEvent]
@@ -169,12 +188,13 @@ class ChartNIndexCollection(NamedTuple):
     chord_time: Index[Seconds, HeroChord]
     chort_tick: Index[Ticks, HeroChord]
 
-class HeroChart(Chart[HeroNote]):
 
-    def __init__(self, metadata: ChartMetadata, notes: list[HeroNote], events: list[Event]) -> None:
+class HeroChart(Chart):
+    def __init__(self, metadata: ChartMetadata, notes: Sequence[HeroNote], events: Sequence[Event]) -> None:
         super().__init__(metadata, notes, events)
+        self.notes: list[HeroNote]
         self.chords: list[HeroChord] = []
-        self.indices: ChartNIndexCollection = None
+        self.indices: ChartNIndexCollection
 
     def calculate_indices(self) -> None:
         # !: This assumes that the events, notes, and chords are all time sorted :3

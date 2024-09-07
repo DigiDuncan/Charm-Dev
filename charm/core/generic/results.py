@@ -6,9 +6,10 @@ import arcade
 from arcade import Sprite, SpriteList, Texture, color as colors
 
 from charm.lib.anim import lerp
-from charm.core.generic.chart import Chart
-from charm.core.generic.judgement import Judgement
 from charm.lib.types import Seconds
+
+from .chart import Chart
+from .judgement import Judgement
 
 class ScoreJSON(TypedDict):
     score: int

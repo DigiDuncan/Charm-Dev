@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+import logging
+import traceback
 from importlib.resources import files
 from typing import ClassVar
 
@@ -9,6 +13,19 @@ import charm.data.images.errors
 from charm.lib.utils import img_from_path
 
 MAX_REPEATS = 50
+
+logger = logging.getLogger("charm")
+
+
+def log_charmerror(e: CharmError):
+    loglevel = {
+        "error": logging.ERROR,
+        "warn": logging.WARN
+    }.get(e.icon_name, logging.INFO)
+    logger.log(loglevel, f"{e.title}: {e.message}{' (' + str(e.repeat) + ')' if e.repeat > 1 else ''}")
+    if e.repeat == 1:
+        logger.debug(traceback.format_exc())
+
 
 class CharmError(Exception):
     _icon_textures: ClassVar[dict[str, Texture]] = {}
@@ -92,6 +109,16 @@ class NoChartsError(CharmError):
 class NoMetadataError(CharmError):
     def __init__(self, song_name: str):
         super().__init__(title="No metadata found!", message=f"No metadata found for song '{song_name}'")
+
+
+class NoParserError(CharmError):
+    def __init__(self, song_name: str):
+        super().__init__(title="No parser found!", message=f"No parser found for song '{song_name}'")
+
+
+class AmbigiousParserError(CharmError):
+    def __init__(self, song_name: str):
+        super().__init__(title="Multiple parsers found!", message=f"Multiple parsers found for song '{song_name}'")
 
 
 class MissingGamemodeError(CharmError):

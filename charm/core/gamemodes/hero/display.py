@@ -1,19 +1,22 @@
 
+from collections.abc import Sequence
+
 from arcade import get_window
 
 from charm.lib.types import Seconds
-from charm.lib.displayables import HPBar, Timer
+from charm.lib.displayables import Timer
 
-from charm.core.generic.display import Display
-from charm.core.gamemodes.hero.chart import HeroChart
-from charm.core.gamemodes.hero.engine import HeroEngine
-from charm.core.gamemodes.hero.highway import HeroHighway
+from charm.core.generic import Display
+from .chart import HeroChart
+from .engine import HeroEngine
+from .highway import HeroHighway
 
 
-class HeroDisplay(Display[HeroEngine, HeroChart]):
-
-    def __init__(self, engine: HeroEngine, charts: tuple[HeroChart, ...]):
+class HeroDisplay(Display):
+    def __init__(self, engine: HeroEngine, charts: Sequence[HeroChart]):
         super().__init__(engine, charts)
+        self.engine: HeroEngine
+        self.charts: Sequence[HeroChart]
         self._win: "DigiWindow" = get_window()  # type: ignore | aaa shut up Arcade
         self.chart = charts[0]
 

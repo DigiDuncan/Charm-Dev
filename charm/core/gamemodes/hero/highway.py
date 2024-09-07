@@ -1,6 +1,6 @@
 import math
 from typing import Any
-from collections.abc import Generator
+from collections.abc import Generator, Sequence
 from functools import cache
 from importlib.resources import files
 import logging
@@ -14,11 +14,10 @@ from arcade.camera.grips import rotate_around_right
 from charm.lib.charm import load_missing_texture
 from charm.lib.utils import img_from_path
 from charm.lib.pool import Pool, SpritePool
-from charm.core.generic.chart import Chart
-from charm.core.generic.engine import Engine
-from charm.core.generic.highway import Highway
+
+from charm.core.generic import Chart, Engine, Highway
 from charm.core.generic.sprite import NoteSprite, StrikelineSprite, SustainSprites, SustainTextureDict, SustainTextures, get_note_color_by_beat
-from charm.core.gamemodes.hero.chart import HeroChart, HeroNote, BeatEvent
+from .chart import HeroChart, HeroNote, BeatEvent
 
 import charm.data.images.skins as skins
 
@@ -48,13 +47,12 @@ HERO_HIGHWAY_DIST = 400.0
 HERO_LANE_COUNT = 5
 
 class HeroHighway(Highway):
-
     def __init__(self, chart: Chart, engine: Engine, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5, *, show_flags: bool = False):
         static_camera = PerspectiveProjector()
         highway_camera = PerspectiveProjector(projection=static_camera.projection)
-
-        self.chart: HeroChart
         super().__init__(chart, engine, pos, size, gap, downscroll=True, static_camera=static_camera, highway_camera=highway_camera)
+        self.chart: HeroChart
+        self.notes: Sequence[HeroNote]
 
         # Using some triginomerty we find the angle and position of the perspective camera's
         # to give us the classic hero look

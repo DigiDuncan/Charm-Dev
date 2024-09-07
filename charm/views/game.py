@@ -4,13 +4,9 @@ from charm.lib.charm import GumWrapper
 from charm.views.results import ResultsView
 from charm.lib.keymap import keymap
 
-from charm.core.generic.display import Display
-from charm.core.generic.engine import Engine
+from charm.core.generic import Display, Engine, ChartSet, Chart
 
-from charm.core.generic.chartset import ChartSet
-from charm.core.generic.chart import Chart
-
-from charm.core.defintions import GAMEMODES
+from charm.core.definitions import GAMEMODES
 from charm.lib.trackcollection import TrackCollection
 from charm.lib.settings import settings
 

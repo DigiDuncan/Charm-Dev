@@ -8,7 +8,7 @@ from pyglet import gl
 from charm.lib.types import Seconds
 from charm.objects.emojilabel import FormattedLabel, update_emoji_doc
 
-from charm.core.generic.chart import Event
+from charm.core.generic import Event
 
 gl.glEnable(gl.GL_DEPTH_TEST)
 

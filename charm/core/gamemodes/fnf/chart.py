@@ -1,6 +1,13 @@
+from __future__ import annotations
+
+from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
-from charm.core.generic.chart import ChartMetadata, Event, Note, Chart
+
+from charm.lib.types import Seconds
+
+from charm.core.generic import Chart, Event, Note, ChartMetadata
+
 
 @dataclass
 class CameraFocusEvent(Event):
@@ -14,6 +21,7 @@ class CameraFocusEvent(Event):
     def __str__(self) -> str:
         return self.__repr__()
 
+
 @dataclass
 class CameraZoomEvent(Event):
     zoom: float
@@ -25,6 +33,7 @@ class CameraZoomEvent(Event):
 
     def __str__(self) -> str:
         return self.__repr__()
+
 
 @dataclass
 class PlayAnimationEvent(Event):
@@ -38,6 +47,7 @@ class PlayAnimationEvent(Event):
     def __str__(self) -> str:
         return self.__repr__()
 
+
 class FNFNoteType(StrEnum):
     NORMAL = "normal"
     BOMB = "bomb"
@@ -47,10 +57,17 @@ class FNFNoteType(StrEnum):
     STRIKELINE = "strikeline"
     SUSTAIN = "sustain"  # FNF specific and maybe going away one day
 
-class FNFNote(Note[FNFNoteType]):
-    pass
 
-class FNFChart(Chart[FNFNote]):
-    def __init__(self, metadata: ChartMetadata, notes: list[FNFNote], events: list[Event]) -> None:
+class FNFNote(Note):
+    def __init__(self, chart: FNFChart, time: Seconds, lane: int, length: Seconds = 0, type: FNFNoteType = FNFNoteType.NORMAL):
+        super().__init__(chart, time, lane, length, type)
+        self.chart: FNFChart
+        self.type: FNFNoteType
+        self.parent: FNFNote
+
+
+class FNFChart(Chart):
+    def __init__(self, metadata: ChartMetadata, notes: Sequence[FNFNote], events: Sequence[Event]) -> None:
         super().__init__(metadata, notes, events)
+        self.notes: list[FNFNote]
         self.speed = 1.0

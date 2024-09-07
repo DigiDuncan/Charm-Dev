@@ -1,18 +1,19 @@
 from __future__ import annotations
+from collections.abc import Sequence
 
 from arcade.types import Point
 
-from charm.core.generic.engine import Engine
-from charm.core.generic.chart import Chart
-from charm.core.generic.sprite import NoteSprite
 from charm.lib.types import Seconds
 
+from .engine import Engine
+from .chart import Chart
+from .sprite import NoteSprite
 
-class Display[ET: Engine, CT: Chart]:
 
-    def __init__(self, engine: ET, charts: tuple[CT, ...]):
-        self.engine: ET = engine
-        self.charts: tuple[CT, ...] = charts
+class Display:
+    def __init__(self, engine: Engine, charts: Sequence[Chart]):
+        self.engine = engine
+        self.charts = charts
 
     def update(self, song_time: Seconds) -> None:
         pass

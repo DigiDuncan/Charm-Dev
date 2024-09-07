@@ -11,7 +11,6 @@ import time
 from dataclasses import dataclass
 import functools
 import logging
-import traceback
 
 import arcade
 from imgui_bundle import imgui
@@ -20,11 +19,12 @@ from arcade import LBWH, LRBT, View, SpriteList
 from charm.lib.charm import CharmColors
 from charm.lib.components import ComponentManager
 from charm.lib.anim import ease_linear, perc
-from charm.lib.errors import CharmError, GenericError
+from charm.lib.errors import CharmError, GenericError, log_charmerror
 from charm.lib.keymap import keymap
 from charm.lib.sfxmanager import SFXManager
 
 logger = logging.getLogger("charm")
+
 
 def shows_errors[S: DigiView, **P](fn: Callable[Concatenate[S, P], None]) -> Callable[Concatenate[S, P], None]:
     @functools.wraps(fn)
@@ -37,13 +37,7 @@ def shows_errors[S: DigiView, **P](fn: Callable[Concatenate[S, P], None]) -> Cal
             if (not self.shown) and self.back is not None:
                 self = self.back
             self.on_error(e)
-            logger_fn = {
-                "error": logger.error,
-                "warn": logger.warn
-            }.get(e.icon_name, logger.info)
-            logger_fn(f"{e.title}: {e.message}{' (' + str(e.repeat) + ')' if e.repeat > 1 else ''}")
-            if e.repeat == 1:
-                logger.debug(traceback.format_exc())
+            log_charmerror(e)
     return wrapper
 
 

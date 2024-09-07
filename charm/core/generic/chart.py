@@ -1,17 +1,19 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
+from enum import StrEnum
 from functools import total_ordering
 from typing import Any
 
 from charm.lib.types import Seconds
 
-from charm.core.generic.metadata import ChartMetadata
+from .metadata import ChartMetadata
 
 
 @dataclass
 @total_ordering
-class Note[NT: str]:
+class Note:
     """Represents a note on a chart.
 
     - `chart: Chart`: the chart this Note belongs to
@@ -26,20 +28,18 @@ class Note[NT: str]:
     - `hit_time: float`: when was this note hit?
 
     - `extra_data: tuple`: ¯\\_(ツ)_//¯"""
-    chart: Chart
-    time: Seconds
-    lane: int
-    length: Seconds = 0
-    # A basic string technically might not satisfy a subclass of string (not that we are doing that so its fine)
-    type: NT = "normal"  # type: ignore --
+    def __init__(self, chart: Chart, time: Seconds, lane: int, length: Seconds, type: StrEnum):
+        self.chart = chart
+        self.time = time
+        self.lane = lane
+        self.length = length
+        self.type = type
 
-    parent: Note[NT] | None = None
-
-    hit: bool = False
-    missed: bool = False
-    hit_time: Seconds | None = None
-
-    extra_data: tuple[Any, ...] | None = None
+        self.parent: Note | None = None
+        self.hit: bool = False
+        self.missed: bool = False
+        self.hit_time: Seconds | None = None
+        self.extra_data: tuple[Any, ...] | None = None
 
     @property
     def end(self) -> Seconds:
@@ -48,8 +48,6 @@ class Note[NT: str]:
     @end.setter
     def end(self, v: Seconds) -> None:
         self.length = v - self.time
-
-    # !: Removed .icon
 
     @property
     def is_sustain(self) -> bool:
@@ -126,12 +124,12 @@ class CountdownEvent(Event):
         return self.__repr__()
 
 
-class Chart[NT: Note]:
+class Chart:
     """A collection of notes and events, with helpful metadata."""
-    def __init__(self, metadata: ChartMetadata, notes: list[NT], events: list[Event]) -> None:
+    def __init__(self, metadata: ChartMetadata, notes: Sequence[Note], events: Sequence[Event]) -> None:
         self.metadata: ChartMetadata = metadata
-        self.notes: list[NT] = notes
-        self.events: list[Event] = events
+        self.notes = list(notes)
+        self.events = list(events)
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {self.metadata.gamemode}/{self.metadata.instrument}/{self.metadata.difficulty}>"

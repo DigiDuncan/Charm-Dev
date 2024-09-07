@@ -1,12 +1,16 @@
 import itertools
 from pathlib import Path
-from charm.core.generic.chart import Chart, CountdownEvent, Note
-from charm.core.generic.metadata import ChartMetadata, ChartSetMetadata
+from typing import Sequence
+
+from .chart import Chart, CountdownEvent
+from .metadata import ChartMetadata, ChartSetMetadata
 
 # should be configurable
 COUNTDOWN_GAP = 5.0
 
-class Parser[T: Chart[Note]]:
+class Parser:
+    gamemode: str = None
+
     @staticmethod
     def is_possible_chartset(path: Path) -> bool:
         """Does this folder contain a parseable ChartSet?"""
@@ -30,7 +34,7 @@ class Parser[T: Chart[Note]]:
         return []
 
     @staticmethod
-    def parse_chart(chart_data: ChartMetadata) -> list[T]:
+    def parse_chart(chart_data: ChartMetadata) -> Sequence[Chart]:
         """
         For the specific chart provided read its source, and create
         the needed note and event data.
@@ -40,10 +44,13 @@ class Parser[T: Chart[Note]]:
         raise NotImplementedError
 
     @staticmethod
-    def calculate_countdowns(chart: T) -> list[CountdownEvent]:
-        countdowns = []
-        for note1, note2 in itertools.pairwise(chart.notes):
-            if note2.time - note1.time >= COUNTDOWN_GAP:
-                countdowns.append(CountdownEvent(note1.time, note2.time - note1.time))
-        countdowns = [CountdownEvent(-3, chart.notes[0].time + 3), *countdowns]
+    def calculate_countdowns(chart: Chart) -> list[CountdownEvent]:
+        countdowns = [
+            CountdownEvent(-3, chart.notes[0].time + 3),
+            *(
+                CountdownEvent(note1.time, note2.time - note1.time)
+                for note1, note2 in itertools.pairwise(chart.notes)
+                if note2.time - note1.time >= COUNTDOWN_GAP
+            )
+        ]
         return countdowns

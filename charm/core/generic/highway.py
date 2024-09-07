@@ -2,16 +2,16 @@ import arcade
 from arcade import Camera2D
 from arcade.camera import Projector
 
-from charm.core.generic.chart import Chart, Note
-from charm.core.generic.engine import Engine
 from charm.lib.types import Seconds
 
+from .chart import Chart, Note
+from .engine import Engine
 
 class Highway:
-    def __init__(self, chart: Chart, engine: Engine, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5, viewport: float = 1.0, *, downscroll: bool = False, static_camera: Projector = None, highway_camera: Projector = None):
+    def __init__(self, chart: Chart, engine: Engine, pos: tuple[int, int], size: tuple[int, int] | None = None, gap: int = 5, viewport: float = 1.0, *, downscroll: bool = False, static_camera: Projector = None, highway_camera: Projector = None):
         """A time-based display of current and upcoming notes to be hit by the player."""
-        self.chart: Chart = chart
-        self.engine: Engine = engine
+        self.chart = chart
+        self.engine = engine
         self.notes = self.chart.notes
 
         self._pos = pos

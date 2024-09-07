@@ -7,7 +7,8 @@ from pyglet.media import Player
 
 from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView, disable_when_focus_lost, shows_errors
-from charm.core.generic.results import Results, Heatmap
+
+from charm.core.generic import Results, Heatmap
 
 
 import charm.data.audio

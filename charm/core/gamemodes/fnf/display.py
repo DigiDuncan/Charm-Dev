@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 from arcade import get_window, color, load_texture, draw_sprite, Text, Sprite, Texture
@@ -11,14 +12,10 @@ from charm.lib.displayables import Countdown, Spotlight, HPBar, Timer
 from charm.lib.types import Seconds
 from charm.objects.lyric_animator import LyricAnimator, LyricEvent
 
-from charm.core.generic.chart import CountdownEvent
-from charm.core.generic.engine import Engine, AutoEngine
-from charm.core.generic.display import Display
-
-from charm.core.gamemodes.four_key.chart import FourKeyChart
-from charm.core.gamemodes.fnf.chart import CameraFocusEvent
-from charm.core.gamemodes.fnf.engine import FNFEngine
-from charm.core.gamemodes.fnf.highway import FNFHighway
+from charm.core.generic import CountdownEvent, Engine, AutoEngine, Display
+from charm.core.gamemodes.four_key import FourKeyChart, FourKeyHighway
+from .chart import CameraFocusEvent
+from .engine import FNFEngine
 
 # TODO: turn into actually using skin manager :3
 from importlib.resources import files
@@ -27,14 +24,14 @@ import charm.data.images.skins as skins
 if TYPE_CHECKING:
     from charm.lib.digiwindow import DigiWindow
 
-class FNFDisplay(Display[FNFEngine, FourKeyChart]):
 
-    def __init__(self, engine: FNFEngine, charts: tuple[FourKeyChart, ...]):
+class FNFDisplay(Display):
+    def __init__(self, engine: FNFEngine, charts: Sequence[FourKeyChart]):
         super().__init__(engine, charts)
+        self.engine: FNFEngine
+        self.charts: Sequence[FourKeyChart]
         self._win: DigiWindow = get_window()
         assert len(charts) == 2, "FNF expects two charts. [0] for the player, [1] for the opposition"
-        self.player_chart: FourKeyChart
-        self.opp_chart: FourKeyChart
         self.player_chart, self.opp_chart = charts
 
         # TODO: make more flexible post mvp
@@ -42,10 +39,10 @@ class FNFDisplay(Display[FNFEngine, FourKeyChart]):
 
         # NOTE: change highways to work of their center position not bottom left
         # TODO: place highways at true ideal locations
-        self._player_highway: FNFHighway = FNFHighway(self.player_chart, engine, (0, 0))
+        self._player_highway = FourKeyHighway(self.player_chart, engine, (0, 0))
         self._player_highway.pos = (self._win.width - self._player_highway.w - 25, 0)
         self._player_highway.bg_color = Color(0, 0, 0, 0)
-        self._enemy_highway: FNFHighway = FNFHighway(self.opp_chart, self._enemy_engine, (0, 0))
+        self._enemy_highway = FourKeyHighway(self.opp_chart, self._enemy_engine, (0, 0))
         self._enemy_highway.pos = (25, 0)
         self._enemy_highway.bg_color = Color(0, 0, 0, 0)
 

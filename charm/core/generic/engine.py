@@ -1,14 +1,17 @@
 from __future__ import annotations
-import math
 from typing import Literal
 
-from charm.core.generic.chart import Chart, Note
-from charm.core.generic.judgement import Judgement
-from charm.core.generic.results import Results
+import math
+
 from charm.lib.types import Seconds
+
+from .chart import Chart, Note
+from .judgement import Judgement
+from .results import Results
 
 KeyStates = list[bool]
 Key = int
+
 
 class EngineEvent:
     """Any Event that happens at a time. Meant to be subclassed."""
@@ -46,15 +49,15 @@ class DigitalKeyEvent[K](EngineEvent):
         return self.__repr__()
 
 
-class Engine[CT: Chart[Note]]:
-    def __init__(self, chart: CT, judgements: list[Judgement] | None = None, offset: Seconds = 0):
+class Engine:
+    def __init__(self, chart: Chart, judgements: list[Judgement] | None = None, offset: Seconds = 0):
         """The class that processes user inputs into score according to a Chart."""
         self.chart = chart
         self.offset = offset
         self.judgements: list[Judgement] = judgements or []
 
         self.chart_time: Seconds = 0
-        self.current_notes = self.chart.notes.copy()
+        self.current_notes = list(self.chart.notes)
 
         # Scoring
         self.score: int = 0

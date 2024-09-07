@@ -1,19 +1,12 @@
 from typing import TypedDict
 
-from charm.core.generic.engine import Engine, AutoEngine
-from charm.core.generic.display import Display
+from charm.core.generic import Engine, AutoEngine, Display
 
-# -- ENGINES --
-from charm.core.gamemodes.fnf.engine import FNFEngine
-from charm.core.gamemodes.four_key.engine import FourKeyEngine
-from charm.core.gamemodes.hero.engine import HeroEngine
-from charm.core.gamemodes.taiko.engine import TaikoEngine
-
-# -- DISPLAYS --
-from charm.core.gamemodes.fnf.display import FNFDisplay
-from charm.core.gamemodes.four_key.display import FourKeyDisplay
-from charm.core.gamemodes.hero.display import HeroDisplay
-from charm.core.gamemodes.taiko.display import TaikoDisplay
+# -- ENGINES & DISPLAYS --
+from charm.core.gamemodes.fnf import FNFEngine, FNFDisplay
+from charm.core.gamemodes.four_key import FourKeyEngine, FourKeyDisplay
+from charm.core.gamemodes.hero import HeroEngine, HeroDisplay
+from charm.core.gamemodes.taiko import TaikoEngine, TaikoDisplay
 
 
 # ?: Add other gamemode properties?

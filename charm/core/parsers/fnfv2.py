@@ -24,20 +24,21 @@
 import json
 import logging
 from pathlib import Path
-from typing import Any, Literal, NotRequired, TypedDict
-from charm.core.gamemodes.fnf.chart import CameraFocusEvent, CameraZoomEvent, FNFChart, FNFNote, FNFNoteType, PlayAnimationEvent
-from charm.core.generic.metadata import ChartMetadata, ChartSetMetadata
-from charm.core.generic.chart import Event
-from charm.core.generic.parser import Parser
+from typing import Any, Literal, NotRequired, Sequence, TypedDict
+
+from charm.core.generic import ChartMetadata, ChartSetMetadata, Event, Parser
+from charm.core.gamemodes.fnf import CameraFocusEvent, CameraZoomEvent, FNFChart, FNFNote, FNFNoteType, PlayAnimationEvent
 
 logger = logging.getLogger("charm")
 
 TimeFormat = Literal["s", "ms"]
 
+
 class GenericEventJSON(TypedDict):
     t: float
     e: str
     v: dict[str, Any]
+
 
 class FocusCameraEventDataJSON(TypedDict):
     char: int
@@ -46,32 +47,39 @@ class FocusCameraEventDataJSON(TypedDict):
     ease: NotRequired[str]
     duration: NotRequired[float]
 
+
 class FocusCameraEventJSON(TypedDict):
     t: float
     e: Literal["FocusCamera"]
     v: FocusCameraEventDataJSON | int
+
 
 class ZoomCameraEventDataJSON(TypedDict):
     zoom: float
     ease: str
     duration: NotRequired[float]
 
+
 class ZoomCameraEventJSON(TypedDict):
     t: float
     e: Literal["ZoomCamera"]
     v: ZoomCameraEventDataJSON
+
 
 class PlayAnimationEventDataJSON(TypedDict):
     target: str
     anim: str
     force: NotRequired[bool]
 
+
 class PlayAnimationEventJSON(TypedDict):
     t: float
     e: Literal["PlayAnimation"]
     v: PlayAnimationEventDataJSON
 
+
 EventJSON = GenericEventJSON | FocusCameraEventJSON | ZoomCameraEventJSON
+
 
 class NoteJSON(TypedDict):
     t: float
@@ -79,11 +87,13 @@ class NoteJSON(TypedDict):
     l: NotRequired[float]
     k: NotRequired[str]
 
+
 class SongFileJSON(TypedDict):
     version: str
     scrollSpeed: dict[str, float]
     events: list[EventJSON]
     notes: dict[str, list[NoteJSON]]
+
 
 class PlayDataJSON(TypedDict):
     album: str
@@ -95,12 +105,14 @@ class PlayDataJSON(TypedDict):
     difficulties: list[str]
     noteStyle: str
 
+
 class TimeChangesJSON(TypedDict):
     d: int
     n: int
     t: float
     bt: list[int]
     bpm: float
+
 
 class MetadataJSON(TypedDict):
     timeFormat: TimeFormat
@@ -112,7 +124,10 @@ class MetadataJSON(TypedDict):
     generatedBy: str
     version: str
 
-class FNFV2Parser(Parser[FNFChart]):
+
+class FNFV2Parser(Parser):
+    gamemode = "fnf"
+
     @staticmethod
     def is_possible_chartset(path: Path) -> bool:
         """Does this folder possibly contain a parseable ChartSet?"""
@@ -163,13 +178,13 @@ class FNFV2Parser(Parser[FNFChart]):
         meta_path = path / (stem + "-metadata.json")
         with open(meta_path) as m:
             metadata: MetadataJSON = json.load(m)
-        metadatas = []
+        metadatas: list[ChartMetadata] = []
         for d in metadata["playData"]["difficulties"]:
             metadatas.append(ChartMetadata("fnf", d, chart_path, '0'))
         return metadatas
 
     @staticmethod
-    def parse_chart(chart_data: ChartMetadata) -> list[FNFChart]:
+    def parse_chart(chart_data: ChartMetadata) -> Sequence[FNFChart]:
         with open(chart_data.path) as p:
             j: SongFileJSON = json.load(p)
 

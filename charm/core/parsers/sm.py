@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from hashlib import sha1
 from io import StringIO
 import itertools
@@ -12,16 +13,19 @@ from simfile.timing import TimingData, BeatValue
 from simfile.timing.engine import TimingEngine
 
 from charm.lib.errors import NoChartsError
-from charm.core.gamemodes.four_key.chart import FourKeyNoteType, FourKeyNote, FourKeyChart
-from charm.core.generic.chart import BPMChangeEvent, ChartMetadata
-from charm.core.generic.parser import Parser
+
+from charm.core.generic import BPMChangeEvent, ChartMetadata, Parser
+from charm.core.gamemodes.four_key import FourKeyNoteType, FourKeyNote, FourKeyChart
 
 sm_name_map = {
     "TAP": FourKeyNoteType.NORMAL,
     "MINE": FourKeyNoteType.BOMB
 }
 
-class SMParser(Parser[FourKeyChart]):
+
+class SMParser(Parser):
+    gamemode = "4k"
+
     @staticmethod
     def is_parseable(path: Path) -> bool:
         return path.suffix == ".sm" or path.suffix == ".ssc"
@@ -31,10 +35,10 @@ class SMParser(Parser[FourKeyChart]):
         return []
 
     @staticmethod
-    def parse_chart(chart_data: ChartMetadata) -> list[FourKeyChart]:
+    def parse_chart(chart_data: ChartMetadata) -> Sequence[FourKeyChart]:
         raise NotImplementedError
 
-    def parse(self, path: Path) -> list[FourKeyChart]:
+    def parse(self, path: Path) -> Sequence[FourKeyChart]:
         # OK, figure out what chart file to use.
         try:
             sm_file = next(itertools.chain(path.glob("*.ssc"), path.glob("*.sm")))
@@ -53,7 +57,7 @@ class SMParser(Parser[FourKeyChart]):
         # for parsing? But it's so good...
 
         for c in sm.charts:
-            c: SMChart | SSCChart = c
+            c: SMChart | SSCChart
             chart = FourKeyChart("4k", c.difficulty)
             temp_file = StringIO()
             c.serialize(temp_file)
