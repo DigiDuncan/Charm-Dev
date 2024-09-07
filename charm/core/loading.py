@@ -25,8 +25,8 @@
 import logging
 from operator import attrgetter
 import tomllib
-from typing import NamedTuple, Any, cast
-from collections.abc import Callable, Generator, Iterator, Sequence
+from typing import NamedTuple, cast
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 from itertools import groupby
 
@@ -34,20 +34,12 @@ from charm.lib.paths import songspath
 from charm.lib.errors import CharmError, ChartUnparseableError, MissingGamemodeError, NoParserError, AmbigiousParserError, log_charmerror, NoChartsError
 
 from charm.core.generic import ChartSet, ChartSetMetadata, Chart, ChartMetadata, Parser
-
-# -- PARSERS --
 from charm.core.parsers import FNFParser, FNFV2Parser, ManiaParser, SMParser, HeroParser, TaikoParser
 
 logger = logging.getLogger("charm")
 
-ParserChooser = Callable[[Path], bool]
 CHARM_TOML_METADATA_FIELDS = ["title", "artist", "album", "length", "genre", "year", "difficulty",
                               "charter", "preview_start", "preview_end", "source", "album_art"]
-
-
-class TypePair(NamedTuple):
-    gamemode: str
-    filetype: str
 
 
 # TODO: Parse MIDI
@@ -128,7 +120,7 @@ def load_path_chartsets_recursive(parsers: Sequence[type[Parser]], chartset_path
         yield load_path_chartsets(parsers, chartset_path, metadata)
     except CharmError as e:
         # TODO: Put error code here
-        log_charmerror(e)
+        log_charmerror(e, False)
 
     for d in chartset_path.iterdir():
         if not d.is_dir():
@@ -147,11 +139,12 @@ def load_gamemode_chartsets(gamemode: str) -> list[ChartSet]:
 def load_chartsets() -> list[ChartSet]:
     gamemodes = ('fnf', '4k', 'hero', 'taiko')
     chartsets = [chartset for gamemode in gamemodes for chartset in load_gamemode_chartsets(gamemode)]
-    chartsets = sorted(chartsets, key=lambda c: (c.charts[0].gamemode, c.metadata.title))
+    # Natalie left a list sorting example here.
+    # chartsets = sorted(chartsets, key=lambda c: (c.charts[0].gamemode, c.metadata.title))
     return chartsets
 
 
-def load_chart(chart_metadata: ChartMetadata) -> list[Chart]:
+def load_chart(chart_metadata: ChartMetadata) -> Sequence[Chart]:
     for parser in parsers_by_gamemode[chart_metadata.gamemode]:
         if parser.is_parsable_chart(chart_metadata.path):
             logger.debug(f"Parsing with {parser}")
