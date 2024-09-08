@@ -10,6 +10,10 @@ class ChartSet:
         self.metadata: ChartSetMetadata = metadata
         self.charts: list[ChartMetadata] = charts or []
 
+    @property
+    def gamemodes(self) -> set[str]:
+        return set(chart.gamemode for chart in self.charts)
+
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {self.path}>"
 
