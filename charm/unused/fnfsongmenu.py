@@ -13,7 +13,7 @@ from charm.lib.errors import NoSongsFoundError
 from charm.lib.gamemodes.fnf import FNFSong
 from charm.lib.keymap import keymap
 from charm.objects.gif import GIF
-from charm.objects.songmenu import SongMenu
+from charm.unused.songmenu import SongMenu
 from charm.lib.songloader import load_songs_fnf
 from charm.unused.gameplay import GameView
 

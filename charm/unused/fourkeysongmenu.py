@@ -18,7 +18,7 @@ from charm.lib.generic.song import Metadata
 from charm.lib.keymap import keymap
 from charm.lib.paths import songspath
 from charm.objects.gif import GIF
-from charm.objects.songmenu import SongMenu
+from charm.unused.songmenu import SongMenu
 from charm.unused.fourkeysong import FourKeySongView
 
 logger = logging.getLogger("charm")
