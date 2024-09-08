@@ -2,37 +2,10 @@ Hi, Dragon!
 
 (Or Natalie, if you stumble across this!)
 
-The goal here is to refactor the backend of how songs work to accomplish these goals:
-
-- Song (now ChartSet) is now a generic container for Charts.
-- Parsers and Charts are now seperate concepts (Parsers take in a Path and return a list of Charts)
-- Split the monolithic gamemodes/ files into seperate modules for charts, displays, engines, highways, and parsers.
-- Use as few custom types as possible:
-    - No more custom Judgement classes
-    - FourKey____ should probably be used instead of specific FNF/SM/Mania specific ones where possible
-- All the various NoteTypes should now be specific, like FourKeyNoteType and such
-
-The current code is a mess and I'm trying to untangle it as I go,
-especially the typing and making sure expected methods exist on parent classes.
-
-The objects I can think of us needing:
-
-- Parsers: FNFParser, SMParser, ManiaParser, TaikoParser, HeroParser
-- Displays: FNFDisplay, FourKeyDisplay, HeroDisplay, TaikoDisplay
-- Engines: FNFEngine, SMEngine*, FourKeyEngine/ManiaEngine, HeroEngine**
-- Highways: FourKeyHighway, HeroHighway, TaikoHighway
-- Charts: FourKeyChart, HeroChart, TaikoChart (and corrosponding XXXNotes and XXXNoteTypes)
-
-* It's possible this doesn't make sense? Like it should be FourKeyEngine and be customizable
-but the issue is that SMEngine relies on TimingEngine existing which only exists in SM files
-and *that's* due to a quirk of the simfile library that we definitely over-rely on I don't know
-
-** This is currently called HeroEngine but the scoring changes for different gamemodes in Hero
-and frankly I don't know what to do about it
-Bass and Five Key Keys are the same but Pro Keys, GH Live (6fret), and Drums/Pro Drums aren't and like what do I do about that
-We don't even support those yet so maybe it doesn't matter
+Well, the refactor is done, but there's still more to do!
 
 TODO:
 - Restructure sustains in engines
 - Rethink Hero engine algorithm
 - Consider XKey
+- Consider the possibility of one parser returning multiple gamemodes (Clone Hero will want this, possibly)
