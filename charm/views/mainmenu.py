@@ -17,7 +17,7 @@ from charm.views.spritetest import SpriteTestView
 from charm.views.visualizertest import VisualizerView
 from charm.views.options import OptionsView
 from charm.views.unifiedmenu import UnifiedSongMenuView
-
+from charm.views.settings import SettingsView
 
 class MainMenuView(DigiView):
     def __init__(self, back: DigiView):
@@ -28,6 +28,7 @@ class MainMenuView(DigiView):
             MainMenuItem("Play", "songs", UnifiedSongMenuView(back=self)),
             # MainMenuItem("Playlists", "playlists", None),
             MainMenuItem("Options", "options", OptionsView(back=self)),
+            MainMenuItem("Settings", "options", SettingsView(back=self)),
             # MainMenuItem("4K Songs", "songs", FourKeySongMenuView(back=self)),
             # MainMenuItem("Emoji Test", "test", EmojiTestView(back=self)),
             # MainMenuItem("Menu Test", "test", NewMenuView(back=self)),

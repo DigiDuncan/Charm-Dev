@@ -4,12 +4,19 @@ from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView, shows_errors, disable_when_focus_lost
 from charm.lib.keymap import keymap
 
+from charm.ui.settings.settings_menu import SettingsMenuElement
 logger = logging.getLogger("charm")
 
 
 class SettingsView(DigiView):
     def __init__(self, back: DigiView):
         super().__init__(fade_in=1, back=back)
+        self.element = SettingsMenuElement()
+        self.element.bounds = self.window.rect
+
+    def on_resize(self, width: int, height: int) -> None:
+        super().on_resize(width, height)
+        self.element.bounds = self.window.rect
 
     @shows_errors
     def setup(self) -> None:
@@ -37,4 +44,6 @@ class SettingsView(DigiView):
         super().predraw()
         # Charm BG
         self.gum_wrapper.draw()
+        self.element.draw()
         super().postdraw()
+
