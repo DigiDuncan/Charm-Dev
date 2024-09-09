@@ -154,7 +154,7 @@ class Animator:
         return new_animation
 
     def start_procedural_animation[A: Animatable](self, callback: Callable[[float, float]], target_x: A,target_dx: A, initial_x: A, initial_y: A, initial_dy: A, frequency: float = 1.0, damping: float = 0.75, response: float = 1.0, start_time: float = 0.0, settling: bool = False, cleanup: Callable[[ProceduralAnimation]] | None = None) -> ProceduralAnimation:
-        new_animation = ProceduralAnimation(callback, target_x, target_dx, initial_x, initial_y, initial_dy, frequency, response, damping, start_time, 0.0, settling, cleanup)
+        new_animation = ProceduralAnimation(callback, target_x, target_dx, initial_x, initial_y, initial_dy, frequency, damping, response, start_time, 0.0, settling, cleanup)
         self.procedural_animations.append(new_animation)
         return new_animation
 

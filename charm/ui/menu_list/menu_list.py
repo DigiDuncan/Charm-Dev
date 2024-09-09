@@ -1,3 +1,5 @@
+from math import fmod
+
 from charm.lib.mini_mint import Element, VerticalElementList
 
 from charm.ui.menu_list.chartset_element import ChartsetElement
@@ -14,11 +16,11 @@ import charm.data.images
 
 # -- PROCEDURAL ANIMATION CONSTANTS --
 CHARTSET_FREQUENCY = 2.0
-CHARTSET_DAMPING = 0.75
-CHARTSET_RESPONSE = 0.8
+CHARTSET_DAMPING = 0.8
+CHARTSET_RESPONSE = 0.75
 CHART_FREQUENCY = 2.0
-CHART_DAMPING = 0.75
-CHART_RESPONSE = 0.8
+CHART_DAMPING = 0.8
+CHART_RESPONSE = 0.75
 
 class UnifiedChartsetMenuElement(Element[VerticalElementList]):
 
@@ -41,8 +43,8 @@ class UnifiedChartsetMenuElement(Element[VerticalElementList]):
 
         self.set_scroll_animation = Element.Animator.start_procedural_animation(
             self.update_set_scroll,
-            self.set_scroll, 0.0,
-            self.highlighted_set_idx, self.highlighted_set_idx, 0.0,
+            self.highlighted_set_idx, 0.0,
+            self.set_scroll, self.set_scroll, 0.0,
             CHARTSET_FREQUENCY, CHARTSET_DAMPING, CHARTSET_RESPONSE
         )
         self.chart_scroll_animation = Element.Animator.start_procedural_animation(
@@ -74,6 +76,22 @@ class UnifiedChartsetMenuElement(Element[VerticalElementList]):
         self._place_chartset_elements()
         self.invalidate_layout()
 
+    def _fetch_chartset_element(self, idx: int) -> ChartsetElement:
+        """
+        Create or get the chartset element for a given chartset index,
+        for an idx outside the range of chartsets return a ChartsetElement with no chartset
+        """
+        element_set = None if (len(self.chartsets) <= idx or idx < 0) else self.chartsets[idx]
+        element = None
+
+        if element_set:
+            element = self.shown_sets.get(element_set.metadata, None)
+
+        if element is None:
+            element = ChartsetElement(self.min_element_size, element_set)
+
+        return element
+
     def _place_chartset_elements(self) -> None:
         self.element_list.empty()
         if not self.chartsets:
@@ -81,54 +99,45 @@ class UnifiedChartsetMenuElement(Element[VerticalElementList]):
         v = self.bounds.height
         vh = v / 2.0
 
+        # The number of elements we need above the center element
         half_count = int(vh // self.min_element_size) + self.element_padding
 
+        # The index of the center element
         start_idx = int(self.set_scroll)
 
-        shown_sets = self.shown_sets
+        # A map from the chartset metadata to the element
         next_songs = {}
 
-        charset_count = len(self.chartsets)
+        # get the center element
+        center = self._fetch_chartset_element(start_idx)
 
-        chartset = None if charset_count <= start_idx else self.chartsets[start_idx]
-        if chartset is None:
-            center = ChartsetElement(self.min_element_size, chartset)
-        else:
-            center = shown_sets.get(chartset.metadata, None)
-            if center is None:
-                center = ChartsetElement(self.min_element_size, chartset)
-            next_songs[chartset.metadata] = center
-
-        if chartset == self.current_selected_chartset:
-            center.select()
+        if center.chartset is not None:
+            next_songs[center.chartset.metadata] = center
+            # If the chartset is selected lets open it
+            if center.chartset == self.current_selected_chartset:
+                center.select()
         self.element_list.add_child(center)
 
-        for offset in range(half_count):
-            above_idx = start_idx - offset - 1
-            above_song = None if (charset_count <= above_idx or above_idx < 0) else self.chartsets[above_idx]
-            if above_song:
-                above_element = shown_sets.get(above_song.metadata, None)
-                if above_element is None:
-                    above_element = ChartsetElement(self.min_element_size, above_song)
-                next_songs[above_song.metadata] = above_element
-            else:
-                above_element = ChartsetElement(self.min_element_size)
+        # The half count doesn't include the center so we 'expand' outward finding
+        # the chartsets and elements
+        for offset in range(1, half_count + 1):
+            # find the next chartset above the center
+            above_idx = start_idx - offset
+            above_element = self._fetch_chartset_element(above_idx)
+            if above_element.chartset is not None:
+                next_songs[above_element.chartset.metadata] = above_element
+                if above_element.chartset == self.current_selected_chartset:
+                    above_element.select()
             self.element_list.insert_child(above_element, 0)
-            if above_song == self.current_selected_chartset and above_element.chartset is not None:
-                above_element.select()
 
-            post_idx = start_idx + offset + 1
-            post_song = None if (0 > post_idx or post_idx >= len(self.chartsets)) else self.chartsets[post_idx]
-            if post_song:
-                post_element = shown_sets.get(post_song.metadata, None)
-                if post_element is None:
-                    post_element = ChartsetElement(self.min_element_size, post_song)
-                next_songs[post_song.metadata] = post_element
-            else:
-                post_element =ChartsetElement(self.min_element_size)
+            # find the next chartset below the center
+            post_idx = start_idx + offset
+            post_element = self._fetch_chartset_element(post_idx)
+            if post_element.chartset is not None:
+                next_songs[post_element.chartset.metadata] = post_element
+                if post_element.chartset == self.current_selected_chartset:
+                    post_element.select()
             self.element_list.add_child(post_element)
-            if post_song == self.current_selected_chartset and post_element.chartset is not None:
-                post_element.select()
 
         self.shown_sets = next_songs
 
@@ -155,7 +164,7 @@ class UnifiedChartsetMenuElement(Element[VerticalElementList]):
 
         # Idx scroll
         scroll_size = self.min_element_size if not self.element_list.children else self.element_list.children[half_count].minimum_size.y
-        idx_scroll = (max(0.0, self.set_scroll) % 1.0) * scroll_size
+        idx_scroll = fmod(self.set_scroll, 1.0) * scroll_size
 
         # Sub scroll
         if self.current_selected_chartset and self.current_selected_chartset.metadata in self.shown_sets and self.shown_sets[self.current_selected_chartset.metadata]._list_element.children:
