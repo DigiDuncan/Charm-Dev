@@ -19,8 +19,8 @@ class ChartElement(Element):
         super().__init__(min_size=Vec2(0.0, min_height))
         self._padding: Padding = padding
         self._sub_region: Rect = padded_sub_rect(self.bounds, self._padding)
-        self._chart: ChartMetadata = None
-        self._text_obj: Text = None
+        self._chart: ChartMetadata | None = None
+        self._text_obj: Text | None = None
 
     def set_chart(self, new_chart: ChartMetadata):
         self._chart = new_chart
@@ -50,6 +50,8 @@ class ChartElement(Element):
         self._text_obj.position = self._sub_region.center
 
     def _display(self) -> None:
+        if self._text_obj is None:
+            raise Exception("Really Bad Error")
         draw.draw_rect_filled(self._sub_region, (255, 255, 255, 255))
         self._text_obj.draw()
 
@@ -62,8 +64,8 @@ class ChartsetDisplayElement(Element):
         super().__init__()
         self._padding: Padding = padding
         self._sub_region: Rect = padded_sub_rect(self.bounds, self._padding)
-        self._metadata: ChartSetMetadata = None
-        self._text_obj: Text = None
+        self._metadata: ChartSetMetadata | None = None
+        self._text_obj: Text | None = None
 
     def set_metadata(self, new_data: ChartSetMetadata) -> None:
         self._metadata = new_data
@@ -84,6 +86,8 @@ class ChartsetDisplayElement(Element):
     def _calc_layout(self) -> None:
         self._sub_region = padded_sub_rect(self.bounds, self._padding)
         if self._text_obj is None:
+            if self._metadata is None:
+                raise Exception("Really Bad Error")
             self._text_obj = Text('', 0.0, 0.0, (0, 0, 0, 255), anchor_x='left', anchor_y='center', font_name='bananaslip plus', font_size = get_font_size(self._metadata.title or '', 36, self.bounds.width))
 
         if self._metadata is None:
@@ -95,6 +99,8 @@ class ChartsetDisplayElement(Element):
 
 
     def _display(self) -> None:
+        if self._text_obj is None:
+            raise Exception("Really Bad Error")
         draw.draw_rect_filled(self._sub_region, CharmColors.FADED_PURPLE)
         self._text_obj.draw()
 
@@ -104,18 +110,18 @@ CHARTSET_ELEMENT_RESPONSE = 1.0
 
 class ChartsetElement(Element):
     # Holds a SongElement and a sublist of ChartElements and manages how and when the sublist appears
-    def __init__(self, min_height: float, chartset: ChartSet = None):
+    def __init__(self, min_height: float, chartset: ChartSet | None = None):
         super().__init__(Vec2(0.0, min_height))
-        self._chartset: ChartSet = None
+        self._chartset: ChartSet | None = None
         self._min_height: float = min_height
 
-        self._list_element: VerticalElementList[ChartElement] = VerticalElementList(strict=True)
+        self._list_element: VerticalElementList = VerticalElementList(strict=True)
         self.add_child(self._list_element)
 
         self._chartset_element: ChartsetDisplayElement = ChartsetDisplayElement()
         self.add_child(self._chartset_element)
 
-        self._animation: ProceduralAnimation = None
+        self._animation: ProceduralAnimation | None = None
 
         self._selected: bool = False
         self.visible = False
@@ -185,11 +191,11 @@ class ChartsetElement(Element):
         return self._list_element.children[idx]
 
     @property
-    def chartset(self) -> ChartSet:
+    def chartset(self) -> ChartSet | None:
         return self._chartset
 
     @chartset.setter
-    def chartset(self, new_set: ChartSet) -> None:
+    def chartset(self, new_set: ChartSet | None) -> None:
         if new_set == self._chartset:
             return
 

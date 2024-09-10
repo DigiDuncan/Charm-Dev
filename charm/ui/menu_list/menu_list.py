@@ -24,7 +24,7 @@ CHART_RESPONSE = 0.75
 
 
 class UnifiedChartsetMenuElement(Element):
-    def __init__(self, chartsets: list[ChartSet] = None, min_element_size: float = 100, element_padding: int = 2, left_fraction: float = 0.0, right_fraction: float = 1.0):
+    def __init__(self, chartsets: list[ChartSet] | None = None, min_element_size: float = 100, element_padding: int = 2, left_fraction: float = 0.0, right_fraction: float = 1.0):
         super().__init__()
         self.min_element_size: float = min_element_size  # uses this to estimate the number of needed elements to simulate the full list
         self.element_padding: int = element_padding  # uses this to make sure the full list illusion isn't broken
@@ -38,8 +38,8 @@ class UnifiedChartsetMenuElement(Element):
         self.set_scroll: float = 0.0
         self._highlighted_chart_idx: int = 0
         self.chart_scroll: float = 0.0
-        self.current_selected_chartset: ChartSet = None
-        self.current_selected_chart: ChartMetadata = None
+        self.current_selected_chartset: ChartSet | None = None
+        self.current_selected_chart: ChartMetadata | None = None
 
         self.set_scroll_animation = Element.Animator.start_procedural_animation(
             self.update_set_scroll,
@@ -56,7 +56,7 @@ class UnifiedChartsetMenuElement(Element):
 
         self.shown_sets: dict[ChartSetMetadata, ChartsetElement] = {}
 
-        self.element_list: VerticalElementList[ChartsetElement] = VerticalElementList(strict=False)
+        self.element_list: VerticalElementList = VerticalElementList(strict=False)
         self.add_child(self.element_list)
 
         if chartsets:
@@ -65,7 +65,7 @@ class UnifiedChartsetMenuElement(Element):
         self.layout(force=True)
 
         # -- TEMP --
-        self.album_art_texture: Texture = None
+        self.album_art_texture: Texture | None = None
 
     def set_chartsets(self, chartsets: list[ChartSet]) -> None:
         self.chartsets = chartsets
@@ -224,6 +224,8 @@ class UnifiedChartsetMenuElement(Element):
         self.album_art_texture = None
 
         # We are outside the chartsets list of charts, so lets close it
+        if self.current_selected_chartset is None:
+            raise Exception("Really Bad Error")
         if self.current_selected_chartset.metadata in self.shown_sets:
             self.shown_sets[self.current_selected_chartset.metadata].deselect()
         self.current_selected_chartset = None
@@ -246,6 +248,8 @@ class UnifiedChartsetMenuElement(Element):
         self.select_chart(self.current_selected_chartset.charts[self.highlighted_chart_idx])
 
     def _down_sub_scroll(self, count: int) -> None:
+        if self.current_selected_chartset is None:
+            raise Exception("Really Bad Error")
         self.highlighted_chart_idx += count
 
         if self.highlighted_chart_idx < len(self.current_selected_chartset.charts):
@@ -267,6 +271,8 @@ class UnifiedChartsetMenuElement(Element):
         self._down_scroll(count=count)
 
     def _up_sub_scroll(self, count: int) -> None:
+        if self.current_selected_chartset is None:
+            raise Exception("Really Bad Error")
         self.highlighted_chart_idx -= count
 
         if self.highlighted_chart_idx >= 0:

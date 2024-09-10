@@ -9,7 +9,7 @@ class BPMAnimator:
         """An animator driven off BPMChangeEvents, in order to sync animations with a playing music track.
 
         - `events: list[BPMChangeEvent]`: A synctrack for the currently playing song.
-        - `func: Optional[EasingFunction]`: An easing function to smooth the animation. Defaults to linear.
+        - `func: EasingFunction | None`: An easing function to smooth the animation. Defaults to linear.
         - `t: float = 0.0`: Sets the current time to `t` if starting part-way through a song."""
         self.func = func
         self.t = t

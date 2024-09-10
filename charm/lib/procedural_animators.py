@@ -1,9 +1,6 @@
 from __future__ import annotations
 from math import pi, tau, ceil, exp, cos, cosh
 
-from typing import TypeVar, Protocol, Optional, Union
-
-
 __all__ = (
     'SecondOrderAnimatorBase',
     'ProceduralAnimator',
@@ -11,32 +8,15 @@ __all__ = (
     'SecondOrderAnimatorTCritical',
     'SecondOrderAnimatorKClamped',
     'SecondOrderAnimatorPoleZero',
-    'update_default_animator',
-    'Animatable'
+    'update_default_animator'
 )
 
 
-class Animatable(Protocol):
-
-    def __mul__(self, other: Union[float, Animatable]) -> Animatable:
-        ...
-
-    def __add__(self, other: Union[float, Animatable]) -> Animatable:
-        ...
-
-    def __sub__(self, other: Union[float, Animatable]) -> Animatable:
-        ...
-
-
-A = TypeVar('A', bound=Animatable)
-
-
 class SecondOrderAnimatorBase:
-
-    def __init__(self, frequency: float, damping: float, response: float,  x_initial: A, y_initial: A, y_d_initial: A):
-        self.xp: Animatable = x_initial
-        self.y: Animatable = y_initial
-        self.dy: Optional[Animatable] = y_d_initial
+    def __init__(self, frequency: float, damping: float, response: float,  x_initial: float, y_initial: float, y_d_initial: float):
+        self.xp: float = x_initial
+        self.y: float = y_initial
+        self.dy: float | None = y_d_initial
 
         self._freq: float = frequency
         self._damp: float = damping
@@ -46,19 +26,19 @@ class SecondOrderAnimatorBase:
         self.k2: float = 1.0 / (tau * frequency) ** 2.0
         self.k3: float = (response * damping) / (tau * frequency)
 
-    def update_frequency(self, new_frequency):
+    def update_frequency(self, new_frequency: float) -> None:
         self._freq = new_frequency
         self.calc_k_vals()
 
-    def update_damping(self, new_damping):
+    def update_damping(self, new_damping: float) -> None:
         self._damp = new_damping
         self.calc_k_vals()
 
-    def update_response(self, new_response):
+    def update_response(self, new_response: float) -> None:
         self._resp = new_response
         self.calc_k_vals()
 
-    def update_values(self, new_frequency: Optional[float] = None, new_damping: Optional[float] = None, new_response: Optional[float] = None):
+    def update_values(self, new_frequency: float | None = None, new_damping: float | None = None, new_response: float | None = None):
         self._freq = new_frequency or self._freq
         self._damp = new_damping or self._damp
         self._resp = new_response or self._resp
@@ -70,7 +50,7 @@ class SecondOrderAnimatorBase:
         self.k2 = 1.0 / (tau * self._freq)**2.0
         self.k3 = (self._resp * self._damp) / (tau * self._freq)
 
-    def update(self, dt: float, nx: A, dx: Optional[A] = None) -> A:
+    def update(self, dt: float, nx: float, dx: float | None = None) -> float:
         raise NotImplementedError
 
 
@@ -82,7 +62,7 @@ class SecondOrderAnimator(SecondOrderAnimatorBase):
     and the sim can explode with lag spikes.
     """
 
-    def update(self, dt: float, nx: A, dx: Optional[A] = None):
+    def update(self, dt: float, nx: float, dx: float | None = None):
         dx = dx or (nx - self.xp) / dt
         self.xp = nx
         self.y = self.y + self.dy * dt
@@ -99,7 +79,7 @@ class SecondOrderAnimatorTCritical(SecondOrderAnimatorBase):
     the sim won't explode with lag spikes, but it adds extra calc steps.
     """
 
-    def __init__(self, frequency: float, damping: float, response: float, x_initial: A, y_initial: A, y_d_initial: A):
+    def __init__(self, frequency: float, damping: float, response: float, x_initial: float, y_initial: float, y_d_initial: float):
         super().__init__(frequency, damping, response, x_initial, y_initial, y_d_initial)
         self.T_crit = 0.8 * ((4.0 * self.k2 + self.k1 * self.k1)**0.5 - self.k1)
 
@@ -107,7 +87,7 @@ class SecondOrderAnimatorTCritical(SecondOrderAnimatorBase):
         super().calc_k_vals()
         self.T_crit = 0.8 * ((4.0 * self.k2 + self.k1 * self.k1)**0.5 - self.k1)
 
-    def update(self, dt: float, nx: A, dx: Optional[A] = None):
+    def update(self, dt: float, nx: float, dx: float | None = None):
         dx = dx or (nx - self.xp) / dt
         self.xp = nx
 
@@ -133,7 +113,7 @@ class SecondOrderAnimatorKClamped(SecondOrderAnimatorBase):
     both sim explosions with lag spikes, and jittering at high frequencies.
     """
 
-    def update(self, dt: float, nx: A, dx: Optional[A] = None):
+    def update(self, dt: float, nx: float, dx: float | None = None):
         dx = dx or (nx - self.xp) / dt
         self.xp = nx
         # Clamping k2 it isn't physically correct, but protects against the sim collapsing with lag spikes.
@@ -155,7 +135,7 @@ class SecondOrderAnimatorPoleZero(SecondOrderAnimatorBase):
     This adds alot of extra computation each frame, and may not be worth it.
     """
 
-    def __init__(self, frequency: float, damping: float, response: float, x_initial: A, y_initial: A, y_d_initial: A):
+    def __init__(self, frequency: float, damping: float, response: float, x_initial: float, y_initial: float, y_d_initial: float):
         super().__init__(frequency, damping, response, x_initial, y_initial, y_d_initial)
         self._w = tau * frequency
         self._d = self._w * (abs(damping * damping - 1.0))
@@ -165,7 +145,7 @@ class SecondOrderAnimatorPoleZero(SecondOrderAnimatorBase):
         self._w = tau * self._freq
         self._d = self._w * (abs(self._damp * self._damp - 1.0))
 
-    def update(self, dt: float, nx: A, dx: Optional[A] = None):
+    def update(self, dt: float, nx: float, dx: float | None = None):
         dx = dx or (nx - self.xp) / dt
         self.xp = nx
         if self._w * dt < self._damp:

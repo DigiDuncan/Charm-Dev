@@ -12,7 +12,7 @@ from arcade.types import Color
 from arcade.clock import GLOBAL_CLOCK
 
 from charm.lib.anim import EasingFunction, ease_linear, perc
-from charm.lib.procedural_animators import ProceduralAnimator, SecondOrderAnimatorBase, Animatable
+from charm.lib.procedural_animators import ProceduralAnimator, SecondOrderAnimatorBase
 
 DRAGON_PEACH = Color(255, 140, 120)
 
@@ -49,20 +49,20 @@ class Animation:
 
 
 @dataclass(eq=True)
-class ProceduralAnimation[A: Animatable]:
-    callback: Callable[[float, float]]
-    target_x: A
-    target_dx: A
-    initial_x: A
-    initial_y: A
-    initial_dy: A
+class ProceduralAnimation:
+    callback: Callable[[float, float], None]
+    target_x: float
+    target_dx: float
+    initial_x: float
+    initial_y: float
+    initial_dy: float
     frequency: float = 1.0
     damping: float = 0.75
     response: float = 1.0
     start_time: float = 0.0
     elapsed: float = 0.0
     settling: bool = False  # Whether the procedural animator will stop once the target_x and target_dx have been reached.
-    cleanup: Callable[[ProceduralAnimation]] | None = None
+    cleanup: Callable[[ProceduralAnimation[A]], None] | None = None
 
     def __hash__(self) -> int:
         return hash((self.callback, self.start_time, self.frequency, self.response, self.damping, self.settling))
@@ -73,7 +73,6 @@ class Animator:
     A generic animator able to animate properties of gui over time.
     Used to give the UI logic over time.
     """
-
     def __init__(self) -> None:
         self.animations: list[Animation] = []
         self.procedural_animations: list[ProceduralAnimation] = []
@@ -156,7 +155,7 @@ class Animator:
         self.animations.append(new_animation)
         return new_animation
 
-    def start_procedural_animation[A: Animatable](self, callback: Callable[[float, float]], target_x: A,target_dx: A, initial_x: A, initial_y: A, initial_dy: A, frequency: float = 1.0, damping: float = 0.75, response: float = 1.0, start_time: float = 0.0, settling: bool = False, cleanup: Callable[[ProceduralAnimation]] | None = None) -> ProceduralAnimation:
+    def start_procedural_animation(self, callback: Callable[[float, float]], target_x: float, target_dx: float, initial_x: float, initial_y: float, initial_dy: float, frequency: float = 1.0, damping: float = 0.75, response: float = 1.0, start_time: float = 0.0, settling: bool = False, cleanup: Callable[[ProceduralAnimation]] | None = None) -> ProceduralAnimation:
         new_animation = ProceduralAnimation(callback, target_x, target_dx, initial_x, initial_y, initial_dy, frequency, damping, response, start_time, 0.0, settling, cleanup)
         self.procedural_animations.append(new_animation)
         return new_animation

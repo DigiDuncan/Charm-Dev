@@ -2,7 +2,6 @@
 Provides a Spritelist and Sprite subclass specifically for drawing the sprite's to always look directly at
 the screen. The new Billboard works with any sprite type but the billboard sprite provides helper methods.
 """
-from typing import Optional
 from arcade import Sprite, SpriteList, TextureAtlas
 
 
@@ -38,7 +37,7 @@ class BillboardList(SpriteList):
             self,
             use_spatial_hash: bool = False,
             spatial_hash_cell_size: int = 128,
-            atlas: Optional[TextureAtlas] = None,
+            atlas: TextureAtlas | None = None,
             capacity: int = 100,
             lazy: bool = False,
             visible: bool = True,
