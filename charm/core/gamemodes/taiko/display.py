@@ -1,4 +1,7 @@
-
+from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from charm.lib.digiview import DigiWindow
 from collections.abc import Sequence
 
 from arcade import get_window
@@ -17,7 +20,7 @@ class TaikoDisplay(Display):
         super().__init__(engine, charts)
         self.engine: TaikoEngine
         self.charts: Sequence[TaikoChart]
-        self._win: "DigiWindow" = get_window()  # type: ignore | aaa shut up Arcade
+        self._win: DigiWindow = get_window()  # type: ignore | aaa shut up Arcade
         self.chart = charts[0]
 
         self.highway: TaikoHighway = TaikoHighway(self.chart, engine, (0, self._win.center_y), (self._win.width, 100))

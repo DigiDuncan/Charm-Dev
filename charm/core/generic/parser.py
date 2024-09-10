@@ -1,6 +1,6 @@
 import itertools
 from pathlib import Path
-from typing import Sequence
+from collections.abc import Sequence
 
 from .chart import Chart, CountdownEvent
 from .metadata import ChartMetadata, ChartSetMetadata

@@ -9,13 +9,13 @@ class LogSection:
         logger.debug(f"Starting {name}")
         self.start_time = time()
 
-    def done(self):
+    def done(self) -> None:
         duration = int((time() - self.start_time) * 1000)
         self.logger.debug(f"Done {self.name} ({duration}ms)")
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         pass
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, type, value, traceback) -> None:
         if type is None:
             self.done()

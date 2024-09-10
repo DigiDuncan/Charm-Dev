@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Self
 from collections.abc import Callable
+from arcade import SpriteList, BasicSprite
 
 
 class Pool[T]:
@@ -22,7 +23,6 @@ class Pool[T]:
     that adds complexity and memory that probably isn't worth it. Also using the idx methods exclude that step
     so if you need the speed that is the way to use the Pool.
     """
-
     def __init__(self, items: list[T]):
         self._source: list[T] = items
         self._size: int = len(self._source)
@@ -71,6 +71,7 @@ class Pool[T]:
         self._free_idx -= 1
         self._source[self._free_idx], self._source[idx] = item, self._source[self._free_idx]
 
+
 # TODO: make a SpritePool that works better with how Spritelists work internally
 class OrderedPool[T]:
     """
@@ -81,7 +82,6 @@ class OrderedPool[T]:
 
     Use Pool if the order of items doesn't matter
     """
-
     def __init__(self, items: list[T]) -> None:
         self._source: list[T] = items
         self._size: int = len(self._source)
@@ -132,11 +132,7 @@ class OrderedPool[T]:
         self._source.append(item)
 
 
-from arcade import SpriteList, BasicSprite
-
-
 class SpritePool[S: BasicSprite](Pool[S]):
-
     def __init__(self, items: list[S]):
         self._size: int = len(items)
         self._source: SpriteList[S] = SpriteList(capacity=self._size)

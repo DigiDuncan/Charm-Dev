@@ -38,14 +38,14 @@ class SecondOrderAnimatorBase:
         self._resp = new_response
         self.calc_k_vals()
 
-    def update_values(self, new_frequency: float | None = None, new_damping: float | None = None, new_response: float | None = None):
+    def update_values(self, new_frequency: float | None = None, new_damping: float | None = None, new_response: float | None = None) -> None:
         self._freq = new_frequency or self._freq
         self._damp = new_damping or self._damp
         self._resp = new_response or self._resp
 
         self.calc_k_vals()
 
-    def calc_k_vals(self):
+    def calc_k_vals(self) -> None:
         self.k1 = self._damp / (pi * self._freq)
         self.k2 = 1.0 / (tau * self._freq)**2.0
         self.k3 = (self._resp * self._damp) / (tau * self._freq)
@@ -62,7 +62,7 @@ class SecondOrderAnimator(SecondOrderAnimatorBase):
     and the sim can explode with lag spikes.
     """
 
-    def update(self, dt: float, nx: float, dx: float | None = None):
+    def update(self, dt: float, nx: float, dx: float | None = None) -> float:
         dx = dx or (nx - self.xp) / dt
         self.xp = nx
         self.y = self.y + self.dy * dt
@@ -79,15 +79,15 @@ class SecondOrderAnimatorTCritical(SecondOrderAnimatorBase):
     the sim won't explode with lag spikes, but it adds extra calc steps.
     """
 
-    def __init__(self, frequency: float, damping: float, response: float, x_initial: float, y_initial: float, y_d_initial: float):
+    def __init__(self, frequency: float, damping: float, response: float, x_initial: float, y_initial: float, y_d_initial: float) -> None:
         super().__init__(frequency, damping, response, x_initial, y_initial, y_d_initial)
         self.T_crit = 0.8 * ((4.0 * self.k2 + self.k1 * self.k1)**0.5 - self.k1)
 
-    def calc_k_vals(self):
+    def calc_k_vals(self) -> None:
         super().calc_k_vals()
         self.T_crit = 0.8 * ((4.0 * self.k2 + self.k1 * self.k1)**0.5 - self.k1)
 
-    def update(self, dt: float, nx: float, dx: float | None = None):
+    def update(self, dt: float, nx: float, dx: float | None = None) -> float:
         dx = dx or (nx - self.xp) / dt
         self.xp = nx
 
@@ -113,7 +113,7 @@ class SecondOrderAnimatorKClamped(SecondOrderAnimatorBase):
     both sim explosions with lag spikes, and jittering at high frequencies.
     """
 
-    def update(self, dt: float, nx: float, dx: float | None = None):
+    def update(self, dt: float, nx: float, dx: float | None = None) -> float:
         dx = dx or (nx - self.xp) / dt
         self.xp = nx
         # Clamping k2 it isn't physically correct, but protects against the sim collapsing with lag spikes.
@@ -135,17 +135,17 @@ class SecondOrderAnimatorPoleZero(SecondOrderAnimatorBase):
     This adds alot of extra computation each frame, and may not be worth it.
     """
 
-    def __init__(self, frequency: float, damping: float, response: float, x_initial: float, y_initial: float, y_d_initial: float):
+    def __init__(self, frequency: float, damping: float, response: float, x_initial: float, y_initial: float, y_d_initial: float) -> None:
         super().__init__(frequency, damping, response, x_initial, y_initial, y_d_initial)
         self._w = tau * frequency
         self._d = self._w * (abs(damping * damping - 1.0))
 
-    def calc_k_vals(self):
+    def calc_k_vals(self) -> None:
         super().calc_k_vals()
         self._w = tau * self._freq
         self._d = self._w * (abs(self._damp * self._damp - 1.0))
 
-    def update(self, dt: float, nx: float, dx: float | None = None):
+    def update(self, dt: float, nx: float, dx: float | None = None) -> float:
         dx = dx or (nx - self.xp) / dt
         self.xp = nx
         if self._w * dt < self._damp:
@@ -168,7 +168,7 @@ class SecondOrderAnimatorPoleZero(SecondOrderAnimatorBase):
 ProceduralAnimator = SecondOrderAnimatorKClamped
 
 
-def update_default_animator(new_default: type):
+def update_default_animator(new_default: type) -> None:
     assert issubclass(new_default, SecondOrderAnimatorBase)
     global ProceduralAnimator
     ProceduralAnimator = new_default

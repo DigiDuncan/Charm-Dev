@@ -167,10 +167,10 @@ class UnifiedChartsetMenuElement(Element):
         idx_scroll = fmod(self.set_scroll, 1.0) * scroll_size
 
         # Sub scroll
-        if self.current_selected_chartset and self.current_selected_chartset.metadata in self.shown_sets and self.shown_sets[self.current_selected_chartset.metadata]._list_element.children:
+        if self.current_selected_chartset and self.current_selected_chartset.metadata in self.shown_sets and self.shown_sets[self.current_selected_chartset.metadata].list_element_children:
             element = self.shown_sets[self.current_selected_chartset.metadata]
-            core = element._chartset_element.bounds.y
-            target = element._list_element.children[self._highlighted_chart_idx].bounds.y
+            core = element.chartset_element_bounds.y
+            target = element.list_element_children[self._highlighted_chart_idx].bounds.y
             self.chart_scroll_animation.target_x = (core - target)
         else:
             self.chart_scroll_animation.target_x = 0.0
@@ -297,7 +297,7 @@ class UnifiedChartsetMenuElement(Element):
         # If the highlighed chartset has an element on screen draw a small marker
         if self.chartsets[self.highlighted_set_idx].metadata in self.shown_sets:
             element = self.shown_sets[self.chartsets[self.highlighted_set_idx].metadata]
-            draw_rect_filled(XYWH(element._chartset_element.bounds.right + 15, element._chartset_element.bounds.center_y, 12, 12), (255, 151, 135, 255))
+            draw_rect_filled(XYWH(element.chartset_element_bounds.right + 15, element.chartset_element_bounds.center_y, 12, 12), (255, 151, 135, 255))
 
         # If we haven't selected a chartset then we are done
         if self.current_selected_chartset is None:

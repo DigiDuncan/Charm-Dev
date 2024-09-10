@@ -4,7 +4,8 @@ import json
 import logging
 import math
 from pathlib import Path
-from typing import NotRequired, Sequence, TypedDict
+from typing import NotRequired, TypedDict
+from collections.abc import Sequence
 
 from charm.lib.errors import ChartPostReadParseError, UnknownLanesError
 from charm.lib.types import Milliseconds, Seconds

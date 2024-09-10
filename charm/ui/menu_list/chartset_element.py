@@ -13,16 +13,18 @@ from charm.core.generic import ChartSet, ChartSetMetadata, ChartMetadata
 from arcade import draw, Text
 
 
+DEFAULT_PADDING = Padding(0, 0, 2.5, 2.5)
+
 class ChartElement(Element):
     # displays info about a specific chart and are spawned in the sublist of the SongListElement
-    def __init__(self, padding: Padding = Padding(0, 0, 2.5, 2.5), min_height: float = 45.0):
+    def __init__(self, padding: Padding = DEFAULT_PADDING, min_height: float = 45.0):
         super().__init__(min_size=Vec2(0.0, min_height))
         self._padding: Padding = padding
         self._sub_region: Rect = padded_sub_rect(self.bounds, self._padding)
         self._chart: ChartMetadata | None = None
         self._text_obj: Text | None = None
 
-    def set_chart(self, new_chart: ChartMetadata):
+    def set_chart(self, new_chart: ChartMetadata) -> None:
         self._chart = new_chart
         self.invalidate_layout()
 
@@ -57,10 +59,12 @@ class ChartElement(Element):
 
 
 
+DEFAULT_PADDING = Padding(0, 0, 5, 5)
+
 class ChartsetDisplayElement(Element):
     # displays info about a specific chartset and are spawned by the ChartsetElement directly
 
-    def __init__(self, padding: Padding = Padding(0, 0, 5, 5)):
+    def __init__(self, padding: Padding = DEFAULT_PADDING):
         super().__init__()
         self._padding: Padding = padding
         self._sub_region: Rect = padded_sub_rect(self.bounds, self._padding)
@@ -218,3 +222,11 @@ class ChartsetElement(Element):
             self._list_element.visible = True
 
         self._list_element.bounds = LRBT(l, r, b, t - self._min_height)
+
+    @property
+    def chartset_element_bounds(self) -> Rect:
+        return self._chartset_element.bounds
+
+    @property
+    def list_element_children(self) -> list[Element]:
+        return self._list_element.children

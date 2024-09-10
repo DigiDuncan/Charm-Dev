@@ -7,7 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
 
-from arcade import Rect, Vec2, LRBT, LBWH, draw_rect_filled, color, draw_text
+from arcade import Rect, Vec2, LRBT, LBWH, draw_rect_filled, draw_text
 from arcade.types import Color
 from arcade.clock import GLOBAL_CLOCK
 
@@ -62,7 +62,7 @@ class ProceduralAnimation:
     start_time: float = 0.0
     elapsed: float = 0.0
     settling: bool = False  # Whether the procedural animator will stop once the target_x and target_dx have been reached.
-    cleanup: Callable[[ProceduralAnimation[A]], None] | None = None
+    cleanup: Callable[[ProceduralAnimation], None] | None = None
 
     def __hash__(self) -> int:
         return hash((self.callback, self.start_time, self.frequency, self.response, self.damping, self.settling))
@@ -118,7 +118,7 @@ class Animator:
     def fixed_update(self, delta_time: float) -> None:
         pass
 
-    def kill_animation(self, animation: Animation, *, do_final_callback: bool = True, do_cleanup: bool = True):
+    def kill_animation(self, animation: Animation, *, do_final_callback: bool = True, do_cleanup: bool = True) -> None:
         if animation not in self.animations:
             return
 
@@ -132,7 +132,7 @@ class Animator:
         if do_cleanup and animation.cleanup is not None:
             animation.cleanup(animation)
 
-    def kill_procedural_animation(self, animation: ProceduralAnimation, *, do_final_callback: bool = True, do_cleanup: bool = True):
+    def kill_procedural_animation(self, animation: ProceduralAnimation, *, do_final_callback: bool = True, do_cleanup: bool = True) -> None:
         if animation not in self.procedural_animations:
             return
         self.procedural_animations.remove(animation)
@@ -163,10 +163,13 @@ class Animator:
     # TODO: add fixed update logic
 
 
-class Element:
-    Animator: Animator = None
+DEFAULT_MIN_SIZE = Vec2(0.0, 0.0)
 
-    def __init__(self, min_size: Vec2 = Vec2(0.0, 0.0)):
+
+class Element:
+    Animator: Animator | None = None
+
+    def __init__(self, min_size: Vec2 = DEFAULT_MIN_SIZE):
         # The area the Element takes up. Not necessarily the area that an Element's children will work within
         # see PaddingElement, but a parent will work on an element based on its bounds. The area an Element draws
         # to is also not depended on the bounds, but they should mostly match to get correct behaviour.
@@ -341,8 +344,11 @@ class RegionElement(Element):
             child.bounds = self._sub_bounds
 
 
+DEFAULT_MIN_SIZE = Vec2(0, 0)
+
+
 class PaddingElement(Element):
-    def __init__(self, padding: Padding, *, children: list[Element] | None = None, min_size: Vec2 = Vec2(0, 0)):
+    def __init__(self, padding: Padding, *, children: list[Element] | None = None, min_size: Vec2 = DEFAULT_MIN_SIZE):
         super().__init__(min_size)
         self._padding: Padding = padding
         self._sub_region: Rect | None = None
@@ -371,17 +377,21 @@ class PaddingElement(Element):
             child.bounds = self._sub_region
 
 
+DEFAULT_MINSIZE = Vec2(0.0, 0.0)
+
+
 class BoxElement(Element):
     def __init__(
-            self,
-            colour: color.Color,
-            min_size: Vec2 = Vec2(0.0, 0.0), text: str = None
+        self,
+        colour: Color,
+        min_size: Vec2 = DEFAULT_MINSIZE,
+        text: str | None = None
     ):
         super().__init__(min_size=min_size)
-        self.colour: color.Color = colour
+        self.colour: Color = colour
         self.text = text
 
-    def _display(self):
+    def _display(self) -> None:
         draw_rect_filled(self._bounds, self.colour)
         if self.text is not None:
             draw_text(self.text, self.bounds.x, self.bounds.y, anchor_x='center', anchor_y='center')
@@ -400,10 +410,13 @@ class AxisAnchor(Enum):
     END = 2
 
 
+DEFAULT_MINSIZE = Vec2()
+
+
 class VerticalElementList(Element):
     # TODO: allow for varying priority in the children. Current they are all equally scaled based on the available size
 
-    def __init__(self, anchor_axis: AxisAnchor = AxisAnchor.TOP, strict: bool = True, *, min_size: Vec2 = Vec2()):
+    def __init__(self, anchor_axis: AxisAnchor = AxisAnchor.TOP, strict: bool = True, *, min_size: Vec2 = DEFAULT_MINSIZE):
         super().__init__(min_size=min_size)
         self._strict: bool = strict
         self._anchor_axis: AxisAnchor = anchor_axis

@@ -53,7 +53,7 @@ class LyricAnimator:
 
         self._string_sizes: dict[str, int] = {}
 
-        self._test_label: FormattedLabel = FormattedLabel("test", font_name = "bananaslip plus", font_size=self.max_font_size, align = "center", anchor_x = "center",)
+        self._test_label: FormattedLabel = FormattedLabel("test", font_name = "bananaslip plus", font_size=self.max_font_size, align = "center", anchor_x = "center")
 
         self._label_batch: pyglet.graphics.Batch = pyglet.graphics.Batch()
 
@@ -83,12 +83,12 @@ class LyricAnimator:
             self._update_subtitles(self.current_subtitles[-1])
             self._shown_event = self.current_subtitles[-1]
 
-    def _clear_subtitles(self):
+    def _clear_subtitles(self) -> None:
         self._shadow_label.position = -1000.0, -1000.0, 10
         self._under_label.position = -1000.0, -1000.0, 20
         self._over_label.position = -1000.0, -1000.0, 30
 
-    def _update_subtitles(self, subtitle: LyricEvent):
+    def _update_subtitles(self, subtitle: LyricEvent) -> None:
         fs = self.get_font_size(subtitle.text)
         if self._shadow_label.font_size != fs:
             self._shadow_label.set_style('font_size', fs)

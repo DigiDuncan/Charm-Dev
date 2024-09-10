@@ -1,8 +1,9 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 if TYPE_CHECKING:
-    from pyglet.image import AbstractImage
+    from pyglet.image import AbstractImage, Texture
     from pyglet.text.document import AbstractDocument
+    from pyglet.graphics import Batch, Group
 
 import logging
 from importlib.resources import files
@@ -50,10 +51,10 @@ class EmojiPicker:
         return self.emoji_coords.get(emoji, (0, 0))
 
     @cache
-    def get_emoji_texture(self, emoji: str, size: int):
+    def get_emoji_texture(self, emoji: str, size: int) -> Texture:
         x, y = self.get_emoji_coords(emoji)
         img_region = self.sheet.get_region(x, y, self.emoji_width, self.emoji_height)
-        img = img_region.get_texture()
+        img = cast(Texture, img_region.get_texture())
         px = pt_to_px(size)
         img.width = px
         img.height = px
@@ -85,13 +86,29 @@ emojisets: dict[str, EmojiPicker] = {}
 
 
 class FormattedLabel(DocumentLabel):
-    def __init__(self, text='',
-                 font_name=None, font_size=None, bold=False, italic=False, stretch=False,
-                 color=(255, 255, 255, 255),
-                 x=0, y=0, z=0, width=None, height=None,
-                 anchor_x='left', anchor_y='baseline',
-                 align='left',
-                 multiline=False, dpi=None, batch=None, group=None, rotation=0):
+    def __init__(
+            self,
+            text: str = '',
+            font_name: str | list[str] | None = None,
+            font_size: float | None = None,
+            bold: bool | str = False,
+            italic: bool | str = False,
+            stretch: bool | str = False,
+            color: tuple[int, int, int, int] = (255, 255, 255, 255),
+            x: int = 0,
+            y: int = 0,
+            z: int = 0,
+            width: int | None = None,
+            height: int | None = None,
+            anchor_x: str = 'left',
+            anchor_y: str = 'baseline',
+            align: str = 'left',
+            multiline: bool = False,
+            dpi: float | None = None,
+            batch: Batch | None = None,
+            group: Group | None = None,
+            rotation: float = 0
+    ):
         """:Parameters:
             `text` : str
                 Text to display.
@@ -185,7 +202,6 @@ class FormattedLabel(DocumentLabel):
 
 
 class EmojiLabel(FormattedLabel):
-
     def __init__(self, text: str, *args, emojiset: str = "twemoji", **kwargs):
         super().__init__(text, *args, **kwargs)
         if emojiset in emojisets:
@@ -208,7 +224,7 @@ class EmojiLabel(FormattedLabel):
         self.document = doc
 
 
-def update_emoji_doc(doc: AbstractDocument, text: str, font_size: int, emojiset: str = 'twemoji'):
+def update_emoji_doc(doc: AbstractDocument, text: str, font_size: int, emojiset: str = 'twemoji') -> None:
     if emojiset in emojisets:
         emoji_picker: EmojiPicker = emojisets[emojiset]
     else:

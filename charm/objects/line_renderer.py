@@ -49,17 +49,17 @@ class LongNoteRenderer:
         self._tail = Sprite(self._tail_textures[self._note_state], center_x=x, center_y=y)
         self._tail.width, self._tail.height = tail_width, tail_height
 
-    def get_sprites(self):
+    def get_sprites(self) -> None:
         return self._cap, self._body, self._tail
 
-    def miss(self):
+    def miss(self) -> None:
         self._note_state = NoteStruckState.MISSED
 
         self._cap.texture = self._cap_textures[self._note_state]
         self._body.texture = self._body_textures[self._note_state]
         self._tail.texture = self._tail_textures[self._note_state]
 
-    def hit(self):
+    def hit(self) -> None:
         self._note_state = NoteStruckState.HIT
 
         self._cap.texture = self._cap_textures[self._note_state]
@@ -73,44 +73,46 @@ class LineRenderer:
         self.color = color
         self.width = width
 
-    def move(self, x: float, y: float):
+    def move(self, x: float, y: float) -> None:
         for p in self.points:
             p.move(x, y)
 
     @property
     def point_tuples(self) -> list[tuple[float, float]]:
-        return [p._point for p in self.points]
+        return [p.xy for p in self.points]
 
-    def update(self, delta_time: float):
+    def update(self, delta_time: float) -> None:
         self.current_time += delta_time
 
-    def draw(self):
+    def draw(self) -> None:
         arcade.draw_line_strip(self.point_tuples, self.color, self.width)
 
 
 class MultiLineRenderer:
-    def __init__(self, line_renderers: dict[Hashable, LineRenderer] = {}):
+    def __init__(self, line_renderers: dict[Hashable, LineRenderer] | None = None):
+        if line_renderers is None:
+            line_renderers = {}
         self.line_renderers = line_renderers
 
-    def add_renderer(self, id: Hashable, renderer: LineRenderer):
+    def add_renderer(self, id: Hashable, renderer: LineRenderer) -> None:
         if id in self.line_renderers:
             raise ValueError(f"ID {id} already in multi-line renderer!")
         self.line_renderers[id] = renderer
 
-    def remove_renderer(self, id: Hashable):
+    def remove_renderer(self, id: Hashable) -> None:
         self.line_renderers.pop(id)
 
-    def remove_renderers_with_prefix(self, prefix: Hashable):
+    def remove_renderers_with_prefix(self, prefix: Hashable) -> None:
         p = str(prefix)
         for id in self.line_renderers.keys():
             if str(id).startswith(p):
                 self.line_renderers.pop(id)
 
-    def move(self, x: float, y: float):
+    def move(self, x: float, y: float) -> None:
         for lr in self.line_renderers.values():
             lr.move(x, y)
 
-    def draw(self):
+    def draw(self) -> None:
         for lr in self.line_renderers.values():
             lr.draw()
 
@@ -118,8 +120,8 @@ class MultiLineRenderer:
 class NoteTrail(MultiLineRenderer):
     def __init__(self, note_id: Hashable, note_center: Point, time_start: Seconds, length: Seconds,
                  px_per_s: float, color: Color, point_depth: float = 50, width: float = 100,
-                 *, resolution: int = 5, thickness: int = 3, upscroll = False,
-                 fill_color: Color | None = None, curve = False):
+                 *, resolution: int = 5, thickness: int = 3, upscroll: bool = False,
+                 fill_color: Color | None = None, curve: bool = False):
 
         self.note_id = note_id
         self.note_center = note_center
@@ -184,7 +186,7 @@ class NoteTrail(MultiLineRenderer):
 
         super().__init__({f"{nid}_left": self.line_renderer1, f"{nid}_right": self.line_renderer2})
 
-    def generate_fill(self):
+    def generate_fill(self) -> None:
         self.rectangles = arcade.shape_list.ShapeElementList()
         if self.fill_color:
             mid_point_x = (self.left_x + self.right_x) / 2
@@ -217,7 +219,7 @@ class NoteTrail(MultiLineRenderer):
                                             self.point_depth - self.thickness, self.color, 0, 180, self.thickness * 2)
             ctx.blend_func = ctx.BLEND_DEFAULT
 
-    def move(self, x: float, y: float):
+    def move(self, x: float, y: float) -> None:
         for lr in self.line_renderers.values():
             lr.move(x, y)
         self.rectangles.move(x, y)
@@ -225,13 +227,13 @@ class NoteTrail(MultiLineRenderer):
             self.curve_cap.move(x, y)
         self.note_center = (self.note_center[0] + x, self.note_center[1] + y)
 
-    def set_position(self, x: float, y: float):
+    def set_position(self, x: float, y: float) -> None:
         ox, oy = self.note_center
         mx = x - ox
         my = y - oy
         self.move(mx, my)
 
-    def draw(self):
+    def draw(self) -> None:
         if self.rectangles:
             self.rectangles.draw()
         for lr in self.line_renderers.values():
@@ -275,7 +277,7 @@ class TaikoNoteTrail:
 
         self.generate_fill()
 
-    def generate_fill(self):
+    def generate_fill(self) -> None:
         self.rectangles = arcade.shape_list.ShapeElementList()
         mid_point_x = self._left + (self._px_length // 2)
         rect = arcade.shape_list.create_rectangle_filled(mid_point_x, self.note_center[1], self._px_length, self.width - self.thickness, self.fill_color)
@@ -292,7 +294,7 @@ class TaikoNoteTrail:
             arcade.draw_arc_outline(0, self.width / 2, self.width, self.width - self.thickness, self.color, -90, 90, self.thickness * 2)
         ctx.blend_func = ctx.BLEND_DEFAULT
 
-    def move(self, x: float, y: float):
+    def move(self, x: float, y: float) -> None:
         for lr in self.line_renderers:
             lr.move(x, y)
         self.rectangles.move(x, y)
@@ -300,13 +302,13 @@ class TaikoNoteTrail:
             self.curve_cap.move(x, y)
         self.note_center = (self.note_center[0] + x, self.note_center[1] + y)
 
-    def set_position(self, x: float, y: float):
+    def set_position(self, x: float, y: float) -> None:
         ox, oy = self.note_center
         mx = x - ox
         my = y - oy
         self.move(mx, my)
 
-    def draw(self):
+    def draw(self) -> None:
         self.rectangles.draw()
         for lr in self.line_renderers:
             lr.draw()

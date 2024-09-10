@@ -1,4 +1,9 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
+
+from charm.core.generic.sprite import NoteSprite
+if TYPE_CHECKING:
+    from charm.lib.digiview import DigiWindow
 from collections.abc import Sequence
 
 from importlib.resources import files
@@ -26,7 +31,7 @@ class FourKeyDisplay(Display):
         super().__init__(engine, charts)
         self.engine: FNFEngine | FourKeyEngine
         self.charts: Sequence[FourKeyChart]
-        self._win: "DigiWindow" = get_window()  # type: ignore | aaa shut up Arcade
+        self._win: DigiWindow = get_window()  # type: ignore | aaa shut up Arcade
         self.chart = charts[0]
 
         # NOTE: change highways to work of their center position not bottom left
@@ -144,7 +149,7 @@ class FourKeyDisplay(Display):
         # ! TODO
         pass
 
-    def debug_fetch_note_sprites_at_point(self, point: Point) -> list:
+    def debug_fetch_note_sprites_at_point(self, point: Point) -> list[NoteSprite]:
         # TODO: NOT HERE
         from arcade.sprite_list.collision import get_sprites_at_point
 

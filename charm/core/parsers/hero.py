@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import configparser
 from collections import defaultdict
+from collections.abc import Sequence
 import itertools
 import logging
 from pathlib import Path
 import re
-from typing import Sequence
 from nindex import Index
 
 from charm.lib.errors import MetadataParseError, NoChartsError, NoMetadataError, ChartParseError, ChartPostReadParseError

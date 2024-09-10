@@ -3,7 +3,7 @@ from pathlib import Path
 import appdirs
 
 
-def _get_data_dir():
+def _get_data_dir() -> Path:
     appname = "Charm"
     appauthor = "DigiDuncan"
     datadir = Path(appdirs.user_data_dir(appname, appauthor))

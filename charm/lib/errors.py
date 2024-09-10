@@ -17,10 +17,10 @@ MAX_REPEATS = 50
 logger = logging.getLogger("charm")
 
 
-def log_charmerror(e: CharmError, show_traceback = True):
+def log_charmerror(e: CharmError, show_traceback: bool = True) -> None:
     loglevel = {
         "error": logging.ERROR,
-        "warn": logging.WARN
+        "warn": logging.WARNING
     }.get(e.icon_name, logging.INFO)
     logger.log(loglevel, f"{e.title}: {e.message}{' (' + str(e.repeat) + ')' if e.repeat > 1 else ''}")
     if e.repeat == 1 and show_traceback:

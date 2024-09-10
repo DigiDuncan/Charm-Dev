@@ -208,19 +208,19 @@ class OsuMetadata:
 @dataclass
 class OsuDifficulty:
     """Definitions relating to the osu! engine."""
-    hp_drain_rate: float = None
-    circle_size: float = None
-    overall_difficulty: float = None
-    approach_rate: float = None
-    slider_multiplier: float = None
-    slider_tick_rate: float = None
+    hp_drain_rate: float | None = None
+    circle_size: float | None = None
+    overall_difficulty: float | None = None
+    approach_rate: float | None = None
+    slider_multiplier: float | None = None
+    slider_tick_rate: float | None = None
 
     @property
     def hp(self) -> float:
         return self.hp_drain_rate
 
     @hp.setter
-    def hp(self, v: float):
+    def hp(self, v: float) -> None:
         self.hp_drain_rate = v
 
     @property
@@ -228,7 +228,7 @@ class OsuDifficulty:
         return self.circle_size
 
     @cs.setter
-    def cs(self, v: float):
+    def cs(self, v: float) -> None:
         self.circle_size = v
 
     @property
@@ -236,7 +236,7 @@ class OsuDifficulty:
         return self.overall_difficulty
 
     @od.setter
-    def od(self, v: float):
+    def od(self, v: float) -> None:
         self.overall_difficulty = v
 
     @property
@@ -244,7 +244,7 @@ class OsuDifficulty:
         return self.approach_rate
 
     @ar.setter
-    def ar(self, v: float):
+    def ar(self, v: float) -> None:
         self.approach_rate = v
 
 

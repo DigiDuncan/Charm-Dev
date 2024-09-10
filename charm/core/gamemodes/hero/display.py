@@ -1,4 +1,8 @@
 
+from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from charm.lib.digiview import DigiWindow
 from collections.abc import Sequence
 
 from arcade import get_window
@@ -17,7 +21,7 @@ class HeroDisplay(Display):
         super().__init__(engine, charts)
         self.engine: HeroEngine
         self.charts: Sequence[HeroChart]
-        self._win: "DigiWindow" = get_window()  # type: ignore | aaa shut up Arcade
+        self._win: DigiWindow = get_window()  # type: ignore | aaa shut up Arcade
         self.chart = charts[0]
 
         self.highway: HeroHighway = HeroHighway(self.chart, engine, (0, 0), (self._win.width // 4, self._win.height))

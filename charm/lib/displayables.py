@@ -17,10 +17,10 @@ if TYPE_CHECKING:
     from charm.lib.gamemodes.fnf import CameraFocusEvent
 
 class Displayable(Protocol):
-    def update(self, song_time: float):
+    def update(self, song_time: float) -> None:
         ...
 
-    def draw(self):
+    def draw(self) -> None:
         ...
 
 class HPBar:
@@ -40,7 +40,7 @@ class HPBar:
         self.center_sprite.center_x = x
         self.center_sprite.center_y = y
 
-    def update(self, song_time: float):
+    def update(self, song_time: float) -> None:
         pass
 
     def draw(self) -> None:
@@ -176,7 +176,7 @@ class Spotlight:
         self.camera_events = camera_events
         self.window = get_window()
 
-        self.last_camera_event: "CameraFocusEvent" =  None
+        self.last_camera_event: CameraFocusEvent | None = None
         self.last_spotlight_change = 0
 
         self.last_spotlight_position_left = 0

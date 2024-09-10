@@ -7,6 +7,7 @@ from arcade import get_window, color, load_texture, draw_sprite, Text, Sprite, T
 from arcade.types import Color, Point
 from nindex.index import Index
 
+from charm.core.generic.sprite import NoteSprite
 from charm.lib.anim import perc, ease_circout
 from charm.lib.displayables import Countdown, Spotlight, HPBar, Timer
 from charm.lib.types import Seconds
@@ -174,7 +175,7 @@ class FNFDisplay(Display):
         # ! TODO
         pass
 
-    def debug_fetch_note_sprites_at_point(self, point: Point) -> list:
+    def debug_fetch_note_sprites_at_point(self, point: Point) -> list[NoteSprite]:
         # TODO: NOT HERE
         from arcade.sprite_list.collision import get_sprites_at_point
 

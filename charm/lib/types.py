@@ -38,6 +38,10 @@ class Point:
     def y(self, val: float) -> None:
         self._point = (self._point[0], val)
 
+    @property
+    def xy(self) -> tuple[float, float]:
+        return self._point
+
     def move(self, x: float, y: float) -> None:
         self._point = (self._point[0] + x, self._point[1] + y)
 

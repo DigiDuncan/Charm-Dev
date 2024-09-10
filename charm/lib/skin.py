@@ -27,7 +27,7 @@ class SkinItem:
         return self._value if self._value is not None else self.default
 
     @value.setter
-    def value(self, v: T):
+    def value(self, v: T) -> None:
         self._value = v
 
 
@@ -42,7 +42,7 @@ class SkinBool(SkinItem):
         return self._value if self._value is not None else self.default
 
     @value.setter
-    def value(self, v: bool):
+    def value(self, v: bool) -> None:
         self._value = v
 
 
@@ -57,7 +57,7 @@ class SkinInt(SkinItem):
         return self._value if self._value is not None else self.default
 
     @value.setter
-    def value(self, v: int):
+    def value(self, v: int) -> None:
         self._value = v
 
 
@@ -72,7 +72,7 @@ class SkinFloat(SkinItem):
         return self._value if self._value is not None else self.default
 
     @value.setter
-    def value(self, v: float):
+    def value(self, v: float) -> None:
         self._value = v
 
 
@@ -87,7 +87,7 @@ class SkinAbsolutePoint(SkinItem):
         return self._value if self._value is not None else self.default
 
     @value.setter
-    def value(self, v: AbsolutePoint):
+    def value(self, v: AbsolutePoint) -> None:
         self._value = v
 
     @property
@@ -95,7 +95,7 @@ class SkinAbsolutePoint(SkinItem):
         return self.value[0]
 
     @x.setter
-    def x(self, val: int):
+    def x(self, val: int) -> None:
         self.value = (val, self.y)
 
     @property
@@ -103,7 +103,7 @@ class SkinAbsolutePoint(SkinItem):
         return self.value[1]
 
     @y.setter
-    def y(self, val: int):
+    def y(self, val: int) -> None:
         self.value = (self.x, val)
 
 
@@ -118,7 +118,7 @@ class SkinRelativePoint(SkinItem):
         return self._value if self._value is not None else self.default
 
     @value.setter
-    def value(self, v: RelativePoint):
+    def value(self, v: RelativePoint) -> None:
         self._value = v
 
     @property
@@ -126,7 +126,7 @@ class SkinRelativePoint(SkinItem):
         return self.value[0]
 
     @x.setter
-    def x(self, val: float):
+    def x(self, val: float) -> None:
         self.value = (val, self.y)
 
     @property
@@ -134,7 +134,7 @@ class SkinRelativePoint(SkinItem):
         return self.value[1]
 
     @y.setter
-    def y(self, val: float):
+    def y(self, val: float) -> None:
         self.value = (self.x, val)
 
     def absolute(self, window_size: AbsolutePoint) -> AbsolutePoint:
@@ -152,7 +152,7 @@ class SkinColor(SkinItem):
         return self._value if self._value is not None else self.default
 
     @value.setter
-    def value(self, v: Color):
+    def value(self, v: Color) -> None:
         self._value = v
 
     @property
@@ -160,7 +160,7 @@ class SkinColor(SkinItem):
         return self.value[0]
 
     @r.setter
-    def r(self, val: int):
+    def r(self, val: int) -> None:
         self.value = (val, self.g, self.b, self.a)
 
     @property
@@ -168,7 +168,7 @@ class SkinColor(SkinItem):
         return self.value[1]
 
     @g.setter
-    def g(self, val: int):
+    def g(self, val: int) -> None:
         self.value = (self.r, val, self.b, self.a)
 
     @property
@@ -176,7 +176,7 @@ class SkinColor(SkinItem):
         return self.value[2]
 
     @b.setter
-    def b(self, val: int):
+    def b(self, val: int) -> None:
         self.value = (self.r, self.g, val, self.a)
 
     @property
@@ -184,7 +184,7 @@ class SkinColor(SkinItem):
         return self.value[3]
 
     @a.setter
-    def a(self, val: int):
+    def a(self, val: int) -> None:
         self.value = (self.r, self.g, self.b, val)
 
 
@@ -199,7 +199,7 @@ class SkinSprite(SkinItem):
         return self._value if self._value is not None else self.default
 
     @value.setter
-    def value(self, v: str):
+    def value(self, v: str) -> None:
         self._value = v
 
     def get_path_from_root(self, root: Path) -> Path:
@@ -223,7 +223,7 @@ class Skin:
         self.data = Addict()
 
     def get_asset(self, item_key: str) -> Any:
-        skin_item = next((s for s in self.skin_items if s.key == item_key))
+        skin_item = next(s for s in self.skin_items if s.key == item_key)
         if isinstance(skin_item, SkinSprite):
             return skin_item.get_sprite(self.root)
         else:

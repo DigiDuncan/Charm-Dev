@@ -24,7 +24,8 @@
 import json
 import logging
 from pathlib import Path
-from typing import Any, Literal, NotRequired, Sequence, TypedDict
+from typing import Any, Literal, NotRequired, TypedDict
+from collections.abc import Sequence
 
 from charm.core.generic import ChartMetadata, ChartSetMetadata, Event, Parser
 from charm.core.gamemodes.fnf import CameraFocusEvent, CameraZoomEvent, FNFChart, FNFNote, FNFNoteType, PlayAnimationEvent

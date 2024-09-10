@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Sequence
+from collections.abc import Sequence
 
 from charm.core.gamemodes.four_key import FourKeyNote, FourKeyChart
 from charm.core.generic import ChartSetMetadata, Parser, ChartMetadata

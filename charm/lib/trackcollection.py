@@ -71,7 +71,7 @@ class TrackCollection:
         self.delay = delay
         self.start_time = GLOBAL_CLOCK.time
 
-    def validate_playing(self):
+    def validate_playing(self) -> None:
         if self.start_time < 0:
             return
 

@@ -27,7 +27,7 @@ class Billboard(Sprite):
         pass
 
     @property
-    def rect(self):
+    def rect(self) -> None:
         pass
 
 
