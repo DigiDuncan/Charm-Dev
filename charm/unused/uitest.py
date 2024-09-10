@@ -1,4 +1,5 @@
 import logging
+from typing import cast
 
 from arcade import Vec2, LRBT, types
 
@@ -12,8 +13,9 @@ from charm.lib.mini_mint import RegionElement, Padding, Element, PaddingElement,
 logger = logging.getLogger("charm")
 
 
-def make_padded_debug(padding: Padding = Padding(0, 20.0, 5.0, 5.0), min_size: Vec2 = Vec2(0.0, 100.0)):
+def make_padded_debug(padding: Padding = Padding(0, 20.0, 5.0, 5.0), min_size: Vec2 = Vec2(0.0, 100.0)) -> PaddingElement:
     return PaddingElement(padding, children=[BoxElement(colour=types.Color(255, 255, 255, 255))], min_size=min_size)
+
 
 def make_empty(idx: int) -> Element:
     return Element(min_size=Vec2(0.0, 100.0))
@@ -30,6 +32,13 @@ class UiView(DigiView):
         self.root_ui_region: RegionElement = RegionElement(LRBT(0.0, 0.6, 0.0, 1.0))
         self.root_ui_region.bounds = self.window.rect
         self._base_region = self.root_ui_region.region
+        
+        # This structure is very difficult to follow. I think it ends up something like this?
+        # root_ui_region = RegionElement
+        #   self.element_list = VerticalElementList
+        #     self.sublist = VerticalElementList
+        #       PaddingElement
+        #         BoxElement
 
         # Actual element list
         self.element_list: VerticalElementList = VerticalElementList(strict=False)
@@ -58,7 +67,7 @@ class UiView(DigiView):
 
         self.has_item_selected: bool = False
 
-        self.sub_list_items: list[PaddingElement] = [None for _ in range(10)]
+        self.sub_list_items: list[PaddingElement | None] = [None for _ in range(10)]
         self.sub_list: VerticalElementList = VerticalElementList(strict=True, min_size=Vec2(0.0, 60.0 * len(self.sub_list_items)))
         self.sub_list.add_child(make_padded_debug(Padding(2, 2, 2, 2)))
 
@@ -138,7 +147,7 @@ class UiView(DigiView):
             self.has_item_selected = True
             self.insert_sublist(self.idx_offset + 1)
             self.selected_idx = int(self.target_scroll)
-            self.sub_list._minimum_size = Vec2(0.0, 100.0)
+            self.sub_list.minimum_size = Vec2(0.0, 100.0)
 
     @shows_errors
     def on_update(self, delta_time: float) -> None:
@@ -159,9 +168,9 @@ class UiView(DigiView):
 
         sb = smerp(self.sub_list.minimum_size.y, len(self.sub_list_items) * 60.0, self._scroll_decay, delta_time)
         if abs(len(self.sub_list_items) * 60.0 - sb) < 0.0001:
-            self.sub_list._minimum_size = Vec2(0.0, len(self.sub_list_items) * 60.0)
+            self.sub_list.minimum_size = Vec2(0.0, len(self.sub_list_items) * 60.0)
         else:
-            self.sub_list._minimum_size = Vec2(0.0, sb)
+            self.sub_list.minimum_size = Vec2(0.0, sb)
 
         # This scroll value doesn't take into account the sub_list which will have to change.
         bounds_fraction = self.element_list_items[0].bounds.height/self.root_ui_region.bounds.height  # x/height is a constant we should store
@@ -192,7 +201,7 @@ class UiView(DigiView):
             self.element_list_items[idx].visible = True
 
             # Elements should probably have a generic for children types
-            item = self.element_list_items[idx].children[0]
+            item = cast(BoxElement, self.element_list_items[idx].children[0])
             item.text = str(start_idx + idx)
             item.colour = types.Color(10 * idx, 255 - 10 * idx, 100, 255)
 

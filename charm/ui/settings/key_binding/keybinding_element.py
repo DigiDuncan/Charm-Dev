@@ -1,7 +1,7 @@
 from charm.lib.mini_mint import Element
 
 
-class KeyBindingElement(Element[Element]):
+class KeyBindingElement(Element):
     def __init__(self):
         super().__init__()
 

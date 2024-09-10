@@ -3,12 +3,10 @@ from arcade import draw_rect_filled
 
 from charm.lib.mini_mint import Element
 
-from charm.ui.settings.settings_tab import SettingsTabElement
-
 OVERLAY_COLOR = Color(0, 0, 0, 125)
 
-class SettingsMenuElement(Element[SettingsTabElement]):
 
+class SettingsMenuElement(Element):
     def __init__(self):
         super().__init__()
         pass

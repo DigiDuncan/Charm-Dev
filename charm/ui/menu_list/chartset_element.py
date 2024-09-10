@@ -13,7 +13,7 @@ from charm.core.generic import ChartSet, ChartSetMetadata, ChartMetadata
 from arcade import draw, Text
 
 
-class ChartElement(Element[Element]):
+class ChartElement(Element):
     # displays info about a specific chart and are spawned in the sublist of the SongListElement
     def __init__(self, padding: Padding = Padding(0, 0, 2.5, 2.5), min_height: float = 45.0):
         super().__init__(min_size=Vec2(0.0, min_height))
@@ -55,7 +55,7 @@ class ChartElement(Element[Element]):
 
 
 
-class ChartsetDisplayElement(Element[Element]):
+class ChartsetDisplayElement(Element):
     # displays info about a specific chartset and are spawned by the ChartsetElement directly
 
     def __init__(self, padding: Padding = Padding(0, 0, 5, 5)):
@@ -102,7 +102,7 @@ CHARTSET_ELEMENT_FREQUENCY = 3.0
 CHARTSET_ELEMENT_DAMPENING = 1.2
 CHARTSET_ELEMENT_RESPONSE = 1.0
 
-class ChartsetElement(Element[ChartsetDisplayElement | VerticalElementList]):
+class ChartsetElement(Element):
     # Holds a SongElement and a sublist of ChartElements and manages how and when the sublist appears
     def __init__(self, min_height: float, chartset: ChartSet = None):
         super().__init__(Vec2(0.0, min_height))
@@ -121,11 +121,11 @@ class ChartsetElement(Element[ChartsetDisplayElement | VerticalElementList]):
         self.visible = False
         self.chartset = chartset
 
-    def grow(self, new_size: float, size_change: float):
+    def grow(self, new_size: float, size_change: float) -> None:
         self.minimum_size = Vec2(0.0, new_size)
         self.invalidate_layout()
 
-    def cleanup(self, animation: ProceduralAnimation):
+    def cleanup(self, animation: ProceduralAnimation) -> None:
         self._animation = None
         self.invalidate_layout()
 

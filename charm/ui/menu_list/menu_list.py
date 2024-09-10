@@ -22,8 +22,8 @@ CHART_FREQUENCY = 2.0
 CHART_DAMPING = 0.8
 CHART_RESPONSE = 0.75
 
-class UnifiedChartsetMenuElement(Element[VerticalElementList]):
 
+class UnifiedChartsetMenuElement(Element):
     def __init__(self, chartsets: list[ChartSet] = None, min_element_size: float = 100, element_padding: int = 2, left_fraction: float = 0.0, right_fraction: float = 1.0):
         super().__init__()
         self.min_element_size: float = min_element_size  # uses this to estimate the number of needed elements to simulate the full list
@@ -141,11 +141,11 @@ class UnifiedChartsetMenuElement(Element[VerticalElementList]):
 
         self.shown_sets = next_songs
 
-    def update_set_scroll(self, new_scroll, delta_scroll):
+    def update_set_scroll(self, new_scroll: float, delta_scroll: float) -> None:
         self.set_scroll = new_scroll
         self.invalidate_layout()
 
-    def update_chart_scroll(self, new_scroll, delta_scroll):
+    def update_chart_scroll(self, new_scroll: float, delta_scroll: float) -> None:
         self.chart_scroll = new_scroll
         self.invalidate_layout()
 
@@ -183,23 +183,23 @@ class UnifiedChartsetMenuElement(Element[VerticalElementList]):
         self.element_list.bounds = LRBT(lef, rig, bot + centering_offset + sub_scroll + idx_scroll, top + centering_offset + sub_scroll + idx_scroll)
 
     @property
-    def highlighted_set_idx(self):
+    def highlighted_set_idx(self) -> int:
         return self._highlighted_set_idx
 
     @highlighted_set_idx.setter
-    def highlighted_set_idx(self, new_idx: int):
+    def highlighted_set_idx(self, new_idx: int) -> None:
         self._highlighted_set_idx = new_idx
         self.set_scroll_animation.target_x = new_idx
 
     @property
-    def highlighted_chart_idx(self):
+    def highlighted_chart_idx(self) -> int:
         return self._highlighted_chart_idx
 
     @highlighted_chart_idx.setter
-    def highlighted_chart_idx(self, new_idx: int):
+    def highlighted_chart_idx(self, new_idx: int) -> None:
         self._highlighted_chart_idx = new_idx
 
-    def select_set(self, chartset: ChartSet):
+    def select_set(self, chartset: ChartSet) -> None:
         if self.current_selected_chartset is not None and self.current_selected_chartset.metadata in self.shown_sets:
             self.shown_sets[self.current_selected_chartset.metadata].deselect()
 
@@ -217,7 +217,7 @@ class UnifiedChartsetMenuElement(Element[VerticalElementList]):
             _img = img_from_path(files(charm.data.images) / "no_image_found.png")
         self.album_art_texture = Texture(_img)
 
-    def deselect_set(self, chartset: ChartSet):
+    def deselect_set(self, chartset: ChartSet) -> None:
         if chartset != self.current_selected_chartset:
             return
 
@@ -230,22 +230,22 @@ class UnifiedChartsetMenuElement(Element[VerticalElementList]):
         self.current_selected_chart = None
         self.highlighted_chart_idx = 0
 
-    def select_chart(self, chart: ChartMetadata):
+    def select_chart(self, chart: ChartMetadata) -> None:
         self.current_selected_chart = chart
         self.invalidate_layout()
         #TODO: load chart?
 
-    def select_chart_element(self, element):
-        print('not yet implimented internally')
+    def select_chart_element(self, element: ChartsetElement) -> None:
+        print('not yet implemented internally')
 
-    def select_currently_highlighted(self):
+    def select_currently_highlighted(self) -> None:
         self.invalidate_layout()
         if self.current_selected_chartset is None:
             self.select_set(self.chartsets[self.highlighted_set_idx])
             return
         self.select_chart(self.current_selected_chartset.charts[self.highlighted_chart_idx])
 
-    def _down_sub_scroll(self, count: int):
+    def _down_sub_scroll(self, count: int) -> None:
         self.highlighted_chart_idx += count
 
         if self.highlighted_chart_idx < len(self.current_selected_chartset.charts):
@@ -254,19 +254,19 @@ class UnifiedChartsetMenuElement(Element[VerticalElementList]):
         self.deselect_set(self.current_selected_chartset)
         self._down_scroll(count=1)
 
-    def _down_scroll(self, count: int):
+    def _down_scroll(self, count: int) -> None:
         if not self.chartsets:
             return
         self.highlighted_set_idx = (self.highlighted_set_idx + count) % len(self.chartsets)
 
-    def down_scroll(self, count: int = 1):
+    def down_scroll(self, count: int = 1) -> None:
         self.invalidate_layout()
         if self.current_selected_chartset is not None:
             self._down_sub_scroll(count=count)
             return
         self._down_scroll(count=count)
 
-    def _up_sub_scroll(self, count: int):
+    def _up_sub_scroll(self, count: int) -> None:
         self.highlighted_chart_idx -= count
 
         if self.highlighted_chart_idx >= 0:
@@ -275,12 +275,12 @@ class UnifiedChartsetMenuElement(Element[VerticalElementList]):
         # We are outside the chartsets list of charts, so lets close it
         self.deselect_set(self.current_selected_chartset)
 
-    def _up_scroll(self, count: int):
+    def _up_scroll(self, count: int) -> None:
         if not self.chartsets:
             return
         self.highlighted_set_idx = (self.highlighted_set_idx - count) % len(self.chartsets)
 
-    def up_scroll(self, count: int = 1):
+    def up_scroll(self, count: int = 1) -> None:
         self.invalidate_layout()
         if self.current_selected_chartset is not None:
             self._up_sub_scroll(count=count)

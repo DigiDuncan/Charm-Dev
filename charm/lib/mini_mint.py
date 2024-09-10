@@ -8,12 +8,14 @@ from dataclasses import dataclass
 from enum import Enum
 
 from arcade import Rect, Vec2, LRBT, LBWH, draw_rect_filled, color, draw_text
+from arcade.types import Color
 from arcade.clock import GLOBAL_CLOCK
 
 from charm.lib.anim import EasingFunction, ease_linear, perc
 from charm.lib.procedural_animators import ProceduralAnimator, SecondOrderAnimatorBase, Animatable
 
-DRAGON_PEACH = color.Color(255, 140, 120)
+DRAGON_PEACH = Color(255, 140, 120)
+
 
 class Padding(NamedTuple):
     left: float
@@ -24,6 +26,7 @@ class Padding(NamedTuple):
 
 def padded_rect(rect: Rect, padding: Padding) -> Rect:
     return LRBT(rect.left - padding.left, rect.right + padding.right, rect.bottom - padding.bottom, rect.top + padding.top)
+
 
 def padded_sub_rect(rect: Rect, padding: Padding) -> Rect:
     return LRBT(rect.left + padding.left, rect.right - padding.right, rect.bottom + padding.bottom, rect.top - padding.top)
@@ -44,6 +47,7 @@ class Animation:
     function: EasingFunction = ease_linear
     cleanup: Callable[[Animation]] | None = None
 
+
 @dataclass(eq=True)
 class ProceduralAnimation[A: Animatable]:
     callback: Callable[[float, float]]
@@ -62,6 +66,7 @@ class ProceduralAnimation[A: Animatable]:
 
     def __hash__(self) -> int:
         return hash((self.callback, self.start_time, self.frequency, self.response, self.damping, self.settling))
+
 
 class Animator:
     """
@@ -158,7 +163,8 @@ class Animator:
 
     # TODO: add fixed update logic
 
-class Element[C: Element]:
+
+class Element:
     Animator: Animator = None
 
     def __init__(self, min_size: Vec2 = Vec2(0.0, 0.0)):
@@ -169,7 +175,7 @@ class Element[C: Element]:
 
         self._minimum_size: Vec2 = min_size
 
-        self.children: list[C] = []
+        self.children: list[Element] = []
 
         self._has_outdated_layout: bool = True
         self._visible: bool = True
@@ -180,24 +186,24 @@ class Element[C: Element]:
                         function: EasingFunction = ease_linear, cleanup: Callable[[Animation]] | None = None) -> Animation:
         return Element.Animator.start_animation(callback, duration, elapsed=elapsed, delay=delay, inset=inset, cutoff=cutoff, function=function, cleanup=cleanup)
 
-    def add_child(self, child: C) -> None:
+    def add_child(self, child: Element) -> None:
         self.children.append(child)
         self.invalidate_layout()
 
-    def insert_child(self, child: C, idx: int = -1) -> None:
+    def insert_child(self, child: Element, idx: int = -1) -> None:
         self.children.insert(idx, child)
         self.invalidate_layout()
 
-    def swap_children(self, child_a: C, child_b: C) -> None:
+    def swap_children(self, child_a: Element, child_b: Element) -> None:
         idx_a, idx_b = self.children.index(child_a), self.children.index(child_b)
         self.children[idx_a], self.children[idx_b] = self.children[idx_b], self.children[idx_a]
         self.invalidate_layout()
 
-    def remove_child(self, child: C) -> None:
+    def remove_child(self, child: Element) -> None:
         self.children.remove(child)
         self.invalidate_layout()
 
-    def get_child_idx(self, child: C) -> int:
+    def get_child_idx(self, child: Element) -> int:
         return self.children.index(child)
 
     def empty(self, *, recursive: bool = False) -> None:
@@ -299,18 +305,17 @@ class Element[C: Element]:
 
 
 class RegionElement(Element):
-
-    def __init__(self, region: Rect = None):
+    def __init__(self, region: Rect | None = None):
         super().__init__()
         self._region: Rect = region if region is not None else LRBT(0.0, 1.0, 0.0, 1.0)
         self._sub_bounds: Rect = self._bounds
 
     @property
-    def region(self):
+    def region(self) -> Rect:
         return self._region
 
     @region.setter
-    def region(self, new_region: Rect):
+    def region(self, new_region: Rect) -> None:
         self._region = new_region
         self.invalidate_layout()
 
@@ -318,14 +323,14 @@ class RegionElement(Element):
     def sub_bounds(self) -> Rect:
         return self._sub_bounds
 
-    def pixel_rect(self, left = None, right = None, bottom = None, top = None) -> Rect:
+    def pixel_rect(self, left: float | None = None, right: float | None = None, bottom: float | None = None, top: float | None = None) -> Rect:
         left = (left - self.bounds.left) / self.bounds.width if left is not None else self.region.left
         right = (right - self.bounds.left) / self.bounds.width if right is not None else self.region.right
         bottom = (bottom - self.bounds.bottom) / self.bounds.height if bottom is not None else self.region.bottom
         top = (top - self.bounds.bottom) / self.bounds.height if top is not None else self.region.top
         return LRBT(left, right, bottom, top)
 
-    def _calc_layout(self):
+    def _calc_layout(self) -> None:
         window_rect = self.bounds
         region_bottom_left = self.region.left, self.region.bottom
         region_top_right = self.region.right, self.region.top
@@ -338,11 +343,10 @@ class RegionElement(Element):
 
 
 class PaddingElement(Element):
-
-    def __init__(self, padding: Padding, *, children: list[Element] = None, min_size: Vec2 = Vec2(0, 0)):
+    def __init__(self, padding: Padding, *, children: list[Element] | None = None, min_size: Vec2 = Vec2(0, 0)):
         super().__init__(min_size)
         self._padding: Padding = padding
-        self._sub_region: Rect = None
+        self._sub_region: Rect | None = None
 
         if not children:
             return
@@ -369,7 +373,6 @@ class PaddingElement(Element):
 
 
 class BoxElement(Element):
-
     def __init__(
             self,
             colour: color.Color,
@@ -398,7 +401,7 @@ class AxisAnchor(Enum):
     END = 2
 
 
-class VerticalElementList[C: Element](Element[C]):
+class VerticalElementList(Element):
     # TODO: allow for varying priority in the children. Current they are all equally scaled based on the available size
 
     def __init__(self, anchor_axis: AxisAnchor = AxisAnchor.TOP, strict: bool = True, *, min_size: Vec2 = Vec2()):
@@ -449,8 +452,6 @@ class VerticalElementList[C: Element](Element[C]):
                     child = self.children[idx]
                     child.bounds = LBWH(left, next_top - next_height - offset, width, next_height)
                     next_top = child.bounds.bottom
-
-
             case AxisAnchor.CENTER:
                 pass
             case AxisAnchor.BOTTOM:
