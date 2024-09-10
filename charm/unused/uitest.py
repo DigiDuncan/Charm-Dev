@@ -1,6 +1,6 @@
 import logging
 
-from arcade import Vec2, LRBT, color, types
+from arcade import Vec2, LRBT, types
 
 from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView, shows_errors, disable_when_focus_lost

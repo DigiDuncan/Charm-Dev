@@ -25,7 +25,7 @@
 import logging
 from operator import attrgetter
 import tomllib
-from typing import NamedTuple, cast
+from typing import cast
 from collections.abc import Iterator, Sequence
 from pathlib import Path
 from itertools import groupby

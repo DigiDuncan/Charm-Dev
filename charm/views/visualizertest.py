@@ -20,8 +20,8 @@ from charm.lib.logsection import LogSection
 from charm.lib.paths import songspath
 from charm.lib.trackcollection import TrackCollection
 
-from charm.core.generic import AutoEngine, ChartSet, ChartMetadata, ChartSetMetadata
-from charm.core.gamemodes.fnf import FNFNote, FNFChart
+from charm.core.generic import AutoEngine, ChartSet
+from charm.core.gamemodes.fnf import FNFNote
 from charm.core.gamemodes.four_key import FourKeyHighway
 from charm.core.parsers.fnf import FNFParser
 

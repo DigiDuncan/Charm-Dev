@@ -24,7 +24,7 @@ from charm.unused.generic.song import Note, Chart, Seconds, Song
 from charm.unused.generic.sprite import NoteSprite, SustainSprites, StrikelineSprite, SustainTextureDict, SustainTextures
 from charm.lib.keymap import keymap, Action
 from charm.lib.utils import img_from_path, clamp
-from charm.lib.pool import Pool, OrderedPool, SpritePool
+from charm.lib.pool import Pool, SpritePool
 
 logger = logging.getLogger("charm")
 

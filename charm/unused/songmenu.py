@@ -2,10 +2,9 @@ from collections.abc import Iterable
 from hashlib import sha1
 import logging
 from operator import attrgetter
-from typing import cast
 
 import arcade
-from arcade import LBWH, LRBT, Sprite, SpriteList, Texture, Camera2D, color as colors
+from arcade import Sprite, SpriteList, Texture, color as colors
 
 from charm.lib.anim import ease_circout, perc
 from charm.lib.charm import CharmColors

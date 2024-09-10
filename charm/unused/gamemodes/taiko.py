@@ -12,7 +12,7 @@ from typing import cast
 
 import PIL
 import arcade
-from arcade import Sprite, SpriteList, Texture, color as colors
+from arcade import Sprite, Texture, color as colors
 
 from charm.lib.charm import load_missing_texture
 from charm.lib.gamemodes.osu import OsuHitCircle, OsuSlider, OsuSpinner, RawOsuChart
@@ -20,8 +20,8 @@ from charm.lib.generic.engine import Engine, AutoEngine
 from charm.lib.generic.highway import Highway
 from charm.lib.generic.song import Chart, Metadata, Note, Song
 from charm.lib.spritebucket import SpriteBucketCollection
-from charm.lib.pool import SpritePool, Pool
-from charm.lib.generic.sprite import NoteSprite, SustainSprites, SustainTextures, SustainTextureDict
+from charm.lib.pool import SpritePool
+from charm.lib.generic.sprite import NoteSprite
 from charm.lib.generic.display import Display
 from charm.lib.utils import clamp, img_from_path
 

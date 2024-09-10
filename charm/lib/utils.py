@@ -4,13 +4,11 @@ from typing import TYPE_CHECKING, Any, Protocol, TypeVar
 import arcade
 if TYPE_CHECKING:
     from pathlib import Path
-    from collections.abc import Iterator
     from charm.lib.generic.song import Metadata
     from charm.lib.types import RGB, RGBA
 
 
 from functools import cache
-from collections.abc import Iterable
 from importlib.resources import files
 
 from arcade import Texture
@@ -32,9 +30,11 @@ def int_or_str(i: Any) -> int | str:
 # Stolen from pylance
 _T_contra = TypeVar("_T_contra", contravariant=True)
 
+
 class SupportsDunderLT(Protocol[_T_contra]):
     def __lt__(self, other: _T_contra, /) -> bool:
         ...
+
 
 class SupportsDunderGT(Protocol[_T_contra]):
     def __gt__(self, other: _T_contra, /) -> bool:
@@ -66,7 +66,9 @@ def img_from_path(path: Path) -> PIL.Image.Image:
         image.load()
     return image
 
+
 L = TypeVar("L", bound=HasAddSubMul)
+
 
 def map_range(x: L, n1: L, m1: L, n2: L = -1, m2: L = 1) -> L:
     """Scale a value `x` that is currently somewhere between `n1` and `m1` to now be in an

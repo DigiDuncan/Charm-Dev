@@ -7,13 +7,11 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
 
-from arcade import Rect, Vec2, LRBT, LBWH, XYWH, draw_rect_filled, color, draw_text
-from arcade.math import clamp
-from arcade.clock import GLOBAL_CLOCK, GLOBAL_FIXED_CLOCK
+from arcade import Rect, Vec2, LRBT, LBWH, draw_rect_filled, color, draw_text
+from arcade.clock import GLOBAL_CLOCK
 
-from charm.lib.anim import EasingFunction, ease_linear, perc, smerp
+from charm.lib.anim import EasingFunction, ease_linear, perc
 from charm.lib.procedural_animators import ProceduralAnimator, SecondOrderAnimatorBase, Animatable
-from charm.lib.pool import Pool
 
 DRAGON_PEACH = color.Color(255, 140, 120)
 

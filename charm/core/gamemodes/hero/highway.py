@@ -16,7 +16,7 @@ from charm.lib.utils import img_from_path
 from charm.lib.pool import Pool, SpritePool
 
 from charm.core.generic import Chart, Engine, Highway
-from charm.core.generic.sprite import NoteSprite, StrikelineSprite, SustainSprites, SustainTextureDict, SustainTextures, get_note_color_by_beat
+from charm.core.generic.sprite import NoteSprite, StrikelineSprite, SustainSprites, SustainTextureDict, SustainTextures
 from .chart import HeroChart, HeroNote, BeatEvent
 
 import charm.data.images.skins as skins
