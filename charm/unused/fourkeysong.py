@@ -15,7 +15,7 @@ from charm.lib.gamemodes.four_key import FourKeyHighway, FourKeyEngine
 from charm.lib.gamemodes.sm import SMEngine, SMSong
 from charm.lib.keymap import keymap
 from charm.lib.logsection import LogSection
-from charm.lib.modchart import Modchart, ModchartProcessor
+from charm.unused.lib.modchart import Modchart, ModchartProcessor
 from charm.lib.oggsound import OGGSound
 from charm.lib.trackcollection import TrackCollection
 from charm.unused.results import ResultsView
