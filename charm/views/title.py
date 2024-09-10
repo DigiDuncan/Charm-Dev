@@ -263,7 +263,7 @@ class LogoSprite(Sprite, Component):
         logo_img = img_from_path(files(charm.data.images) / "logo.png")
         logo_texture = Texture(logo_img)
         super().__init__(logo_texture, scale=0.3)
-        self.internal_sprite_list: SpriteList = SpriteList()
+        self.internal_sprite_list: SpriteList[Sprite] = SpriteList()
         self.internal_sprite_list.append(self)
 
     def on_resize(self, width: int, height: int) -> None:
@@ -273,7 +273,7 @@ class LogoSprite(Sprite, Component):
     def on_update(self, delta_time: float = 1 / 60) -> None:
         self.scale = 0.3 + (self.window.theme_song.beat_factor * 0.025)
 
-    def draw(self):
+    def draw(self) -> None:
         self.internal_sprite_list.draw()
 
 
