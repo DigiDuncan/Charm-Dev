@@ -259,6 +259,17 @@ class AdobeSprite(Sprite):
             for name, value in old_anchor_values.items():
                 setattr(self, name, value)
 
+    @property
+    def animation_frame(self) -> int:
+        return self._current_animation_index
+
+    @animation_frame.setter
+    def animation_frame(self, value: int) -> None:
+        self._current_animation_index = value % len(self._current_animation)
+
+    @property
+    def animation_subtexture(self) -> Subtexture:
+        return self._current_animation_sts[self._current_animation_index]
 
 @cache
 def sprite_from_adobe(name: str, anchors: tuple[Anchor] = ("bottom",), *, debug: bool = False) -> AdobeSprite:

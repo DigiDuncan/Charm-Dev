@@ -1,11 +1,11 @@
-from typing import cast
+from __future__ import annotations
 from collections.abc import Iterator
 
 from itertools import cycle
 
 from arcade import SpriteList, Text, color as colors
 
-from charm.lib.adobexml import Subtexture, sprite_from_adobe, AdobeSprite
+from charm.lib.adobexml import sprite_from_adobe, AdobeSprite
 from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView
 from charm.lib.keymap import keymap
@@ -14,14 +14,14 @@ from charm.lib.keymap import keymap
 class SpriteTestView(DigiView):
     def __init__(self, back: DigiView):
         super().__init__(fade_in=1, back=back)
-        self.sprite: AdobeSprite = None
-        self.anims: Iterator[str] = None
-        self.anim_label: Text = None
-        self.data_label: Text = None
+        self.sprite: AdobeSprite
+        self.anims: Iterator[str]
+        self.anim_label: Text
+        self.data_label: Text
         self.fps: int
         self.paused: bool
         self.gum_wrapper: GumWrapper
-        self.sprite_list: SpriteList = None
+        self.sprite_list: SpriteList[AdobeSprite]
 
     def setup(self) -> None:
         super().presetup()
@@ -83,20 +83,18 @@ class SpriteTestView(DigiView):
         self.fps = self.sprite.fps
 
     def frame_back(self) -> None:
-        self.sprite._current_animation_index -= 1
-        self.sprite._current_animation_index %= len(self.sprite._current_animation)
+        self.sprite.animation_frame -= 1
 
     def frame_forward(self) -> None:
-        self.sprite._current_animation_index += 1
-        self.sprite._current_animation_index %= len(self.sprite._current_animation)
+        self.sprite.animation_frame += 1
 
     def on_update(self, delta_time: float) -> None:
         super().on_update(delta_time)
         self.sprite.update_animation(delta_time)
-        st = cast("Subtexture", self.sprite._current_animation_sts[self.sprite._current_animation_index])
+        st = self.sprite.animation_subtexture
         self.data_label.text = f"""
         Sprite FPS: {self.fps}
-        Sprite F#: {self.sprite._current_animation_index}
+        Sprite F#: {self.sprite.animation_frame}
         X,Y,W,H: {st.x}, {st.y}, {st.width}, {st.height}
         FX,FY,FW,FH: {st.frame_x}, {st.frame_y}, {st.frame_width}, {st.frame_height}"""
         self.gum_wrapper.on_update(delta_time)
