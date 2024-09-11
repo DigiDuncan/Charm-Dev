@@ -47,6 +47,7 @@ class ChartSetMetadata:
     preview_end: Seconds | None = None
     source: str | None = None
     album_art: str | None = None
+    alt_title: str | None = None
     hash: str | None = None  # ! Unused will hopefully become the cross device hash
     gamemode: str | None = None
 

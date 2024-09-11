@@ -39,7 +39,7 @@ from charm.core.parsers import FNFParser, FNFV2Parser, ManiaParser, SMParser, He
 logger = logging.getLogger("charm")
 
 CHARM_TOML_METADATA_FIELDS = ["title", "artist", "album", "length", "genre", "year", "difficulty",
-                              "charter", "preview_start", "preview_end", "source", "album_art"]
+                              "charter", "preview_start", "preview_end", "source", "album_art", "alt_title"]
 
 
 # TODO: Parse MIDI
