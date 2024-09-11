@@ -13,6 +13,7 @@ from charm.objects.mainmenu import MainMenu, MainMenuItem
 # from charm.views.herotest import HeroTestView
 #from charm.views.taikosongtest import TaikoSongTestView
 # from charm.views.newmenu import NewMenuView
+from charm.views.gumwrapper import GumWrapperView
 from charm.views.spritetest import SpriteTestView
 from charm.views.visualizertest import VisualizerView
 from charm.views.options import OptionsView
@@ -37,6 +38,7 @@ class MainMenuView(DigiView):
             # MainMenuItem("Taiko Test", "test", TaikoSongTestView(back=self)),
             MainMenuItem("Sprite Test", "test", SpriteTestView(back=self)),
             MainMenuItem("Scott Test", "test", VisualizerView(back=self)),
+            MainMenuItem("Gumwrapper", "test", GumWrapperView(back=self)),
         ])
 
     def setup(self) -> None:
