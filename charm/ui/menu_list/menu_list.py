@@ -313,7 +313,7 @@ class UnifiedChartsetMenuElement(Element):
         FIVE_SIXTH_W = WIDTH * (5 / 6)
 
         # Background
-        draw_rect_filled(LBWH(ONE_THIRD_W * 2, 0, ONE_THIRD_W, HEIGHT), Color(0, 0, 0, 64))
+        draw_rect_filled(LBWH(ONE_THIRD_W * 2, 0, ONE_THIRD_W, HEIGHT), Color(0, 0, 0, 50))
 
         # Title | Artist | Album
         draw_text(metadata.title or "???", FIVE_SIXTH_W, win.center_y, anchor_x='center', color=(0, 0, 0, 255), font_name="bananaslip plus", font_size=get_font_size(metadata.title or "???", 24, ONE_THIRD_W))
