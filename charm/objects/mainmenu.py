@@ -16,7 +16,7 @@ from arcade import Vec2, Sprite, SpriteList, Texture, Text, color as colors
 import charm.data.icons
 from charm.lib.anim import ease_circout, perc
 from charm.lib.charm import CharmColors, generate_missing_texture_image
-from charm.lib.utils import img_from_path
+from charm.lib.utils import img_from_path, kerning
 
 
 def load_icon_texture(icon: str, width: int, border_width: int, border_color: Color) -> Texture:
@@ -53,6 +53,8 @@ class MainMenuItem(Sprite):
             font_name="bananaslip plus",
             font_size=24
         )
+        # TODO | FONT: Remove this once we fix the font file!
+        self.label._label.set_style("kerning", kerning(-120, 24))
         self.center_y = arcade.get_window().height // 2
         self.jiggle_start: float = 0
         self.window: DigiWindow = arcade.get_window() # type: ignore

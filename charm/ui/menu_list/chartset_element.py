@@ -5,7 +5,7 @@ from arcade import Rect, LRBT
 from arcade.clock import GLOBAL_CLOCK
 from charm.lib.charm import CharmColors
 from charm.lib.mini_mint import Element, VerticalElementList, Padding, padded_sub_rect, ProceduralAnimation
-from charm.lib.utils import get_font_size
+from charm.lib.utils import get_font_size, kerning
 
 from charm.core.generic import ChartSet, ChartSetMetadata, ChartMetadata
 
@@ -49,6 +49,8 @@ class ChartElement(Element):
             return
 
         self._text_obj.text = f'{self._chart.gamemode} - {self._chart.difficulty}' if self._sub_region.height > 15.0 else ''
+        # TODO | FONT: Remove this once we fix the font file!
+        self._text_obj._label.set_style("kerning", kerning(-120, 18))
         self._text_obj.position = self._sub_region.center
 
     def _display(self) -> None:
@@ -98,6 +100,8 @@ class ChartsetDisplayElement(Element):
             return
 
         self._text_obj.text = f'{self._metadata.title}' if self._sub_region.height > 15.0 else ''
+        # TODO | FONT: Remove this once we fix the font file!
+        self._text_obj._label.set_style("kerning", kerning(-120, 36))
         self._text_obj.x = self._sub_region.left + 5  # TODO: Make this a variable
         self._text_obj.y = self._sub_region.center_y
 

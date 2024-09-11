@@ -101,10 +101,6 @@ def map_range(x: L, n1: L, m1: L, n2: L = -1, m2: L = 1) -> L:
 #     return val
 
 
-def color_with_alpha(color: RGB | RGBA, alpha: int) -> RGBA:
-    return color[:3] + (alpha,)
-
-
 def nuke_smart_quotes(s: str) -> str:
     return s.replace("‘", "'").replace("’", "'").replace("＇", "'").replace("“", '"').replace("”", '"').replace("＂", '"')
 
@@ -115,6 +111,13 @@ def pt_to_px(pt: int) -> int:
 
 def px_to_pt(px: int) -> int:
     return round(px // (4 / 3))
+
+
+def kerning(ps: int, font_size: int) -> float:
+    """Take a Photoshop-style kerning value (micro-em) to px (for Pyglet)"""
+    one_em = pt_to_px(font_size)
+    ems = ps / 1000
+    return one_em * ems
 
 
 def snap(n: float, increments: int) -> float:

@@ -8,9 +8,9 @@ from charm.core.generic import ChartSet, ChartMetadata, ChartSetMetadata
 
 # -- TEMP --
 from importlib.resources import files
-from arcade import draw_text, draw_rect_filled, XYWH, LBWH, LRBT, get_window, draw_texture_rect, Texture
+from arcade import Text, draw_text, draw_rect_filled, XYWH, LBWH, LRBT, get_window, draw_texture_rect, Texture
 from arcade.types import Color
-from charm.lib.utils import get_font_size, img_from_path
+from charm.lib.utils import get_font_size, img_from_path, kerning
 import PIL.Image
 import charm.data.images
 
@@ -316,13 +316,24 @@ class UnifiedChartsetMenuElement(Element):
         draw_rect_filled(LBWH(ONE_THIRD_W * 2, 0, ONE_THIRD_W, HEIGHT), Color(0, 0, 0, 50))
 
         # Title | Artist | Album
-        draw_text(metadata.title or "???", FIVE_SIXTH_W, win.center_y, anchor_x='center', color=(0, 0, 0, 255), font_name="bananaslip plus", font_size=get_font_size(metadata.title or "???", 24, ONE_THIRD_W))
-        draw_text(metadata.artist or "Unknown Artist", FIVE_SIXTH_W, win.center_y - 32, anchor_x='center', color=(0, 0, 0, 255), font_name="bananaslip plus", font_size=get_font_size(metadata.artist or "Unknown Artist", 16, ONE_THIRD_W))
-        draw_text(metadata.album or "Unknown Artist", FIVE_SIXTH_W, win.center_y - 64, anchor_x='center', color=(0, 0, 0, 255), font_name="bananaslip plus", font_size=get_font_size(metadata.album or "Unknown Album", 16, ONE_THIRD_W))
+        title_text = Text(metadata.title or "???", FIVE_SIXTH_W, win.center_y, anchor_x='center', color=(0, 0, 0, 255), font_name="bananaslip plus", font_size=get_font_size(metadata.title or "???", 24, ONE_THIRD_W))
+        artist_text = Text(metadata.artist or "Unknown Artist", FIVE_SIXTH_W, win.center_y - 32, anchor_x='center', color=(0, 0, 0, 255), font_name="bananaslip plus", font_size=get_font_size(metadata.artist or "Unknown Artist", 16, ONE_THIRD_W))
+        album_text = Text(metadata.album or "Unknown Album", FIVE_SIXTH_W, win.center_y - 64, anchor_x='center', color=(0, 0, 0, 255), font_name="bananaslip plus", font_size=get_font_size(metadata.album or "Unknown Album", 16, ONE_THIRD_W))
+
+        # TODO | FONT: Remove once kerning in the font file is fixed!
+        title_text._label.set_style("kerning", kerning(-120, 24))
+        artist_text._label.set_style("kerning", kerning(-120, 16))
+        album_text._label.set_style("kerning", kerning(-120, 16))
+
+        title_text.draw()
+        artist_text.draw()
+        album_text.draw()
 
         # If source...
         if metadata.source:
-            draw_text(f"from {metadata.source}", FIVE_SIXTH_W, win.center_y - 96, anchor_x='center', color=(0, 0, 0, 255), font_name="bananaslip plus", font_size=get_font_size(f"from {metadata.source}", 16, ONE_THIRD_W), italic = True)
+            source_text = Text(f"from {metadata.source}", FIVE_SIXTH_W, win.center_y - 96, anchor_x='center', color=(0, 0, 0, 255), font_name="bananaslip plus", font_size=get_font_size(f"from {metadata.source}", 16, ONE_THIRD_W), italic = True)
+            source_text._label.set_style("kerning", kerning(-120, 16))
+            source_text.draw()
 
         # The worst way to get album art
         if self.album_art_texture is not None:
