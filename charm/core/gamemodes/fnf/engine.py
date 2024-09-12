@@ -169,8 +169,6 @@ class FNFEngine(Engine):
             self.streak += 1
             self.last_note_missed = False
 
-        logger.error(f'hit?:{note.hit}, judgement?:{j}, misses:{self.misses}')
-
     def generate_results(self) -> Results:
         return Results(
             self.chart,

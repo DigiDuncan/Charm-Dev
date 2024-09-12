@@ -1,5 +1,15 @@
 """
 A temporary stop gap between the old menu system and Mint.
+
+Key defiencies with this system:
+- Animation system needs a re-think for large more complex staged animations
+- There is no system for cross tree communication
+- Tree model has sever weaknesses
+- Communication to systems outside of the ui is very element specific and feels clunky
+- No clear way to do complex drawing procedures
+- No cache system
+- No event waterfall for key inputs
+- Absolutly no mouse support
 """
 from __future__ import annotations
 from typing import NamedTuple
@@ -344,7 +354,7 @@ class RegionElement(Element):
             child.bounds = self._sub_bounds
 
 
-DEFAULT_MIN_SIZE = Vec2(0, 0)
+DEFAULT_MIN_SIZE = Vec2()
 
 
 class PaddingElement(Element):
@@ -377,14 +387,11 @@ class PaddingElement(Element):
             child.bounds = self._sub_region
 
 
-DEFAULT_MINSIZE = Vec2(0.0, 0.0)
-
-
 class BoxElement(Element):
     def __init__(
         self,
         colour: Color,
-        min_size: Vec2 = DEFAULT_MINSIZE,
+        min_size: Vec2 = DEFAULT_MIN_SIZE,
         text: str | None = None
     ):
         super().__init__(min_size=min_size)
@@ -410,13 +417,11 @@ class AxisAnchor(Enum):
     END = 2
 
 
-DEFAULT_MINSIZE = Vec2()
-
 
 class VerticalElementList(Element):
     # TODO: allow for varying priority in the children. Current they are all equally scaled based on the available size
 
-    def __init__(self, anchor_axis: AxisAnchor = AxisAnchor.TOP, strict: bool = True, *, min_size: Vec2 = DEFAULT_MINSIZE):
+    def __init__(self, anchor_axis: AxisAnchor = AxisAnchor.TOP, strict: bool = True, *, min_size: Vec2 = DEFAULT_MIN_SIZE):
         super().__init__(min_size=min_size)
         self._strict: bool = strict
         self._anchor_axis: AxisAnchor = anchor_axis
