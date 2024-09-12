@@ -1,9 +1,8 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, cast
-if TYPE_CHECKING:
-    from pyglet.image import AbstractImage, Texture
-    from pyglet.text.document import AbstractDocument
-    from pyglet.graphics import Batch, Group
+from typing import cast
+from pyglet.image import AbstractImage, Texture
+from pyglet.text.document import AbstractDocument
+from pyglet.graphics import Batch, Group
 
 import logging
 from importlib.resources import files
