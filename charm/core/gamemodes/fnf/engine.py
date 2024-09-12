@@ -76,9 +76,11 @@ class FNFEngine(Engine):
 
     def calculate_score(self) -> None:
         # Get all non-scored notes within the current window
-        for note in [n for n in self.current_notes if n.time <= self.chart_time + self.hit_window]:
+        for note in self.current_notes:
+            if note.time > self.chart_time + self.hit_window:
+                continue
             # Missed notes (current time is higher than max allowed time for note)
-            if self.chart_time > note.time + self.hit_window:
+            if note.time < self.chart_time - self.hit_window:
                 note.missed = True
                 note.hit_time = math.inf
                 self.score_note(note)
@@ -157,15 +159,17 @@ class FNFEngine(Engine):
 
         # Animation and hit/miss tracking
         self.last_p1_action = keymap.fourkey.actions[note.lane]
-        if note.hit:
-            self.hits += 1
-            self.streak += 1
-            self.last_note_missed = False
-        elif note.missed:
+        if note.missed:
             self.misses += 1
             self.max_streak = max(self.streak, self.max_streak)
             self.streak = 0
             self.last_note_missed = True
+        else:
+            self.hits += 1
+            self.streak += 1
+            self.last_note_missed = False
+
+        logger.error(f'hit?:{note.hit}, judgement?:{j}, misses:{self.misses}')
 
     def generate_results(self) -> Results:
         return Results(

@@ -86,7 +86,7 @@ class Engine:
         Why were we doing that?"""
         # NOTE: This will break if there aren't at least two judgements, but if we run into that
         # we should really look into why on Earth we're doing that and what the intended effect is.
-        return self.judgements[-2].ms / 1000
+        return self.judgements[-2].ms / 1000.0
 
     def pause(self) -> None:
         pass
@@ -124,7 +124,7 @@ class Engine:
     def fc_type(self) -> str:
         if self.accuracy is not None:
             if self.misses == 0:
-                if self.grade in ["SS", "S", "A"]:
+                if self.grade in {"SS", "S", "A"}:
                     return f"{self.grade}FC"
                 else:
                     return "FC"

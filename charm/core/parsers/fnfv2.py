@@ -250,7 +250,7 @@ class FNFV2Parser(Parser):
                 events.append(PlayAnimationEvent(time, event["v"]["target"], event["v"]["anim"], event["v"].get("force", False)))
 
         for c in charts:
-            c.events = events
+            c.events = events[:]
             c.notes.sort()
             c.events.extend(FNFV2Parser.calculate_countdowns(c))
             c.events.sort()

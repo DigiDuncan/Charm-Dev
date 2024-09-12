@@ -154,15 +154,15 @@ class FourKeyEngine(Engine):
 
         # Animation and hit/miss tracking
         self.last_p1_action = keymap.fourkey.actions[note.lane]
-        if note.hit:
+        if note.missed:
+            self.misses += 1
+            self.streak = 0
+            self.last_note_missed = True
+        else:
             self.hits += 1
             self.streak += 1
             self.max_streak = max(self.streak, self.max_streak)
             self.last_note_missed = False
-        elif note.missed:
-            self.misses += 1
-            self.streak = 0
-            self.last_note_missed = True
 
     def score_sustains(self) -> None:
         pass

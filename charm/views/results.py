@@ -62,8 +62,7 @@ class ResultsView(DigiView):
                                            self.window.width, anchor_x = "left", anchor_y = "bottom",
                                            font_name = "bananaslip plus", multiline = True)
 
-        for j in self.results.judgements:
-            self.judgements_text.value += f"{j.name}: {len([i for i in self.results.all_judgements if i[2] == j])}\n"
+        self.judgements_text.value = '\n'.join(f"{j.name}: {len([i for i in self.results.all_judgements if i[-1] == j])}" for j in self.results.judgements)
 
         self.heatmap = Heatmap(self.results.judgements, self.results.all_judgements)
         self.heatmap.scale = 2
