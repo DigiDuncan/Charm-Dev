@@ -1,17 +1,24 @@
 from __future__ import annotations
 from collections.abc import Sequence
+from typing import Generic, TypeVar
 
 from arcade.types import Point
 
 from charm.lib.types import Seconds
 
-from .engine import Engine
-from .chart import Chart
+from .chart import BaseChart
+from .engine import BaseEngine
 from .sprite import NoteSprite
 
 
-class Display:
-    def __init__(self, engine: Engine, charts: Sequence[Chart]):
+type BaseDisplay = Display[BaseChart, BaseEngine]
+
+C = TypeVar("C", bound=BaseChart, covariant=True)
+E = TypeVar("E", bound=BaseEngine, covariant=True)
+
+
+class Display(Generic[C, E]):
+    def __init__(self, engine: E, charts: Sequence[C]):
         self.engine = engine
         self.charts = charts
 

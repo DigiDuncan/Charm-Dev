@@ -9,7 +9,7 @@ from charm.lib.keymap import Action, keymap
 from charm.lib.types import Range4, Seconds
 from charm.lib.utils import clamp
 
-from charm.core.generic import Engine, Judgement, DigitalKeyEvent, Results
+from charm.core.generic import Engine, Judgement, DigitalKeyEvent, Results, BaseResults
 from .chart import FourKeyChart, FourKeyNote, FourKeyNoteType
 
 logger = logging.getLogger("charm")
@@ -26,7 +26,7 @@ logger = logging.getLogger("charm")
 # I'm leaving this here for now because stupidity and confusion of this level
 # deserves to be documented.
 # !: TO REITERATE: THIS IS FINE. FourKeyEngine doesn't rely on simfile and possibly never has.
-class FourKeyEngine(Engine):
+class FourKeyEngine(Engine[FourKeyChart, FourKeyNote]):
     def __init__(self, chart: FourKeyChart, offset: Seconds = 0):  # TODO: Set this dynamically
         judgements = [
             #        ("name",           "key"             ms, score, acc, hp=0)
@@ -39,8 +39,6 @@ class FourKeyEngine(Engine):
             Judgement("Miss",           "miss",     math.inf,   0,    0, -0.1)
         ]
         super().__init__(chart, judgements, offset)
-        self.chart: FourKeyChart
-        self.current_notes: list[FourKeyNote]
 
         self.min_hp = 0
         self.hp = 1
@@ -191,7 +189,7 @@ class FourKeyEngine(Engine):
                 kill.append(sustain)
         self.active_sustains = [s for s in self.active_sustains if s not in kill]
 
-    def generate_results(self) -> Results:
+    def generate_results(self) -> BaseResults:
         return Results(
             self.chart,
             self.hit_window,

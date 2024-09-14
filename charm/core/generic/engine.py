@@ -1,13 +1,13 @@
 from __future__ import annotations
-from typing import Literal
+from typing import Generic, Literal, TypeVar
 
 import math
 
 from charm.lib.types import Seconds
 
-from .chart import Chart, Note
+from .chart import BaseChart, BaseNote
 from .judgement import Judgement
-from .results import Results
+from .results import BaseResults, Results
 
 KeyStates = list[bool]
 Key = int
@@ -49,8 +49,14 @@ class DigitalKeyEvent[K](EngineEvent):
         return self.__repr__()
 
 
-class Engine:
-    def __init__(self, chart: Chart, judgements: list[Judgement] | None = None, offset: Seconds = 0):
+type BaseEngine = Engine[BaseChart, BaseNote]
+
+C = TypeVar("C", bound=BaseChart, covariant=True)
+N = TypeVar("N", bound=BaseNote, covariant=True)
+
+
+class Engine(Generic[C, N]):
+    def __init__(self, chart: C, judgements: list[Judgement] | None = None, offset: Seconds = 0):
         """The class that processes user inputs into score according to a Chart."""
         self.chart = chart
         self.offset = offset
@@ -73,7 +79,7 @@ class Engine:
         self.weighted_hit_notes: float = 0
 
         # Display
-        self.last_note_hit: Note | None = None
+        self.last_note_hit: N | None = None
 
         self.keystate: tuple[bool, ...] = NotImplemented
 
@@ -149,7 +155,7 @@ class Engine:
     def score_note(self) -> None:
         raise NotImplementedError
 
-    def get_note_judgement(self, note: Note) -> Judgement:
+    def get_note_judgement(self, note: N) -> Judgement:
         if note.hit_time is None:
             raise RuntimeError
         rt = abs(note.hit_time - note.time)
@@ -160,12 +166,12 @@ class Engine:
                 return j
         return self.judgements[-1]
 
-    def generate_results(self) -> Results:
+    def generate_results(self) -> Results[C]:
         raise NotImplementedError
 
 
-class AutoEngine(Engine):
-    def __init__(self, chart: Chart, offset: float = 0, lanes: int = 4):
+class AutoEngine(Engine[BaseChart, BaseNote]):
+    def __init__(self, chart: BaseChart, offset: float = 0, lanes: int = 4):
         super().__init__(chart,
                          [Judgement("Auto", "auto", chart.notes[-1].end, 0, 0),
                           Judgement("Miss", "miss", float('inf'), 0, 0)],
@@ -192,7 +198,7 @@ class AutoEngine(Engine):
                 self.current_notes.remove(note)
                 self.last_note_hit = note
 
-    def score_note(self, note: Note) -> None:
+    def score_note(self, note: BaseNote) -> None:
         # Ignore notes we haven't done anything with yet
         if not (note.hit or note.missed):
             return

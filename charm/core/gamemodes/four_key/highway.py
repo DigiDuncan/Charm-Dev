@@ -1,4 +1,3 @@
-from collections.abc import Sequence
 from functools import cache
 from importlib.resources import files
 import logging
@@ -14,9 +13,10 @@ from charm.lib.charm import load_missing_texture
 from charm.lib.pool import Pool, SpritePool
 from charm.lib.utils import img_from_path
 
-from charm.core.generic import Engine, Highway
+from charm.core.generic import Highway
 from charm.core.generic.sprite import NoteSprite, StrikelineSprite, SustainSprites, SustainTextureDict, SustainTextures, get_note_color_by_beat
 from .chart import FourKeyChart, FourKeyNote, FourKeyNoteType
+from .engine import FourKeyEngine
 
 logger = logging.getLogger("charm")
 
@@ -58,11 +58,9 @@ def load_note_texture(note_type: str, note_lane: int, height: int, value: int = 
     return Texture(image)
 
 
-class FourKeyHighway(Highway):
-    def __init__(self, chart: FourKeyChart, engine: Engine, pos: tuple[int, int], size: tuple[int, int] | None = None, gap: int = 5):
+class FourKeyHighway(Highway[FourKeyChart, FourKeyNote, FourKeyEngine]):
+    def __init__(self, chart: FourKeyChart, engine: FourKeyEngine, pos: tuple[int, int], size: tuple[int, int] | None = None, gap: int = 5):
         super().__init__(chart, engine, pos, size, gap)
-        self.chart: FourKeyChart
-        self.notes: Sequence[FourKeyNote]
 
         # TODO: re-add the functionality of
         self.viewport = 0.75  # TODO: BPM scaling?

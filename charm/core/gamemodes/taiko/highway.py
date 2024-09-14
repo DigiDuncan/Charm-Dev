@@ -15,6 +15,7 @@ from charm.lib.utils import img_from_path
 
 from charm.core.generic import NoteSprite, AutoEngine, Engine, Highway
 from .chart import TaikoChart, TaikoNoteType, TaikoNote
+from .engine import TaikoEngine
 
 import charm.data.images.skins as skins
 
@@ -36,11 +37,9 @@ def load_note_texture(note_type: str, height: int) -> Texture:
 TAIKO_LANE_COUNT = 1  #*
 
 
-class TaikoHighway(Highway):
-    def __init__(self, chart: TaikoChart, engine: Engine, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5, viewport: float = 1):
+class TaikoHighway(Highway[TaikoChart, TaikoNote, TaikoEngine]):
+    def __init__(self, chart: TaikoChart, engine: TaikoEngine, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5, viewport: float = 1):
         super().__init__(chart, engine, pos, size, gap, viewport)
-        self.chart: TaikoChart
-        self.notes: Sequence[TaikoNote]
         self.color = (0, 0, 0, 128)  # TODO: eventually this will be a scrolling image.
 
         # Generators are great for ease, but it means we can't really 'scrub' backwards through the song

@@ -33,7 +33,7 @@ from itertools import groupby
 from charm.lib.paths import songspath
 from charm.lib.errors import CharmError, ChartUnparseableError, MissingGamemodeError, NoParserError, AmbigiousParserError, log_charmerror, NoChartsError
 
-from charm.core.generic import ChartSet, ChartSetMetadata, Chart, ChartMetadata, Parser
+from charm.core.generic import ChartSet, ChartSetMetadata, ChartMetadata, Parser, BaseChart
 from charm.core.parsers import FNFParser, FNFV2Parser, ManiaParser, SMParser, HeroParser, TaikoParser
 
 logger = logging.getLogger("charm")
@@ -152,7 +152,7 @@ def load_chartsets() -> list[ChartSet]:
     return chartsets
 
 
-def load_chart(chart_metadata: ChartMetadata) -> Sequence[Chart]:
+def load_chart(chart_metadata: ChartMetadata) -> Sequence[BaseChart]:
     for parser in parsers_by_gamemode[chart_metadata.gamemode]:
         if parser.is_parsable_chart(chart_metadata.path):
             logger.debug(f"Parsing with {parser}")

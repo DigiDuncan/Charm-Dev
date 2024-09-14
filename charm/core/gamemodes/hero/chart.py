@@ -22,23 +22,20 @@ class HeroNoteType(StrEnum):
 
 
 @dataclass
-class HeroNote(Note):
+class HeroNote(Note["HeroChart", HeroNoteType]):
     def __init__(self, chart: HeroChart, time: Seconds, lane: int, length: Seconds, type: HeroNoteType, tick: Ticks, tick_length: Ticks):
         super().__init__(chart, time, lane, length, type)
-        self.chart: HeroChart
-        self.type: HeroNoteType
-        self.parent: HeroNote
         self.tick: Ticks = tick
         self.tick_length: Ticks = tick_length
 
 
 class HeroChord:
     """A data object to hold notes and have useful functions for manipulating and reading them."""
-    def __init__(self, notes: list[HeroNote] = None) -> None:
+    def __init__(self, notes: list[HeroNote] | None = None) -> None:
         self.notes = notes if notes else []
 
     @property
-    def frets(self) -> tuple[int]:
+    def frets(self) -> tuple[int, ...]:
         return tuple(set(n.lane for n in self.notes))
 
     @property
@@ -189,10 +186,9 @@ class ChartNIndexCollection(NamedTuple):
     chort_tick: Index[Ticks, HeroChord]
 
 
-class HeroChart(Chart):
+class HeroChart(Chart[HeroNote]):
     def __init__(self, metadata: ChartMetadata, notes: Sequence[HeroNote], events: Sequence[Event]) -> None:
         super().__init__(metadata, notes, events)
-        self.notes: list[HeroNote]
         self.chords: list[HeroChord] = []
         self.indices: ChartNIndexCollection
 

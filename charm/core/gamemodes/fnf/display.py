@@ -13,7 +13,7 @@ from charm.lib.displayables import Countdown, Spotlight, HPBar, Timer
 from charm.lib.types import Seconds
 from charm.objects.lyric_animator import LyricAnimator, LyricEvent
 
-from charm.core.generic import CountdownEvent, Engine, AutoEngine, Display
+from charm.core.generic import CountdownEvent, AutoEngine, Display
 from charm.core.gamemodes.four_key import FourKeyChart, FourKeyHighway
 from .chart import CameraFocusEvent
 from .engine import FNFEngine
@@ -26,17 +26,15 @@ if TYPE_CHECKING:
     from charm.lib.digiwindow import DigiWindow
 
 
-class FNFDisplay(Display):
+class FNFDisplay(Display[FourKeyChart, FNFEngine]):
     def __init__(self, engine: FNFEngine, charts: Sequence[FourKeyChart]):
         super().__init__(engine, charts)
-        self.engine: FNFEngine
-        self.charts: Sequence[FourKeyChart]
         self._win: DigiWindow = get_window()
         assert len(charts) == 2, "FNF expects two charts. [0] for the player, [1] for the opposition"
         self.player_chart, self.opp_chart = charts
 
         # TODO: make more flexible post mvp
-        self._enemy_engine: Engine = AutoEngine(charts[1], 0.0)
+        self._enemy_engine: BaseEngine = AutoEngine(charts[1], 0.0)
 
         # NOTE: change highways to work of their center position not bottom left
         # TODO: place highways at true ideal locations

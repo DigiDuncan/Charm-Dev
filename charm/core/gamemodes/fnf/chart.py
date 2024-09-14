@@ -58,16 +58,12 @@ class FNFNoteType(StrEnum):
     SUSTAIN = "sustain"  # FNF specific and maybe going away one day
 
 
-class FNFNote(Note):
+class FNFNote(Note["FNFChart", FNFNoteType]):
     def __init__(self, chart: FNFChart, time: Seconds, lane: int, length: Seconds = 0, type: FNFNoteType = FNFNoteType.NORMAL):
         super().__init__(chart, time, lane, length, type)
-        self.chart: FNFChart
-        self.type: FNFNoteType
-        self.parent: FNFNote
 
 
-class FNFChart(Chart):
+class FNFChart(Chart[FNFNote]):
     def __init__(self, metadata: ChartMetadata, notes: Sequence[FNFNote], events: Sequence[Event]) -> None:
         super().__init__(metadata, notes, events)
-        self.notes: list[FNFNote]
         self.speed = 1.0

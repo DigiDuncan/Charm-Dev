@@ -1,14 +1,23 @@
+from typing import Generic, TypeVar
 import arcade
 from arcade import Camera2D
 from arcade.camera import Projector
 
 from charm.lib.types import Seconds
 
-from .chart import Chart, Note
-from .engine import Engine
+from .chart import BaseChart, BaseNote
+from .engine import BaseEngine
 
-class Highway:
-    def __init__(self, chart: Chart, engine: Engine, pos: tuple[int, int], size: tuple[int, int] | None = None, gap: int = 5, viewport: float = 1.0, *, downscroll: bool = False, static_camera: Projector = None, highway_camera: Projector = None):
+
+type BaseHighway = Highway[BaseChart, BaseNote, BaseEngine]
+
+C = TypeVar("C", bound=BaseChart, covariant=True)
+N = TypeVar("N", bound=BaseNote, covariant=True)
+E = TypeVar("E", bound=BaseEngine, covariant=True)
+
+
+class Highway(Generic[C, N, E]):
+    def __init__(self, chart: C, engine: E, pos: tuple[int, int], size: tuple[int, int] | None = None, gap: int = 5, viewport: float = 1.0, *, downscroll: bool = False, static_camera: Projector = None, highway_camera: Projector = None):
         """A time-based display of current and upcoming notes to be hit by the player."""
         self.chart = chart
         self.engine = engine
@@ -81,7 +90,7 @@ class Highway:
         return self.h - 25
 
     @property
-    def visible_notes(self) -> list[Note]:
+    def visible_notes(self) -> list[N]:
         return [n for n in self.notes if self.song_time - self.viewport < n.time <= self.song_time + self.viewport]
 
     def apos(self, rpos: tuple[int, int]) -> tuple[int, int]:

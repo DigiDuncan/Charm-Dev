@@ -26,11 +26,9 @@ from .highway import FourKeyHighway
 import charm.data.images.skins as skins
 
 
-class FourKeyDisplay(Display):
+class FourKeyDisplay(Display[FourKeyChart, FNFEngine | FourKeyEngine]):
     def __init__(self, engine: FNFEngine | FourKeyEngine, charts: Sequence[FourKeyChart]):
         super().__init__(engine, charts)
-        self.engine: FNFEngine | FourKeyEngine
-        self.charts: Sequence[FourKeyChart]
         self._win: DigiWindow = get_window()  # type: ignore | aaa shut up Arcade
         self.chart = charts[0]
 

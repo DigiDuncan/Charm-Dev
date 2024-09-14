@@ -2,7 +2,7 @@ import itertools
 from pathlib import Path
 from collections.abc import Sequence
 
-from .chart import Chart, CountdownEvent
+from .chart import BaseChart, CountdownEvent
 from .metadata import ChartMetadata, ChartSetMetadata
 
 # should be configurable
@@ -34,7 +34,7 @@ class Parser:
         return []
 
     @staticmethod
-    def parse_chart(chart_data: ChartMetadata) -> Sequence[Chart]:
+    def parse_chart(chart_data: ChartMetadata) -> Sequence[BaseChart]:
         """
         For the specific chart provided read its source, and create
         the needed note and event data.
@@ -44,7 +44,7 @@ class Parser:
         raise NotImplementedError
 
     @staticmethod
-    def calculate_countdowns(chart: Chart) -> list[CountdownEvent]:
+    def calculate_countdowns(chart: BaseChart) -> list[CountdownEvent]:
         countdowns = [
             CountdownEvent(-3, chart.notes[0].time + 3),
             *(

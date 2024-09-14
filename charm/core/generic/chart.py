@@ -4,16 +4,23 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from functools import total_ordering
-from typing import Any
+from typing import Any, Generic, Self, TypeVar
 
 from charm.lib.types import Seconds
 
 from .metadata import ChartMetadata
 
+type BaseNote = Note[BaseChart, StrEnum]
+type BaseChart = Chart[BaseNote]
+
+C = TypeVar("C", bound=BaseChart, covariant=True)
+T = TypeVar("T", bound=StrEnum, covariant=True)
+N = TypeVar("N", bound=BaseNote, covariant=True)
+
 
 @dataclass
 @total_ordering
-class Note:
+class Note(Generic[C, T]):
     """Represents a note on a chart.
 
     - `chart: Chart`: the chart this Note belongs to
@@ -28,14 +35,14 @@ class Note:
     - `hit_time: float`: when was this note hit?
 
     - `extra_data: tuple`: ¯\\_(ツ)_//¯"""
-    def __init__(self, chart: Chart, time: Seconds, lane: int, length: Seconds, type: StrEnum):
+    def __init__(self, chart: C, time: Seconds, lane: int, length: Seconds, type: T):
         self.chart = chart
         self.time = time
         self.lane = lane
         self.length = length
         self.type = type
 
-        self.parent: Note | None = None
+        self.parent: Self | None = None
         self.hit: bool = False
         self.missed: bool = False
         self.hit_time: Seconds | None = None
@@ -53,7 +60,7 @@ class Note:
     def is_sustain(self) -> bool:
         return self.length > 0
 
-    def __lt__(self, other: Event | Note) -> bool:
+    def __lt__(self, other: Event | Note[C, T]) -> bool:
         if isinstance(other, Note):
             return (self.time, self.lane, self.type) < (other.time, other.lane, other.type)
         elif isinstance(other, Event):
@@ -124,9 +131,9 @@ class CountdownEvent(Event):
         return self.__repr__()
 
 
-class Chart:
+class Chart(Generic[N]):
     """A collection of notes and events, with helpful metadata."""
-    def __init__(self, metadata: ChartMetadata, notes: Sequence[Note], events: Sequence[Event]) -> None:
+    def __init__(self, metadata: ChartMetadata, notes: Sequence[N], events: Sequence[Event]) -> None:
         self.metadata: ChartMetadata = metadata
         self.notes = list(notes)
         self.events = list(events)

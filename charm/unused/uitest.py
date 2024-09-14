@@ -29,7 +29,7 @@ class UiView(DigiView):
 
         # The region of the screen taken up by the list. Includes space above and below screen so our
         # trick to fake an infitely scrollable list isn't spoiled
-        self.root_ui_region: RegionElement = RegionElement(LRBT(0.0, 0.6, 0.0, 1.0))
+        self.root_ui_region = RegionElement(LRBT(0.0, 0.6, 0.0, 1.0))
         self.root_ui_region.bounds = self.window.rect
         self._base_region = self.root_ui_region.region
         

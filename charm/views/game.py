@@ -4,7 +4,7 @@ from charm.lib.charm import GumWrapper
 from charm.views.results import ResultsView
 from charm.lib.keymap import keymap
 
-from charm.core.generic import Display, Engine, ChartSet, Chart
+from charm.core.generic import BaseDisplay, BaseEngine, ChartSet, BaseChart
 
 from charm.core.definitions import GAMEMODES
 from charm.lib.trackcollection import TrackCollection
@@ -12,35 +12,45 @@ from charm.lib.settings import settings
 
 COUNTDOWN_TIME = 3.0
 
-class GameView(DigiView):
 
+class GameView(DigiView):
     def __init__(self, *, back: DigiView | None = None, fade_in: float = 0):
         super().__init__(back=back, fade_in=fade_in)
         self._initialized: bool = False
 
-        self._tracks: TrackCollection = None  # type: ignore[]
+        self._tracks: TrackCollection
 
-        self._chartset: ChartSet = None  # type: ignore[]
-        self._charts: list[Chart] = None  # type: ignore[]
+        self._chartset: ChartSet
+        self._charts: list[BaseChart]
 
-        self._engine: Engine = None  # type: ignore[]
-        self._display: Display = None  # type: ignore[]
+        self._engine: BaseEngine
+        self._display: BaseDisplay
 
         self._paused = False
+        self._initialized = False
 
     @shows_errors
-    def initialize_chart(self, chartset: ChartSet, charts: list[Chart]) -> None:
+    def initialize_chart(self, chartset: ChartSet, charts: list[BaseChart]) -> None:
+        if self._initialized:
+            # TODO: make an explicit error for this
+            raise ValueError("The GameView has already been initialised")
+
+        if charts is None or not charts or chartset is None:
+            # TODO: make an explicit error for this
+            raise ValueError("The GameView has been improperly initialised with a Chartset or Chart")
+
         self._chartset = chartset
         self._charts = charts
 
         self._paused = True
+        self._initialized = True
 
     @shows_errors
     def setup(self) -> None:
         self.presetup()
         self.gum_wrapper = GumWrapper()
 
-        if self._charts is None or not self._charts or self._chartset is None:
+        if not self._initialized:
             # TODO: make an explicit error for this
             raise ValueError("The GameView has not been initialised with a Chartset or Chart")
 

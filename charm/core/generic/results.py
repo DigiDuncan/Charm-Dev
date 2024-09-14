@@ -1,6 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import TypedDict
+from typing import Generic, TypeVar, TypedDict
 
 import arcade
 from arcade import Sprite, SpriteList, Texture, color as colors
@@ -8,7 +8,7 @@ from arcade import Sprite, SpriteList, Texture, color as colors
 from charm.lib.anim import lerp
 from charm.lib.types import Seconds
 
-from .chart import Chart
+from .chart import BaseChart
 from .judgement import Judgement
 
 class ScoreJSON(TypedDict):
@@ -18,10 +18,16 @@ class ScoreJSON(TypedDict):
     fc_type: str
     max_streak: int
 
+
+type BaseResults = Results[BaseChart]
+
+C = TypeVar("C", bound=BaseChart, covariant=True)
+
+
 @dataclass
-class Results:
+class Results(Generic[C]):
     """The stats about a users play on a chart."""
-    chart: Chart
+    chart: C
     hit_window: Seconds
     judgements: list[Judgement]
     all_judgements: list[tuple[Seconds, Seconds, Judgement]]

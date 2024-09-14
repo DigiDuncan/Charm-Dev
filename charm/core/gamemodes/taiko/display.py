@@ -15,11 +15,9 @@ from .engine import TaikoEngine
 from .highway import TaikoHighway
 
 
-class TaikoDisplay(Display):
+class TaikoDisplay(Display[TaikoChart, TaikoEngine]):
     def __init__(self, engine: TaikoEngine, charts: Sequence[TaikoChart]):
         super().__init__(engine, charts)
-        self.engine: TaikoEngine
-        self.charts: Sequence[TaikoChart]
         self._win: DigiWindow = get_window()  # type: ignore | aaa shut up Arcade
         self.chart = charts[0]
 

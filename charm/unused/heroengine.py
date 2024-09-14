@@ -7,7 +7,7 @@ import math
 
 from charm.core.generic.engine import DigitalKeyEvent, Engine, Judgement, EngineEvent
 from charm.core.generic.chart import Seconds
-from charm.core.gamemodes.hero import HeroChord, HeroChart
+from charm.core.gamemodes.hero import HeroChord, HeroChart, HeroNote
 from charm.lib.keymap import Action, keymap
 
 logger = logging.getLogger("charm")
@@ -31,7 +31,7 @@ STRUM_ACTIONS = (keymap.hero.strumup, keymap.hero.strumdown)
 POWER_ACTIONS = (keymap.hero.power,)
 
 
-class HeroEngine(Engine):
+class HeroEngine(Engine[HeroChart, HeroNote]):
     def __init__(self, chart: HeroChart, offset: Seconds = 0):
         hit_window = 0.050  # 50ms +/-
         judgements = [Judgement("pass", 50, 100, 1, 1), Judgement("miss", math.inf, 0, 0, -1)]

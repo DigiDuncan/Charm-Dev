@@ -16,11 +16,9 @@ from .engine import HeroEngine
 from .highway import HeroHighway
 
 
-class HeroDisplay(Display):
+class HeroDisplay(Display[HeroChart, HeroEngine]):
     def __init__(self, engine: HeroEngine, charts: Sequence[HeroChart]):
         super().__init__(engine, charts)
-        self.engine: HeroEngine
-        self.charts: Sequence[HeroChart]
         self._win: DigiWindow = get_window()  # type: ignore | aaa shut up Arcade
         self.chart = charts[0]
 

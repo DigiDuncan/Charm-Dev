@@ -1,6 +1,6 @@
 from typing import TypedDict
 
-from charm.core.generic import Engine, AutoEngine, Display
+from charm.core.generic import BaseEngine, AutoEngine, BaseDisplay
 
 # -- ENGINES & DISPLAYS --
 from charm.core.gamemodes.fnf import FNFEngine, FNFDisplay
@@ -12,8 +12,8 @@ from charm.core.gamemodes.taiko import TaikoEngine, TaikoDisplay
 # ?: Add other gamemode properties?
 # !: We are doing a single engine per mode, prevents multiplayer, but lets leave that for after MVP
 class GameModeDefinition(TypedDict):
-    engines: type[Engine]
-    display: type[Display]
+    engines: type[BaseEngine]
+    display: type[BaseDisplay]
 
 
 GAMEMODES: dict[str, GameModeDefinition] = {

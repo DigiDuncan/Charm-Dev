@@ -15,9 +15,10 @@ from charm.lib.charm import load_missing_texture
 from charm.lib.utils import img_from_path
 from charm.lib.pool import Pool, SpritePool
 
-from charm.core.generic import Chart, Engine, Highway
+from charm.core.generic import Highway
 from charm.core.generic.sprite import NoteSprite, StrikelineSprite, SustainSprites, SustainTextureDict, SustainTextures
 from .chart import HeroChart, HeroNote, BeatEvent
+from .engine import HeroEngine
 
 import charm.data.images.skins as skins
 
@@ -46,13 +47,11 @@ HERO_HIGHWAY_ANGLE = 70.0
 HERO_HIGHWAY_DIST = 400.0
 HERO_LANE_COUNT = 5
 
-class HeroHighway(Highway):
-    def __init__(self, chart: Chart, engine: Engine, pos: tuple[int, int], size: tuple[int, int] = None, gap: int = 5, *, show_flags: bool = False):
+class HeroHighway(Highway[HeroChart, HeroNote, HeroEngine]):
+    def __init__(self, chart: HeroChart, engine: HeroEngine, pos: tuple[int, int], size: tuple[int, int] | None = None, gap: int = 5, *, show_flags: bool = False):
         static_camera = PerspectiveProjector()
         highway_camera = PerspectiveProjector(projection=static_camera.projection)
         super().__init__(chart, engine, pos, size, gap, downscroll=True, static_camera=static_camera, highway_camera=highway_camera)
-        self.chart: HeroChart
-        self.notes: Sequence[HeroNote]
 
         # Using some triginomerty we find the angle and position of the perspective camera's
         # to give us the classic hero look
@@ -107,7 +106,7 @@ class HeroHighway(Highway):
                 'miss': SustainTextures(_missed_tail, _missed_body, _missed_cap)}
         for i in range(6)}
 
-        self._next_sustain: HeroNote = next(self._sustain_generator, None)
+        self._next_sustain: HeroNote | None = next(self._sustain_generator, None)
 
         self._show_flags = show_flags
 

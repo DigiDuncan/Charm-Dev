@@ -8,7 +8,7 @@ from pyglet.media import Player
 from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView, disable_when_focus_lost, shows_errors
 
-from charm.core.generic import Results, Heatmap
+from charm.core.generic import BaseResults, Heatmap
 
 
 import charm.data.audio
@@ -22,7 +22,7 @@ logger = logging.getLogger("charm")
 
 
 class ResultsView(DigiView):
-    def __init__(self, back: DigiView, results: Results):
+    def __init__(self, back: DigiView, results: BaseResults):
         super().__init__(fade_in=1, back=back)
         self.song: Player
         self.results = results

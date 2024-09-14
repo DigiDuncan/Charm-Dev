@@ -417,7 +417,6 @@ class AxisAnchor(Enum):
     END = 2
 
 
-
 class VerticalElementList(Element):
     # TODO: allow for varying priority in the children. Current they are all equally scaled based on the available size
 
