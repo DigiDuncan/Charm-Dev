@@ -3,6 +3,8 @@ import logging
 import math
 from statistics import mean
 
+import arcade
+
 from charm.lib.keymap import Action, keymap
 from charm.lib.types import Range4, Seconds
 from charm.lib.utils import clamp
@@ -19,6 +21,11 @@ logger = logging.getLogger("charm")
 # Oh well!
 # * EDIT: This got renamed to FourKeyEngine, but didn't fundamentally change!
 # * aaaaaaaa
+# ?: OK, what the f***. This code doesn't rely on TimingEngine at all, I think
+# only the SMParser does. Why this comment was ever here remains a mystery.
+# I'm leaving this here for now because stupidity and confusion of this level
+# deserves to be documented.
+# !: TO REITERATE: THIS IS FINE. FourKeyEngine doesn't rely on simfile and possibly never has.
 class FourKeyEngine(Engine):
     def __init__(self, chart: FourKeyChart, offset: Seconds = 0):  # TODO: Set this dynamically
         judgements = [
@@ -53,8 +60,11 @@ class FourKeyEngine(Engine):
         self.streak = 0
         self.max_streak = 0
 
+        # ! This might not be the right way to do this nor accurate to how most games handle this!
+        self.sustain_score_per_sec = self.judgements[0].score
+        self.miss_on_sustain_break = True
+
         self.active_sustains: list[FourKeyNote] = []
-        self.last_sustain_tick = 0
         self.keystate: tuple[bool, bool, bool, bool] = (False, False, False, False)
 
     def on_key_press(self, symbol: int, modifiers: int) -> None:
@@ -164,9 +174,22 @@ class FourKeyEngine(Engine):
             self.max_streak = max(self.streak, self.max_streak)
             self.last_note_missed = False
 
+            # We just hit a sustain, get it set as active:
+            if note.length > 0:
+                self.active_sustains.append(note)
+
     def score_sustains(self) -> None:
-        pass
-        # raise NotImplementedError
+        # ! This is kinda hacky, I think? Or maybe this is exactly how to use this feature, ask Dragon.
+        dt = arcade.get_window().delta_time
+
+        kill = []
+        for sustain in self.active_sustains:
+            if self.keystate[sustain.lane]:
+                self.score += self.sustain_score_per_sec * dt
+            else:
+                self.streak = 0
+                kill.append(sustain)
+        self.active_sustains = [s for s in self.active_sustains if s not in kill]
 
     def generate_results(self) -> Results:
         return Results(
