@@ -185,7 +185,8 @@ class FourKeyEngine(Engine[FourKeyChart, FourKeyNote]):
             if self.keystate[sustain.lane]:
                 self.score += self.sustain_score_per_sec * dt
             else:
-                self.streak = 0
+                if self.miss_on_sustain_break:
+                    self.streak = 0
                 kill.append(sustain)
         self.active_sustains = [s for s in self.active_sustains if s not in kill]
 
