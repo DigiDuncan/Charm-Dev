@@ -29,7 +29,7 @@ class SMParser(Parser):
 
     @staticmethod
     def is_possible_chartset(path: Path) -> bool:
-        return len([f for f in path.iterdir() if f.suffix in {'.sm', '.ssc'}]) > 0
+        return len([f for f in path.iterdir() if f.suffix in {'.ssc', '.sm'}]) > 0
 
     @staticmethod
     def is_parsable_chart(path: Path) -> bool:
@@ -42,8 +42,9 @@ class SMParser(Parser):
 
         metadatas = []
         charts = SMParser._parse(path)
+        chart_path = [f for f in path.iterdir() if f.suffix in {'.sm', '.ssc'}][0]
         for d in charts.keys():
-            metadatas.append(ChartMetadata("4k", d, path))
+            metadatas.append(ChartMetadata("4k", d, chart_path))
         return metadatas
 
     @staticmethod
@@ -69,7 +70,7 @@ class SMParser(Parser):
     def parse_chart(chart_data: ChartMetadata) -> Sequence[FourKeyChart]:
         # The simfile parsers return a list of charts which all have their difficulty so it
         # shouldn't be hard to find and parse only the one we care about.
-        charts = SMParser._parse(chart_data.path)
+        charts = SMParser._parse(chart_data.path.parent)
         if chart_data.difficulty not in charts.keys():
             raise NoChartsError(str(chart_data.path))
         c = charts[chart_data.difficulty]

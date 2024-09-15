@@ -48,7 +48,7 @@ class ResultsView(DigiView):
         self.grade_sprite.bottom = 25
         self.grade_sprite.left = 25
 
-        self.score_text = Text(f"{self.results.score}",
+        self.score_text = Text(f"{int(self.results.score)}",
                                       self.window.width - 5, self.window.height,
                                       colors.BLACK, 72, self.window.width,
                                       "right", "bananaslip plus",

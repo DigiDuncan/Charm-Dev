@@ -95,8 +95,8 @@ class FourKeyDisplay(Display[FourKeyChart, FNFEngine | FourKeyEngine]):
     def update(self, song_time: Seconds) -> None:
         self._song_time = song_time
 
-        if self._score_text.text != str(self.engine.score):
-            self._score_text.text = str(self.engine.score)
+        if self._score_text.text != str(int(self.engine.score)):
+            self._score_text.text = str(int(self.engine.score))
 
         self._highway.update(song_time)
 
