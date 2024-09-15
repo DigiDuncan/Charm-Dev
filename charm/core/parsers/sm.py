@@ -12,12 +12,13 @@ from simfile.notes.group import group_notes, NoteWithTail
 from simfile.timing import TimingData, BeatValue
 from simfile.timing.engine import TimingEngine
 
+from charm.core.generic.metadata import ChartSetMetadata
 from charm.lib.errors import NoChartsError
 
 from charm.core.generic import BPMChangeEvent, ChartMetadata, Parser
 from charm.core.gamemodes.four_key import FourKeyNoteType, FourKeyNote, FourKeyChart
 
-sm_name_map = {
+SM_NAME_MAP = {
     "TAP": FourKeyNoteType.NORMAL,
     "MINE": FourKeyNoteType.BOMB
 }
@@ -27,15 +28,33 @@ class SMParser(Parser):
     gamemode = "4k"
 
     @staticmethod
-    def is_parseable(path: Path) -> bool:
-        return path.suffix == ".sm" or path.suffix == ".ssc"
+    def is_possible_chartset(path: Path) -> bool:
+        return len([f for f in path.iterdir() if f.suffix in {'.sm', '.ssc'}]) > 0
 
     @staticmethod
-    def parse_metadata(path: Path) -> list[ChartMetadata]:
-        return []
+    def is_parsable_chart(path: Path) -> bool:
+        return path.suffix in {'.sm', '.ssc'}
+
+    @staticmethod
+    def parse_chart_metadata(path: Path) -> list[ChartMetadata]:
+        # Both SMFile and SSCFile have the song metadata in them. Having to parse the whole object kinda sucks
+        # but untill we write our own we are s*** out of luck.
+
+        # TODO: This method returns the chart metadata for every chart in the chartset
+        raise NotImplementedError
+
+    @staticmethod
+    def parse_chartset_metadata(path: Path) -> ChartSetMetadata:
+        # Both SMFile and SSCFile have the song metadata in them. Having to parse the whole object kinda sucks
+        # but untill we write our own we are s*** out of luck.
+
+        # TODO: This method returns the chartset metadata for the whole file song song data n stuff.
+        raise NotImplementedError
 
     @staticmethod
     def parse_chart(chart_data: ChartMetadata) -> Sequence[FourKeyChart]:
+        # The simfile parsers return a list of charts which all have their difficulty so it
+        # shouldn't be hard to find and parse only the one we care about.
         raise NotImplementedError
 
     def parse(self, path: Path) -> Sequence[FourKeyChart]:
@@ -76,7 +95,7 @@ class SMParser(Parser):
                 time = timing_engine.time_at(note.beat)
                 beat = note.beat % 1
                 value = beat.denominator  # TODO: Reimplement?
-                note_type = sm_name_map.get(note.note_type.name, None)
+                note_type = SM_NAME_MAP.get(note.note_type.name, None)
                 if isinstance(note, NoteWithTail):
                     end_time = timing_engine.time_at(note.tail_beat)
                     chart.notes.append(FourKeyNote(chart, time, note.column, end_time - time, FourKeyNoteType.NORMAL))
