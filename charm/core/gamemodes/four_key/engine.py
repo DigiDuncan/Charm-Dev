@@ -3,7 +3,6 @@ import logging
 import math
 from statistics import mean
 
-import arcade
 from arcade.clock import GLOBAL_CLOCK
 
 from charm.lib.keymap import Action, keymap

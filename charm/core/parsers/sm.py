@@ -40,24 +40,44 @@ class SMParser(Parser):
         # Both SMFile and SSCFile have the song metadata in them. Having to parse the whole object kinda sucks
         # but untill we write our own we are s*** out of luck.
 
-        # TODO: This method returns the chart metadata for every chart in the chartset
-        raise NotImplementedError
+        metadatas = []
+        charts = SMParser._parse(path)
+        for d in charts.keys():
+            metadatas.append(ChartMetadata("4k", d, path))
+        return metadatas
 
     @staticmethod
     def parse_chartset_metadata(path: Path) -> ChartSetMetadata:
         # Both SMFile and SSCFile have the song metadata in them. Having to parse the whole object kinda sucks
         # but untill we write our own we are s*** out of luck.
+        try:
+            sm_file = next(itertools.chain(path.glob("*.ssc"), path.glob("*.sm")))
+        except StopIteration as err:
+            raise NoChartsError(path.stem) from err
+        with sm_file.open("r") as f:
+            sm = simfile.load(f)
 
-        # TODO: This method returns the chartset metadata for the whole file song song data n stuff.
-        raise NotImplementedError
+        return ChartSetMetadata(path,
+                                sm.title,
+                                sm.artist,
+                                sm.cdtitle,
+                                genre = sm.genre,
+                                album_art = getattr(sm, "cdimage", None),
+                                gamemode = "4k")
 
     @staticmethod
     def parse_chart(chart_data: ChartMetadata) -> Sequence[FourKeyChart]:
         # The simfile parsers return a list of charts which all have their difficulty so it
         # shouldn't be hard to find and parse only the one we care about.
-        raise NotImplementedError
+        charts = SMParser._parse(chart_data.path)
+        if chart_data.difficulty not in charts.keys():
+            raise NoChartsError(str(chart_data.path))
+        c = charts[chart_data.difficulty]
+        c.metadata = chart_data
+        return [c]
 
-    def parse(self, path: Path) -> Sequence[FourKeyChart]:
+    @staticmethod
+    def _parse(path: Path) -> dict[str, FourKeyChart]:
         # OK, figure out what chart file to use.
         try:
             sm_file = next(itertools.chain(path.glob("*.ssc"), path.glob("*.sm")))
@@ -77,7 +97,7 @@ class SMParser(Parser):
 
         for c in sm.charts:
             c: SMChart | SSCChart
-            chart = FourKeyChart("4k", c.difficulty)
+            chart = FourKeyChart(..., [], [])
             temp_file = StringIO()
             c.serialize(temp_file)
             chart.hash = sha1(bytes(temp_file.read(), encoding = "utf-8")).hexdigest()
@@ -107,4 +127,4 @@ class SMParser(Parser):
                 bpm_event = BPMChangeEvent(timing_engine.time_at(bpm.beat), float(bpm.value))
                 chart.events.append(bpm_event)
 
-        return list(charts.values())
+        return charts
