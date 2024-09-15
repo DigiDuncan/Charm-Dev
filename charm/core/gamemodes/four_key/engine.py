@@ -4,6 +4,7 @@ import math
 from statistics import mean
 
 import arcade
+from arcade.clock import GLOBAL_CLOCK
 
 from charm.lib.keymap import Action, keymap
 from charm.lib.types import Range4, Seconds
@@ -177,8 +178,7 @@ class FourKeyEngine(Engine[FourKeyChart, FourKeyNote]):
                 self.active_sustains.append(note)
 
     def score_sustains(self) -> None:
-        # ! This is kinda hacky, I think? Or maybe this is exactly how to use this feature, ask Dragon.
-        dt = arcade.get_window().delta_time
+        dt = GLOBAL_CLOCK.dt
 
         kill = []
         for sustain in self.active_sustains:
