@@ -98,7 +98,7 @@ class FourKeyEngine(Engine[FourKeyChart, FourKeyNote]):
 
     def calculate_score(self) -> None:
         # Get all non-scored notes within the current window
-        for note in [n for n in self.current_notes if n.time <= self.chart_time + self.hit_window]:
+        for note in (n for n in self.current_notes if n.time <= self.chart_time + self.hit_window):
             # Get sustains in the window and add them to the active sustains list
             if note.is_sustain and note not in self.active_sustains:
                 self.active_sustains.append(note)
@@ -110,7 +110,7 @@ class FourKeyEngine(Engine[FourKeyChart, FourKeyNote]):
                 self.current_notes.remove(note)
             else:
                 # Check non-used events to see if one matches our note
-                for event in [e for e in self.current_events if e.new_state == "down"]:
+                for event in (e for e in self.current_events if e.new_state == "down"):
                     # We've determined the note was hit
                     if event.key == note.lane and abs(event.time - note.time) <= self.hit_window:
                         note.hit = True
@@ -173,7 +173,7 @@ class FourKeyEngine(Engine[FourKeyChart, FourKeyNote]):
             self.last_note_missed = False
 
             # We just hit a sustain, get it set as active:
-            if note.length > 0:
+            if note.is_sustain and note not in self.active_sustains:
                 self.active_sustains.append(note)
 
     def score_sustains(self) -> None:

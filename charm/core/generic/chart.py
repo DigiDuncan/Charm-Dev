@@ -146,3 +146,7 @@ class Chart(Generic[N]):
 
     def events_by_type[T: Event](self, t: type[T]) -> list[T]:
         return [e for e in self.events if isinstance(e, t)]
+
+    def calculate_indices(self) -> None:
+        """An overridable method for charts to generate their NIndex collections"""
+        pass

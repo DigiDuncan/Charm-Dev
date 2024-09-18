@@ -172,7 +172,7 @@ class RawBPMEvent:
     mbpm: int
 
 
-class ChartNIndexCollection(NamedTuple):
+class HeroNIndexCollection(NamedTuple):
     bpm_time: Index[Seconds, BPMChangeTickEvent]
     bpm_tick: Index[Ticks, BPMChangeTickEvent]
     time_sig_time: Index[Seconds, TSEvent]
@@ -190,7 +190,7 @@ class HeroChart(Chart[HeroNote]):
     def __init__(self, metadata: ChartMetadata, notes: Sequence[HeroNote], events: Sequence[Event]) -> None:
         super().__init__(metadata, notes, events)
         self.chords: list[HeroChord] = []
-        self.indices: ChartNIndexCollection
+        self.indices: HeroNIndexCollection
 
     def calculate_indices(self) -> None:
         # !: This assumes that the events, notes, and chords are all time sorted :3
@@ -200,7 +200,7 @@ class HeroChart(Chart[HeroNote]):
         beat = self.events_by_type(BeatEvent)
         note = self.notes
         chord = self.chords
-        self.indices = ChartNIndexCollection(
+        self.indices = HeroNIndexCollection(
             Index[Seconds, BPMChangeTickEvent](bpm, 'time'),
             Index[Ticks, BPMChangeTickEvent](bpm, 'tick'),
             Index[Seconds, TSEvent](ts, 'time'),
