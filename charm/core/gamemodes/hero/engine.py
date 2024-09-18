@@ -24,9 +24,8 @@ class ChordShapeChangeEvent(EngineEvent):
 
 class HeroEngine(Engine[HeroChart, HeroNote]):
     def __init__(self, chart: HeroChart, offset: Seconds = 0):
-        # Defaulting to 80ms hit window, despite CH's ~140ms, because that's egregiously large.
         judgements = [
-            Judgement('Pass', 'pass', 80, 10, 1),
+            Judgement('Pass', 'pass', 140, 10, 1),
             Judgement('Miss', 'miss', float('inf'), 0, 0),
         ]
         super().__init__(chart, judgements, offset)
