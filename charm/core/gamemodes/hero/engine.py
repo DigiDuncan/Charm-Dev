@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import NamedTuple
 
 from charm.core.generic.engine import DigitalKeyEvent
@@ -31,6 +32,7 @@ class HeroEngine(Engine[HeroChart, HeroNote]):
         super().__init__(chart, judgements, offset)
 
         self.current_events: list[ChordShapeChangeEvent | DigitalKeyEvent] = []
+        self.last_event_times = defaultdict(None)
 
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         if symbol in (keymap.hero.green, keymap.hero.red, keymap.hero.yellow, keymap.hero.blue, keymap.hero.orange):
@@ -47,6 +49,8 @@ class HeroEngine(Engine[HeroChart, HeroNote]):
         elif symbol == keymap.hero.strumdown:
             self.current_events.append(DigitalKeyEvent(self.chart_time, "strumdown", "down"))
 
+        self.last_event_times[symbol] = self.chart_time
+
     def on_key_release(self, symbol: int, modifiers: int) -> None:
         if symbol in (keymap.hero.green, keymap.hero.red, keymap.hero.yellow, keymap.hero.blue, keymap.hero.orange):
             self.current_events.append(ChordShapeChangeEvent(self.chart_time, ChordShape(
@@ -56,6 +60,8 @@ class HeroEngine(Engine[HeroChart, HeroNote]):
                 keymap.hero.blue.held,
                 keymap.hero.orange.held
             )))
+
+            self.last_event_times[symbol] = None
 
         elif symbol == keymap.hero.strumup:
             self.current_events.append(DigitalKeyEvent(self.chart_time, "strumup", "up"))
