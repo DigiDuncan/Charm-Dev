@@ -25,6 +25,11 @@ class HeroEngine(Engine[HeroChart, HeroNote]):
         self.current_events: list[ChordShapeChangeEvent | DigitalKeyEvent] = []
         self.last_event_times = defaultdict(None)
 
+        self.infinite_front_end = False
+        self.hopo_leniency: Seconds = 0.080
+        self.strum_leniency: Seconds = 0.060
+        self.no_note_leniency: Seconds = 0.030
+
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         if symbol in (keymap.hero.green, keymap.hero.red, keymap.hero.yellow, keymap.hero.blue, keymap.hero.orange):
             self.current_events.append(ChordShapeChangeEvent(self.chart_time, ChordShape(
