@@ -5,7 +5,6 @@ from typing import NamedTuple
 from enum import StrEnum
 from dataclasses import dataclass
 from nindex.index import Index
-import itertools
 
 from charm.core.generic import Chart, Event, Note, ChartMetadata
 from charm.lib.errors import ThisShouldNeverHappenError
@@ -30,16 +29,17 @@ class ChordShape(NamedTuple):
 
     def __repr__(self) -> str:
         return (f"<ChordShape {'G' if self.green else '_' if self.green is not None else 'X'}"
-                f"{'R' if self.red else '_' if self.red is not None else 'X'}"
-                f"{'Y' if self.yellow else '_' if self.yellow is not None else 'X'}"
-                f"{'B' if self.blue else '_' if self.blue is not None else 'X'}"
-                f"{'O' if self.orange else '_' if self.orange is not None else 'X'}>")
+                            f"{'R' if self.red else '_' if self.red is not None else 'X'}"
+                            f"{'Y' if self.yellow else '_' if self.yellow is not None else 'X'}"
+                            f"{'B' if self.blue else '_' if self.blue is not None else 'X'}"
+                            f"{'O' if self.orange else '_' if self.orange is not None else 'X'}>")
 
     def is_compatible(self, other: ChordShape) -> bool:
         for fret in ("green", "red", "yellow", "blue", "orange"):
             self_fret = getattr(self, fret)
             other_fret = getattr(other, fret)
             if self_fret is None or other_fret is None:
+                # None means this fret can be anchored, so either False or True are fine
                 continue
             if self_fret != other_fret:
                 return False
@@ -106,7 +106,7 @@ class HeroChord:
             n.hit = v
 
     @property
-    def hit_time(self) -> Seconds:
+    def hit_time(self) -> Seconds | None:
         return self.notes[0].hit_time
 
     @hit_time.setter
