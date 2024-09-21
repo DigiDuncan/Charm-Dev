@@ -6,7 +6,7 @@ from charm.lib.keymap import keymap
 from charm.lib.types import Seconds
 
 from charm.core.generic import Engine, EngineEvent, Judgement
-from .chart import ChordShape, HeroChart, HeroNote, HeroChord
+from .chart import ChordShape, FiveFretChart, FiveFretNote, FiveFretChord
 
 
 
@@ -16,14 +16,14 @@ class ChordShapeChangeEvent(EngineEvent):
         self.shape = chord_shape
 
 
-class HeroEngine(Engine[HeroChart, HeroNote]):
-    def __init__(self, chart: HeroChart, offset: Seconds = 0):
+class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
+    def __init__(self, chart: FiveFretChart, offset: Seconds = 0):
         judgements = [
             Judgement('Pass', 'pass', 140, 10, 1),
             Judgement('Miss', 'miss', float('inf'), 0, 0),
         ]
         super().__init__(chart, judgements, offset)
-        self.current_notes: list[HeroChord] = self.chart.chords[:] # Override the default engine
+        self.current_notes: list[FiveFretChord] = self.chart.chords[:] # Override the default engine
 
         self.chord_events: list[ChordShapeChangeEvent] = []
         self.strum_events: Queue[DigitalKeyEvent] = Queue()
@@ -114,13 +114,13 @@ class HeroEngine(Engine[HeroChart, HeroNote]):
                         pass
 
 
-    def score_chord(self, chord: HeroChord) -> None:
+    def score_chord(self, chord: FiveFretChord) -> None:
         raise NotImplementedError
 
-    def score_tap(self, chord: HeroChord) -> None:
+    def score_tap(self, chord: FiveFretChord) -> None:
         raise NotImplementedError
 
-    def score_sustain(self, note: HeroNote) -> None:
+    def score_sustain(self, note: FiveFretNote) -> None:
         raise NotImplementedError
 
 

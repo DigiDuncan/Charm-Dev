@@ -7,7 +7,7 @@ import math
 
 from charm.core.generic.engine import DigitalKeyEvent, Engine, Judgement, EngineEvent
 from charm.core.generic.chart import Seconds
-from charm.core.gamemodes.hero import HeroChord, HeroChart, HeroNote
+from charm.core.gamemodes.five_fret import FiveFretChord, FiveFretChart, FiveFretNote
 from charm.lib.keymap import Action, keymap
 
 logger = logging.getLogger("charm")
@@ -31,14 +31,14 @@ STRUM_ACTIONS = (keymap.hero.strumup, keymap.hero.strumdown)
 POWER_ACTIONS = (keymap.hero.power,)
 
 
-class HeroEngine(Engine[HeroChart, HeroNote]):
-    def __init__(self, chart: HeroChart, offset: Seconds = 0):
+class HeroEngine(Engine[FiveFretChart, FiveFretNote]):
+    def __init__(self, chart: FiveFretChart, offset: Seconds = 0):
         hit_window = 0.050  # 50ms +/-
         judgements = [Judgement("pass", 50, 100, 1, 1), Judgement("miss", math.inf, 0, 0, -1)]
 
         super().__init__(chart, hit_window, judgements, offset)
 
-        self.current_chords: list[HeroChord] = self.chart.chords.copy()
+        self.current_chords: list[FiveFretChord] = self.chart.chords.copy()
         self.current_events: list[DigitalKeyEvent[Literal[0, 1, 2, 3, 4, 5, 6, 7]]] = []
 
         self.combo = 0
@@ -130,7 +130,7 @@ class HeroEngine(Engine[HeroChart, HeroNote]):
             for o in overstrums:
                 self.strum_events.remove(o)
 
-    def process_strum(self, chord: HeroChord, strum_events: list[StrumEvent]) -> None:
+    def process_strum(self, chord: FiveFretChord, strum_events: list[StrumEvent]) -> None:
         for event in strum_events:
             if event.shape in chord.valid_shapes:
                 chord.hit = True
@@ -139,7 +139,7 @@ class HeroEngine(Engine[HeroChart, HeroNote]):
                 self.current_chords.remove(chord)
                 self.strum_events.remove(event)
 
-    def process_tap(self, chord: HeroChord, strum_events: list[StrumEvent]) -> None:
+    def process_tap(self, chord: FiveFretChord, strum_events: list[StrumEvent]) -> None:
         if self.current_holds in chord.valid_shapes and self.tap_available:
             chord.hit = True
             chord.hit_time = self.chart_time
@@ -149,13 +149,13 @@ class HeroEngine(Engine[HeroChart, HeroNote]):
         else:
             self.process_strum(chord, strum_events)
 
-    def process_missed(self, chord: HeroChord) -> None:
+    def process_missed(self, chord: FiveFretChord) -> None:
         chord.missed = True
         chord.hit_time = math.inf
         self.score_chord(chord)
         self.current_chords.remove(chord)
 
-    def score_chord(self, chord: HeroChord) -> None:
+    def score_chord(self, chord: FiveFretChord) -> None:
         if chord.hit:
             self.score += 50 * self.multiplier
             self.combo += 1

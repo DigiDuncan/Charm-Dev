@@ -12,10 +12,10 @@ from nindex import Index
 from charm.lib.errors import MetadataParseError, NoChartsError, NoMetadataError, ChartParseError, ChartPostReadParseError
 from charm.lib.types import Seconds
 from charm.lib.utils import nuke_smart_quotes
-from charm.core.gamemodes.hero import (
-    HeroChart,
-    HeroNote,
-    HeroChord,
+from charm.core.gamemodes.five_fret import (
+    FiveFretChart,
+    FiveFretNote,
+    FiveFretChord,
     Ticks,
     BPMChangeTickEvent,
     TextEvent,
@@ -25,7 +25,7 @@ from charm.core.gamemodes.hero import (
     RawLyricEvent,
     StarpowerEvent,
     BeatEvent,
-    HeroNoteType
+    FiveFretNoteType
 )
 from charm.objects.lyric_animator import LyricEvent
 
@@ -68,7 +68,7 @@ def tick_to_seconds(current_tick: Ticks, sync_track: list[BPMChangeTickEvent], r
     return seconds + offset + last_bpm_event.time
 
 
-def process_chart_lyric_events(chart: HeroChart) -> None:
+def process_chart_lyric_events(chart: FiveFretChart) -> None:
     """Takes a Song and generates a LyricAnimator-compatible list of LyricEvents."""
     end_time = None
     current_full_string = ""
@@ -107,24 +107,24 @@ def process_chart_lyric_events(chart: HeroChart) -> None:
     chart.events.extend(processsed_lyrics)
 
 
-def create_chart_chords(chart: HeroChart) -> None:
+def create_chart_chords(chart: FiveFretChart) -> None:
     """
     Turn lists of notes (in `self.notes`) into `HeroChord`s (in `self.chords`)
     A chord is defined as all notes occuring at the same tick.
     While this could be a method on HeroChart I am keeping it
     seperate to keep parsing of hero charts all in one file ~Dragon
     """
-    c: dict[Ticks, list[HeroNote]] = defaultdict(list[HeroNote])
+    c: dict[Ticks, list[FiveFretNote]] = defaultdict(list[FiveFretNote])
     for note in chart.notes:
         c[note.tick].append(note)
     chord_lists = list(c.values())
-    chords: list[HeroChord] = []
+    chords: list[FiveFretChord] = []
     for cl in chord_lists:
-        chords.append(HeroChord(cl))
+        chords.append(FiveFretChord(cl))
     chart.chords = chords
 
 
-def calculate_chart_note_flags(chart: HeroChart) -> None:
+def calculate_chart_note_flags(chart: FiveFretChart) -> None:
     """Turn notes that aren't really notes but flags into properties on the notes."""
     for c in chart.chords:
         forced = False
@@ -137,13 +137,13 @@ def calculate_chart_note_flags(chart: HeroChart) -> None:
         for n in c.notes:
             # Tap overrides HOPO, intentionally.
             if tap:
-                n.type = HeroNoteType.TAP
+                n.type = FiveFretNoteType.TAP
             elif forced:
-                n.type = HeroNoteType.FORCED
+                n.type = FiveFretNoteType.FORCED
         c.notes = [n for n in c.notes if n.lane not in {5, 6}]
 
 
-def parse_chart_text_events(chart: HeroChart) -> None:
+def parse_chart_text_events(chart: FiveFretChart) -> None:
     current_solo = None
     for e in chart.events_by_type(TextEvent):
         if e.text == "solo":
@@ -159,7 +159,7 @@ def parse_chart_text_events(chart: HeroChart) -> None:
             chart.events.remove(e)
 
 
-def calculate_chart_hopos(chart: HeroChart, time_sig_ticks: Index[Ticks, TSEvent], resolution: float) -> None:
+def calculate_chart_hopos(chart: FiveFretChart, time_sig_ticks: Index[Ticks, TSEvent], resolution: float) -> None:
             # This is basically ripped from Charm-Legacy.
         # https://github.com/DigiDuncan/Charm-Legacy/blob/3187a8f2fa8c8876c2706b731bff6913dc0bad60/charm/song.py#L179
         for last_chord, current_chord in zip(chart.chords[:-1], chart.chords[1:], strict = True):  # python zip pattern, wee
@@ -193,7 +193,7 @@ def calculate_chart_hopos(chart: HeroChart, time_sig_ticks: Index[Ticks, TSEvent
                     current_chord.type = "hopo"
 
 
-def create_chart_beat_events(chart: HeroChart, time_sig_seconds: Index[Seconds, TSEvent]) -> None:
+def create_chart_beat_events(chart: FiveFretChart, time_sig_seconds: Index[Seconds, TSEvent]) -> None:
     beats: list[BeatEvent] = []
     current_time = 0
     last_note = chart.notes[-1]
@@ -277,7 +277,7 @@ class HeroParser(Parser):
         return metadatas
 
     @staticmethod
-    def parse_chart(chart_data: ChartMetadata) -> Sequence[HeroChart]:
+    def parse_chart(chart_data: ChartMetadata) -> Sequence[FiveFretChart]:
         if not (chart_data.path).exists():
             raise NoChartsError(chart_data.path.stem)
         with open(chart_data.path, encoding = "utf-8") as f:
@@ -289,7 +289,7 @@ class HeroParser(Parser):
         resolution: Ticks = 192
         offset: Seconds = 0
 
-        chart = HeroChart(chart_data, [], [])
+        chart = FiveFretChart(chart_data, [], [])
 
         current_header = None
         sync_track: list[BPMChangeTickEvent] = []
@@ -383,7 +383,7 @@ class HeroParser(Parser):
                         seconds = tick_to_seconds(tick, sync_track, resolution, offset)
                         end = tick_to_seconds(tick + length, sync_track, resolution, offset)
                         sec_length = round(end - seconds, 5)  # accurate to 1/100ms
-                        chart.notes.append(HeroNote(chart, seconds, int(lane), sec_length, type=HeroNoteType.STRUM, tick=tick, tick_length=length))  # TODO: Note flags.
+                        chart.notes.append(FiveFretNote(chart, seconds, int(lane), sec_length, type=FiveFretNoteType.STRUM, tick=tick, tick_length=length))  # TODO: Note flags.
                     # Special events
                     elif m := re.match(RE_S, line):
                         tick, s_type, length = m.groups()

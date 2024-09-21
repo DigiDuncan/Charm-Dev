@@ -17,8 +17,8 @@ from charm.lib.pool import Pool, SpritePool
 
 from charm.core.generic import Highway
 from charm.core.generic.sprite import NoteSprite, StrikelineSprite, SustainSprites, SustainTextureDict, SustainTextures
-from .chart import HeroChart, HeroNote, BeatEvent
-from .engine import HeroEngine
+from .chart import FiveFretChart, FiveFretNote, BeatEvent
+from .engine import FiveFretEngine
 
 import charm.data.images.skins as skins
 
@@ -47,8 +47,8 @@ HERO_HIGHWAY_ANGLE = 70.0
 HERO_HIGHWAY_DIST = 400.0
 HERO_LANE_COUNT = 5
 
-class HeroHighway(Highway[HeroChart, HeroNote, HeroEngine]):
-    def __init__(self, chart: HeroChart, engine: HeroEngine, pos: tuple[int, int], size: tuple[int, int] | None = None, gap: int = 5, *, show_flags: bool = False):
+class FiveFretHighway(Highway[FiveFretChart, FiveFretNote, FiveFretEngine]):
+    def __init__(self, chart: FiveFretChart, engine: FiveFretEngine, pos: tuple[int, int], size: tuple[int, int] | None = None, gap: int = 5, *, show_flags: bool = False):
         static_camera = PerspectiveProjector()
         highway_camera = PerspectiveProjector(projection=static_camera.projection)
         super().__init__(chart, engine, pos, size, gap, downscroll=True, static_camera=static_camera, highway_camera=highway_camera)
@@ -72,19 +72,19 @@ class HeroHighway(Highway[HeroChart, HeroNote, HeroEngine]):
 
         # Generators are great for ease, but it means we can't really 'scrub' backwards through the song
         # So this is a patch job at best.
-        self._note_generator: Generator[HeroNote, Any, None] = (note for note in self.notes)
+        self._note_generator: Generator[FiveFretNote, Any, None] = (note for note in self.notes)
 
         self._note_pool: SpritePool[NoteSprite] = SpritePool([NoteSprite(x=-1000.0, y=-1000.0) for _ in range(1000)])
         # avoid orthographic culling TODO: make source program more accessable
         self._note_pool._source.program = self.window.ctx.sprite_list_program_no_cull # noqa: SLF001
 
-        self._next_note: HeroNote = next(self._note_generator, None)
+        self._next_note: FiveFretNote = next(self._note_generator, None)
 
         # SUSTAIN POOL DEFINITION AND CONSTRUCTION
 
         # Generators are great for ease, but it means we can't really 'scrub' backwards through the song
         # So this is a patch job at best.
-        self._sustain_generator: Generator[HeroNote, Any, None] = (note for note in self.notes if note.length)
+        self._sustain_generator: Generator[FiveFretNote, Any, None] = (note for note in self.notes if note.length)
 
         self._sustain_pool: Pool[SustainSprites] = Pool([SustainSprites(self.note_size, self.note_size/2.0, downscroll=True) for _ in range(100)])
         self._sustain_sprites: SpriteList[Sprite] = SpriteList()
@@ -106,7 +106,7 @@ class HeroHighway(Highway[HeroChart, HeroNote, HeroEngine]):
                 'miss': SustainTextures(_missed_tail, _missed_body, _missed_cap)}
         for i in range(6)}
 
-        self._next_sustain: HeroNote | None = next(self._sustain_generator, None)
+        self._next_sustain: FiveFretNote | None = next(self._sustain_generator, None)
 
         self._show_flags = show_flags
 
