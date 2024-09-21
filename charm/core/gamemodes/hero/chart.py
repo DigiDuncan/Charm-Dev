@@ -35,13 +35,11 @@ class ChordShape(NamedTuple):
                             f"{'O' if self.orange else '_' if self.orange is not None else 'X'}>")
 
     def is_compatible(self, other: ChordShape) -> bool:
-        for fret in ("green", "red", "yellow", "blue", "orange"):
-            self_fret = getattr(self, fret)
-            other_fret = getattr(other, fret)
-            if self_fret is None or other_fret is None:
+        for a, b in zip(self, other, strict=True):
+            if a is None or b is None:
                 # None means this fret can be anchored, so either False or True are fine
                 continue
-            if self_fret != other_fret:
+            if a != b:
                 return False
         return True
 
@@ -125,38 +123,25 @@ class HeroChord:
 
     @property
     def shape(self) -> ChordShape:
-        # ! THIS IS VERY UNROLLED DRAGON PLS HELP
         if 7 in self.frets:
+            # Open note
             return ChordShape(False, False, False, False, False)
         if len(self.frets) == 1:
             # Single notes
-            match self.notes[0].lane:
-                case 0:
-                    return ChordShape(True,  False, False, False, False)
-                case 1:
-                    return ChordShape(None,  True,  False, False, False)
-                case 2:
-                    return ChordShape(None,  None,  True,  False, False)
-                case 3:
-                    return ChordShape(None,  None,  None,  True,  False)
-                case 4:
-                    return ChordShape(None,  None,  None,  None,  True)
-                case _:
-                    raise ThisShouldNeverHappenError
+            lanes = self.notes[0].lane
+            return ChordShape(
+                None if 0 < lanes else 0 == lanes, # Green
+                None if 1 < lanes else 1 == lanes, # Red
+                None if 2 < lanes else 2 == lanes, # Yellow
+                None if 3 < lanes else 3 == lanes, # Blue
+                None if 4 < lanes else 4 == lanes, # Orange
+            )
         else:
             # Chords
-            min_fret = min(*self.frets)
-            lanes: list[bool | None] = [None, None, None, None, None]
-            for i in range(5):
-                if i < min_fret:
-                    if self.type == HeroNoteType.TAP:
-                        # You can anchor taps in CH, so I'm rolling with it for now.
-                        lanes[i] = None
-                    else:
-                        lanes[i] = False
-                else:
-                    lanes[i] = i in self.frets
-            return ChordShape(*lanes)
+            fret_set = set(self.frets)
+            is_tap = self.type == HeroNoteType.TAP
+            min_fret = min(*fret_set)
+            return ChordShape(*[None if (i < min_fret and is_tap) else i in fret_set for i in range(5)])
 
 
 @dataclass
