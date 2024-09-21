@@ -7,9 +7,9 @@ from dataclasses import dataclass
 from nindex.index import Index
 import itertools
 
-from charm.lib.types import Seconds
-
 from charm.core.generic import Chart, Event, Note, ChartMetadata
+from charm.lib.errors import ThisShouldNeverHappenError
+from charm.lib.types import Seconds
 
 Ticks = int
 
@@ -19,6 +19,31 @@ class HeroNoteType(StrEnum):
     HOPO = "hopo"
     TAP = "tap"
     FORCED = "force"
+
+
+class ChordShape(NamedTuple):
+    green: bool | None
+    red: bool | None
+    yellow: bool | None
+    blue: bool | None
+    orange: bool | None
+
+    def __repr__(self) -> str:
+        return (f"<ChordShape {'G' if self.green else '_' if self.green is not None else 'X'}"
+                f"{'R' if self.red else '_' if self.red is not None else 'X'}"
+                f"{'Y' if self.yellow else '_' if self.yellow is not None else 'X'}"
+                f"{'B' if self.blue else '_' if self.blue is not None else 'X'}"
+                f"{'O' if self.orange else '_' if self.orange is not None else 'X'}>")
+
+    def is_compatible(self, other: ChordShape) -> bool:
+        for fret in ("green", "red", "yellow", "blue", "orange"):
+            self_fret = getattr(self, fret)
+            other_fret = getattr(other, fret)
+            if self_fret is None or other_fret is None:
+                continue
+            if self_fret != other_fret:
+                return False
+        return True
 
 
 @dataclass
@@ -99,17 +124,39 @@ class HeroChord:
             n.missed = v
 
     @property
-    def valid_shapes(self) -> list[list[bool]]:
+    def shape(self) -> ChordShape:
+        # ! THIS IS VERY UNROLLED DRAGON PLS HELP
         if 7 in self.frets:
-            return [[False] * 5]
-        if len(self.frets) > 1:
-            return [[n in self.frets for n in range(5)]]
-        b = [False, True]
-        max_fret = max(self.frets)
-        valid_shape_list = [list(v) for v in itertools.product(b, repeat = max_fret)]
-        append_part = [True] + ([False] * (4 - max_fret))
-        final_list = [v + append_part for v in valid_shape_list]
-        return final_list
+            return ChordShape(False, False, False, False, False)
+        if len(self.frets) == 1:
+            # Single notes
+            match self.notes[0].lane:
+                case 0:
+                    return ChordShape(True,  False, False, False, False)
+                case 1:
+                    return ChordShape(None,  True,  False, False, False)
+                case 2:
+                    return ChordShape(None,  None,  True,  False, False)
+                case 3:
+                    return ChordShape(None,  None,  None,  True,  False)
+                case 4:
+                    return ChordShape(None,  None,  None,  None,  True)
+                case _:
+                    raise ThisShouldNeverHappenError
+        else:
+            # Chords
+            min_fret = min(*self.frets)
+            lanes: list[bool | None] = [None, None, None, None, None]
+            for i in range(5):
+                if i < min_fret:
+                    if self.type == HeroNoteType.TAP:
+                        # You can anchor taps in CH, so I'm rolling with it for now.
+                        lanes[i] = None
+                    else:
+                        lanes[i] = False
+                else:
+                    lanes[i] = i in self.frets
+            return ChordShape(*lanes)
 
 
 @dataclass

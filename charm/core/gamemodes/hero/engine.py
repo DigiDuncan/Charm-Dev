@@ -1,27 +1,18 @@
 from collections import defaultdict
-from typing import NamedTuple
 
 from charm.core.generic.engine import DigitalKeyEvent
 from charm.lib.keymap import keymap
 from charm.lib.types import Seconds
 
 from charm.core.generic import Engine, EngineEvent, Judgement
-from .chart import HeroChart, HeroNote
+from .chart import ChordShape, HeroChart, HeroNote
 
-class ChordShape(NamedTuple):
-    green: bool
-    red: bool
-    yellow: bool
-    blue: bool
-    orange: bool
-
-    def __repr__(self) -> str:
-        return f"<ChordShape {'G' if self.green else '_'}{'R' if self.red else '_'}{'Y' if self.yellow else '_'}{'B' if self.blue else '_'}{'O' if self.orange else '_'}>"
 
 class ChordShapeChangeEvent(EngineEvent):
     def __init__(self, time: Seconds, chord_shape: ChordShape):
         super().__init__(time)
         self.chord_shape = chord_shape
+
 
 class HeroEngine(Engine[HeroChart, HeroNote]):
     def __init__(self, chart: HeroChart, offset: Seconds = 0):

@@ -96,6 +96,11 @@ class TestError(CharmError):
         super().__init__(title="Test", message=message)
 
 
+class ThisShouldNeverHappenError(CharmError):
+    def __init__(self, message: str = "[REDACTED]"):
+        super().__init__(title="REALITY BROKEN", message=message)
+
+
 class TODOError(CharmError):
     def __init__(self, person: str):
         super().__init__(title="TODO", message=f"{person} has to finish implementing/fixing this!", icon = "help")
