@@ -98,7 +98,10 @@ class FourKeyEngine(Engine[FourKeyChart, FourKeyNote]):
 
     def calculate_score(self) -> None:
         # Get all non-scored notes within the current window
-        for note in (n for n in self.current_notes if n.time <= self.chart_time + self.hit_window):
+        for note in self.current_notes:
+            if note.time > self.chart_time + self.hit_window:
+                break
+
             # Get sustains in the window and add them to the active sustains list
             if note.is_sustain and note not in self.active_sustains:
                 self.active_sustains.append(note)
