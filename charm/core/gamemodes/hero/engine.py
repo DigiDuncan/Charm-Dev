@@ -1,17 +1,19 @@
 from collections import defaultdict
+from queue import Queue
 
 from charm.core.generic.engine import DigitalKeyEvent
 from charm.lib.keymap import keymap
 from charm.lib.types import Seconds
 
 from charm.core.generic import Engine, EngineEvent, Judgement
-from .chart import ChordShape, HeroChart, HeroNote
+from .chart import ChordShape, HeroChart, HeroNote, HeroChord
+
 
 
 class ChordShapeChangeEvent(EngineEvent):
     def __init__(self, time: Seconds, chord_shape: ChordShape):
         super().__init__(time)
-        self.chord_shape = chord_shape
+        self.shape = chord_shape
 
 
 class HeroEngine(Engine[HeroChart, HeroNote]):
@@ -21,35 +23,66 @@ class HeroEngine(Engine[HeroChart, HeroNote]):
             Judgement('Miss', 'miss', float('inf'), 0, 0),
         ]
         super().__init__(chart, judgements, offset)
+        self.current_notes: list[HeroChord] = self.chart.chords[:] # Override the default engine
 
-        self.current_events: list[ChordShapeChangeEvent | DigitalKeyEvent] = []
+        self.chord_events: list[ChordShapeChangeEvent] = []
+        self.strum_events: Queue[DigitalKeyEvent] = Queue()
+
         self.last_event_times = defaultdict(None)
+        self.last_chord_shape: ChordShape = ChordShape(False, False, False, False, False)
 
         self.infinite_front_end = False
         self.hopo_leniency: Seconds = 0.080
         self.strum_leniency: Seconds = 0.060
         self.no_note_leniency: Seconds = 0.030
 
+        self.strum_time: Seconds = -float('inf')
+
+        # todo: ignore overstrum during countdown events
+
     def on_key_press(self, symbol: int, modifiers: int) -> None:
-        if symbol in (keymap.hero.green, keymap.hero.red, keymap.hero.yellow, keymap.hero.blue, keymap.hero.orange):
-            self.current_events.append(ChordShapeChangeEvent(self.chart_time, ChordShape(
+        # ignore spam during front/back porch
+        t = self.chart_time
+        hit_win = self.hit_window
+        if t + hit_win < self.chart.notes[0].time or t - hit_win > self.chart.notes[-1].time:
+            return
+
+        # Get the current hero action being pressed
+        current_action = keymap.hero.pressed_action
+        if current_action is None:
+            return
+
+        if current_action in {keymap.hero.green, keymap.hero.red, keymap.hero.yellow, keymap.hero.blue, keymap.hero.orange}:
+            shape = ChordShape(
                 keymap.hero.green.held,
                 keymap.hero.red.held,
                 keymap.hero.yellow.held,
                 keymap.hero.blue.held,
                 keymap.hero.orange.held
-            )))
-
-        elif symbol == keymap.hero.strumup:
-            self.current_events.append(DigitalKeyEvent(self.chart_time, "strumup", "down"))
-        elif symbol == keymap.hero.strumdown:
-            self.current_events.append(DigitalKeyEvent(self.chart_time, "strumdown", "down"))
-
-        self.last_event_times[symbol] = self.chart_time
+            )
+            self.chord_events.append(ChordShapeChangeEvent(t, shape))
+            self.last_chord_shape = shape
+            self.last_event_times[current_action] = t
+        elif current_action == keymap.hero.strumup:
+            self.strum_events.put(DigitalKeyEvent(t, "strumup", "down"))
+            self.last_event_times['strum'] = t
+        elif current_action == keymap.hero.strumdown:
+            self.strum_events.put(DigitalKeyEvent(t, "strumdown", "down"))
+            self.last_event_times['strum'] = t
 
     def on_key_release(self, symbol: int, modifiers: int) -> None:
-        if symbol in (keymap.hero.green, keymap.hero.red, keymap.hero.yellow, keymap.hero.blue, keymap.hero.orange):
-            self.current_events.append(ChordShapeChangeEvent(self.chart_time, ChordShape(
+        # ignore spam during front/back porch
+        t = self.chart_time
+        hit_win = self.hit_window
+        if t + hit_win < self.chart.notes[0].time or t - hit_win > self.chart.notes[-1].time:
+            return
+
+        current_action = keymap.hero.pressed_action
+        if current_action is None:
+            return
+
+        if current_action in {keymap.hero.green, keymap.hero.red, keymap.hero.yellow, keymap.hero.blue, keymap.hero.orange}:
+            self.chord_events.append(ChordShapeChangeEvent(self.chart_time, ChordShape(
                 keymap.hero.green.held,
                 keymap.hero.red.held,
                 keymap.hero.yellow.held,
@@ -59,7 +92,38 @@ class HeroEngine(Engine[HeroChart, HeroNote]):
 
             self.last_event_times[symbol] = None
 
-        elif symbol == keymap.hero.strumup:
-            self.current_events.append(DigitalKeyEvent(self.chart_time, "strumup", "up"))
-        elif symbol == keymap.hero.strumdown:
-            self.current_events.append(DigitalKeyEvent(self.chart_time, "strumdown", "up"))
+    def pause(self) -> None:
+        pass
+
+    def unpause(self) -> None:
+        pass
+
+    def calculate_score(self) -> None:
+        for chord in self.current_notes[:]:
+            if self.chart_time + self.hit_window < chord.time:
+                break
+
+            if self.chart_time - self.hit_window > chord.time:
+                chord.missed = True
+                chord.hit_time = float('inf')
+                self.score_chord(chord)
+                self.current_notes.remove(chord)
+            else:
+                for chord_event in self.chord_events:
+                    if chord.shape == chord_event.shape:
+                        pass
+
+
+    def score_chord(self, chord: HeroChord) -> None:
+        raise NotImplementedError
+
+    def score_tap(self, chord: HeroChord) -> None:
+        raise NotImplementedError
+
+    def score_sustain(self, note: HeroNote) -> None:
+        raise NotImplementedError
+
+
+
+    # def generate_results(self) -> Results[C]:
+    #     raise NotImplementedError

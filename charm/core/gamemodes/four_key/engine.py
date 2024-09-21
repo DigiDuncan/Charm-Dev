@@ -98,7 +98,7 @@ class FourKeyEngine(Engine[FourKeyChart, FourKeyNote]):
 
     def calculate_score(self) -> None:
         # Get all non-scored notes within the current window
-        for note in self.current_notes:
+        for note in self.current_notes[:]:
             if note.time > self.chart_time + self.hit_window:
                 break
 
@@ -106,7 +106,7 @@ class FourKeyEngine(Engine[FourKeyChart, FourKeyNote]):
             if note.is_sustain and note not in self.active_sustains:
                 self.active_sustains.append(note)
             # Missed notes (current time is higher than max allowed time for note)
-            if self.chart_time > note.time + self.hit_window:
+            if self.chart_time - self.hit_window > note.time:
                 note.missed = True
                 note.hit_time = math.inf  # how smart is this? :thinking:
                 self.score_note(note)
