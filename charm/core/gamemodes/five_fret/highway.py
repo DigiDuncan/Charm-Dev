@@ -194,7 +194,7 @@ class FiveFretHighway(Highway[FiveFretChart, FiveFretNote, FiveFretEngine]):
 
     def lane_x(self, lane_num: int) -> int:
         if lane_num == 7:  # tap note override
-            return self.x
+            return self.x + (self.gap * 3)
         return (self.note_size + self.gap) * lane_num + self.x
 
     @property
