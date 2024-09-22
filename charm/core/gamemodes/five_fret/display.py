@@ -1,6 +1,8 @@
 
 from __future__ import annotations
 from typing import TYPE_CHECKING
+
+from charm.objects.lyric_animator import LyricAnimator, LyricEvent
 if TYPE_CHECKING:
     from charm.lib.digiview import DigiWindow
 from collections.abc import Sequence
@@ -27,8 +29,15 @@ class FiveFretDisplay(Display[FiveFretChart, FiveFretEngine]):
 
         # Timer
         self.timer = Timer(250, 60)
-        self.timer.center_x = self._win.center_x
-        self.timer.center_y = self._win.height - 60
+        self.timer.center_x = self._win.width - 135
+        self.timer.center_y = 60
+
+        # Lyric animator
+        if lyrics := self.chart.events_by_type(LyricEvent):
+            self.lyric_animator: LyricAnimator = LyricAnimator(self._win.width / 2, self._win.height * 0.9, lyrics)
+            self.lyric_animator.prerender()
+        else:
+            self.lyric_animator: LyricAnimator = None
 
     def update(self, song_time: Seconds) -> None:
         self._song_time = song_time
@@ -38,8 +47,14 @@ class FiveFretDisplay(Display[FiveFretChart, FiveFretEngine]):
         self.timer.current_time = song_time
         self.timer.update(self._win.delta_time)
 
+        if self.lyric_animator:
+            self.lyric_animator.update(song_time)
+
     def draw(self) -> None:
         self.highway.draw()
 
         # self.hp_bar.draw()
         self.timer.draw()
+
+        if self.lyric_animator:
+            self.lyric_animator.draw()
