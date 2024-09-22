@@ -45,6 +45,21 @@ class ChordShape(NamedTuple):
                 return False
         return True
 
+    def from_fret(self, fret: int) -> ChordShape:
+        return ChordShape(
+                fret == 0,  # Green
+                fret == 1,  # Red
+                fret == 2,  # Yellow
+                fret == 3,  # Blue
+                fret == 4,  # Orange
+            )
+
+    def __and__(self, other: ChordShape) -> ChordShape:
+        return ChordShape(self.green and other.green, self.red and other.red, self.yellow and other.yellow, self.blue and other.blue, self.orange and other.orange)
+
+    def __or__(self, other: ChordShape) -> ChordShape:
+        return ChordShape(self.green or other.green, self.red or other.red, self.yellow or other.yellow, self.blue or other.blue, self.orange or other.orange)
+
 
 @dataclass
 class FiveFretNote(Note["FiveFretChart", FiveFretNoteType]):
