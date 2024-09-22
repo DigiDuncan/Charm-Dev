@@ -181,15 +181,15 @@ def calculate_chart_hopos(chart: FiveFretChart, time_sig_ticks: Index[Ticks, TSE
 
             if current_chord.frets == last_chord.frets:
                 # You can't have two HOPO chords of the same fretting.
-                if current_chord.type == "forced":
+                if current_chord.type == "force":
                     current_chord.type = "normal"
             elif chord_distance <= hopo_cutoff:
-                if current_chord.type == "forced":
+                if current_chord.type == "force":
                     current_chord.type = "normal"
                 elif current_chord.type == "normal":
                     current_chord.type = "hopo"
             else:
-                if current_chord.type == "forced":
+                if current_chord.type == "force":
                     current_chord.type = "hopo"
 
 
