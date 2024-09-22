@@ -160,7 +160,7 @@ def parse_chart_text_events(chart: FiveFretChart) -> None:
 
 
 def calculate_chart_hopos(chart: FiveFretChart, time_sig_ticks: Index[Ticks, TSEvent], resolution: float) -> None:
-            # This is basically ripped from Charm-Legacy.
+        # This is basically ripped from Charm-Legacy.
         # https://github.com/DigiDuncan/Charm-Legacy/blob/3187a8f2fa8c8876c2706b731bff6913dc0bad60/charm/song.py#L179
         for last_chord, current_chord in zip(chart.chords[:-1], chart.chords[1:], strict = True):  # python zip pattern, wee
             timesig = time_sig_ticks.lteq(last_chord.tick)
@@ -174,6 +174,9 @@ def calculate_chart_hopos(chart: FiveFretChart, time_sig_ticks: Index[Ticks, TSE
             ticks_per_beat = ticks_per_wholenote / beats_per_wholenote
 
             chord_distance = current_chord.tick - last_chord.tick
+
+            # ! THIS IS CURRENTLY NOT WORKING IN SOME CASES
+            # Unforced HOPOs 1/16 from each other crossing over lanes should be HOPOs but are strums still
 
             hopo_cutoff = ticks_per_beat / (192 / 66)  # Why? Where does this number come from?
                                                        # It's like 1/81th more than 1/3? Why?
