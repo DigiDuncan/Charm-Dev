@@ -178,22 +178,28 @@ def calculate_chart_hopos(chart: FiveFretChart, time_sig_ticks: Index[Ticks, TSE
             # ! THIS IS CURRENTLY NOT WORKING IN SOME CASES
             # Unforced HOPOs 1/16 from each other crossing over lanes should be HOPOs but are strums still
 
-            hopo_cutoff = ticks_per_beat / (192 / 66)  # Why? Where does this number come from?
-                                                       # It's like 1/81th more than 1/3? Why?
-                                                       # This value was scraped from Moonscraper so I trust it.
+            hopo_cutoff = ticks_per_beat / (192.0 / 66.0)  # Why? Where does this number come from?
+                                                           # It's like 1/81th more than 1/3? Why?
+                                                           # This value was scraped from Moonscraper so I trust it.
 
             if current_chord.frets == last_chord.frets:
                 # You can't have two HOPO chords of the same fretting.
-                if current_chord.type == "force":
-                    current_chord.type = "normal"
+                if current_chord.type == FiveFretNoteType.FORCED:
+                    current_chord.type = FiveFretNoteType.STRUM
+                    logger.debug(f"Δt{chord_distance}: SAME FRETTING - IGNORING FORCE FLAG")
             elif chord_distance <= hopo_cutoff:
-                if current_chord.type == "force":
-                    current_chord.type = "normal"
-                elif current_chord.type == "normal":
-                    current_chord.type = "hopo"
+                if current_chord.type == FiveFretNoteType.FORCED:
+                    current_chord.type = FiveFretNoteType.STRUM
+                    logger.debug(f"Δt{chord_distance}: CLOSE: forcing to strum")
+                elif current_chord.type == FiveFretNoteType.STRUM:
+                    current_chord.type = FiveFretNoteType.HOPO
+                    logger.debug(f"Δt{chord_distance}: CLOSE: hopo")
             else:
-                if current_chord.type == "force":
-                    current_chord.type = "hopo"
+                if current_chord.type == FiveFretNoteType.FORCED:
+                    current_chord.type = FiveFretNoteType.HOPO
+                    logger.debug(f"Δt{chord_distance}: FAR: forcing to hopo")
+                else:
+                    logger.debug(f"Δt{chord_distance}: FAR: strum")
 
 
 def create_chart_beat_events(chart: FiveFretChart, time_sig_seconds: Index[Seconds, TSEvent]) -> None:

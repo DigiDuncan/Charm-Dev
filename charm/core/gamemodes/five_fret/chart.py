@@ -84,9 +84,8 @@ class FiveFretChord:
     def __init__(self, notes: list[FiveFretNote] | None = None) -> None:
         self.notes = notes if notes else []
 
-    @property
-    def frets(self) -> tuple[int, ...]:
-        return tuple(set(n.lane for n in self.notes))
+        self.frets: list[int] = list(set(n.lane for n in self.notes))
+        self.frets.sort()
 
     @property
     def tick(self) -> Ticks:
