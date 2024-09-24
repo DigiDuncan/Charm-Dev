@@ -34,7 +34,7 @@ from charm.lib.paths import songspath
 from charm.lib.errors import CharmError, ChartUnparseableError, MissingGamemodeError, NoParserError, AmbigiousParserError, log_charmerror, NoChartsError
 
 from charm.core.generic import ChartSet, ChartSetMetadata, ChartMetadata, Parser, BaseChart
-from charm.core.parsers import FNFParser, FNFV2Parser, ManiaParser, SMParser, HeroParser, TaikoParser
+from charm.core.parsers import FNFParser, FNFV2Parser, ManiaParser, SMParser, DotChartParser, TaikoParser
 
 logger = logging.getLogger("charm")
 
@@ -43,7 +43,7 @@ CHARM_TOML_METADATA_FIELDS = ["title", "artist", "album", "length", "genre", "ye
 
 
 # TODO: Parse MIDI
-all_parsers: list[type[Parser]] = [FNFParser, FNFV2Parser, ManiaParser, SMParser, HeroParser, TaikoParser]
+all_parsers: list[type[Parser]] = [FNFParser, FNFV2Parser, ManiaParser, SMParser, DotChartParser, TaikoParser]
 parsers_by_gamemode: dict[str, list[type[Parser]]] = {
     cast(str, gamemode): list(values)
     for gamemode, values

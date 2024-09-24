@@ -2,7 +2,7 @@ from .fnf import FNFParser
 from .fnfv2 import FNFV2Parser
 from .mania import ManiaParser
 from .sm import SMParser
-from .hero import HeroParser
+from .dotchart import DotChartParser
 from .taiko import TaikoParser
 
 __all__ = [
@@ -10,6 +10,6 @@ __all__ = [
     "FNFV2Parser",
     "ManiaParser",
     "SMParser",
-    "HeroParser",
+    "DotChartParser",
     "TaikoParser"
 ]
