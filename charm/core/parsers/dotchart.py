@@ -208,7 +208,7 @@ def create_chart_beat_events(chart: FiveFretChart, time_sig_seconds: Index[Secon
     bpm_events.append(BPMChangeTickEvent(last_note.time, last_note.tick, bpm_events[-1].new_bpm))
     current_id = 0
     for current_bpm_event, next_bpm_event in itertools.pairwise(bpm_events):
-        current_beat = 0
+        current_beat = 1
         ts: TSEvent = time_sig_seconds.lteq(current_time)
         ts_num, ts_denom = ts.numerator, ts.denominator
         seconds_per_beat = (1 / (current_bpm_event.new_bpm / 60)) / ts_denom

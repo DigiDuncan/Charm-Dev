@@ -43,7 +43,7 @@ def load_note_texture(note_type: str, note_lane: int, height: int) -> Texture:
     return Texture(image)
 
 
-HERO_HIGHWAY_ANGLE = 70.0
+HERO_HIGHWAY_ANGLE = 20.0
 HERO_HIGHWAY_DIST = 400.0
 HERO_LANE_COUNT = 5
 
@@ -184,7 +184,7 @@ class FiveFretHighway(Highway[FiveFretChart, FiveFretNote, FiveFretEngine]):
             last_beat_idx = self.chart.indices.beat_time.lteq_index(self.song_time + self.viewport)
             if current_beat_idx is not None and last_beat_idx is not None:
                 for beat in self.chart.events_by_type(BeatEvent)[current_beat_idx:last_beat_idx + 1]:
-                    px = self.note_y(beat.time) - (self.note_size / 2)
+                    px = self.note_y(beat.time) + (self.note_size / 2)
                     draw_line(self.x, px, self.x + self.w, px, colors.DARK_GRAY, 3 if beat.major else 1)
 
             self.strikeline.draw()
