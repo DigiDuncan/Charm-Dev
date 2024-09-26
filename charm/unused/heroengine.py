@@ -21,7 +21,7 @@ class StrumEvent(EngineEvent):
     def __str__(self) -> str:
         strum_name = {
             keymap.hero.strumup: "up",
-            keymap.hero.strumup: "down"
+            keymap.hero.strumdown: "down"
         }
         return f"<StrumEvent {strum_name[self.action]} @ {round(self.time, 3)}: {[n for n, v in enumerate(self.shape) if v is True]}>"
 
