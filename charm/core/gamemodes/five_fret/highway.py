@@ -43,7 +43,7 @@ def load_note_texture(note_type: str, note_lane: int, height: int) -> Texture:
     return Texture(image)
 
 
-HERO_HIGHWAY_ANGLE = 20.0
+HERO_HIGHWAY_ANGLE = 55.0
 HERO_HIGHWAY_DIST = 400.0
 HERO_LANE_COUNT = 5
 
@@ -67,7 +67,6 @@ class FiveFretHighway(Highway[FiveFretChart, FiveFretNote, FiveFretEngine]):
 
         static_data.position = highway_data.position = (self.window.center_x, self.perp_y_pos, self.perp_z_pos)
         static_data.up, static_data.forward = highway_data.up, highway_data.forward = rotate_around_right(static_data, -HERO_HIGHWAY_ANGLE)
-
         # NOTE POOL DEFINITION AND CONSTRUCTION
 
         # Generators are great for ease, but it means we can't really 'scrub' backwards through the song
@@ -180,11 +179,12 @@ class FiveFretHighway(Highway[FiveFretChart, FiveFretNote, FiveFretEngine]):
                 LRBT(self.x, self.x + self.w, self.y, self.y + self.h),
                 self.color
             )
-            current_beat_idx = self.chart.indices.beat_time.lteq_index(self.song_time)
+            current_beat_idx = self.chart.indices.beat_time.gteq_index(self.song_time)
             last_beat_idx = self.chart.indices.beat_time.lteq_index(self.song_time + self.viewport)
             if current_beat_idx is not None and last_beat_idx is not None:
+                current_beat_idx = max(current_beat_idx - 1, 0)
                 for beat in self.chart.events_by_type(BeatEvent)[current_beat_idx:last_beat_idx + 1]:
-                    px = self.note_y(beat.time) + (self.note_size / 2)
+                    px = self.note_y(beat.time) - (self.note_size / 2)
                     draw_line(self.x, px, self.x + self.w, px, colors.DARK_GRAY, 3 if beat.major else 1)
 
             self.strikeline.draw()

@@ -201,21 +201,38 @@ def calculate_chart_hopos(chart: FiveFretChart, time_sig_ticks: Index[Ticks, TSE
 
 
 def create_chart_beat_events(chart: FiveFretChart, time_sig_seconds: Index[Seconds, TSEvent]) -> None:
+    # ! Assumes a bpm event at t=0. assumes time signatures happen only at the start of measures
     beats: list[BeatEvent] = []
     current_time = 0
     last_note = chart.notes[-1]
     bpm_events = chart.events_by_type(BPMChangeTickEvent)
     bpm_events.append(BPMChangeTickEvent(last_note.time, last_note.tick, bpm_events[-1].new_bpm))
-    current_id = 0
+    current_id = 0 # UNUSED
     for current_bpm_event, next_bpm_event in itertools.pairwise(bpm_events):
-        current_beat = 1
+        seconds_per_note = 60.0 / current_bpm_event.new_bpm # So this should just be the seconds per beat, but maybe rock bpm is stored as npm?
+
         ts: TSEvent = time_sig_seconds.lteq(current_time)
+        next_ts: TSEvent = time_sig_seconds.gteq(current_time) or ts
         ts_num, ts_denom = ts.numerator, ts.denominator
-        seconds_per_beat = (1 / (current_bpm_event.new_bpm / 60)) / ts_denom
-        while current_time < next_bpm_event.time:
+        seconds_per_beat = seconds_per_note / ts_denom
+
+        current_time, end_time = current_bpm_event.time, next_bpm_event.time
+        current_beat = 0
+        while current_time < end_time:
             beats.append(BeatEvent(current_time, current_id, current_id, True if current_beat % ts_num == 0 else False))
             current_time += seconds_per_beat
             current_beat += 1
+
+            # Check if the time sig has changed
+            if next_ts == ts or current_time < next_ts.time:
+                continue
+            # If it has the seconds per beat has changed
+            ts = next_ts
+            next_ts = time_sig_seconds.gteq(current_time) or ts
+            current_beat = 0
+            ts_num, ts_denom = ts.numerator, ts.denominator
+            seconds_per_beat = seconds_per_note / ts_denom
+
     chart.events.extend(beats)
 
 
