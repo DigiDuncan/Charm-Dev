@@ -1,19 +1,26 @@
-## Minimum Viable Product [Alpha]
-- Show results screen on fail
-- Selectable difficulty
-- Scroll flips
-- Score saving
-    - Kinda in? It doesn't get displayed anywhere which isn't great
-- Local leaderboard
-- Display metadata
-- Adjustable note scroll speed
-    - This requires not using the Camera trick we're doing for note scroll
-- Offset wizard
-- In-game settings
-- Song preview on menu
-- Song speed? [might be saved until we implement song mods]
-- Results screen health graph
-- Menu cards should be smaller
-- Basic profile creation
-- Keybinding
-- Note lighting
+# Sprint
+- FiveFretEngine
+    - Look at Moonscraper's implementation (and others?)
+    - Finish it (dragon please break this down)
+- FiveFretHighway
+    - BillboardSprite
+    - Consistent shape/angle at all window sizes
+    - Scrolling background*
+    - Render beat lines better
+- FiveFretDisplay
+    - Finish layout
+    - Sprite-based rolling score*
+    - Multiplier sprites/displayable
+- DotChartParser
+    - Generate beat events better
+- MIDIParser
+    - Investigate
+- Controller support
+- Settings menu
+    - Save to disk
+    - Volume sliders
+    - Resolution
+    - FPS
+    - ...
+
+* This would be upstreamed to all generics

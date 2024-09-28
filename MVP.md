@@ -1,0 +1,19 @@
+## Minimum Viable Product [Alpha]
+- Show results screen on fail
+- Selectable difficulty
+- Scroll flips
+- Score saving
+    - Kinda in? It doesn't get displayed anywhere which isn't great
+- Local leaderboard
+- Display metadata
+- Adjustable note scroll speed
+    - This requires not using the Camera trick we're doing for note scroll
+- Offset wizard
+- In-game settings
+- Song preview on menu
+- Song speed? [might be saved until we implement song mods]
+- Results screen health graph
+- Menu cards should be smaller
+- Basic profile creation
+- Keybinding
+- Note lighting
