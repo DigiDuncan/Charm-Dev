@@ -1,5 +1,6 @@
 
 from __future__ import annotations
+import random
 from typing import TYPE_CHECKING
 
 import arcade
@@ -12,7 +13,7 @@ from collections.abc import Sequence
 from arcade import get_window
 
 from charm.lib.types import Seconds
-from charm.lib.displayables import Timer
+from charm.lib.displayables import NumericDisplay, Timer
 
 from charm.core.generic import Display
 from .chart import FiveFretChart, SectionEvent
@@ -44,6 +45,9 @@ class FiveFretDisplay(Display[FiveFretChart, FiveFretEngine]):
         self.sections = self.chart.events_by_type(SectionEvent)
         self.current_section = self.sections[0] if self.sections else "No Section"
 
+        # Score display
+        self.score_display = NumericDisplay(self._win.width - 10, 200, 64, color = arcade.color.BLACK, show_zeroes = False)
+
     def update(self, song_time: Seconds) -> None:
         self._song_time = song_time
 
@@ -59,6 +63,8 @@ class FiveFretDisplay(Display[FiveFretChart, FiveFretEngine]):
             sec = self.current_section = self.chart.indices.section_time.lteq(song_time)
             self.current_section = sec.name if sec else "No Section"
 
+        self.score_display.score += random.randint(0, 9)
+
     def draw(self) -> None:
         self.highway.draw()
 
@@ -69,3 +75,5 @@ class FiveFretDisplay(Display[FiveFretChart, FiveFretEngine]):
 
         if self.lyric_animator:
             self.lyric_animator.draw()
+
+        self.score_display.draw()

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from importlib.resources import files, as_file
+
 from typing import TYPE_CHECKING, Protocol
-from arcade import LBWH, Sprite, SpriteCircle, Text, LRBT, XYWH, color as colors, \
-    draw_rect_filled, draw_rect_outline, draw_sprite, get_window
+from arcade import LBWH, Sprite, SpriteCircle, SpriteList, Text, LRBT, XYWH, Texture, color as colors, \
+    draw_rect_filled, draw_rect_outline, draw_sprite, get_window, load_texture
 import arcade
 from arcade.types import Color
 from arcade.color import BLACK
@@ -10,6 +12,7 @@ from arcade.color import BLACK
 from charm.lib.anim import ease_circout, lerp, ease_linear, LerpData, perc
 from charm.lib.charm import CharmColors
 from charm.lib.utils import map_range, px_to_pt
+import charm.data.images.skins.base as base_skin
 
 from charm.core.generic import BaseEngine
 
@@ -276,3 +279,49 @@ class Countdown:
             arcade.draw_rect_filled(rect, self.color.replace(a = alpha))
             self.text.color = self.text.color.replace(a = alpha)
             self.text.draw()
+
+class NumericDisplay:
+    def __init__(self, x: float, y: float, height: int, inital_digits: int = 7, color: Color = arcade.color.WHITE, show_zeroes = True) -> None:
+        self.spritelist = SpriteList()
+
+
+        path = files(base_skin)
+        self.textures: list[Texture] = []
+        for n in range(10):
+            with as_file(path.joinpath(f"score_{n}.png")) as p:
+                self.textures.append(load_texture(p))
+
+        scale = height / self.textures[0].height
+        initial_x = x - (self.textures[0].width * scale / 2)
+        initial_y = y - (height / 2)
+
+        self.color = color
+        self.show_zeroes = show_zeroes
+
+        self._score = 0
+
+        self.digits = [Sprite(self.textures[0], scale = scale, center_x = initial_x - (i * self.textures[0].width * scale), center_y = initial_y) for i in range(inital_digits)]
+
+        for d in self.digits:
+            d.color = color
+
+        self.spritelist.extend(self.digits)
+
+    @property
+    def score(self) -> int:
+        return self._score
+
+    @score.setter
+    def score(self, v: int) -> None:
+        if v == self._score:
+            return
+        self._score = v
+        for n, d in enumerate(str(v)[::-1]):
+            self.digits[n].visible = True
+            self.digits[n].texture = self.textures[int(d)]
+            if not self.show_zeroes:
+                if 10 ** n > v:
+                    self.digits[n].visible = False
+
+    def draw(self) -> None:
+        self.spritelist.draw()
