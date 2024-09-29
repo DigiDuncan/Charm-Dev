@@ -166,6 +166,11 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
 
         self.last_chord_shape = chord_shape
 
+        if current_chord.time > self.window_front_end:
+            # The current chord isn't available to process,
+            # but we needed to update the chord shape
+            return
+
         if (time - last_strum) <= self.strum_leniency and current_chord.shape == chord_shape:
             # ! Assumes last strum is before time.
             # ! Doesn't make sense to not be true, but it is an assumption
@@ -194,6 +199,11 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
             self.overstrum()
             return
 
+        if current_chord.time > self.window_front_end:
+            # The current chord isn't available to process,
+            # but we needed to process overstrum
+            return
+
         if currnet_shape == current_chord.shape:
             self.hit_chord(current_chord, time)
             self.last_strum_time = -float('inf') # ? Should this just go in hit chord? I think no cause taps
@@ -206,12 +216,14 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
 
 
     def miss_chord(self, chord: FiveFretChord, time: float = float('inf')) -> None:
+        print('!MISS!')
         chord.missed = True
         chord.hit_time = time
         self.score_chord(chord)
         self.current_notes.remove(chord)
 
     def hit_chord(self, chord: FiveFretChord, time: float) -> None:
+        print('!CHORD!')
         chord.hit = True
         chord.hit_time = time
         self.score_chord(chord)
@@ -221,7 +233,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
 
 
     def score_chord(self, chord: FiveFretChord) -> None:
-        print(chord)
+        pass
 
     def score_tap(self, chord: FiveFretChord) -> None:
         raise NotImplementedError
