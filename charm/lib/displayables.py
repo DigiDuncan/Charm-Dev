@@ -316,12 +316,14 @@ class NumericDisplay:
         if v == self._score:
             return
         self._score = v
-        for n, d in enumerate(str(v)[::-1]):
-            self.digits[n].visible = True
-            self.digits[n].texture = self.textures[int(d)]
+        score_str = str(v)[::-1]
+        score_len = len(score_str)
+        for n, digit in enumerate(self.digits):
+            digit.visible = True
+            digit.texture = self.textures[0 if n >= score_len else int(score_str[n])]
             if not self.show_zeroes:
                 if 10 ** n > v:
-                    self.digits[n].visible = False
+                    digit.visible = False
 
     def draw(self) -> None:
         self.spritelist.draw()
