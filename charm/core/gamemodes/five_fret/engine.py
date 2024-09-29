@@ -1,21 +1,19 @@
-from collections import defaultdict
 from queue import Queue
-
-from charm.lib.errors import TODOError
+from charm.lib.errors import TODOError, ThisShouldNeverHappenError
 
 from charm.core.generic.engine import DigitalKeyEvent
 from charm.lib.keymap import keymap
 from charm.lib.types import Seconds
 
 from charm.core.generic import Engine, EngineEvent, Judgement
-from .chart import ChordShape, FiveFretChart, FiveFretNote, FiveFretChord
-
+from .chart import ChordShape, FiveFretChart, FiveFretNote, FiveFretChord, FiveFretNoteType
 
 
 class ChordShapeChangeEvent(EngineEvent):
     def __init__(self, time: Seconds, chord_shape: ChordShape):
         super().__init__(time)
         self.shape = chord_shape
+
 
 EMPTY_CHORD = ChordShape(False, False, False, False, False)
 
@@ -28,47 +26,23 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         super().__init__(chart, judgements, offset)
         self.current_notes: list[FiveFretChord] = self.chart.chords[:] # Override the default engine
 
-        self.chord_events: Queue[ChordShapeChangeEvent] = Queue()
-        self.strum_events: Queue[DigitalKeyEvent] = Queue()
+        self.input_events: Queue[DigitalKeyEvent] = Queue()
+        self.chord_shapes: Queue[ChordShape] = Queue()
 
-        self.last_event_times = defaultdict(None)
+        # There are rolling values from the update, which sucks,
+        # but we also need to store it between frames so its okay?
         self.last_chord_shape: ChordShape = EMPTY_CHORD
+        self.last_strum_time: Seconds = -float('inf')
 
         self.infinite_front_end = False
+        self.can_chord_skip = True
+        self.punish_chord_skip = True
         self.hopo_leniency: Seconds = 0.080
         self.strum_leniency: Seconds = 0.060
         self.no_note_leniency: Seconds = 0.030
         self.sustain_end_leniency: Seconds = 0.01
 
-        self.strum_time: Seconds = -float('inf')
-
         # todo: ignore overstrum during countdown events
-
-    @property
-    def window_front_end(self) -> Seconds:
-        return self.chart_time + self.hit_window
-
-    @property
-    def window_back_end(self) -> Seconds:
-        return self.chart_time - self.hit_window
-
-    def on_strum(self):
-        # When a player strums a few things can occur:
-        # 1) No strum has happened recently
-        #   1 a) No notes are around for it to be a valid strum
-        #   1 b) Add the strum to the queue to be processed next update
-        # 2) A strum has happened recently -> Mark it as overstrum
-        # 3) We are in a countdown so ignore it
-        pass
-
-    def on_chord_change(self):
-        pass
-
-    def on_whammy(self):
-        raise TODOError('Dragon/Digi needs to add whammy')
-
-    def on_starpower(self):
-        raise TODOError('Dragon/Digi needs to do Starpower')
 
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         # ignore spam during front/back porch
@@ -83,22 +57,21 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
             return
 
         if current_action in {keymap.hero.green, keymap.hero.red, keymap.hero.yellow, keymap.hero.blue, keymap.hero.orange}:
-            shape = ChordShape(
-                keymap.hero.green.held,
-                keymap.hero.red.held,
-                keymap.hero.yellow.held,
-                keymap.hero.blue.held,
-                keymap.hero.orange.held
+            self.input_events.put_nowait(DigitalKeyEvent(t, "fret", "down"))
+            self.chord_shapes.put_nowait(
+                ChordShape(
+                    keymap.hero.green.held,
+                    keymap.hero.red.held,
+                    keymap.hero.yellow.held,
+                    keymap.hero.blue.held,
+                    keymap.hero.orange.held
+                )
             )
-            self.chord_events.put_nowait(ChordShapeChangeEvent(t, shape))
-            self.last_chord_shape = shape
-            self.last_event_times[current_action] = t
         elif current_action == keymap.hero.strumup:
-            self.strum_events.put_nowait(DigitalKeyEvent(t, "strumup", "down"))
-            self.last_event_times['strum'] = t
+            # kept sep incase we want to track
+            self.input_events.put_nowait(DigitalKeyEvent(t, "strum", "down"))
         elif current_action == keymap.hero.strumdown:
-            self.strum_events.put_nowait(DigitalKeyEvent(t, "strumdown", "down"))
-            self.last_event_times['strum'] = t
+            self.input_events.put_nowait(DigitalKeyEvent(t, "strum", "down"))
 
     def on_key_release(self, symbol: int, modifiers: int) -> None:
         # ignore spam during front/back porch
@@ -112,15 +85,16 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
             return
 
         if current_action in {keymap.hero.green, keymap.hero.red, keymap.hero.yellow, keymap.hero.blue, keymap.hero.orange}:
-            self.chord_events.put_nowait(ChordShapeChangeEvent(self.chart_time, ChordShape(
-                keymap.hero.green.held,
-                keymap.hero.red.held,
-                keymap.hero.yellow.held,
-                keymap.hero.blue.held,
-                keymap.hero.orange.held
-            )))
-
-            self.last_event_times[symbol] = None
+            self.input_events.put_nowait(DigitalKeyEvent(t, "fret", "up"))
+            self.chord_shapes.put_nowait(
+                ChordShape(
+                    keymap.hero.green.held,
+                    keymap.hero.red.held,
+                    keymap.hero.yellow.held,
+                    keymap.hero.blue.held,
+                    keymap.hero.orange.held
+                )
+            )
 
     def pause(self) -> None:
         pass
@@ -129,23 +103,125 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         pass
 
     def calculate_score(self) -> None:
-        for chord in self.current_notes[:]:
-            if self.window_front_end < chord.time:
-                # If the chord is outside the hit window then we have processed all hit able notes
+        # There is a curious conundrum to solve
+        # If we work off of the chords then inputs only get
+        # processed when there are chords available,
+        # however when using inputs we need to 'catch-up'
+        # in the same way for chords
+
+        # ! Not only do we need to handle missed notes, but what about taps with front end?
+
+        if not self.current_notes:
+            return # ! We are out of notes, but we still need to handle sustains hmmmm.
+
+
+        # Remove all missed chords
+        # ! What happens if it was a tap/hopo we could have hit using the last chord?
+        # ! Or can we safely assert that would have been caught? I think yes, but lets see.
+        while self.current_notes[0].time < self.window_back_end:
+            self.miss_chord(self.current_notes[0])
+
+        # ? Could we maybe just check the first valid tap in here ?
+        # ? Also if you miss a note does that invalidate the tap ?
+
+        # Process all the note inputs
+        while not self.input_events.empty():
+            event = self.input_events.get_nowait()
+            if event.time < self.window_back_end:
+                # Skip events that are now outside the input time.
+                # Should only happen after lag spikes or if some inputs are processed
+                continue
+
+            if event.time > self.window_front_end:
+                # Okay so we are done cause these inputs are in the future????
+                # ! THIS SHOULD NEVER HAPPEN AND MAYBE WE SHOULD THROW AND ERROR
                 break
 
-            if self.window_back_end > chord.time:
-                # If the note has left the hit window without being it then it is missed
-                chord.missed = True
-                chord.hit_time = float('inf')
-                self.score_chord(chord)
-                self.current_notes.remove(chord)
-            else:
-                pass
+            match event.key:
+                case "fret":
+                    # The chord shape queue is filled and eaten only by these inputs so
+                    # its 'safe' to do this.
+                    self.on_fret_change(self.chord_shapes.get_nowait(), event.time)
+                case "strum":
+                    self.on_strum(event.time)
+                case _:
+                    raise ThisShouldNeverHappenError
+
+
+
+    def on_fret_change(self, chord_shape: ChordShape, time: Seconds) -> None:
+        # First we check against sustains
+        # Then we do Taps and Hopos
+        # Then we can do the strum
+        # Also update the last chord shape
+
+        # TODO:
+        # Sustains
+        # Taps and Hopos
+        #  Anchoring and Ghosting
+
+        current_chord = self.current_notes[0]
+        last_shape = self.last_chord_shape # Not Needed?
+        last_strum = self.last_strum_time
+
+        self.last_chord_shape = chord_shape
+
+        if (time - last_strum) <= self.strum_leniency and current_chord.shape == chord_shape:
+            # ! Assumes last strum is before time.
+            # ! Doesn't make sense to not be true, but it is an assumption
+            # * Because we can strum any note irrespective of its type
+            # * this works for Taps and Hopos
+            self.hit_chord(current_chord, time)
+            self.last_strum_time = -float('inf')
+            return
+
+    def on_strum(self, time: Seconds) -> None:
+        # First we check for overstrum
+        # Then we check for struming notes
+        # If we didn't hit a chord then lets look into the future
+        # If that didn't work then 'start' the strum leniency
+
+        # TODO:
+        # No Input Ghosting or Anchoring
+        # No Chord Skipping
+        # Prolly so much else lmao
+
+        current_chord = self.current_notes[0]
+        currnet_shape = self.last_chord_shape
+        last_strum = self.last_strum_time
+
+        if time - last_strum <= self.strum_leniency:
+            self.overstrum()
+            return
+
+        if currnet_shape == current_chord.shape:
+            self.hit_chord(current_chord, time)
+            self.last_strum_time = -float('inf') # ? Should this just go in hit chord? I think no cause taps
+            return
+
+        if self.can_chord_skip:
+            pass
+
+        self.last_strum_time = time
+
+
+    def miss_chord(self, chord: FiveFretChord, time: float = float('inf')) -> None:
+        chord.missed = True
+        chord.hit_time = time
+        self.score_chord(chord)
+        self.current_notes.remove(chord)
+
+    def hit_chord(self, chord: FiveFretChord, time: float) -> None:
+        chord.hit = True
+        chord.hit_time = time
+        self.score_chord(chord)
+        self.current_notes.remove(chord)
+
+        # TODO: Add sustain
 
 
     def score_chord(self, chord: FiveFretChord) -> None:
-        raise NotImplementedError
+        print(chord)
 
     def score_tap(self, chord: FiveFretChord) -> None:
         raise NotImplementedError
@@ -154,7 +230,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         raise NotImplementedError
 
     def overstrum(self) -> None:
-        pass
+        print('!OVERSTRUM!')
 
     # def generate_results(self) -> Results[C]:
     #     raise NotImplementedError

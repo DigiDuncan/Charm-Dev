@@ -84,6 +84,14 @@ class Engine(Generic[C, N]):
         self.keystate: tuple[bool, ...] = NotImplemented
 
     @property
+    def window_front_end(self) -> Seconds:
+        return self.chart_time + self.hit_window
+
+    @property
+    def window_back_end(self) -> Seconds:
+        return self.chart_time - self.hit_window
+
+    @property
     def hit_window(self) -> Seconds:
         """The maximum seconds offset from the intended note timing that points can be scored in.
         Works as a kind of first-pass check to see if we should try to score a note.
