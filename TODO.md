@@ -30,7 +30,12 @@
     - Volume sliders
     - Resolution
     - FPS
-    - ...
+    - Key Binding !!!!!
+- Release Plans
+    - Trailer
+    - 
+- Video Player
+    - Invensitage Arcade's video player
 
 * This would be upstreamed to all generics
 
