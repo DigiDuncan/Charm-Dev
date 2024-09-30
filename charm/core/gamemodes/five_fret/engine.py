@@ -46,9 +46,9 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         # ignore spam during front/back porch
         t = self.chart_time
-        hit_win = self.hit_window
-        if t + hit_win < self.chart.notes[0].time or t - hit_win > self.chart.notes[-1].time:
-            return
+        # hit_win = self.hit_window
+        # if t + hit_win < self.chart.notes[0].time or t - hit_win > self.chart.notes[-1].time:
+        #     return
 
         # Get the current hero action being pressed
         current_action = keymap.hero.pressed_action
@@ -62,20 +62,21 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
             self.input_events.put_nowait(DigitalKeyEvent(t, "strum", "down"))
         elif current_action == keymap.hero.strumdown:
             self.input_events.put_nowait(DigitalKeyEvent(t, "strum", "down"))
+        print('input down', self.input_events.qsize())
 
     def on_key_release(self, symbol: int, modifiers: int) -> None:
         # ignore spam during front/back porch
         t = self.chart_time
-        hit_win = self.hit_window
-        if t + hit_win < self.chart.notes[0].time or t - hit_win > self.chart.notes[-1].time:
-            return
-
+        # hit_win = self.hit_window
+        # if t + hit_win < self.chart.notes[0].time or t - hit_win > self.chart.notes[-1].time:
+        #     return
         current_action = keymap.hero.pressed_action
         if current_action is None:
             return
 
         if current_action in {keymap.hero.green, keymap.hero.red, keymap.hero.yellow, keymap.hero.blue, keymap.hero.orange}:
             self.input_events.put_nowait(DigitalKeyEvent(t, current_action.id, "up"))
+        print('input up', self.input_events.qsize())
 
     def pause(self) -> None:
         pass
@@ -92,51 +93,51 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
 
         # ! Not only do we need to handle missed notes, but what about taps with front end?
 
-        if not self.current_notes:
-            return # ! We are out of notes, but we still need to handle sustains hmmmm.
-
-
         # Remove all missed chords
         # ! What happens if it was a tap/hopo we could have hit using the last chord?
         # ! Or can we safely assert that would have been caught? I think yes, but lets see.
-        while self.current_notes[0].time < self.window_back_end:
+        while self.current_notes and self.current_notes[0].time < self.window_back_end:
+            # print(len(self.current_notes))
             self.miss_chord(self.current_notes[0])
+
+        if not self.current_notes:
+            return # ! We are out of notes, but we still need to handle sustains hmmmm.
 
         # ? Could we maybe just check the first valid tap in here ?
         # ? Also if you miss a note does that invalidate the tap ?
 
         # Process all the note inputs
-        while not self.input_events.empty():
+        while self.input_events.qsize() > 0:
             event = self.input_events.get_nowait()
-            if event.time < self.window_back_end:
-                # Skip events that are now outside the input time.
-                # Should only happen after lag spikes or if some inputs are processed
-                continue
-
-            if event.time > self.window_front_end:
-                # Okay so we are done cause these inputs are in the future????
-                # ! THIS SHOULD NEVER HAPPEN AND MAYBE WE SHOULD THROW AND ERROR
-                break
+            print(self.input_events.qsize())
 
             match event.key:
                 case "hero_1":
-                    self.on_fret_change(Fret.GREEN, event.time)
+                    self.on_fret_change(Fret.GREEN, event.new_state=='down', event.time)
                 case "hero_2":
-                    self.on_fret_change(Fret.RED, event.time)
+                    self.on_fret_change(Fret.RED, event.new_state=='down', event.time)
                 case "hero_3":
-                    self.on_fret_change(Fret.YELLOW, event.time)
+                    self.on_fret_change(Fret.YELLOW, event.new_state=='down', event.time)
                 case "hero_4":
-                    self.on_fret_change(Fret.BLUE, event.time)
+                    self.on_fret_change(Fret.BLUE, event.new_state=='down', event.time)
                 case "hero_5":
-                    self.on_fret_change(Fret.ORANGE, event.time)
+                    self.on_fret_change(Fret.ORANGE, event.new_state=='down', event.time)
                 case "strum":
                     self.on_strum(event.time)
                 case _:
                     raise ThisShouldNeverHappenError
 
+        c = ChordShape(
+            keymap.hero.green.held,
+            keymap.hero.red.held,
+            keymap.hero.yellow.held,
+            keymap.hero.blue.held,
+            keymap.hero.orange.held,
+        )
+        # print(self.last_chord_shape, c, self.last_chord_shape.matches(c))
 
-
-    def on_fret_change(self, fret: Fret, time: Seconds) -> None:
+    def on_fret_change(self, fret: Fret, pressed: bool, time: Seconds) -> None:
+        print(fret, pressed, time)
         # First we check against sustains
         # Then we do Taps and Hopos
         # Then we can do the strum
@@ -151,16 +152,14 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         last_shape = self.last_chord_shape
         last_strum = self.last_strum_time
 
-        self.last_chord_shape = chord_shape = last_shape.update_fret(fret)
+        self.last_chord_shape = chord_shape = last_shape.update_fret(fret, pressed)
 
-        if current_chord.time > self.window_front_end:
+        if not (self.window_back_end <= current_chord.time <= self.window_front_end):
             # The current chord isn't available to process,
             # but we needed to update the chord shape
             return
 
-        if (time - last_strum) <= self.strum_leniency and current_chord.shape == chord_shape:
-            # ! Assumes last strum is before time.
-            # ! Doesn't make sense to not be true, but it is an assumption
+        if abs(time - last_strum) <= self.strum_leniency and chord_shape.matches(current_chord.shape):
             # * Because we can strum any note irrespective of its type
             # * this works for Taps and Hopos
             self.hit_chord(current_chord, time)
@@ -179,21 +178,21 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         # Prolly so much else lmao
 
         current_chord = self.current_notes[0]
-        currnet_shape = self.last_chord_shape
+        current_shape = self.last_chord_shape
         last_strum = self.last_strum_time
 
-        if time - last_strum <= self.strum_leniency:
+        if abs(time - last_strum) <= self.strum_leniency:
             self.overstrum()
             return
 
-        if current_chord.time > self.window_front_end:
+        if not (self.window_back_end <= current_chord.time <= self.window_front_end):
             # The current chord isn't available to process,
             # but we needed to process overstrum
             return
 
-        if currnet_shape.matches(current_chord.shape):
+        if current_shape.matches(current_chord.shape):
             self.hit_chord(current_chord, time)
-            self.last_strum_time = -float('inf') # ? Should this just go in hit chord? I think no cause taps
+            self.last_strum_time = -float('inf')
             return
 
         if self.can_chord_skip:
@@ -203,14 +202,14 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
 
 
     def miss_chord(self, chord: FiveFretChord, time: float = float('inf')) -> None:
-        print('!MISS!')
+        # print('!MISS!')
         chord.missed = True
         chord.hit_time = time
         self.score_chord(chord)
         self.current_notes.remove(chord)
 
     def hit_chord(self, chord: FiveFretChord, time: float) -> None:
-        print('!CHORD!')
+        # print('!CHORD!')
         chord.hit = True
         chord.hit_time = time
         self.score_chord(chord)
@@ -229,7 +228,8 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         raise NotImplementedError
 
     def overstrum(self) -> None:
-        print('!OVERSTRUM!')
+        pass
+        # print('!OVERSTRUM!')
 
     # def generate_results(self) -> Results[C]:
     #     raise NotImplementedError

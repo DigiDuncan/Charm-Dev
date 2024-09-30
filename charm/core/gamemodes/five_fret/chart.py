@@ -67,9 +67,9 @@ class ChordShape(NamedTuple):
                 fret == Fret.ORANGE,
             )
 
-    def update_fret(self, fret: int, state: bool | None = None) -> ChordShape:
+    def update_fret(self, fret: int, state: bool) -> ChordShape:
         f = list(self)
-        f[fret] = state if state is not None else not self[fret]
+        f[fret] = state
         return ChordShape(*f)
 
     def __and__(self, other: ChordShape) -> ChordShape:
