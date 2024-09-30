@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from typing import NamedTuple
-from enum import StrEnum
+from enum import StrEnum, IntEnum
 from dataclasses import dataclass
 from nindex.index import Index
 
@@ -18,6 +18,14 @@ class FiveFretNoteType(StrEnum):
     HOPO = "hopo"
     TAP = "tap"
     FORCED = "force"
+
+
+class Fret(IntEnum):
+    GREEN = 0
+    RED = 1
+    YELLOW = 2
+    BLUE = 3
+    ORANGE = 4
 
 
 class ChordShape(NamedTuple):
@@ -36,7 +44,7 @@ class ChordShape(NamedTuple):
             f"{'O' if self.orange else '_' if self.orange is not None else 'X'}>"
         )
 
-    def is_compatible(self, other: ChordShape) -> bool:
+    def matches(self, other: ChordShape) -> bool:
         for a, b in zip(self, other, strict=True):
             if a is None or b is None:
                 # None means this fret can be anchored, so either False or True are fine
@@ -45,14 +53,24 @@ class ChordShape(NamedTuple):
                 return False
         return True
 
-    def from_fret(self, fret: int) -> ChordShape:
-        return ChordShape(
-                fret == 0,  # Green
-                fret == 1,  # Red
-                fret == 2,  # Yellow
-                fret == 3,  # Blue
-                fret == 4,  # Orange
+    @property
+    def is_open(self) -> bool:
+        return not any(self)
+
+    @classmethod
+    def from_fret(cls, fret: Fret) -> ChordShape:
+        return cls(
+                fret == Fret.GREEN,
+                fret == Fret.RED,
+                fret == Fret.YELLOW,
+                fret == Fret.BLUE,
+                fret == Fret.ORANGE,
             )
+
+    def update_fret(self, fret: int, state: bool | None = None) -> ChordShape:
+        f = list(self)
+        f[fret] = state if state is not None else not self[fret]
+        return ChordShape(*f)
 
     def __and__(self, other: ChordShape) -> ChordShape:
         return ChordShape(self.green and other.green, self.red and other.red, self.yellow and other.yellow, self.blue and other.blue, self.orange and other.orange)

@@ -1,12 +1,12 @@
 from queue import Queue
-from charm.lib.errors import TODOError, ThisShouldNeverHappenError
+from charm.lib.errors import ThisShouldNeverHappenError
 
 from charm.core.generic.engine import DigitalKeyEvent
 from charm.lib.keymap import keymap
 from charm.lib.types import Seconds
 
 from charm.core.generic import Engine, EngineEvent, Judgement
-from .chart import ChordShape, FiveFretChart, FiveFretNote, FiveFretChord, FiveFretNoteType
+from .chart import ChordShape, FiveFretChart, FiveFretNote, FiveFretChord, FiveFretNoteType, Fret
 
 
 class ChordShapeChangeEvent(EngineEvent):
@@ -27,7 +27,6 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         self.current_notes: list[FiveFretChord] = self.chart.chords[:] # Override the default engine
 
         self.input_events: Queue[DigitalKeyEvent] = Queue()
-        self.chord_shapes: Queue[ChordShape] = Queue()
 
         # There are rolling values from the update, which sucks,
         # but we also need to store it between frames so its okay?
@@ -57,16 +56,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
             return
 
         if current_action in {keymap.hero.green, keymap.hero.red, keymap.hero.yellow, keymap.hero.blue, keymap.hero.orange}:
-            self.input_events.put_nowait(DigitalKeyEvent(t, "fret", "down"))
-            self.chord_shapes.put_nowait(
-                ChordShape(
-                    keymap.hero.green.held,
-                    keymap.hero.red.held,
-                    keymap.hero.yellow.held,
-                    keymap.hero.blue.held,
-                    keymap.hero.orange.held
-                )
-            )
+            self.input_events.put_nowait(DigitalKeyEvent(t, current_action.id, "down"))
         elif current_action == keymap.hero.strumup:
             # kept sep incase we want to track
             self.input_events.put_nowait(DigitalKeyEvent(t, "strum", "down"))
@@ -85,16 +75,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
             return
 
         if current_action in {keymap.hero.green, keymap.hero.red, keymap.hero.yellow, keymap.hero.blue, keymap.hero.orange}:
-            self.input_events.put_nowait(DigitalKeyEvent(t, "fret", "up"))
-            self.chord_shapes.put_nowait(
-                ChordShape(
-                    keymap.hero.green.held,
-                    keymap.hero.red.held,
-                    keymap.hero.yellow.held,
-                    keymap.hero.blue.held,
-                    keymap.hero.orange.held
-                )
-            )
+            self.input_events.put_nowait(DigitalKeyEvent(t, current_action.id, "up"))
 
     def pause(self) -> None:
         pass
@@ -138,10 +119,16 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
                 break
 
             match event.key:
-                case "fret":
-                    # The chord shape queue is filled and eaten only by these inputs so
-                    # its 'safe' to do this.
-                    self.on_fret_change(self.chord_shapes.get_nowait(), event.time)
+                case "hero_1":
+                    self.on_fret_change(Fret.GREEN, event.time)
+                case "hero_2":
+                    self.on_fret_change(Fret.RED, event.time)
+                case "hero_3":
+                    self.on_fret_change(Fret.YELLOW, event.time)
+                case "hero_4":
+                    self.on_fret_change(Fret.BLUE, event.time)
+                case "hero_5":
+                    self.on_fret_change(Fret.ORANGE, event.time)
                 case "strum":
                     self.on_strum(event.time)
                 case _:
@@ -149,7 +136,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
 
 
 
-    def on_fret_change(self, chord_shape: ChordShape, time: Seconds) -> None:
+    def on_fret_change(self, fret: Fret, time: Seconds) -> None:
         # First we check against sustains
         # Then we do Taps and Hopos
         # Then we can do the strum
@@ -161,10 +148,10 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         #  Anchoring and Ghosting
 
         current_chord = self.current_notes[0]
-        last_shape = self.last_chord_shape # Not Needed?
+        last_shape = self.last_chord_shape
         last_strum = self.last_strum_time
 
-        self.last_chord_shape = chord_shape
+        self.last_chord_shape = chord_shape = last_shape.update_fret(fret)
 
         if current_chord.time > self.window_front_end:
             # The current chord isn't available to process,
@@ -204,7 +191,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
             # but we needed to process overstrum
             return
 
-        if currnet_shape == current_chord.shape:
+        if currnet_shape.matches(current_chord.shape):
             self.hit_chord(current_chord, time)
             self.last_strum_time = -float('inf') # ? Should this just go in hit chord? I think no cause taps
             return
