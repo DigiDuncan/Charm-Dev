@@ -36,10 +36,10 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         self.infinite_front_end = False
         self.can_chord_skip = True
         self.punish_chord_skip = True
-        self.hopo_leniency: Seconds = 0.080
-        self.strum_leniency: Seconds = 0.060
-        self.no_note_leniency: Seconds = 0.030
-        self.sustain_end_leniency: Seconds = 0.01
+        # ? self.hopo_leniency: Seconds = 0.080 ? I think this is so you can hit a hopo before you strum as a consession
+        self.strum_leniency: Seconds = 0.060 # How much time after a strum occurs that you can fret a note
+        self.no_note_leniency: Seconds = 0.030 # If the hit window is empty but there is a note coming within this time, don't overstrum
+        self.sustain_end_leniency: Seconds = 0.01 # How early you can release a sustain and still get full points
 
         # todo: ignore overstrum during countdown events
 
@@ -106,6 +106,8 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         # in the same way for chords
 
         # ! Not only do we need to handle missed notes, but what about taps with front end?
+        # TODO: self.update_sustains()
+        # TODO: self.catch_strum()
 
         # Remove all missed chords
         # ! What happens if it was a tap/hopo we could have hit using the last chord?
@@ -141,7 +143,6 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
                     raise ThisShouldNeverHappenError
 
     def on_fret_change(self, fret: Fret, pressed: bool, time: Seconds) -> None:
-        # print(fret, pressed, time)
         # First we check against sustains
         # Then we do Taps and Hopos
         # Then we can do the strum
@@ -177,7 +178,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         # If that didn't work then 'start' the strum leniency
 
         # TODO:
-        # No Input Ghosting or Anchoring
+        # No Input Ghosting
         # No Chord Skipping
         # Prolly so much else lmao
 
@@ -185,6 +186,8 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         current_shape = self.last_chord_shape
         last_strum = self.last_strum_time
 
+        # TODO: Change this to record when the overstrum will occur
+        # TODO: This means we can easily track multiple levels of leniency
         if abs(time - last_strum) <= self.strum_leniency:
             self.overstrum()
             return
