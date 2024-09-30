@@ -51,18 +51,22 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         #     return
 
         # Get the current hero action being pressed
-        current_action = keymap.hero.pressed_action
-        if current_action is None:
-            return
-
-        if current_action in {keymap.hero.green, keymap.hero.red, keymap.hero.yellow, keymap.hero.blue, keymap.hero.orange}:
-            self.input_events.put_nowait(DigitalKeyEvent(t, current_action.id, "down"))
-        elif current_action == keymap.hero.strumup:
+        if keymap.hero.green.pressed:
+            self.input_events.put_nowait(DigitalKeyEvent(t, Fret.GREEN, "down"))
+        elif keymap.hero.red.pressed:
+            self.input_events.put_nowait(DigitalKeyEvent(t, Fret.RED, "down"))
+        elif keymap.hero.yellow.pressed:
+            self.input_events.put_nowait(DigitalKeyEvent(t, Fret.YELLOW, "down"))
+        elif keymap.hero.blue.pressed:
+            self.input_events.put_nowait(DigitalKeyEvent(t, Fret.BLUE, "down"))
+        elif keymap.hero.orange.pressed:
+            self.input_events.put_nowait(DigitalKeyEvent(t, Fret.ORANGE, "down"))
+        elif keymap.hero.strumup.pressed:
             # kept sep incase we want to track
             self.input_events.put_nowait(DigitalKeyEvent(t, "strum", "down"))
-        elif current_action == keymap.hero.strumdown:
+        elif keymap.hero.strumdown.pressed:
             self.input_events.put_nowait(DigitalKeyEvent(t, "strum", "down"))
-        print('input down', self.input_events.qsize())
+
 
     def on_key_release(self, symbol: int, modifiers: int) -> None:
         # ignore spam during front/back porch
@@ -70,13 +74,23 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         # hit_win = self.hit_window
         # if t + hit_win < self.chart.notes[0].time or t - hit_win > self.chart.notes[-1].time:
         #     return
-        current_action = keymap.hero.pressed_action
-        if current_action is None:
-            return
 
-        if current_action in {keymap.hero.green, keymap.hero.red, keymap.hero.yellow, keymap.hero.blue, keymap.hero.orange}:
-            self.input_events.put_nowait(DigitalKeyEvent(t, current_action.id, "up"))
-        print('input up', self.input_events.qsize())
+        # Get the current hero action being released
+        if keymap.hero.green.released:
+            self.input_events.put_nowait(DigitalKeyEvent(t, Fret.GREEN, "up"))
+        elif keymap.hero.red.released:
+            self.input_events.put_nowait(DigitalKeyEvent(t, Fret.RED, "up"))
+        elif keymap.hero.yellow.released:
+            self.input_events.put_nowait(DigitalKeyEvent(t, Fret.YELLOW, "up"))
+        elif keymap.hero.blue.released:
+            self.input_events.put_nowait(DigitalKeyEvent(t, Fret.BLUE, "up"))
+        elif keymap.hero.orange.released:
+            self.input_events.put_nowait(DigitalKeyEvent(t, Fret.ORANGE, "up"))
+        elif keymap.hero.strumup.released:
+            # kept sep incase we want to track
+            self.input_events.put_nowait(DigitalKeyEvent(t, "strum", "up"))
+        elif keymap.hero.strumdown.released:
+            self.input_events.put_nowait(DigitalKeyEvent(t, "strum", "up"))
 
     def pause(self) -> None:
         pass
@@ -109,35 +123,25 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         # Process all the note inputs
         while self.input_events.qsize() > 0:
             event = self.input_events.get_nowait()
-            print(self.input_events.qsize())
 
             match event.key:
-                case "hero_1":
+                case Fret.GREEN:
                     self.on_fret_change(Fret.GREEN, event.new_state=='down', event.time)
-                case "hero_2":
+                case Fret.RED:
                     self.on_fret_change(Fret.RED, event.new_state=='down', event.time)
-                case "hero_3":
+                case Fret.YELLOW:
                     self.on_fret_change(Fret.YELLOW, event.new_state=='down', event.time)
-                case "hero_4":
+                case Fret.BLUE:
                     self.on_fret_change(Fret.BLUE, event.new_state=='down', event.time)
-                case "hero_5":
+                case Fret.ORANGE:
                     self.on_fret_change(Fret.ORANGE, event.new_state=='down', event.time)
                 case "strum":
                     self.on_strum(event.time)
                 case _:
                     raise ThisShouldNeverHappenError
 
-        c = ChordShape(
-            keymap.hero.green.held,
-            keymap.hero.red.held,
-            keymap.hero.yellow.held,
-            keymap.hero.blue.held,
-            keymap.hero.orange.held,
-        )
-        # print(self.last_chord_shape, c, self.last_chord_shape.matches(c))
-
     def on_fret_change(self, fret: Fret, pressed: bool, time: Seconds) -> None:
-        print(fret, pressed, time)
+        # print(fret, pressed, time)
         # First we check against sustains
         # Then we do Taps and Hopos
         # Then we can do the strum
@@ -202,14 +206,14 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
 
 
     def miss_chord(self, chord: FiveFretChord, time: float = float('inf')) -> None:
-        # print('!MISS!')
+        print('!MISS!')
         chord.missed = True
         chord.hit_time = time
         self.score_chord(chord)
         self.current_notes.remove(chord)
 
     def hit_chord(self, chord: FiveFretChord, time: float) -> None:
-        # print('!CHORD!')
+        print('!CHORD!')
         chord.hit = True
         chord.hit_time = time
         self.score_chord(chord)
@@ -228,8 +232,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         raise NotImplementedError
 
     def overstrum(self) -> None:
-        pass
-        # print('!OVERSTRUM!')
+        print('!OVERSTRUM!')
 
     # def generate_results(self) -> Results[C]:
     #     raise NotImplementedError
