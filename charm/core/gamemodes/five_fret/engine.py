@@ -32,6 +32,8 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         # but we also need to store it between frames so its okay?
         self.last_chord_shape: ChordShape = EMPTY_CHORD
         self.last_strum_time: Seconds = -float('inf')
+        self.last_fret_time: Seconds = -float('inf')
+        self.tap_shape: ChordShape = EMPTY_CHORD # need to track if we have 'consumed' a chord
 
         self.infinite_front_end = False
         self.can_chord_skip = True
@@ -105,6 +107,9 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         # however when using inputs we need to 'catch-up'
         # in the same way for chords
 
+        # TODO: Star Power
+        # TODO: Solo
+
         # ! Not only do we need to handle missed notes, but what about taps with front end?
         # TODO: self.update_sustains()
         # TODO: self.catch_strum()
@@ -113,12 +118,15 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         # ! What happens if it was a tap/hopo we could have hit using the last chord?
         # ! Or can we safely assert that would have been caught? I think yes, but lets see.
         while self.current_notes and self.current_notes[0].time < self.window_back_end:
-            # print(len(self.current_notes))
-            self.miss_chord(self.current_notes[0])
+            self._miss_chord(self.current_notes.pop(0), float('inf'))
 
         if not self.current_notes:
-            return # ! We are out of notes, but we still need to handle sustains hmmmm.
+            return
 
+        # can_tap_hopo = (self.current_notes[0].type == FiveFretNoteType.HOPO and (self.streak > 0 or len(self.current_notes) == len(self.chart.chords)))
+        # if self.infinite_front_end and self.current_notes[0].time <= self.window_front_end and self.tap_shape.is_open and (can_tap_hopo or self.current_notes[0].type == FiveFretNoteType.TAP):
+        #     self.hit_chord(self.current_notes[0], self.chart_time)
+        #     self.tap_shape = self.last_chord_shape
         # ? Could we maybe just check the first valid tap in here ?
         # ? Also if you miss a note does that invalidate the tap ?
 
@@ -158,18 +166,31 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         last_strum = self.last_strum_time
 
         self.last_chord_shape = chord_shape = last_shape.update_fret(fret, pressed)
+        self.last_fret_time = time
+
+        # update the tap shape since the chord is no longer 'consumed'
+        if not chord_shape.matches(self.tap_shape):
+            self.tap_shape = EMPTY_CHORD
 
         if not (self.window_back_end <= current_chord.time <= self.window_front_end):
             # The current chord isn't available to process,
             # but we needed to update the chord shape
             return
 
-        if abs(time - last_strum) <= self.strum_leniency and chord_shape.matches(current_chord.shape):
-            # * Because we can strum any note irrespective of its type
-            # * this works for Taps and Hopos
-            self.hit_chord(current_chord, time)
-            self.last_strum_time = -float('inf')
-            return
+        if chord_shape.matches(current_chord.shape):
+            if abs(time - last_strum) <= self.strum_leniency:
+                # * Because we can strum any note irrespective of its type
+                # * this works for Taps and Hopos
+                self.hit_chord(current_chord, time)
+                self.last_strum_time = -float('inf')
+                return
+
+            can_tap_hopo = (current_chord.type == FiveFretNoteType.HOPO and (self.streak > 0 or len(self.current_notes) == len(self.chart.chords)))
+            if (can_tap_hopo or current_chord.type == FiveFretNoteType.TAP) and self.tap_shape.is_open:
+                self.hit_chord(current_chord, time)
+                self.tap_shape = chord_shape
+                return
+
 
     def on_strum(self, time: Seconds) -> None:
         # First we check for overstrum
@@ -190,7 +211,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         # TODO: This means we can easily track multiple levels of leniency
         if abs(time - last_strum) <= self.strum_leniency:
             self.overstrum()
-            return
+        self.last_strum_time = time
 
         if not (self.window_back_end <= current_chord.time <= self.window_front_end):
             # The current chord isn't available to process,
@@ -205,31 +226,41 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         if self.can_chord_skip:
             pass
 
-        self.last_strum_time = time
-
-
     def miss_chord(self, chord: FiveFretChord, time: float = float('inf')) -> None:
         print('!MISS!')
+        if chord.missed or chord.hit:
+            return
+        self._miss_chord(chord, time)
+        self.current_notes.remove(chord)
+
+    def _miss_chord(self, chord: FiveFretChord, time: float) -> None:
         chord.missed = True
         chord.hit_time = time
         self.score_chord(chord)
-        self.current_notes.remove(chord)
+
+        self.max_streak = max(self.max_streak, self.streak)
+        self.streak = 0
 
     def hit_chord(self, chord: FiveFretChord, time: float) -> None:
         print('!CHORD!')
+        if chord.missed or chord.hit:
+            return
+        self._hit_chord(chord, time)
+        self.current_notes.remove(chord)
+
+    def _hit_chord(self, chord: FiveFretChord, time: float) -> None:
         chord.hit = True
         chord.hit_time = time
         self.score_chord(chord)
-        self.current_notes.remove(chord)
 
+        self.streak += 1
         # TODO: Add sustain
 
+    def start_sustain(self, chord: FiveFretChord, time: float) -> None:
+        pass
 
     def score_chord(self, chord: FiveFretChord) -> None:
         pass
-
-    def score_tap(self, chord: FiveFretChord) -> None:
-        raise NotImplementedError
 
     def score_sustain(self, note: FiveFretNote) -> None:
         raise NotImplementedError
