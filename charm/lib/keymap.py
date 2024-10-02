@@ -20,6 +20,9 @@ from arcade.key import (
 
 import charm.lib.data
 
+type Button = Keys | MouseButtons | ControllerButtons
+type Axis = MouseAxes | ControllerAxes
+
 Mod = int
 Key = int
 KeyMod = tuple[Key, Mod]

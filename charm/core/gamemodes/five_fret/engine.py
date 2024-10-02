@@ -123,12 +123,10 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         if not self.current_notes:
             return
 
-        # can_tap_hopo = (self.current_notes[0].type == FiveFretNoteType.HOPO and (self.streak > 0 or len(self.current_notes) == len(self.chart.chords)))
-        # if self.infinite_front_end and self.current_notes[0].time <= self.window_front_end and self.tap_shape.is_open and (can_tap_hopo or self.current_notes[0].type == FiveFretNoteType.TAP):
-        #     self.hit_chord(self.current_notes[0], self.chart_time)
-        #     self.tap_shape = self.last_chord_shape
-        # ? Could we maybe just check the first valid tap in here ?
-        # ? Also if you miss a note does that invalidate the tap ?
+        can_tap_hopo = (self.current_notes[0].type == FiveFretNoteType.HOPO and (self.streak > 0 or len(self.current_notes) == len(self.chart.chords)))
+        if self.infinite_front_end and self.current_notes[0].time <= self.window_front_end and self.tap_shape.is_open and (can_tap_hopo or self.current_notes[0].type == FiveFretNoteType.TAP):
+            self.hit_chord(self.current_notes[0], self.chart_time)
+            self.tap_shape = self.last_chord_shape
 
         # Process all the note inputs
         while self.input_events.qsize() > 0:
