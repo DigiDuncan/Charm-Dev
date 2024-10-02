@@ -3,6 +3,11 @@ from collections.abc import Iterable
 from typing import Literal, cast, get_args
 
 import arcade
+from arcade import Vec2
+from pyglet.input import get_controllers
+from pyglet.input.base import Controller
+
+from arcade.future.input.inputs import MouseAxes, MouseButtons, Keys, ControllerButtons, ControllerAxes
 from arcade.key import (
     A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,               # noqa: F401
     GRAVE, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_0, MINUS, EQUAL,  # noqa: F401
@@ -221,6 +226,7 @@ class KeyMap:
         self.actions: set[Action] = set()
         self.keys: dict[Context | None, dict[KeyMod, set[Action]]] = {ctx: {} for ctx in [*get_args(Context), None]}
         self.state = KeyStateManager()
+        self.bound_controller: Controller = None
 
         self.start =         Action(self, 'start',         [RETURN, ENTER],     REQUIRED)
         self.back =          Action(self, 'back',          [ESCAPE, BACKSPACE], REQUIRED)
@@ -327,6 +333,21 @@ class KeyMap:
     def on_key_release(self, symbol: int, modifiers: int) -> None:
         self.state.on_key_release(symbol, modifiers)
 
+    def on_button_press(self, controller: Controller, button_name: str):
+        pass
+
+    def on_button_release(self, controller: Controller, button_name: str):
+        pass
+
+    def on_stick_motions(self, controller: Controller, name: str, motion: Vec2):
+        pass
+
+    def on_dpad_motion(self, controller: Controller, motion: Vec2):
+        pass
+
+    def on_trigger_motion(self, controller: Controller, trigger_name: str, value: float):
+        pass
+
     def to_json(self) -> KeyMapJson:
         return {action.id: action.to_json() for action in sorted(self.actions)}
 
@@ -370,5 +391,41 @@ class KeyMap:
             self.keys[ctx][key].discard(action)
             if len(self.keys[ctx][key]) == 0:
                 del self.keys[ctx][key]
+
+    def set_controller(self, idx: int = -1) -> None:
+        controllers = get_controllers()
+        if abs(idx) >= len(controllers):
+            self.unbind_controller()
+            return
+        self.bind_controller(controllers[idx])
+
+    def bind_controller(self, controller: Controller) -> None:
+        if self.bound_controller != controller:
+            self.unbind_controller()
+
+        self.bound_controller = controller
+        controller.open()
+        controller.push_handlers(
+            self.on_button_press,
+            self.on_button_release,
+            self.on_stick_motions,
+            self.on_dpad_motion,
+            self.on_trigger_motion
+        )
+
+    def unbind_controller(self) -> None:
+        if not self.bound_controller:
+            return
+
+        self.bound_controller.remove_handlers(
+            self.on_button_press,
+            self.on_button_release,
+            self.on_stick_motions,
+            self.on_dpad_motion,
+            self.on_trigger_motion
+        )
+        self.bound_controller.close()
+        self.bound_controller = None  # type: ignore -- wah wah wah type hinting
+
 
 keymap = KeyMap()
