@@ -8,7 +8,7 @@ import PIL.Image
 
 import charm.data.images
 import charm.data.images.icons
-from charm.lib.anim import lerp, perc
+from charm.lib.anim import perc
 from charm.lib.types import Seconds
 from charm.lib.utils import get_font_size, img_from_path, px_to_pt
 
@@ -20,7 +20,7 @@ class ToastDisplay:
     def __init__(self, x: int = None, y: int = None, width: int = 640, height: int = 180, default_on_screen_time: float = 5.0) -> None:
         win = arcade.get_window()
         self.x = x if x is not None else win.width
-        self.y = y if y is not None else win.height - 10
+        self.y = y if y is not None else win.height  # TODO: Why is this not touching the top?
         self.width = width
         self.height = height
         self.default_on_screen_time = default_on_screen_time

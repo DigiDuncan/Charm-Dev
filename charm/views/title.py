@@ -62,7 +62,7 @@ class TitleView(DigiView):
         self.press_label = self.components.register(PressLabel(self, x=self.window.width // 2, y=self.window.height // 4))
         self.components.register(WelcomeLabel(x=self.window.width // 2, y=6))
 
-        self.toast = ToastDisplay(width = 480, height = 135)
+        self.toast = ToastDisplay(width = 400, height = 100)
 
     @shows_errors
     def setup(self) -> None:
@@ -94,7 +94,6 @@ class TitleView(DigiView):
             keymap.set_controller(key_dict[symbol])
             if keymap.bound_controller != con:
                 self.toast.show_toast("controller", "Controller bound!", f"Controller {key_dict[symbol]} bound to player 1!")
-                print(self.toast.local_time, self.toast.last_show_time, self.toast.left)
         elif self.window.debug.enabled and keymap.log_sync.pressed:
             self.splash_label.next_splash()
         elif self.window.debug.enabled and keymap.seek_zero.pressed:
