@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from charm.lib.components import Component
+from charm.lib.toast import ToastDisplay
 if TYPE_CHECKING:
     from charm.lib.digiwindow import DigiWindow
 
@@ -61,6 +62,8 @@ class TitleView(DigiView):
         self.press_label = self.components.register(PressLabel(self, x=self.window.width // 2, y=self.window.height // 4))
         self.components.register(WelcomeLabel(x=self.window.width // 2, y=6))
 
+        self.toast = ToastDisplay(width = 480, height = 135)
+
     @shows_errors
     def setup(self) -> None:
         super().presetup()
@@ -87,7 +90,11 @@ class TitleView(DigiView):
         if keymap.start.pressed:
             self.start()
         elif symbol in key_dict:
+            con = keymap.bound_controller
             keymap.set_controller(key_dict[symbol])
+            if keymap.bound_controller != con:
+                self.toast.show_toast("controller", "Controller bound!", f"Controller {key_dict[symbol]} bound to player 1!")
+                print(self.toast.local_time, self.toast.last_show_time, self.toast.left)
         elif self.window.debug.enabled and keymap.log_sync.pressed:
             self.splash_label.next_splash()
         elif self.window.debug.enabled and keymap.seek_zero.pressed:
@@ -111,6 +118,12 @@ class TitleView(DigiView):
             if self.local_time >= self.goto_switch_time:
                 # Go to main menu
                 self.go_start()
+
+        self.toast.update(delta_time)
+
+    def on_draw(self) -> None:
+        super().on_draw()
+        self.toast.draw()
 
     def start(self) -> None:
         if self.goto_fade_time is not None:
