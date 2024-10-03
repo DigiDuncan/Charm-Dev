@@ -423,10 +423,10 @@ class KeyMap:
 
     def set_controller(self, idx: int = -1) -> None:
         controllers = get_controllers()
-        if idx >= len(controllers):
+        try:
+            self.bind_controller(controllers[idx])
+        except IndexError:
             self.unbind_controller()
-            return
-        self.bind_controller(controllers[idx])
 
     def bind_controller(self, controller: Controller) -> None:
         if self.bound_controller != controller:

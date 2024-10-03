@@ -43,6 +43,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         self.no_note_leniency: Seconds = 0.030 # If the hit window is empty but there is a note coming within this time, don't overstrum
         self.sustain_end_leniency: Seconds = 0.01 # How early you can release a sustain and still get full points
 
+        self.keystate = (False,)*5
         # todo: ignore overstrum during countdown events
 
     def on_key_press(self, symbol: int, modifiers: int) -> None:
@@ -165,6 +166,8 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
 
         self.last_chord_shape = chord_shape = last_shape.update_fret(fret, pressed)
         self.last_fret_time = time
+
+        self.keystate = tuple(chord_shape)  # type: ignore -- :p
 
         # update the tap shape since the chord is no longer 'consumed'
         if not chord_shape.matches(self.tap_shape):

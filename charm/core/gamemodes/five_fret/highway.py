@@ -172,6 +172,10 @@ class FiveFretHighway(Highway[FiveFretChart, FiveFretNote, FiveFretEngine]):
                 sustain.hide()
                 self._sustain_pool.give(sustain)
 
+    def update_strikeline(self):
+        for strikeline, fret in zip(self.strikeline, self.engine.keystate, strict=True):
+            strikeline.active = fret
+
     def draw(self) -> None:
         self.window.ctx.blend_func = self.window.ctx.BLEND_DEFAULT
         with self.static_camera.activate():
@@ -187,6 +191,7 @@ class FiveFretHighway(Highway[FiveFretChart, FiveFretNote, FiveFretEngine]):
                     px = self.note_y(beat.time) - (self.note_size / 2)
                     draw_line(self.x, px, self.x + self.w, px, colors.DARK_GRAY, 3 if beat.major else 1)
 
+            self.update_strikeline()
             self.strikeline.draw()
 
             self._sustain_sprites.draw()
