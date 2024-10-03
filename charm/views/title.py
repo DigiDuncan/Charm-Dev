@@ -23,6 +23,21 @@ from charm.lib.utils import img_from_path, typewriter
 from charm.views.mainmenu import MainMenuView
 import charm.lib.egg as egg
 
+# -- TEMP --
+from arcade.key import KEY_0, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9
+key_dict = {
+    KEY_0: 0,
+    KEY_1: 1,
+    KEY_2: 2,
+    KEY_3: 3,
+    KEY_4: 4,
+    KEY_5: 5,
+    KEY_6: 6,
+    KEY_7: 7,
+    KEY_8: 8,
+    KEY_9: 9,
+}
+
 FADE_DELAY = 1
 SWITCH_DELAY = 0.5 + FADE_DELAY
 
@@ -54,6 +69,7 @@ class TitleView(DigiView):
         self.fade_volume = None
         self.window.theme_song.seek(self.local_time + 3)
         self.splash_label.random_splash()
+        keymap.set_controller()
         super().postsetup()
 
     def generate_splash(self) -> ClownLogo | SplashLogo:
@@ -70,6 +86,8 @@ class TitleView(DigiView):
         super().on_key_press(symbol, modifiers)
         if keymap.start.pressed:
             self.start()
+        elif symbol in key_dict:
+            keymap.set_controller(key_dict[symbol])
         elif self.window.debug.enabled and keymap.log_sync.pressed:
             self.splash_label.next_splash()
         elif self.window.debug.enabled and keymap.seek_zero.pressed:

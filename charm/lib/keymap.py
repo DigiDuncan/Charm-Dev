@@ -1,48 +1,34 @@
 from __future__ import annotations
+from logging import getLogger
 from collections.abc import Iterable
 from typing import Literal, cast, get_args
 
-import arcade
 from arcade import Vec2
 from pyglet.input import get_controllers
 from pyglet.input.base import Controller
 
-from arcade.future.input.inputs import MouseAxes, MouseButtons, Keys, ControllerButtons, ControllerAxes
-from arcade.key import (
-    A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,               # noqa: F401
-    GRAVE, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_0, MINUS, EQUAL,  # noqa: F401
-    F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12,                                          # noqa: F401
-    F13, F14, F15, F16, F17, F18, F19, F20, F21, F22, F23, F24,                                 # noqa: F401
-    RETURN, ENTER, ESCAPE, BACKSPACE, SPACE, UP, DOWN, LEFT, RIGHT,
-    MOD_SHIFT, RSHIFT, MOD_CAPSLOCK, MOD_NUMLOCK, MOD_SCROLLLOCK,
-    SEMICOLON, BRACKETLEFT, APOSTROPHE, BRACKETRIGHT, BACKSLASH, COMMA, PERIOD
-)
+from arcade.future.input.inputs import MouseAxes, MouseButtons, Keys, ControllerButtons, ControllerAxes # noqa: F401
 
 import charm.lib.data
 
-type Button = Keys | MouseButtons | ControllerButtons
-type Axis = MouseAxes | ControllerAxes
+logger = getLogger('charm')
 
-Mod = int
-Key = int
-KeyMod = tuple[Key, Mod]
+type Modifiers = Literal[0, Keys.MOD_SHIFT, Keys.MOD_CTRL, Keys.MOD_ALT, Keys.MOD_CAPSLOCK, Keys.MOD_NUMLOCK, Keys.MOD_WINDOWS, Keys.MOD_COMMAND, Keys.MOD_OPTION, Keys.MOD_SCROLLLOCK]
+type Button = Keys | ControllerButtons
+type KeyMod = tuple[Button, int]
 
-key_names = {v: k for k, v in arcade.key.__dict__.items() if isinstance(v, int) and not k.startswith("MOD_")}
-mod_names = {v: k for k, v in arcade.key.__dict__.items() if isinstance(v, int) and k.startswith("MOD_") and k != "MOD_ACCEL"}
+mod_names = {v.value: v.name for v in get_args(Modifiers) if v in Keys}
 
+def get_keyname(k: KeyMod) -> str:
+    key, mods = to_keymod(k)
+    return " + ".join([mod_names[mod] for mod in split_mod(mods)] + [key.name])
 
-def get_keyname(k: Key | KeyMod) -> str:
-    k, m = to_keymod(k)
-    return " + ".join([mod_names[mod] for mod in split_mod(m)] + [key_names[k]])
-
-
-def to_keymod(k: Key | KeyMod) -> KeyMod:
-    if isinstance(k, Key):
+def to_keymod(k: Button | KeyMod) -> KeyMod:
+    if isinstance(k, Keys) or isinstance(k, ControllerButtons):
         return (k, 0)
     return k
 
-
-def split_mod(m: Mod) -> list[Mod]:
+def split_mod(m: int) -> list[int]:
     mod_values = [1 << n for n in range(9)]
     return [n for n in mod_values if m & n]
 
@@ -55,43 +41,49 @@ SINGLEBIND = 2
 Context = Literal["global", "hero", "fourkey", "menu", "parallax", "songmenu"]
 ALL = None
 
+# CONSTS
+TRIGGER_DEADZONE = 0.05
+STICK_DEADZONE = 0.05
+
 ActionJson = tuple[KeyMod, ...]
 KeyMapJson = dict[str, ActionJson]
 
 
 class KeyStateManager:
     def __init__(self):
-        self.pressed: dict[Key, Mod] = {}
-        self.released: dict[Key, Mod] = {}
-        self.held: dict[Key, Mod] = {}
-        self.ignore_mods = MOD_CAPSLOCK | MOD_NUMLOCK | MOD_SCROLLLOCK
+        self.pressed: dict[Button, int] = {}
+        self.released: dict[Button, int] = {}
+        self.held: dict[Button, int] = {}
+        self.ignore_mods = Keys.MOD_CAPSLOCK.value | Keys.MOD_NUMLOCK.value | Keys.MOD_SCROLLLOCK.value
 
-    def on_key_press(self, symbol: int, modifiers: int) -> None:
+    def on_button_press(self, symbol: Button, modifiers: int) -> None:
+        logger.info(f'Button {symbol} pressed with mods {modifiers}')
         modifiers = modifiers & ~self.ignore_mods
         self.pressed = {symbol: modifiers}
         self.held[symbol] = modifiers
 
-    def on_key_release(self, symbol: int, modifiers: int) -> None:
+    def on_button_release(self, symbol: Button, modifiers: int) -> None:
+        logger.info(f'Button {symbol} released with mods {modifiers}')
         modifiers = modifiers & ~self.ignore_mods
         self.released = {symbol: modifiers}
         if symbol in self.held:
             del self.held[symbol]
 
-    def is_key_pressed(self, key: KeyMod) -> bool:
-        k, m = key
+    def is_input_pressed(self, button: KeyMod) -> bool:
+        k, m = button
         return k in self.pressed and self.pressed[k] == m
 
-    def is_key_released(self, key: KeyMod) -> bool:
-        k, m = key
+    def is_input_released(self, button: KeyMod) -> bool:
+        k, m = button
         return k in self.released and self.released[k] == m
 
-    def is_key_held(self, key: KeyMod) -> bool:
-        k, m = key
+    def is_input_held(self, button: KeyMod) -> bool:
+        k, m = button
         return k in self.held and self.held[k] == m
 
 
 class Action:
-    def __init__(self, keymap: KeyMap, id: str, defaults: Iterable[KeyMod | Key], flags: int = 0, context: Context = "global") -> None:
+    def __init__(self, keymap: KeyMap, id: str, defaults: Iterable[Button | KeyMod], flags: int = 0, context: Context = "global") -> None:
         self._keymap = keymap
         self.id = id
         self._defaults: list[KeyMod] = [to_keymod(k) for k in defaults]
@@ -142,12 +134,12 @@ class Action:
             else:
                 action.conflicting_keys.discard(key)
 
-    def bind(self, key: KeyMod | Key) -> None:
+    def bind(self, key: KeyMod | Button) -> None:
         """Bind a key to this Action"""
         key = to_keymod(key)
         self._bind(key)
 
-    def unbind(self, key: KeyMod | Key) -> None:
+    def unbind(self, key: KeyMod | Button) -> None:
         """Unbind a key from this Action"""
         key = to_keymod(key)
         self._unbind(key)
@@ -186,15 +178,15 @@ class Action:
 
     @property
     def pressed(self) -> bool:
-        return any(self._keymap.state.is_key_pressed(key) for key in self.keys)
+        return any(self._keymap.state.is_input_pressed(key) for key in self.keys)
 
     @property
     def released(self) -> bool:
-        return any(self._keymap.state.is_key_released(key) for key in self.keys)
+        return any(self._keymap.state.is_input_released(key) for key in self.keys)
 
     @property
     def held(self) -> bool:
-        return any(self._keymap.state.is_key_held(key) for key in self.keys)
+        return any(self._keymap.state.is_input_held(key) for key in self.keys)
 
     def __str__(self) -> str:
         return f"{self.id}: {[get_keyname(k) for k in self.keys]}"
@@ -230,91 +222,95 @@ class KeyMap:
         self.keys: dict[Context | None, dict[KeyMod, set[Action]]] = {ctx: {} for ctx in [*get_args(Context), None]}
         self.state = KeyStateManager()
         self.bound_controller: Controller = None
+        self.dpad: Vec2 = Vec2()
+        self.triggers: list[float] = [0.0, 0.0]
+        self.l_stick: Vec2 = Vec2()
+        self.r_stick: Vec2 = Vec2()
 
-        self.start =         Action(self, 'start',         [RETURN, ENTER],     REQUIRED)
-        self.back =          Action(self, 'back',          [ESCAPE, BACKSPACE], REQUIRED)
-        self.pause =         Action(self, 'pause',         [SPACE],             REQUIRED)
-        self.fullscreen =    Action(self, 'fullscreen',    [F11],               REQUIRED)
-        self.mute =          Action(self, 'mute',          [M],                 REQUIRED)
+        self.start =         Action(self, 'start',         [Keys.RETURN, Keys.ENTER],     REQUIRED)
+        self.back =          Action(self, 'back',          [Keys.ESCAPE, Keys.BACKSPACE], REQUIRED)
+        self.pause =         Action(self, 'pause',         [Keys.SPACE],             REQUIRED)
+        self.fullscreen =    Action(self, 'fullscreen',    [Keys.F11],               REQUIRED)
+        self.mute =          Action(self, 'mute',          [Keys.M],                 REQUIRED)
 
-        self.navup =         Action(self, 'navup',         [UP],                REQUIRED, context="menu")
-        self.navdown =       Action(self, 'navdown',       [DOWN],              REQUIRED, context="menu")
-        self.navleft =       Action(self, 'navleft',       [LEFT],              REQUIRED, context="menu")
-        self.navright =      Action(self, 'navright',      [RIGHT],             REQUIRED, context="menu")
+        self.navup =         Action(self, 'navup',         [Keys.UP],                REQUIRED, context="menu")
+        self.navdown =       Action(self, 'navdown',       [Keys.DOWN],              REQUIRED, context="menu")
+        self.navleft =       Action(self, 'navleft',       [Keys.LEFT],              REQUIRED, context="menu")
+        self.navright =      Action(self, 'navright',      [Keys.RIGHT],             REQUIRED, context="menu")
 
-        self.seek_zero =     Action(self, 'seek_zero',     [KEY_0])
-        self.seek_backward = Action(self, 'seek_backward', [MINUS])
-        self.seek_forward =  Action(self, 'seek_forward',  [EQUAL])
+        self.seek_zero =     Action(self, 'seek_zero',     [Keys.KEY_0])
+        self.seek_backward = Action(self, 'seek_backward', [Keys.MINUS])
+        self.seek_forward =  Action(self, 'seek_forward',  [Keys.EQUAL])
 
-        self.debug =                   Action(self, 'debug',                   [GRAVE])
-        self.log_sync =                Action(self, 'log_sync',                [S]            )
-        self.toggle_distractions =     Action(self, 'toggle_distractions',     [KEY_8]        )
-        self.toggle_chroma =           Action(self, 'toggle_chroma',           [B]            )
-        self.debug_toggle_hit_window = Action(self, 'debug_toggle_hit_window', [(H, MOD_SHIFT)])
-        self.debug_show_results =      Action(self, 'debug_show_results',      [(R, MOD_SHIFT)])
-        self.dump_textures =           Action(self, 'dump_textures',           [E]            )
-        self.debug_toggle_flags =      Action(self, 'debug_toggle_flags',      [F]            )
-        self.debug_e =                 Action(self, 'debug_e',                 [E]            )
-        self.debug_f24 =               Action(self, 'debug_f24',               [F24]          )
-        self.toggle_show_text =        Action(self, 'toggle_show_text',        [T]            )
+        self.debug =                   Action(self, 'debug',                   [Keys.GRAVE])
+        self.log_sync =                Action(self, 'log_sync',                [Keys.S]            )
+        self.toggle_distractions =     Action(self, 'toggle_distractions',     [Keys.KEY_8]        )
+        self.toggle_chroma =           Action(self, 'toggle_chroma',           [Keys.B]            )
+        self.debug_toggle_hit_window = Action(self, 'debug_toggle_hit_window', [(Keys.H, Keys.MOD_SHIFT.value)])
+        self.debug_show_results =      Action(self, 'debug_show_results',      [(Keys.R, Keys.MOD_SHIFT.value)])
+        self.dump_textures =           Action(self, 'dump_textures',           [Keys.E]            )
+        self.debug_toggle_flags =      Action(self, 'debug_toggle_flags',      [Keys.F]            )
+        self.debug_e =                 Action(self, 'debug_e',                 [Keys.E]            )
+        self.debug_f24 =               Action(self, 'debug_f24',               [Keys.F24]          )
+        self.toggle_show_text =        Action(self, 'toggle_show_text',        [Keys.T]            )
 
         class ParallaxMap(SubKeyMap[tuple[()]]):
             def __init__(self, keymap: KeyMap):
-                self.up =       Action(keymap, 'parallax_up',       [W], REQUIRED, context="parallax")
-                self.down =     Action(keymap, 'parallax_down',     [S], REQUIRED, context="parallax")
-                self.left =     Action(keymap, 'parallax_left',     [A], REQUIRED, context="parallax")
-                self.right =    Action(keymap, 'parallax_right',    [D], REQUIRED, context="parallax")
-                self.zoom_in =  Action(keymap, 'parallax_zoom_in',  [R], REQUIRED, context="parallax")
-                self.zoom_out = Action(keymap, 'parallax_zoom_out', [F], REQUIRED, context="parallax")
+                self.up =       Action(keymap, 'parallax_up',       [Keys.W], REQUIRED, context="parallax")
+                self.down =     Action(keymap, 'parallax_down',     [Keys.S], REQUIRED, context="parallax")
+                self.left =     Action(keymap, 'parallax_left',     [Keys.A], REQUIRED, context="parallax")
+                self.right =    Action(keymap, 'parallax_right',    [Keys.D], REQUIRED, context="parallax")
+                self.zoom_in =  Action(keymap, 'parallax_zoom_in',  [Keys.R], REQUIRED, context="parallax")
+                self.zoom_out = Action(keymap, 'parallax_zoom_out', [Keys.F], REQUIRED, context="parallax")
                 super().__init__()
         self.parallax = ParallaxMap(self)
 
         class FourKeyMap(SubKeyMap[tuple[bool, bool, bool, bool]]):
             def __init__(self, keymap: KeyMap):
-                self.key1 = Action(keymap, 'fourkey_1', [D], REQUIRED | SINGLEBIND, context="fourkey")
-                self.key2 = Action(keymap, 'fourkey_2', [F], REQUIRED | SINGLEBIND, context="fourkey")
-                self.key3 = Action(keymap, 'fourkey_3', [J], REQUIRED | SINGLEBIND, context="fourkey")
-                self.key4 = Action(keymap, 'fourkey_4', [K], REQUIRED | SINGLEBIND, context="fourkey")
+                self.key1 = Action(keymap, 'fourkey_1', [Keys.D], REQUIRED | SINGLEBIND, context="fourkey")
+                self.key2 = Action(keymap, 'fourkey_2', [Keys.F], REQUIRED | SINGLEBIND, context="fourkey")
+                self.key3 = Action(keymap, 'fourkey_3', [Keys.J], REQUIRED | SINGLEBIND, context="fourkey")
+                self.key4 = Action(keymap, 'fourkey_4', [Keys.K], REQUIRED | SINGLEBIND, context="fourkey")
                 super().__init__(self.key1, self.key2, self.key3, self.key4)
         self.fourkey = FourKeyMap(self)
 
         class HeroMap(SubKeyMap[tuple[bool, bool, bool, bool, bool, bool, bool, bool]]):
             def __init__(self, keymap: KeyMap):
-                self.green =     Action(keymap, 'hero_1',          [KEY_1],  REQUIRED | SINGLEBIND, context="hero")
-                self.red =       Action(keymap, 'hero_2',          [KEY_2],  REQUIRED | SINGLEBIND, context="hero")
-                self.yellow =    Action(keymap, 'hero_3',          [KEY_3],  REQUIRED | SINGLEBIND, context="hero")
-                self.blue =      Action(keymap, 'hero_4',          [KEY_4],  REQUIRED | SINGLEBIND, context="hero")
-                self.orange =    Action(keymap, 'hero_5',          [KEY_5],  REQUIRED | SINGLEBIND, context="hero")
-                self.strumup =   Action(keymap, 'hero_strum_up',   [UP],     REQUIRED | SINGLEBIND, context="hero")
-                self.strumdown = Action(keymap, 'hero_strum_down', [DOWN],   REQUIRED | SINGLEBIND, context="hero")
-                self.power =     Action(keymap, 'hero_power',      [RSHIFT], REQUIRED | SINGLEBIND, context="hero")
+                self.green =     Action(keymap, 'hero_1',          [Keys.KEY_1, ControllerButtons.BOTTOM_FACE],  REQUIRED | SINGLEBIND, context="hero")
+                self.red =       Action(keymap, 'hero_2',          [Keys.KEY_2, ControllerButtons.RIGHT_FACE],  REQUIRED | SINGLEBIND, context="hero")
+                self.yellow =    Action(keymap, 'hero_3',          [Keys.KEY_3, ControllerButtons.TOP_FACE],  REQUIRED | SINGLEBIND, context="hero")
+                self.blue =      Action(keymap, 'hero_4',          [Keys.KEY_4, ControllerButtons.RIGHT_FACE],  REQUIRED | SINGLEBIND, context="hero")
+                self.orange =    Action(keymap, 'hero_5',          [Keys.KEY_5, ControllerButtons.LEFT_SHOULDER],  REQUIRED | SINGLEBIND, context="hero")
+                self.strumup =   Action(keymap, 'hero_strum_up',   [Keys.UP, ControllerButtons.DPAD_UP],     REQUIRED | SINGLEBIND, context="hero")
+                self.strumdown = Action(keymap, 'hero_strum_down', [Keys.DOWN, ControllerButtons.DPAD_DOWN],   REQUIRED | SINGLEBIND, context="hero")
+                self.power =     Action(keymap, 'hero_power',      [Keys.RSHIFT, ControllerButtons.GUIDE], REQUIRED | SINGLEBIND, context="hero")
                 super().__init__(self.green, self.red, self.yellow, self.blue, self.orange, self.strumup, self.strumdown, self.power)
         self.hero = HeroMap(self)
 
         class SongMenuMap(SubKeyMap[tuple[()]]):
             def __init__(self, keymap: KeyMap):
-                self.min_factor_up =     Action(keymap, 'min_factor_up',     [Y],            REQUIRED, context="songmenu")
-                self.min_factor_down =   Action(keymap, 'min_factor_down',   [H],            REQUIRED, context="songmenu")
-                self.max_factor_up =     Action(keymap, 'max_factor_up',     [U],            REQUIRED, context="songmenu")
-                self.max_factor_down =   Action(keymap, 'max_factor_down',   [J],            REQUIRED, context="songmenu")
-                self.offset_up =         Action(keymap, 'offset_up',         [I],            REQUIRED, context="songmenu")
-                self.offset_down =       Action(keymap, 'offset_down',       [K],            REQUIRED, context="songmenu")
-                self.in_sin_up =         Action(keymap, 'in_sin_up',         [O],            REQUIRED, context="songmenu")
-                self.in_sin_down =       Action(keymap, 'in_sin_down',       [L],            REQUIRED, context="songmenu")
-                self.out_sin_up =        Action(keymap, 'out_sin_up',        [P],            REQUIRED, context="songmenu")
-                self.out_sin_down =      Action(keymap, 'out_sin_down',      [SEMICOLON],    REQUIRED, context="songmenu")
-                self.shift_up =          Action(keymap, 'shift_up',          [BRACKETLEFT],  REQUIRED, context="songmenu")
-                self.shift_down =        Action(keymap, 'shift_down',        [APOSTROPHE],   REQUIRED, context="songmenu")
-                self.move_forward_up =   Action(keymap, 'move_forward_up',   [BRACKETRIGHT], REQUIRED, context="songmenu")
-                self.move_forward_down = Action(keymap, 'move_forward_down', [BACKSLASH],    REQUIRED, context="songmenu")
-                self.y_shift_up =        Action(keymap, 'y_shift_up',        [COMMA],        REQUIRED, context="songmenu")
-                self.y_shift_down =      Action(keymap, 'y_shift_down',      [PERIOD],       REQUIRED, context="songmenu")
+                self.min_factor_up =     Action(keymap, 'min_factor_up',     [Keys.Y],            REQUIRED, context="songmenu")
+                self.min_factor_down =   Action(keymap, 'min_factor_down',   [Keys.H],            REQUIRED, context="songmenu")
+                self.max_factor_up =     Action(keymap, 'max_factor_up',     [Keys.U],            REQUIRED, context="songmenu")
+                self.max_factor_down =   Action(keymap, 'max_factor_down',   [Keys.J],            REQUIRED, context="songmenu")
+                self.offset_up =         Action(keymap, 'offset_up',         [Keys.I],            REQUIRED, context="songmenu")
+                self.offset_down =       Action(keymap, 'offset_down',       [Keys.K],            REQUIRED, context="songmenu")
+                self.in_sin_up =         Action(keymap, 'in_sin_up',         [Keys.O],            REQUIRED, context="songmenu")
+                self.in_sin_down =       Action(keymap, 'in_sin_down',       [Keys.L],            REQUIRED, context="songmenu")
+                self.out_sin_up =        Action(keymap, 'out_sin_up',        [Keys.P],            REQUIRED, context="songmenu")
+                self.out_sin_down =      Action(keymap, 'out_sin_down',      [Keys.SEMICOLON],    REQUIRED, context="songmenu")
+                self.shift_up =          Action(keymap, 'shift_up',          [Keys.BRACKETLEFT],  REQUIRED, context="songmenu")
+                self.shift_down =        Action(keymap, 'shift_down',        [Keys.APOSTROPHE],   REQUIRED, context="songmenu")
+                self.move_forward_up =   Action(keymap, 'move_forward_up',   [Keys.BRACKETRIGHT], REQUIRED, context="songmenu")
+                self.move_forward_down = Action(keymap, 'move_forward_down', [Keys.BACKSLASH],    REQUIRED, context="songmenu")
+                self.y_shift_up =        Action(keymap, 'y_shift_up',        [Keys.COMMA],        REQUIRED, context="songmenu")
+                self.y_shift_down =      Action(keymap, 'y_shift_down',      [Keys.PERIOD],       REQUIRED, context="songmenu")
                 super().__init__()
         self.songmenu = SongMenuMap(self)
 
         self.set_defaults()
 
-    def unbind(self, key: Key | KeyMod) -> None:
+    def unbind(self, key: KeyMod | Button) -> None:
         """Unbind a particular key"""
         key = to_keymod(key)
         for action in self.get_actions(key):
@@ -331,25 +327,55 @@ class KeyMap:
             action.set_defaults()
 
     def on_key_press(self, symbol: int, modifiers: int) -> None:
-        self.state.on_key_press(symbol, modifiers)
+        self.state.on_button_press(Keys(symbol), modifiers)
 
     def on_key_release(self, symbol: int, modifiers: int) -> None:
-        self.state.on_key_release(symbol, modifiers)
+        self.state.on_button_release(Keys(symbol), modifiers)
 
-    def on_button_press(self, controller: Controller, button_name: str):
+    def on_button_press(self, controller: Controller, button_name: str) -> None:
+        logger.info(f'Pressed controller button {button_name}')
+        self.state.on_button_press(ControllerButtons(button_name), 0)
+
+    def on_button_release(self, controller: Controller, button_name: str) -> None:
+        self.state.on_button_release(ControllerButtons(button_name), 0)
+
+    def on_stick_motion(self, controller: Controller, name: str, motion: Vec2) -> None:
+        # TODO: Bug Dragon
         pass
 
-    def on_button_release(self, controller: Controller, button_name: str):
+    def on_dpad_motion(self, controller: Controller, motion: Vec2) -> None:
+        dx, dy = motion - self.dpad
+        if self.dpad.x != 0.0:
+            # button released
+            if dx > 0:
+                self.state.on_button_release(ControllerButtons.DPAD_LEFT, 0)
+            elif dx < 0:
+                self.state.on_button_release(ControllerButtons.DPAD_RIGHT, 0)
+        else:
+            # button pressed
+            if dx > 0:
+                self.state.on_button_press(ControllerButtons.DPAD_RIGHT, 0)
+            elif dx < 0:
+                self.state.on_button_press(ControllerButtons.DPAD_LEFT, 0)
+
+        if self.dpad.y != 0.0:
+            # button released
+            if dy > 0:
+                self.state.on_button_release(ControllerButtons.DPAD_DOWN, 0)
+            elif dy < 0:
+                self.state.on_button_release(ControllerButtons.DPAD_UP, 0)
+        else:
+            # button pressed
+            if dy > 0:
+                self.state.on_button_press(ControllerButtons.DPAD_UP, 0)
+            elif dy < 0:
+                self.state.on_button_press(ControllerButtons.DPAD_DOWN, 0)
+        self.dpad = motion
+
+    def on_trigger_motion(self, controller: Controller, trigger_name: str, value: float) -> None:
+        # TODO: Bug Dragon
         pass
 
-    def on_stick_motions(self, controller: Controller, name: str, motion: Vec2):
-        pass
-
-    def on_dpad_motion(self, controller: Controller, motion: Vec2):
-        pass
-
-    def on_trigger_motion(self, controller: Controller, trigger_name: str, value: float):
-        pass
 
     def to_json(self) -> KeyMapJson:
         return {action.id: action.to_json() for action in sorted(self.actions)}
@@ -364,7 +390,7 @@ class KeyMap:
     def load(self) -> None:
         self.set_from_json(cast("KeyMapJson", charm.lib.data.load("keymap.json")))
 
-    def get_actions(self, key: KeyMod | Key, context: Context | None = ALL) -> set[Action]:
+    def get_actions(self, key: KeyMod | Button, context: Context | None = ALL) -> set[Action]:
         """Get all Actions mapped to a particular key"""
         key = to_keymod(key)
         if context == "global":
@@ -397,7 +423,7 @@ class KeyMap:
 
     def set_controller(self, idx: int = -1) -> None:
         controllers = get_controllers()
-        if abs(idx) >= len(controllers):
+        if idx >= len(controllers):
             self.unbind_controller()
             return
         self.bind_controller(controllers[idx])
@@ -411,24 +437,33 @@ class KeyMap:
         controller.push_handlers(
             self.on_button_press,
             self.on_button_release,
-            self.on_stick_motions,
+            self.on_stick_motion,
             self.on_dpad_motion,
             self.on_trigger_motion
         )
+        self.dpad: Vec2 = Vec2(controller.dpadx, controller.dpady)
+        self.triggers: list[float] = [controller.lefttrigger, controller.righttrigger]
+        self.l_stick: Vec2 = Vec2(controller.leftx, controller.lefty)
+        self.r_stick: Vec2 = Vec2(controller.rightx, controller.righty)
+        logger.info(f'Bound Controller {controller}')
 
     def unbind_controller(self) -> None:
         if not self.bound_controller:
             return
+        logger.info(f'Unbound Controller {self.bound_controller}')
 
         self.bound_controller.remove_handlers(
             self.on_button_press,
             self.on_button_release,
-            self.on_stick_motions,
+            self.on_stick_motion,
             self.on_dpad_motion,
             self.on_trigger_motion
         )
         self.bound_controller.close()
         self.bound_controller = None  # type: ignore -- wah wah wah type hinting
-
+        self.dpad = Vec2()
+        self.triggers = [0.0, 0.0]
+        self.l_stick = Vec2()
+        self.r_stick = Vec2()
 
 keymap = KeyMap()
