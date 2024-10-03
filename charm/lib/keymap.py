@@ -283,7 +283,7 @@ class KeyMap:
                 self.orange =    Action(keymap, 'hero_5',          [Keys.KEY_5, ControllerButtons.LEFT_SHOULDER],  REQUIRED | SINGLEBIND, context="hero")
                 self.strumup =   Action(keymap, 'hero_strum_up',   [Keys.UP, ControllerButtons.DPAD_UP],     REQUIRED | SINGLEBIND, context="hero")
                 self.strumdown = Action(keymap, 'hero_strum_down', [Keys.DOWN, ControllerButtons.DPAD_DOWN],   REQUIRED | SINGLEBIND, context="hero")
-                self.power =     Action(keymap, 'hero_power',      [Keys.RSHIFT, ControllerButtons.GUIDE], REQUIRED | SINGLEBIND, context="hero")
+                self.power =     Action(keymap, 'hero_power',      [Keys.RSHIFT, ControllerButtons.BACK], REQUIRED | SINGLEBIND, context="hero")
                 super().__init__(self.green, self.red, self.yellow, self.blue, self.orange, self.strumup, self.strumdown, self.power)
         self.hero = HeroMap(self)
 
