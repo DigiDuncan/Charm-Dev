@@ -92,7 +92,7 @@ class TitleView(DigiView):
         elif symbol in key_dict:
             con = keymap.bound_controller
             keymap.set_controller(key_dict[symbol])
-            if keymap.bound_controller != con:
+            if keymap.bound_controller != con and keymap.bound_controller is not None:
                 self.toast.show_toast("controller", "Controller bound!", f"Controller {key_dict[symbol]} bound to player 1!")
         elif self.window.debug.enabled and keymap.log_sync.pressed:
             self.splash_label.next_splash()

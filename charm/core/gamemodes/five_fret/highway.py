@@ -6,14 +6,15 @@ from importlib.resources import files
 import logging
 import PIL.Image
 
-from arcade import SpriteList, Sprite, Texture, draw_line, draw_rect_filled, LRBT
+from arcade import SpriteList, Sprite, Texture, draw_line, draw_rect_filled, LRBT, Vec3
 import arcade.color as colors
-from arcade.camera import PerspectiveProjector
+from arcade.camera import PerspectiveProjector, PerspectiveProjectionData, CameraData
 from arcade.camera.grips import rotate_around_right
 
 from charm.lib.charm import load_missing_texture
 from charm.lib.utils import img_from_path
 from charm.lib.pool import Pool, SpritePool
+from charm.data import get_shader_path
 
 from charm.core.generic import Highway
 from charm.core.generic.sprite import NoteSprite, StrikelineSprite, SustainSprites, SustainTextureDict, SustainTextures
@@ -30,7 +31,7 @@ def load_note_texture(note_type: str, note_lane: int, height: int) -> Texture:
     image_name = f"{note_type}-{note_lane + 1}"
     open_height = int(height / (128 / 48))
     try:
-        image = img_from_path(files(skins) / "hero" / f"{image_name}.png")
+        image = img_from_path(files(skins) / "hero" / "3d" / f"{image_name}.png")
         if image.height != height and note_lane != 7:
             width = int((height / image.height) * image.width)
             image = image.resize((width, height), PIL.Image.LANCZOS)
@@ -42,31 +43,50 @@ def load_note_texture(note_type: str, note_lane: int, height: int) -> Texture:
         return load_missing_texture(height, height)
     return Texture(image)
 
-
-HERO_HIGHWAY_ANGLE = 55.0
+HERO_HIGHWAY_FOV = 60.0
+HERO_HIGHWAY_ANGLE = 50.0
 HERO_HIGHWAY_DIST = 400.0
 HERO_LANE_COUNT = 5
+
+
+def update_camera(angle: float, dist: float, data: CameraData, projection: PerspectiveProjectionData):
+    # Using some triginomerty we find the angle and position of the perspective camera's
+    # to give us the classic hero look
+    data_h_fov = 0.5 * projection.fov
+    look_radians = math.radians(angle - data_h_fov)
+
+    perp_y_pos = -dist * math.sin(look_radians)
+    perp_z_pos = dist * math.cos(look_radians)
+
+    data.position = (0, perp_y_pos, perp_z_pos)
+    data.up = Vec3(0.0, 1.0, 0.0)
+    data.forward = Vec3(0.0, 0.0, -1.0)
+    data.up, data.forward = rotate_around_right(data, -angle)
+
+    return perp_y_pos, perp_z_pos
+
 
 class FiveFretHighway(Highway[FiveFretChart, FiveFretNote, FiveFretEngine]):
     def __init__(self, chart: FiveFretChart, engine: FiveFretEngine, pos: tuple[int, int], size: tuple[int, int] | None = None, gap: int = 5, *, show_flags: bool = False):
         static_camera = PerspectiveProjector()
+        static_camera.projection.fov = HERO_HIGHWAY_FOV
         highway_camera = PerspectiveProjector(projection=static_camera.projection)
         super().__init__(chart, engine, pos, size, gap, downscroll=True, static_camera=static_camera, highway_camera=highway_camera)
 
-        # Using some triginomerty we find the angle and position of the perspective camera's
+        # Using some triginomerty we find the angle and position of the perspective cameras
         # to give us the classic hero look
-        data_h_fov = 0.5 * static_camera.projection.fov
-        static_camera.projection.far = 10000.0
-        look_radians = math.radians(HERO_HIGHWAY_ANGLE - data_h_fov)
+        self.angle_t, self.dist_t = HERO_HIGHWAY_ANGLE, HERO_HIGHWAY_DIST
 
-        self.perp_y_pos = -HERO_HIGHWAY_DIST * math.sin(look_radians)
-        self.perp_z_pos = HERO_HIGHWAY_DIST * math.cos(look_radians)
+        static_camera.projection.far = 10000.0
+        self.perp_y_pos, self.perp_z_pos = update_camera(self.angle_t, self.dist_t, static_camera.view, static_camera.projection)
 
         static_data = static_camera.view
         highway_data = highway_camera.view
 
         static_data.position = highway_data.position = (self.window.center_x, self.perp_y_pos, self.perp_z_pos)
-        static_data.up, static_data.forward = highway_data.up, highway_data.forward = rotate_around_right(static_data, -HERO_HIGHWAY_ANGLE)
+        highway_data.forward = static_data.forward
+        highway_data.up = static_data.up
+
         # NOTE POOL DEFINITION AND CONSTRUCTION
 
         # Generators are great for ease, but it means we can't really 'scrub' backwards through the song
@@ -75,7 +95,13 @@ class FiveFretHighway(Highway[FiveFretChart, FiveFretNote, FiveFretEngine]):
 
         self._note_pool: SpritePool[NoteSprite] = SpritePool([NoteSprite(x=-1000.0, y=-1000.0) for _ in range(1000)])
         # avoid orthographic culling TODO: make source program more accessable
-        self._note_pool._source.program = self.window.ctx.sprite_list_program_no_cull # noqa: SLF001
+        self._note_pool._source.program = self.window.ctx.load_program(  # noqa: SLF001
+            vertex_shader=":system:shaders/sprites/sprite_list_geometry_vs.glsl",
+            geometry_shader=get_shader_path('sprite_no_cull_geo'),
+            fragment_shader=":system:shaders/sprites/sprite_list_geometry_fs.glsl"
+        )
+        self._note_pool._source.program["sprite_texture"] = 0
+        self._note_pool._source.program["uv_texture"] = 1
 
         self._next_note: FiveFretNote = next(self._note_generator, None)
 
@@ -129,6 +155,44 @@ class FiveFretHighway(Highway[FiveFretChart, FiveFretNote, FiveFretEngine]):
         # TODO: Replace with better pixel_offset calculation or remove entirely
         self.last_update_time = 0
         self._pixel_offset = 0
+
+        self.window.push_handlers(self.on_key_press)
+
+    def on_key_press(self, symbol, mod):
+        from arcade.key import NUM_0, NUM_1, NUM_2, NUM_3, NUM_4, NUM_5, NUM_6, NUM_7, NUM_8, NUM_9
+        if symbol == NUM_0:
+            self.angle_t = HERO_HIGHWAY_ANGLE
+            self.dist_t = HERO_HIGHWAY_DIST
+            self.static_camera.projection.fov = HERO_HIGHWAY_FOV
+        elif symbol == NUM_1:
+            self.angle_t = max(self.angle_t - 1.0, 0.0)
+        elif symbol == NUM_2:
+            self.static_camera.projection.fov = max(self.static_camera.projection.fov - 1, 1.0)
+        elif symbol == NUM_3:
+            self.dist_t = max(self.dist_t - 10.0, 0.0)
+        elif symbol == NUM_4:
+            self.angle_t = HERO_HIGHWAY_ANGLE
+        elif symbol == NUM_5:
+            self.static_camera.projection.fov = HERO_HIGHWAY_FOV
+        elif symbol == NUM_6:
+            self.dist_t = HERO_HIGHWAY_DIST
+        elif symbol == NUM_7:
+            self.angle_t = min(self.angle_t + 1, 90.0)
+        elif symbol == NUM_8:
+            self.static_camera.projection.fov = min(self.static_camera.projection.fov + 1, 179.0)
+        elif symbol == NUM_9:
+            self.dist_t = min(self.dist_t + 10.0, 800.0)
+        else:
+            return
+
+        self.perp_y_pos, self.perp_z_pos = update_camera(self.angle_t, self.dist_t, self.static_camera.view, self.static_camera.projection)
+
+        static_data = self.static_camera.view
+        highway_data = self.highway_camera.view
+
+        static_data.position = highway_data.position = (self.window.center_x, self.perp_y_pos, self.perp_z_pos)
+        highway_data.forward = static_data.forward
+        highway_data.up = static_data.up
 
     def update(self, song_time: float) -> None:
         super().update(song_time)
