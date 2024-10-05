@@ -12,7 +12,7 @@ import numpy as np
 import nindex
 
 import charm.data.audio
-from charm.lib.keymap import keymap
+from charm.lib.keymap import KeyMap
 from charm.lib.adobexml import sprite_from_adobe
 from charm.lib.anim import ease_linear, ease_quartout, perc
 from charm.lib.digiview import DigiView, disable_when_focus_lost, shows_errors
@@ -212,9 +212,7 @@ class VisualizerView(DigiView):
         self.highway.update(self.tracks.time)
 
     @shows_errors
-    @disable_when_focus_lost(keyboard=True)
-    def on_key_press(self, symbol: int, modifiers: int) -> None:
-        super().on_key_press(symbol, modifiers)
+    def on_button_press(self, keymap: KeyMap) -> None:
         if keymap.back.pressed:
             self.go_back()
         elif keymap.pause.pressed:

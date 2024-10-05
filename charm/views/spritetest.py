@@ -45,8 +45,7 @@ class SpriteTestView(DigiView):
         self.gum_wrapper = GumWrapper()
         super().postsetup()
 
-    def on_key_press(self, symbol: int, modifiers: int) -> None:
-        super().on_key_press(symbol, modifiers)
+    def on_button_press(self, keymap: KeyMap) -> None:
         if keymap.back.pressed:
             self.go_back()
         elif keymap.start.pressed:
@@ -61,6 +60,9 @@ class SpriteTestView(DigiView):
             self.frame_back()
         elif keymap.navright.pressed:
             self.frame_forward()
+
+    def on_button_release(self, keymap: KeyMap) -> None:
+        pass
 
     def toggle_pause(self) -> None:
         self.paused = not self.paused

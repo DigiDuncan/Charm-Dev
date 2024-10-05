@@ -12,6 +12,8 @@ import logging
 import arcade
 from arcade import Window, Camera2D
 
+from charm.lib.digiview import DigiView
+from charm.lib.keymap import KeyMap, keymap
 from charm.lib.sfxmanager import SFXManager
 from charm.lib.debug import DebugMenu
 from charm.lib.presencemanager import PresenceManager
@@ -24,6 +26,13 @@ logger = logging.getLogger("charm")
 class DigiWindow(Window):
     def __init__(self, size: tuple[int, int], title: str, fps_cap: int):
         super().__init__(*size, title, update_rate=1 / fps_cap, enable_polling=True, resizable=True, draw_rate=1 / 120)
+        self.register_event_type('on_button_press')
+        self.register_event_type('on_button_release')
+        self.push_handlers(self.on_button_press, self.on_button_release)
+
+        keymap.set_window(self)
+        self.push_handlers(keymap.on_key_press, keymap.on_key_release)
+
         self.ctx.default_atlas.resize((2048, 2048))
         self.sfx = SFXManager()
         self.fps_cap = fps_cap
@@ -54,8 +63,18 @@ class DigiWindow(Window):
         self.debug.on_update(delta_time)
         self.theme_song.on_update(delta_time)
 
+    def on_button_press(self, keymap: KeyMap) -> None:
+        if keymap.debug.pressed:
+            self.debug.enabled = not self.debug.enabled
+        elif keymap.fullscreen.pressed:
+            self.set_fullscreen(not self.fullscreen)
+        elif keymap.mute.pressed:
+            self.theme_song.volume = 0
+
+    def on_button_release(self, keymap: KeyMap) -> None:
+        pass
+
     def on_resize(self, width: int, height: int) -> None:
-        super().on_resize(width, height)
         self.debug.on_resize(width, height)
 
     def save_atlas(self, name: str = "atlas.png") -> None:
@@ -68,3 +87,8 @@ class DigiWindow(Window):
 
     def on_move(self, x: int, y: int) -> bool | None:
         self.draw(0.0)
+
+    def show_view(self, new_view: DigiView) -> None:
+        if new_view.back is None and self.current_view() is not None:
+            new_view.back = self.current_view()
+        super().show_view(new_view)

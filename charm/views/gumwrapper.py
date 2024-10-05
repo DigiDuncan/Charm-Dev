@@ -2,7 +2,7 @@ import logging
 
 from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView, shows_errors, disable_when_focus_lost
-from charm.lib.keymap import keymap
+from charm.lib.keymap import KeyMap
 
 logger = logging.getLogger("charm")
 
@@ -21,11 +21,13 @@ class GumWrapperView(DigiView):
         self.window.theme_song.volume = 0
 
     @shows_errors
-    @disable_when_focus_lost(keyboard=True)
-    def on_key_press(self, symbol: int, modifiers: int) -> None:
-        super().on_key_press(symbol, modifiers)
+    def on_button_press(self, keymap: KeyMap) -> None:
         if keymap.back.pressed:
             self.go_back()
+
+    @shows_errors
+    def on_button_release(self, keymap: KeyMap) -> None:
+        pass
 
     @shows_errors
     def on_update(self, delta_time: float) -> None:

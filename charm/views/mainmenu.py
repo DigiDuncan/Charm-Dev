@@ -5,7 +5,7 @@ from charm.lib.anim import ease_quartout, perc
 from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView, disable_when_focus_lost, shows_errors
 from charm.lib.errors import TestError
-from charm.lib.keymap import keymap
+from charm.lib.keymap import KeyMap
 from charm.objects.mainmenu import MainMenu, MainMenuItem
 # from charm.views.cycletest import CycleTestView
 # from charm.views.emojitest import EmojiTestView
@@ -57,9 +57,7 @@ class MainMenuView(DigiView):
             self.menu.loading = False
 
     @shows_errors
-    @disable_when_focus_lost(keyboard=True)
-    def on_key_press(self, symbol: int, modifiers: int) -> None:
-        super().on_key_press(symbol, modifiers)
+    def on_button_press(self, keymap: KeyMap) -> None:
         if keymap.navright.pressed:
             self.menu.selected_id += 1
         if keymap.navleft.pressed:
@@ -76,6 +74,10 @@ class MainMenuView(DigiView):
             raise TestError("You hit the E button! Don't do that.")
         elif keymap.debug_f24.pressed:
             raise TestError("F24, let's go!")
+
+    @shows_errors
+    def on_button_release(self, keymap: KeyMap) -> None:
+        pass
 
     @shows_errors
     @disable_when_focus_lost(mouse=True)

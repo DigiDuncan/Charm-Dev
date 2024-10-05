@@ -57,9 +57,7 @@ class HeroTestView(DigiView):
         self.song = arcade.play_sound(self._song, 0.25, loop=False)
 
     @shows_errors
-    @disable_when_focus_lost(keyboard=True)
-    def on_key_press(self, symbol: int, modifiers: int) -> None:
-        super().on_key_press(symbol, modifiers)
+    def on_button_press(self, keymap: KeyMap) -> None:
         if keymap.back.pressed:
             self.go_back()
         elif keymap.pause.pressed:
@@ -73,8 +71,7 @@ class HeroTestView(DigiView):
         elif self.window.debug.enabled and keymap.debug_toggle_flags.pressed:
             self.highway.show_flags = not self.highway.show_flags
 
-
-        self.engine.on_key_press(symbol, modifiers)
+        self.engine.on_button_press(keymap)
         if keymap.back.pressed or keymap.pause.pressed:
             self.song.pause() if self.song.playing else self.song.play()
         if self.window.debug.enabled:
@@ -87,11 +84,9 @@ class HeroTestView(DigiView):
             if keymap.debug_toggle_flags.pressed:
                 self.highway.show_flags = not self.highway.show_flags
 
-
     @shows_errors
-    def on_key_release(self, symbol: int, modifiers: int) -> None:
-        super().on_key_release(symbol, modifiers)
-        self.engine.on_key_release(symbol, modifiers)
+    def on_button_release(self, keymap: KeyMap) -> None:
+        self.engine.on_button_release(keymap)
 
     def go_back(self) -> None:
         self.song.delete()

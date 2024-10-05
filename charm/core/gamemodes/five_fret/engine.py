@@ -2,7 +2,7 @@ from queue import Queue
 from charm.lib.errors import ThisShouldNeverHappenError
 
 from charm.core.generic.engine import DigitalKeyEvent
-from charm.lib.keymap import keymap
+from charm.lib.keymap import KeyMap
 from charm.lib.types import Seconds
 
 from charm.core.generic import Engine, EngineEvent, Judgement
@@ -46,7 +46,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         self.keystate = (False,)*5
         # todo: ignore overstrum during countdown events
 
-    def on_key_press(self, symbol: int, modifiers: int) -> None:
+    def on_button_press(self, keymap: KeyMap) -> None:
         # ignore spam during front/back porch
         t = self.chart_time
         # hit_win = self.hit_window
@@ -71,7 +71,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
             self.input_events.put_nowait(DigitalKeyEvent(t, "strum", "down"))
 
 
-    def on_key_release(self, symbol: int, modifiers: int) -> None:
+    def on_button_release(self, keymap: KeyMap) -> None:
         # ignore spam during front/back porch
         t = self.chart_time
         # hit_win = self.hit_window

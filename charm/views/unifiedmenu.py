@@ -2,7 +2,7 @@ import logging
 
 from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView, shows_errors, disable_when_focus_lost
-from charm.lib.keymap import keymap
+from charm.lib.keymap import KeyMap
 
 # -- UI --
 from charm.lib.mini_mint import Animator, Element
@@ -49,9 +49,7 @@ class UnifiedSongMenuView(DigiView):
                     self.element.highlighted_set_idx = self.element.chartsets.index(child.song)
 
     @shows_errors
-    @disable_when_focus_lost(keyboard=True)
-    def on_key_press(self, symbol: int, modifiers: int) -> None:
-        super().on_key_press(symbol, modifiers)
+    def on_button_press(self, keymap: KeyMap) -> None:
         if keymap.back.pressed:
             self.go_back()
         elif keymap.navdown.pressed:
@@ -60,17 +58,20 @@ class UnifiedSongMenuView(DigiView):
             self.element.up_scroll()
         elif keymap.start.pressed:
             if self.element.current_selected_chartset is not None:
-                chartset = self.element.current_selected_chartset
+                charset = self.element.current_selected_chartset
                 chartdata = self.element.current_selected_chartset.charts[self.element.highlighted_chart_idx]
                 charts = load_chart(chartdata)
 
-                game_view = GameView(back=self)
-                game_view.initialize_chart(chartset, charts)
+                game_view = GameView()
+                game_view.initialize_chart(charset, charts)
 
                 game_view.setup()
                 self.window.show_view(game_view)
             else:
                 self.element.select_currently_highlighted()
+
+    def on_button_release(self, keymap: KeyMap) -> None:
+        pass
 
     def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int) -> bool | None:
         if scroll_y > 0:

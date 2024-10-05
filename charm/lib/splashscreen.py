@@ -62,7 +62,6 @@ class SplashView(DigiView):
     def on_key_release(self, symbol: int, modifiers: int) -> None:
         self._current_splash = None
         self.leave()
-        return super().on_key_press(symbol, modifiers)
 
     def on_update(self, delta_time: float) -> None:
         if self._current_splash is None:

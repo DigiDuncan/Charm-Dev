@@ -2,6 +2,8 @@ from arcade.key import H, MOD_SHIFT, Q
 
 from charm.lib.keymap import keymap
 
+# ! THESE ARE NOW BROKEN
+
 def test_keymap_unbind() -> None:
     assert keymap.debug_toggle_hit_window in keymap.get_actions((H, MOD_SHIFT))
     assert (H, MOD_SHIFT) in keymap.debug_toggle_hit_window.keys

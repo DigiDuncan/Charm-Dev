@@ -4,7 +4,7 @@ import arcade
 from arcade import BasicSprite, SpriteList, SpriteCircle, Camera2D, Vec2, color as colors
 
 from charm.lib.keymap import keymap
-from charm.lib.digiview import DigiView
+from charm.lib.digiview import DigiView, shows_errors
 
 
 class SpriteLayer[T: BasicSprite]:
@@ -155,10 +155,14 @@ class ParallaxTestView(DigiView):
                 layer.z /= 1 + delta_time
         return super().on_update(delta_time)
 
-    def on_key_press(self, symbol: int, modifiers: int) -> None:
-        super().on_key_press(symbol, modifiers)
+    @shows_errors
+    def on_button_press(self, keymap: KeyMap) -> None:
         if keymap.back.pressed:
             self.go_back()
+
+    @shows_errors
+    def on_button_release(self, keymap: KeyMap) -> None:
+        pass
 
     def on_draw(self) -> None:
         super().predraw()

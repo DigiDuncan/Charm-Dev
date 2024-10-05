@@ -2,7 +2,7 @@ from charm.lib.digiview import DigiView, shows_errors, disable_when_focus_lost
 
 from charm.lib.charm import GumWrapper
 from charm.views.results import ResultsView
-from charm.lib.keymap import keymap
+from charm.lib.keymap import KeyMap
 
 from charm.core.generic import BaseDisplay, BaseEngine, ChartSet, BaseChart
 
@@ -106,9 +106,7 @@ class GameView(DigiView):
         self._tracks.play()
 
     @shows_errors
-    @disable_when_focus_lost(keyboard=True)
-    def on_key_press(self, symbol: int, modifiers: int) -> None:
-        super().on_key_press(symbol, modifiers)
+    def on_button_press(self, keymap: KeyMap) -> None:
         if keymap.back.pressed:
             self.go_back()
         elif keymap.pause.pressed:
@@ -132,14 +130,12 @@ class GameView(DigiView):
             self.show_results()
 
         if not self._paused:
-            self._engine.on_key_press(symbol, modifiers)
+            self._engine.on_button_press(keymap)
 
     @shows_errors
-    @disable_when_focus_lost(keyboard=True)
-    def on_key_release(self, symbol: int, modifiers: int) -> None:
-        super().on_key_release(symbol, modifiers)
+    def on_button_release(self, keymap: KeyMap) -> None:
         if not self._paused:
-            self._engine.on_key_release(symbol, modifiers)
+            self._engine.on_button_release(keymap)
 
     @shows_errors
     def on_update(self, delta_time: float) -> None:

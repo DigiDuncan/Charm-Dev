@@ -6,7 +6,7 @@ import arcade
 from charm.lib.charm import GumWrapper
 from charm.lib.digiview import DigiView, shows_errors, disable_when_focus_lost
 from charm.lib.settings import settings
-from charm.lib.keymap import keymap
+from charm.lib.keymap import KeyMap
 
 logger = logging.getLogger("charm")
 
@@ -29,15 +29,17 @@ class OptionsView(DigiView):
         self.window.theme_song.volume = 0
 
     @shows_errors
-    @disable_when_focus_lost(keyboard=True)
-    def on_key_press(self, symbol: int, modifiers: int) -> None:
-        super().on_key_press(symbol, modifiers)
+    def on_button_press(self, keymap: KeyMap) -> None:
         if keymap.back.pressed:
             self.go_back()
         elif keymap.navup.pressed:
             self.volume_up(0.1)
         elif keymap.navdown.pressed:
             self.volume_down(0.1)
+
+    @shows_errors
+    def on_button_release(self, keymap: KeyMap) -> None:
+        pass
 
     def volume_up(self, factor: float) -> None:
         settings.volume.master = min(1.0, settings.volume.master + factor)

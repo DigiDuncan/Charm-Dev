@@ -87,18 +87,23 @@ class TitleView(DigiView):
     @disable_when_focus_lost(keyboard=True)
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         super().on_key_press(symbol, modifiers)
-        if keymap.start.pressed:
-            self.start()
-        elif symbol in key_dict:
+        if symbol in key_dict:
             con = keymap.bound_controller
             keymap.set_controller(key_dict[symbol])
             if keymap.bound_controller != con and keymap.bound_controller is not None:
                 self.toast.show_toast("controller", "Controller bound!", f"Controller {key_dict[symbol]} bound to player 1!")
+
+    def on_button_press(self, keymap: KeyMap) -> None:
+        if keymap.start.pressed:
+            self.start()
         elif self.window.debug.enabled and keymap.log_sync.pressed:
             self.splash_label.next_splash()
         elif self.window.debug.enabled and keymap.seek_zero.pressed:
             self.window.theme_song.seek(3)
             self.setup()
+
+    def on_button_release(self, keymap: KeyMap) -> None:
+        pass
 
     @shows_errors
     @disable_when_focus_lost(mouse=True)

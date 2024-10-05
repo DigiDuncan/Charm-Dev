@@ -20,7 +20,7 @@ from charm.lib.charm import CharmColors
 from charm.lib.components import ComponentManager
 from charm.lib.anim import ease_linear, perc
 from charm.lib.errors import CharmError, GenericError, log_charmerror
-from charm.lib.keymap import keymap
+from charm.lib.keymap import KeyMap
 from charm.lib.sfxmanager import SFXManager
 
 logger = logging.getLogger("charm")
@@ -131,17 +131,13 @@ class DigiView(View):
         self.fader.on_resize(width, height)
         self.components.on_resize(width, height)
 
-    def on_key_press(self, symbol: int, modifiers: int) -> None:
-        keymap.on_key_press(symbol, modifiers)
-        if keymap.debug.pressed:
-            self.window.debug.enabled = not self.window.debug.enabled
-        elif keymap.fullscreen.pressed:
-            self.window.set_fullscreen(not self.window.fullscreen)
-        elif keymap.mute.pressed:
-            self.window.theme_song.volume = 0
+    @shows_errors
+    def on_button_press(self, keymap: KeyMap) -> None:
+        pass
 
-    def on_key_release(self, symbol: int, modifiers: int) -> None:
-        keymap.on_key_release(symbol, modifiers)
+    @shows_errors
+    def on_button_release(self, keymap: KeyMap) -> None:
+        pass
 
     def on_update(self, delta_time: float) -> None:
         for popup in self._errors[:]:

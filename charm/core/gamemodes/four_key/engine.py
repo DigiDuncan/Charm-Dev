@@ -5,7 +5,7 @@ from statistics import mean
 
 from arcade.clock import GLOBAL_CLOCK
 
-from charm.lib.keymap import Action, keymap
+from charm.lib.keymap import Action, keymap, KeyMap
 from charm.lib.types import Range4, Seconds
 from charm.lib.utils import clamp
 
@@ -65,7 +65,7 @@ class FourKeyEngine(Engine[FourKeyChart, FourKeyNote]):
         self.active_sustains: list[FourKeyNote] = []
         self.keystate: tuple[bool, bool, bool, bool] = (False, False, False, False)
 
-    def on_key_press(self, symbol: int, modifiers: int) -> None:
+    def on_button_press(self, keymap: KeyMap) -> None:
         self.keystate = keymap.fourkey.state
         # ignore spam during front/back porch
         if (self.chart_time < self.chart.notes[0].time - self.hit_window \
@@ -77,7 +77,7 @@ class FourKeyEngine(Engine[FourKeyChart, FourKeyNote]):
         key = cast(Range4, keymap.fourkey.actions.index(action))
         self.current_events.append(DigitalKeyEvent(self.chart_time, key, "down"))
 
-    def on_key_release(self, symbol: int, modifiers: int) -> None:
+    def on_button_release(self, keymap: KeyMap) -> None:
         self.keystate = keymap.fourkey.state
         if self.last_p1_action is not None and not self.last_p1_action.held:
             self.last_p1_action = None

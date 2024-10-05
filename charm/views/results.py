@@ -13,7 +13,7 @@ from charm.core.generic import BaseResults, Heatmap
 
 import charm.data.audio
 import charm.data.images.skins as skins
-from charm.lib.keymap import keymap
+from charm.lib.keymap import KeyMap
 
 # from charm.lib import paths
 # from charm.lib.scores import ScoreDB
@@ -88,11 +88,13 @@ class ResultsView(DigiView):
             self.song = song
 
     @shows_errors
-    @disable_when_focus_lost(keyboard=True)
-    def on_key_press(self, symbol: int, modifiers: int) -> None:
-        super().on_key_press(symbol, modifiers)
+    def on_button_press(self, keymap: KeyMap) -> None:
         if keymap.back.pressed or keymap.start.pressed:
             self.go_back()
+
+    @shows_errors
+    def on_button_release(self, keymap: KeyMap) -> None:
+        pass
 
     def go_back(self) -> None:
         self.song.volume = 0

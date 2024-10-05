@@ -4,6 +4,7 @@ from typing import Generic, Literal, TypeVar
 import math
 
 from charm.lib.types import Seconds
+from charm.lib.keymap import KeyMap
 
 from .chart import BaseChart, BaseNote
 from .judgement import Judgement
@@ -149,11 +150,11 @@ class Engine(Generic[C, N]):
     def update(self, song_time: Seconds) -> None:
         self.chart_time = song_time + self.offset
 
-    def on_key_press(self, symbol: int, modifiers: int) -> None:
+    def on_button_press(self, keymap: KeyMap) -> None:
         pass
         # TODO: Maybe remove?
 
-    def on_key_release(self, symbol: int, modifiers: int) -> None:
+    def on_button_release(self, keymap: KeyMap) -> None:
         pass
         # TODO: Maybe remove?
 

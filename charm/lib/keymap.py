@@ -3,7 +3,7 @@ from logging import getLogger
 from collections.abc import Iterable
 from typing import Literal, cast, get_args
 
-from arcade import Vec2
+from arcade import Vec2, Window
 from pyglet.input import get_controllers
 from pyglet.input.base import Controller
 
@@ -217,10 +217,15 @@ class SubKeyMap[T]:
 
 class KeyMap:
     def __init__(self):
+        self._window: Window = None
+
         """Access and set mappings for inputs to actions. Key binding."""
         self.actions: set[Action] = set()
         self.keys: dict[Context | None, dict[KeyMod, set[Action]]] = {ctx: {} for ctx in [*get_args(Context), None]}
         self.state = KeyStateManager()
+
+        # Controller Properties
+        # ? (Should maybe be a part of the key state manager?????)
         self.bound_controller: Controller = None
         self.dpad: Vec2 = Vec2()
         self.triggers: list[float] = [0.0, 0.0]
@@ -310,6 +315,9 @@ class KeyMap:
 
         self.set_defaults()
 
+    def set_window(self, window: Window) -> None:
+        self._window = window
+
     def unbind(self, key: KeyMod | Button) -> None:
         """Unbind a particular key"""
         key = to_keymod(key)
@@ -326,18 +334,32 @@ class KeyMap:
         for action in self.actions:
             action.set_defaults()
 
+    def press(self) -> None:
+        if self._window is None:
+            return
+        self._window.dispatch_event('on_button_press', self)
+
+    def release(self) -> None:
+        if self._window is None:
+            return
+        self._window.dispatch_event('on_button_release', self)
+
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         self.state.on_button_press(Keys(symbol), modifiers)
+        self.press()
 
     def on_key_release(self, symbol: int, modifiers: int) -> None:
         self.state.on_button_release(Keys(symbol), modifiers)
+        self.release()
 
     def on_button_press(self, controller: Controller, button_name: str) -> None:
         logger.info(f'Pressed controller button {button_name}')
         self.state.on_button_press(ControllerButtons(button_name), 0)
+        self.press()
 
     def on_button_release(self, controller: Controller, button_name: str) -> None:
         self.state.on_button_release(ControllerButtons(button_name), 0)
+        self.release()
 
     def on_stick_motion(self, controller: Controller, name: str, motion: Vec2) -> None:
         # TODO: Bug Dragon
@@ -349,27 +371,35 @@ class KeyMap:
             # button released
             if dx > 0:
                 self.state.on_button_release(ControllerButtons.DPAD_LEFT, 0)
+                self.release()
             elif dx < 0:
                 self.state.on_button_release(ControllerButtons.DPAD_RIGHT, 0)
+                self.release()
         else:
             # button pressed
             if dx > 0:
                 self.state.on_button_press(ControllerButtons.DPAD_RIGHT, 0)
+                self.press()
             elif dx < 0:
                 self.state.on_button_press(ControllerButtons.DPAD_LEFT, 0)
+                self.press()
 
         if self.dpad.y != 0.0:
             # button released
             if dy > 0:
                 self.state.on_button_release(ControllerButtons.DPAD_DOWN, 0)
+                self.release()
             elif dy < 0:
                 self.state.on_button_release(ControllerButtons.DPAD_UP, 0)
+                self.release()
         else:
             # button pressed
             if dy > 0:
                 self.state.on_button_press(ControllerButtons.DPAD_UP, 0)
+                self.press()
             elif dy < 0:
                 self.state.on_button_press(ControllerButtons.DPAD_DOWN, 0)
+                self.press()
         self.dpad = motion
 
     def on_trigger_motion(self, controller: Controller, trigger_name: str, value: float) -> None:
