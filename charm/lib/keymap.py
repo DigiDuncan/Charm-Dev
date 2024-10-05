@@ -284,7 +284,7 @@ class KeyMap:
                 self.green =     Action(keymap, 'hero_1',          [Keys.KEY_1, ControllerButtons.BOTTOM_FACE],  REQUIRED, context="hero")
                 self.red =       Action(keymap, 'hero_2',          [Keys.KEY_2, ControllerButtons.RIGHT_FACE],  REQUIRED, context="hero")
                 self.yellow =    Action(keymap, 'hero_3',          [Keys.KEY_3, ControllerButtons.TOP_FACE],  REQUIRED, context="hero")
-                self.blue =      Action(keymap, 'hero_4',          [Keys.KEY_4, ControllerButtons.RIGHT_FACE],  REQUIRED, context="hero")
+                self.blue =      Action(keymap, 'hero_4',          [Keys.KEY_4, ControllerButtons.LEFT_FACE],  REQUIRED, context="hero")
                 self.orange =    Action(keymap, 'hero_5',          [Keys.KEY_5, ControllerButtons.LEFT_SHOULDER],  REQUIRED, context="hero")
                 self.strumup =   Action(keymap, 'hero_strum_up',   [Keys.UP, ControllerButtons.DPAD_UP],     REQUIRED, context="hero")
                 self.strumdown = Action(keymap, 'hero_strum_down', [Keys.DOWN, ControllerButtons.DPAD_DOWN],   REQUIRED, context="hero")
