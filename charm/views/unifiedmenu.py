@@ -10,6 +10,7 @@ from charm.ui.menu_list import UnifiedChartsetMenuElement
 
 # -- TEMP --
 from charm.core.loading import load_chartsets, load_chart
+from charm.core.loading2 import CHART_LOADER
 from charm.views.game import GameView
 
 logger = logging.getLogger("charm")
@@ -18,16 +19,20 @@ logger = logging.getLogger("charm")
 class UnifiedSongMenuView(DigiView):
     def __init__(self, back: DigiView):
         super().__init__(fade_in=1, back=back)
+        if not CHART_LOADER.is_finished:
+            CHART_LOADER.start_loading()
         self.animator: Animator = Animator()
         Element.Animator = self.animator
         self.element = UnifiedChartsetMenuElement(right_fraction=0.6)
         self.element.bounds = self.window.rect
-        self.element.set_chartsets(load_chartsets())
+        self.element.set_chartsets(CHART_LOADER.copy_chartsets())
 
     @shows_errors
     def setup(self) -> None:
         super().presetup()
         self.gum_wrapper = GumWrapper()
+        self.element.bounds = self.window.rect
+        self.element.set_chartsets(CHART_LOADER.copy_chartsets())
         super().postsetup()
 
     def on_resize(self, width: int, height: int) -> None:
@@ -84,6 +89,9 @@ class UnifiedSongMenuView(DigiView):
         super().on_update(delta_time)
         self.gum_wrapper.on_update(delta_time)
         self.animator.update(delta_time)
+
+        if not CHART_LOADER.is_finished or not CHART_LOADER.is_up_to_date(self.element.chartsets):
+            self.element.set_chartsets(CHART_LOADER.copy_chartsets())
 
     @shows_errors
     def on_fixed_update(self, delta_time: float) -> None:

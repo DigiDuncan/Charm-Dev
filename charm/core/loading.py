@@ -69,7 +69,7 @@ def get_album_art_path_from_metadata(metadata: ChartSetMetadata) -> str | None:
             art_path = p
             break
 
-    return art_path if art_path is None else art_path.name
+    return None if art_path is None else art_path.name
 
 
 def read_charm_metadata(metadata_src: Path) -> ChartSetMetadata:
@@ -105,7 +105,6 @@ def load_path_chartsets(parsers: Sequence[type[Parser]], chartset_path: Path, me
     if not charts:
         raise NoChartsError(str(chartset_path))
     metadata = metadata.update(chartset_metadata)
-
 
     if directory_metadata is not None:
         metadata = metadata.update(directory_metadata)
@@ -145,6 +144,7 @@ def load_gamemode_chartsets(gamemode: str) -> list[ChartSet]:
 
 
 def load_chartsets() -> list[ChartSet]:
+    return []
     gamemodes = ('fnf', '4k', 'hero', 'taiko')
     chartsets = [chartset for gamemode in gamemodes for chartset in load_gamemode_chartsets(gamemode)]
     # Natalie left a list sorting example here.

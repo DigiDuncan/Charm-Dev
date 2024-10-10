@@ -68,9 +68,11 @@ class UnifiedChartsetMenuElement(Element):
         self.album_art_texture: Texture | None = None
 
     def set_chartsets(self, chartsets: list[ChartSet]) -> None:
+        if len(self.chartsets) > len(chartsets):
+            self.highlighted_set_idx = 0
+            self.highlighted_chart_idx = 0
+
         self.chartsets = chartsets
-        self.highlighted_set_idx = 0
-        self.highlighted_chart_idx = 0
         self.current_selected_chartset = None
         self.current_selected_chart = None
         self._place_chartset_elements()

@@ -20,12 +20,15 @@ from charm.lib.presencemanager import PresenceManager
 from charm.lib.themesong import ThemeSong
 from charm.views.title import TitleView
 
+from charm.core.loading2 import CHART_LOADER
+
 logger = logging.getLogger("charm")
 
 
 class DigiWindow(Window):
     def __init__(self, size: tuple[int, int], title: str, fps_cap: int):
         super().__init__(*size, title, update_rate=1 / fps_cap, enable_polling=True, resizable=True, draw_rate=1 / 120)
+
         self.register_event_type('on_button_press')
         self.register_event_type('on_button_release')
         self.push_handlers(self.on_button_press, self.on_button_release)
@@ -53,6 +56,8 @@ class DigiWindow(Window):
 
         # Debug menu
         self.debug = DebugMenu(self)
+
+        CHART_LOADER.wake_loader()
 
     def setup(self) -> None:
         self.initial_view.setup()
