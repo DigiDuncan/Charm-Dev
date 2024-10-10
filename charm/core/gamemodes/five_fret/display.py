@@ -63,7 +63,7 @@ class FiveFretDisplay(Display[FiveFretChart, FiveFretEngine]):
             sec = self.current_section = self.chart.indices.section_time.lteq(song_time)
             self.current_section = sec.name if sec else "No Section"
 
-        self.score_display.score += random.randint(0, 9)
+        self.score_display.score = self.engine.score
 
     def draw(self) -> None:
         self.highway.draw()

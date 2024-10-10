@@ -261,7 +261,8 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         pass
 
     def score_chord(self, chord: FiveFretChord) -> None:
-        pass
+        if chord.hit:
+            self.score += 50 * min(self.streak // 10 + 1, 4)
 
     def score_sustain(self, note: FiveFretNote) -> None:
         raise NotImplementedError

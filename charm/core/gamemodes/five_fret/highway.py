@@ -31,7 +31,10 @@ def load_note_texture(note_type: str, note_lane: int, height: int) -> Texture:
     image_name = f"{note_type}-{note_lane + 1}"
     open_height = int(height / (128 / 48))
     try:
-        image = img_from_path(files(skins) / "hero" / "3d" / f"{image_name}.png")
+        if image_name.startswith(("strikeline", "tail", "body", "cap", "active")):
+            image = img_from_path(files(skins) / "hero" / f"{image_name}.png")
+        else:
+            image = img_from_path(files(skins) / "hero" / "3d" / f"{image_name}.png")
         if image.height != height and note_lane != 7:
             width = int((height / image.height) * image.width)
             image = image.resize((width, height), PIL.Image.LANCZOS)
@@ -144,7 +147,7 @@ class FiveFretHighway(Highway[FiveFretChart, FiveFretNote, FiveFretEngine]):
             x = self.lane_x(lane) + self.note_size/2.0
             sprite = StrikelineSprite(
                 x, y,
-                active_texture=load_note_texture("normal", lane, self.note_size),
+                active_texture=load_note_texture("active", lane, self.note_size),
                 inactive_texture=load_note_texture("strikeline", lane, self.note_size),
                 inactive_alpha=128
             )
