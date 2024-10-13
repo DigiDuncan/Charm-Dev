@@ -57,13 +57,13 @@ class KeyStateManager:
         self.ignore_mods = Keys.MOD_CAPSLOCK.value | Keys.MOD_NUMLOCK.value | Keys.MOD_SCROLLLOCK.value
 
     def on_button_press(self, symbol: Button, modifiers: int) -> None:
-        logger.info(f'Button {symbol} pressed with mods {modifiers}')
+        # logger.info(f'Button {symbol} pressed with mods {modifiers}')
         modifiers = modifiers & ~self.ignore_mods
         self.pressed = {symbol: modifiers}
         self.held[symbol] = modifiers
 
     def on_button_release(self, symbol: Button, modifiers: int) -> None:
-        logger.info(f'Button {symbol} released with mods {modifiers}')
+        # logger.info(f'Button {symbol} released with mods {modifiers}')
         modifiers = modifiers & ~self.ignore_mods
         self.released = {symbol: modifiers}
         if symbol in self.held:

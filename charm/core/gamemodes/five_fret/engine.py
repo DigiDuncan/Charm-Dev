@@ -1,4 +1,5 @@
 from queue import Queue
+from logging import getLogger
 from charm.lib.errors import ThisShouldNeverHappenError
 
 from charm.core.generic.engine import DigitalKeyEvent
@@ -8,11 +9,68 @@ from charm.lib.types import Seconds
 from charm.core.generic import Engine, EngineEvent, Judgement
 from .chart import ChordShape, FiveFretChart, FiveFretNote, FiveFretChord, FiveFretNoteType, Fret
 
+logger = getLogger('charm')
 
 class ChordShapeChangeEvent(EngineEvent):
     def __init__(self, time: Seconds, chord_shape: ChordShape):
         super().__init__(time)
         self.shape = chord_shape
+
+class FiveFretSustain:
+
+    def __init__(self, chord: FiveFretChord, start: Seconds) -> None:
+        self._chord: FiveFretChord = chord
+        self._start: Seconds = start
+
+        self._broken: bool = False
+        self._break_time: Seconds = -float('inf')
+
+        self._is_disjointed: bool = not (len(self._chord.frets) != 1 and all(
+            self._chord.notes[0].length == note.length for note in self._chord.notes
+        ))
+
+        self._times: dict[int, Seconds] = {
+            note.lane: note.end for note in self._chord.notes
+        }
+        self._min_fret: int = min(self._times.keys())
+        self._is_tap: bool = self._chord.notes[0].type == FiveFretNoteType.TAP
+        self._end = max(self._times.values())
+
+    @property
+    def end(self) -> Seconds:
+        return self._end
+
+    def get_shape(self, time: Seconds) -> ChordShape:
+        if self._is_disjointed:
+            return ChordShape(*(
+                None if (i < self._min_fret and self._is_tap) else (self._times.get(i, float('inf')) <= time)
+                for i in range(5)
+            ))
+        if 7 in self._chord.frets:
+            # Open note
+            return ChordShape(False, False, False, False, False)
+        if len(self._chord.frets) == 1:
+            # Single notes
+            lanes = self._chord.notes[0].lane
+            return ChordShape(
+                None if 0 < lanes else 0 == lanes,  # Green
+                None if 1 < lanes else 1 == lanes,  # Red
+                None if 2 < lanes else 2 == lanes,  # Yellow
+                None if 3 < lanes else 3 == lanes,  # Blue
+                None if 4 < lanes else 4 == lanes,  # Orange
+            )
+        else:
+            # Chords
+            return ChordShape(
+                *(
+                    None if (i < self._min_fret and self._is_tap) else i in self._times
+                    for i in range(5)
+                )
+            )
+
+    def break_sustain(self, time: float):
+        self._broken = True
+        self._break_time = time
 
 
 EMPTY_CHORD = ChordShape(False, False, False, False, False)
@@ -34,6 +92,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         self.last_strum_time: Seconds = -float('inf')
         self.last_fret_time: Seconds = -float('inf')
         self.tap_shape: ChordShape = EMPTY_CHORD # need to track if we have 'consumed' a chord
+        self.active_sustains: list[FiveFretSustain] = []
 
         self.infinite_front_end = False
         self.can_chord_skip = True
@@ -112,7 +171,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         # TODO: Solo
 
         # ! Not only do we need to handle missed notes, but what about taps with front end?
-        # TODO: self.update_sustains()
+        self.update_sustains()
         # TODO: self.catch_strum()
 
         # Remove all missed chords
@@ -148,6 +207,18 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
                     self.on_strum(event.time)
                 case _:
                     raise ThisShouldNeverHappenError
+
+
+    def update_sustains(self):
+        for sustain in self.active_sustains[:]:
+            if sustain.end - self.sustain_end_leniency < self.chart_time:
+                logger.info('Sustain finished')
+                self.active_sustains.remove(sustain)
+
+    def break_sustains(self, time: float):
+        logger.info('broken all sustains')
+        for sustain in self.active_sustains:
+            sustain.break_sustain(time)
 
     def on_fret_change(self, fret: Fret, pressed: bool, time: Seconds) -> None:
         # First we check against sustains
@@ -217,6 +288,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         if not (self.window_back_end <= current_chord.time <= self.window_front_end):
             # The current chord isn't available to process,
             # but we needed to process overstrum
+            self.break_sustains(time)
             return
 
         if current_shape.matches(current_chord.shape):
@@ -227,8 +299,10 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         if self.can_chord_skip:
             pass
 
+        # If fail to chord skip then break sustains
+        self.break_sustains(time)
+
     def miss_chord(self, chord: FiveFretChord, time: float = float('inf')) -> None:
-        print('!MISS!')
         if chord.missed or chord.hit:
             return
         self._miss_chord(chord, time)
@@ -243,7 +317,6 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         self.streak = 0
 
     def hit_chord(self, chord: FiveFretChord, time: float) -> None:
-        print('!CHORD!')
         if chord.missed or chord.hit:
             return
         self._hit_chord(chord, time)
@@ -255,7 +328,9 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         self.score_chord(chord)
 
         self.streak += 1
-        # TODO: Add sustain
+
+        if chord.length > 0.0:
+            self.active_sustains.append(FiveFretSustain(chord, time))
 
     def start_sustain(self, chord: FiveFretChord, time: float) -> None:
         pass
@@ -268,7 +343,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         raise NotImplementedError
 
     def overstrum(self) -> None:
-        print('!OVERSTRUM!')
+        logger.info(f'Overstrummed at t={self.chart_time}')
 
     # def generate_results(self) -> Results[C]:
     #     raise NotImplementedError

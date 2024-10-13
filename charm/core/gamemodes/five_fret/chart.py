@@ -102,8 +102,7 @@ class FiveFretChord:
     def __init__(self, notes: list[FiveFretNote] | None = None) -> None:
         self.notes = notes if notes else []
 
-        self.frets: list[int] = list(set(n.lane for n in self.notes))
-        self.frets.sort()
+        self.frets: list[int] = sorted(set(n.lane for n in self.notes))
 
     @property
     def tick(self) -> Ticks:
@@ -184,12 +183,12 @@ class FiveFretChord:
             # Chords
             fret_set = set(self.frets)
             is_tap = self.type == FiveFretNoteType.TAP
-            min_fret = min(*fret_set)
+            min_fret = min(fret_set)
             return ChordShape(
-                *[
+                *(
                     None if (i < min_fret and is_tap) else i in fret_set
                     for i in range(5)
-                ]
+                )
             )
 
 
