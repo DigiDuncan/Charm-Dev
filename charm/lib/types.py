@@ -8,15 +8,17 @@ It's just for readability in function signatures.
 from typing import Literal
 
 
-Seconds = float
-Milliseconds = float
+type Seconds = float
+type Milliseconds = float
+NEVER: Seconds = -float('inf')
+FOREVER: Seconds = float('inf')
 
-RGB = tuple[int, int, int]
-RGBA = tuple[int, int, int, int]
-TuplePoint = tuple[int | float, int | float]
+type RGB = tuple[int, int, int]
+type RGBA = tuple[int, int, int, int]
+type TuplePoint = tuple[int | float, int | float]
 
-Range4 = Literal[0, 1, 2, 3]
-Range8 = Literal[0, 1, 2, 3, 4, 5, 6, 7]
+type Range4 = Literal[0, 1, 2, 3]
+type Range8 = Literal[0, 1, 2, 3, 4, 5, 6, 7]
 
 class Point:
     def __init__(self, point: TuplePoint):
@@ -47,3 +49,4 @@ class Point:
 
     def __str__(self) -> str:
         return f"Point({self.x}, {self.y})"
+

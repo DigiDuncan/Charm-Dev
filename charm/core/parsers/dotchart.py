@@ -117,9 +117,8 @@ def create_chart_chords(chart: FiveFretChart) -> None:
     c: dict[Ticks, list[FiveFretNote]] = defaultdict(list[FiveFretNote])
     for note in chart.notes:
         c[note.tick].append(note)
-    chord_lists = list(c.values())
     chords: list[FiveFretChord] = []
-    for cl in chord_lists:
+    for cl in c.values():
         chords.append(FiveFretChord(cl))
     chart.chords = chords
 
@@ -436,4 +435,5 @@ class DotChartParser(Parser):
         chart.events.extend(DotChartParser.calculate_countdowns(chart))
         chart.events.sort()
         chart.calculate_indices()
+        chart.resolution = resolution
         return [chart]

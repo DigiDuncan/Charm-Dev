@@ -91,7 +91,7 @@ class SustainSprites:
         self._textures: SustainTextureDict = None # type: ignore --
 
         self.hide()
-
+  
     def get_sprites(self) -> tuple[Sprite, ...]:
         return self._cap, self._body, self._tail
 

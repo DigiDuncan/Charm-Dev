@@ -86,7 +86,7 @@ class Highway(Generic[C, N, E]):
     @property
     def strikeline_y(self) -> int:
         if self.downscroll:
-            return 89  # 64 + 25
+            return 64
         return self.h - 25
 
     @property

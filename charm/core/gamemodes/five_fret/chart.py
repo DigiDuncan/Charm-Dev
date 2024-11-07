@@ -37,12 +37,13 @@ class ChordShape(NamedTuple):
 
     def __repr__(self) -> str:
         return (
-            f"<ChordShape {'G' if self.green else '_' if self.green is not None else 'X'}"
-            f"{'R' if self.red else '_' if self.red is not None else 'X'}"
-            f"{'Y' if self.yellow else '_' if self.yellow is not None else 'X'}"
-            f"{'B' if self.blue else '_' if self.blue is not None else 'X'}"
-            f"{'O' if self.orange else '_' if self.orange is not None else 'X'}>"
+            f"<ChordShape {'G' if self.green else ('X' if self.green is None else '_')}"
+            f"{'R' if self.red else ('X' if self.red is None else '_')}"
+            f"{'Y' if self.yellow else ('X' if self.yellow is None else '_')}"
+            f"{'B' if self.blue else ('X' if self.blue is None else '_')}"
+            f"{'O' if self.orange else ('X' if self.orange is None else '_')}>"
         )
+    
 
     def matches(self, other: ChordShape) -> bool:
         for a, b in zip(self, other, strict=True):
@@ -52,6 +53,15 @@ class ChordShape(NamedTuple):
             if a != b:
                 return False
         return True
+    
+    def contains(self, other: ChordShape) -> bool:
+        for a, b in zip(self, other, strict=True):
+            if a is None or b is None:
+                # None means this fret can be anchored, so either False or True are fine
+                continue
+            if (not a) and b:
+                return False
+        return False
 
     @property
     def is_open(self) -> bool:
@@ -73,7 +83,13 @@ class ChordShape(NamedTuple):
         return ChordShape(*f)
 
     def __and__(self, other: ChordShape) -> ChordShape:
-        return ChordShape(self.green and other.green, self.red and other.red, self.yellow and other.yellow, self.blue and other.blue, self.orange and other.orange)
+        return ChordShape(
+            None if (self.green is None or other.green is None) else self.green and other.green,
+            None if (self.red is None or other.red is None) else self.red and other.red,
+            None if (self.yellow is None or other.yellow is None) else self.yellow and other.yellow,
+            None if (self.blue is None or other.blue is None) else self.blue and other.blue,
+            None if (self.orange is None or other.orange is None) else self.orange and other.orange,
+        )
 
     def __or__(self, other: ChordShape) -> ChordShape:
         return ChordShape(self.green or other.green, self.red or other.red, self.yellow or other.yellow, self.blue or other.blue, self.orange or other.orange)
@@ -101,8 +117,8 @@ class FiveFretChord:
 
     def __init__(self, notes: list[FiveFretNote] | None = None) -> None:
         self.notes = notes if notes else []
-
         self.frets: list[int] = sorted(set(n.lane for n in self.notes))
+        self.size: int = len(self.frets)
 
     @property
     def tick(self) -> Ticks:
@@ -119,6 +135,14 @@ class FiveFretChord:
     @property
     def time(self) -> Seconds:
         return self.notes[0].time
+
+    @property
+    def disjoint(self) -> bool:
+        return not (
+            len(self.notes) != 1
+            and
+            all(self.notes[0].length == note.length for note in self.notes)
+        )
 
     @property
     def length(self) -> Seconds:
@@ -169,27 +193,20 @@ class FiveFretChord:
         if 7 in self.frets:
             # Open note
             return ChordShape(False, False, False, False, False)
-        if len(self.frets) == 1:
-            # Single notes
-            lanes = self.notes[0].lane
-            return ChordShape(
-                None if 0 < lanes else 0 == lanes,  # Green
-                None if 1 < lanes else 1 == lanes,  # Red
-                None if 2 < lanes else 2 == lanes,  # Yellow
-                None if 3 < lanes else 3 == lanes,  # Blue
-                None if 4 < lanes else 4 == lanes,  # Orange
+        # Chords
+        fret_set = set(self.frets)
+        is_anchored = self.type == FiveFretNoteType.TAP or len(self.frets) == 1
+        min_fret = min(fret_set)
+        return ChordShape(
+            *(
+                None if (i < min_fret and is_anchored) else i in fret_set
+                for i in range(5)
             )
-        else:
-            # Chords
-            fret_set = set(self.frets)
-            is_tap = self.type == FiveFretNoteType.TAP
-            min_fret = min(fret_set)
-            return ChordShape(
-                *(
-                    None if (i < min_fret and is_tap) else i in fret_set
-                    for i in range(5)
-                )
-            )
+        )
+
+
+class FiveFretSustain(FiveFretChord):
+    pass
 
 
 @dataclass
@@ -273,10 +290,12 @@ class FiveFretChart(Chart[FiveFretNote]):
         metadata: ChartMetadata,
         notes: Sequence[FiveFretNote],
         events: Sequence[Event],
+        resolution: int = 192
     ) -> None:
         super().__init__(metadata, notes, events)
         self.chords: list[FiveFretChord] = []
         self.indices: FiveFretNIndexCollection
+        self.resolution: int = resolution
 
     def calculate_indices(self) -> None:
         # !: This assumes that the events, notes, and chords are all time sorted :3

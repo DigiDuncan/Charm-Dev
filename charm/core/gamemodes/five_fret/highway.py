@@ -29,7 +29,7 @@ logger = logging.getLogger("charm")
 @cache
 def load_note_texture(note_type: str, note_lane: int, height: int) -> Texture:
     image_name = f"{note_type}-{note_lane + 1}"
-    open_height = int(height / (128 / 48))
+    open_height = int(height * 48 / 128)  # based onm a pixel ratio
     try:
         if image_name.startswith(("strikeline", "tail", "body", "cap", "active")):
             image = img_from_path(files(skins) / "hero" / f"{image_name}.png")
@@ -132,7 +132,13 @@ class FiveFretHighway(Highway[FiveFretChart, FiveFretNote, FiveFretEngine]):
                     load_note_texture('cap', i, self.note_size // 2)
                 ),
                 'miss': SustainTextures(_missed_tail, _missed_body, _missed_cap)}
-        for i in range(6)}
+        for i in range(5)}
+        self._sustain_textures[7] = {'primary': SustainTextures(
+                    load_note_texture('tail', 7, self.note_size),
+                    load_note_texture('body', 7, self.note_size),
+                    load_note_texture('cap', 7, self.note_size // 2)
+                ),
+                'miss': SustainTextures(_missed_tail, _missed_body, _missed_cap)}
 
         self._next_sustain: FiveFretNote | None = next(self._sustain_generator, None)
 
@@ -142,9 +148,9 @@ class FiveFretHighway(Highway[FiveFretChart, FiveFretNote, FiveFretEngine]):
 
         self.strikeline: SpriteList[StrikelineSprite] = SpriteList()
         self.strikeline.program = self.strikeline.ctx.sprite_list_program_no_cull
-        y = self.strikeline_y - self.note_size/2.0
+        y = self.strikeline_y
         for lane in range(5):
-            x = self.lane_x(lane) + self.note_size/2.0
+            x = self.lane_x(lane)
             sprite = StrikelineSprite(
                 x, y,
                 active_texture=load_note_texture("active", lane, self.note_size),
@@ -204,13 +210,13 @@ class FiveFretHighway(Highway[FiveFretChart, FiveFretNote, FiveFretEngine]):
             note = self._next_note
             sprite = self._note_pool.get()
             sprite.texture = load_note_texture(note.type, note.lane, self.note_size)
-            sprite.position = self.lane_x(note.lane) + sprite.width/2, self.note_y(note.time) - sprite.height/2.0
+            sprite.position = self.lane_x(note.lane), self.note_y(note.time)
             sprite.visible = True
             sprite.note = note
 
             self._next_note = next(self._note_generator, None)
             # Filters out the flags if they aren't supposed to be shown
-            while self._next_note and (self._next_note.lane in {5, 6}) and not self._show_flags:
+            while not self._show_flags and self._next_note and (self._next_note.lane == 5 or self._next_note.lane == 6):
                 self._next_note = next(self._note_generator, None)
 
         while self._next_sustain is not None and self._next_sustain.time <= (self.song_time + self.viewport) and self._sustain_pool.has_free_slot():
@@ -218,8 +224,8 @@ class FiveFretHighway(Highway[FiveFretChart, FiveFretNote, FiveFretEngine]):
             sustain = self._sustain_pool.get()
             sustain.place(
                 note,
-                self.lane_x(self._next_sustain.lane) + sustain.size/2.0,
-                self.note_y(note.time) - sustain.size/2.0,
+                self.lane_x(note.lane),
+                self.note_y(note.time),
                 note.length * self.px_per_s,
                 self._sustain_textures[note.lane]
             )
@@ -227,14 +233,14 @@ class FiveFretHighway(Highway[FiveFretChart, FiveFretNote, FiveFretEngine]):
             self._next_sustain = next(self._sustain_generator, None)
 
         for sprite in self._note_pool.given_items:
-            sprite.center_y = self.note_y(sprite.note.time) - sprite.height/2.0
+            sprite.center_y = self.note_y(sprite.note.time)
             if sprite.note.hit or sprite.note.time <= (song_time - 0.1):
                 sprite.visible = False
                 self._note_pool.give(sprite)
 
         for sustain in self._sustain_pool.given_items:
             sustain.update_texture()
-            sustain.update_sustain(self.note_y(sustain.note.time) - sustain.size/2.0, sustain.note.length * self.px_per_s)
+            sustain.update_sustain(self.note_y(sustain.note.time), sustain.note.length * self.px_per_s)
             if sustain.note.end <= (song_time - 0.1):
                 sustain.hide()
                 self._sustain_pool.give(sustain)
@@ -255,7 +261,7 @@ class FiveFretHighway(Highway[FiveFretChart, FiveFretNote, FiveFretEngine]):
             if current_beat_idx is not None and last_beat_idx is not None:
                 current_beat_idx = max(current_beat_idx - 1, 0)
                 for beat in self.chart.events_by_type(BeatEvent)[current_beat_idx:last_beat_idx + 1]:
-                    px = self.note_y(beat.time) - (self.note_size / 2)
+                    px = self.note_y(beat.time)
                     draw_line(self.x, px, self.x + self.w, px, colors.DARK_GRAY, 3 if beat.major else 1)
 
             self.update_strikeline()
@@ -266,8 +272,8 @@ class FiveFretHighway(Highway[FiveFretChart, FiveFretNote, FiveFretEngine]):
 
     def lane_x(self, lane_num: int) -> int:
         if lane_num == 7:  # tap note override
-            return self.x + (self.gap * 3)
-        return (self.note_size + self.gap) * lane_num + self.x
+            return self.x + self.w // 2
+        return (self.note_size + self.gap) * lane_num + self.x + self.note_size // 2
 
     @property
     def pos(self) -> tuple[int, int]:

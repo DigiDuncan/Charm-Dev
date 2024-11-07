@@ -6,8 +6,8 @@ import arcade
 
 import charm.data.fonts
 import charm.data.images
+from charm.core.settings import settings
 from charm.lib import charm_logger
-from charm.lib.settings import settings
 from charm.lib.utils import pyglet_img_from_path
 from charm.lib.digiwindow import DigiWindow
 
@@ -22,8 +22,8 @@ with as_file(files(charm.data.fonts) / "bananaslipplus.otf") as p:
 
 class CharmGame(DigiWindow):
     def __init__(self):
-        super().__init__(settings.resolution, "Charm", settings.fps)
-        self.set_minimum_size(1280, 720)
+        super().__init__(settings.window.size, "Charm", settings.window.ups, settings.window.fps)
+        self.set_minimum_size(*settings.window.size)
         icon = pyglet_img_from_path(files(charm.data.images) / "charm-icon32t.png")
         self.set_icon(icon)
         arcade.hitbox.algo_default = arcade.hitbox.algo_bounding_box

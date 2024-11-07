@@ -26,8 +26,8 @@ logger = logging.getLogger("charm")
 
 
 class DigiWindow(Window):
-    def __init__(self, size: tuple[int, int], title: str, fps_cap: int):
-        super().__init__(*size, title, update_rate=1 / fps_cap, enable_polling=True, resizable=True, draw_rate=1 / 120)
+    def __init__(self, size: tuple[int, int], title: str, ups_cap: int, fps_cap: int):
+        super().__init__(*size, title, update_rate=1.0 / ups_cap, enable_polling=True, resizable=True, draw_rate=1.0 / fps_cap)
 
         self.register_event_type('on_button_press')
         self.register_event_type('on_button_release')
