@@ -406,7 +406,18 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
             return
 
         if self.can_chord_skip:
-            pass
+            for chord in self.current_notes[1:]:
+                if self.window_front_end < chord.time:
+                    # We have reached the end of the chords in the hit window
+                    break
+                if ghost_shape.matches(chord.shape):
+                    if self.punish_chord_skip:
+                        for missed in self.current_notes[:]:
+                            if missed is chord:
+                                break
+                            self.miss_chord(missed, time)
+                    self.hit_chord(chord, time)
+                    return
 
         # If fail to chord skip then break sustains
         self.overstrum(time)
