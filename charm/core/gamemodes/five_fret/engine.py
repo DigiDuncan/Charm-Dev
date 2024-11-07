@@ -207,7 +207,6 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
 
         # ! Not only do we need to handle missed notes, but what about taps with front end?
         self.update_sustains()
-        self.calculate_uncommited()
         # TODO: self.catch_strum()
 
         # Remove all missed chords
@@ -220,6 +219,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
             # We still need to process inputs when there are sustains left
             if self.active_sustains:
                 self.process_inputs()
+            self.calculate_uncommited()
             return
 
         can_tap_hopo = (self.current_notes[0].type == FiveFretNoteType.HOPO and (self.streak > 0 or len(self.current_notes) == len(self.chart.chords)))
@@ -228,6 +228,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
             self.tap_shape = self.last_chord_shape
         
         self.process_inputs()
+        self.calculate_uncommited()
 
     def process_inputs(self):
         # Process all the note inputs
