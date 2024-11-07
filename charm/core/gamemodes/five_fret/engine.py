@@ -365,13 +365,13 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         # TODO: Change this to record when the overstrum will occur
         # TODO: This means we can easily track multiple levels of leniency
         if abs(time - last_strum) <= self.strum_leniency:
-            self.overstrum()
+            self.overstrum(time)
         self.last_strum_time = time
 
         if not (self.window_back_end <= current_chord.time <= self.window_front_end):
             # The current chord isn't available to process,
             # but we needed to process overstrum
-            self.overstrum()
+            self.overstrum(time)
             return
 
         # We use the anchoring logic to easily ignore ghosted inputs
@@ -390,7 +390,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
             pass
 
         # If fail to chord skip then break sustains
-        self.overstrum()
+        self.overstrum(time)
 
     def miss_chord(self, chord: FiveFretChord, time: float = float('inf')) -> None:
         if chord.missed or chord.hit:
@@ -450,7 +450,6 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         self.active_sustains.append(FiveFretSustain(chord, chord.notes, time, self.multiplier))
 
     def score_sustain(self, sustain: FiveFretSustain) -> bool:
-        print('sajkdhaskhj')
         rolling_score = 0
         start = sustain.start
         for fret_data in sustain.frets.values():
