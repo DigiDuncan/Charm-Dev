@@ -278,9 +278,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
                 continue
             
             shape = sustain.get_shape_at_time(time)
-            print( self.linked_disjoints, not sustain.is_disjoint, (has_active_chord and chord_shape.contains(shape)), chord_shape.matches(shape))
             if self.linked_disjoints or not sustain.is_disjoint and ((has_active_chord and chord_shape.contains(shape)) or chord_shape.matches(shape)):
-                print('wow!')
                 sustain.drop_sustain(time)
                 self.score_sustain(sustain)
                 continue
@@ -361,7 +359,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         # Prolly so much else lmao
 
         current_chord = self.current_notes[0]
-        current_shape = self.last_chord_shape
+        chord_shape = self.last_chord_shape
         last_strum = self.last_strum_time
 
         # TODO: Change this to record when the overstrum will occur
@@ -373,10 +371,17 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         if not (self.window_back_end <= current_chord.time <= self.window_front_end):
             # The current chord isn't available to process,
             # but we needed to process overstrum
-            self.drop_sustains(time)
+            self.overstrum()
             return
+
+        # We use the anchoring logic to easily ignore ghosted inputs
+        ghost_shape = chord_shape
+        for sustain in self.active_sustains:
+            for fret, data in sustain.frets.items():
+                if not data.dropped or data.drop != NEVER:
+                    ghost_shape = ghost_shape.update_fret(fret, None)
  
-        if current_shape.matches(current_chord.shape):
+        if ghost_shape.matches(current_chord.shape):
             self.hit_chord(current_chord, time)
             self.last_strum_time = -float('inf')
             return
@@ -385,7 +390,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
             pass
 
         # If fail to chord skip then break sustains
-        self.drop_sustains(time)
+        self.overstrum()
 
     def miss_chord(self, chord: FiveFretChord, time: float = float('inf')) -> None:
         if chord.missed or chord.hit:
@@ -461,8 +466,13 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
             return True
         return False
 
-    def overstrum(self) -> None:
-        logger.info(f'Overstrummed at t={self.chart_time}')
+    def overstrum(self, time: Seconds) -> None:
+        self.drop_sustains(time)
+
+        # Star Power and Solo
+
+        self.max_streak = max(self.streak, self.max_streak)
+        self.streak = 0
 
     # def generate_results(self) -> Results[C]:
     #     raise NotImplementedError
