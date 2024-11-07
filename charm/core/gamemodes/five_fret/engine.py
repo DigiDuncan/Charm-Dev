@@ -325,7 +325,16 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
             # but we needed to update the chord shape, and handle sustain fretting.
             return
 
-        if chord_shape.matches(current_chord.shape):
+        # While this could be done in the previous sustain loop this is easier logically
+        # We use the anchoring logic to easily ignore ghosted inputs
+        ghost_shape = chord_shape
+        for sustain in self.active_sustains:
+            for fret, data in sustain.frets.items():
+                if not data.dropped or data.drop != NEVER:
+                    ghost_shape = ghost_shape.update_fret(fret, None)
+
+
+        if ghost_shape.matches(current_chord.shape):
             if abs(time - last_strum) <= self.strum_leniency:
                 # * Because we can strum any note irrespective of its type
                 # * this works for Taps and Hopos
