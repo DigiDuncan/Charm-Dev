@@ -190,12 +190,12 @@ class FiveFretChord:
 
     @property
     def shape(self) -> ChordShape:
-        if 7 in self.frets:
+        if 7 in self.frets and self.size == 1:
             # Open note
             return ChordShape(False, False, False, False, False)
         # Chords
         fret_set = set(self.frets)
-        is_anchored = self.type == FiveFretNoteType.TAP or len(self.frets) == 1
+        is_anchored = (self.type == FiveFretNoteType.TAP and 7 not in fret_set) or len(self.frets) == 1
         min_fret = min(fret_set)
         return ChordShape(
             *(

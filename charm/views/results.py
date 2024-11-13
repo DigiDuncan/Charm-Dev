@@ -33,7 +33,6 @@ class ResultsView(DigiView):
         self.data_text: Text = None
         self.judgements_text: Text = None
         self.heatmap: Heatmap = None
-        self.gum_wrapper: GumWrapper = None
         self.sprite_list: SpriteList = None
         self.success: bool = False
 
@@ -76,7 +75,6 @@ class ResultsView(DigiView):
         self.sprite_list = SpriteList()
         self.sprite_list.extend((self.grade_sprite, self.heatmap))
 
-        self.gum_wrapper = GumWrapper()
         self.success = True
         super().postsetup()
 
@@ -103,13 +101,13 @@ class ResultsView(DigiView):
     @shows_errors
     def on_update(self, delta_time: float) -> None:
         super().on_update(delta_time)
-        self.gum_wrapper.on_update(delta_time)
+        self.wrapper.update(delta_time)
 
     @shows_errors
     def on_draw(self) -> None:
         super().predraw()
         if self.success:
-            self.gum_wrapper.draw()
+            self.wrapper.draw()
             self.score_text.draw()
             self.data_text.draw()
             self.judgements_text.draw()

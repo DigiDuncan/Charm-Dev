@@ -30,7 +30,6 @@ class UnifiedSongMenuView(DigiView):
     @shows_errors
     def setup(self) -> None:
         super().presetup()
-        self.gum_wrapper = GumWrapper()
         self.element.bounds = self.window.rect
         self.element.set_chartsets(CHART_LOADER.copy_chartsets())
         super().postsetup()
@@ -87,7 +86,7 @@ class UnifiedSongMenuView(DigiView):
     @shows_errors
     def on_update(self, delta_time: float) -> None:
         super().on_update(delta_time)
-        self.gum_wrapper.on_update(delta_time)
+        self.wrapper.update(delta_time)
         self.animator.update(delta_time)
 
         if not CHART_LOADER.is_finished or not CHART_LOADER.is_up_to_date(self.element.chartsets):
@@ -102,6 +101,6 @@ class UnifiedSongMenuView(DigiView):
     def on_draw(self) -> None:
         super().predraw()
         # Charm BG
-        self.gum_wrapper.draw()
+        self.wrapper.draw()
         self.element.draw()
         super().postdraw()

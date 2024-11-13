@@ -6,6 +6,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from charm.lib.digiwindow import DigiWindow
     from arcade import Rect
+    from charm.lib.charm import GumWrapper
 
 import time
 from dataclasses import dataclass
@@ -82,6 +83,10 @@ class DigiView(View):
     @property
     def sfx(self) -> SFXManager:
         return self.window.sfx
+    
+    @property
+    def wrapper(self) -> GumWrapper:
+        return self.window.wrapper
 
     @property
     def size(self) -> tuple[int, int]:

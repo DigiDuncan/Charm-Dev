@@ -18,7 +18,6 @@ class OptionsView(DigiView):
     @shows_errors
     def setup(self) -> None:
         super().presetup()
-        self.gum_wrapper = GumWrapper()
         self.haha = Text(f"VOLUME\n{round(settings.volume.master * 100)}%", (self.size[0] // 2), (self.size[1] // 2), font_size=128,
                     anchor_x="center", anchor_y="center", color=arcade.color.BLACK,
                     font_name="bananaslip plus", multiline = True, width = 1920,
@@ -54,12 +53,12 @@ class OptionsView(DigiView):
     @shows_errors
     def on_update(self, delta_time: float) -> None:
         super().on_update(delta_time)
-        self.gum_wrapper.on_update(delta_time)
+        self.wrapper.update(delta_time)
 
     @shows_errors
     def on_draw(self) -> None:
         super().predraw()
         # Charm BG
-        self.gum_wrapper.draw()
+        self.wrapper.draw()
         self.haha.draw()
         super().postdraw()

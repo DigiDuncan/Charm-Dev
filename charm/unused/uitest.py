@@ -155,7 +155,7 @@ class UiView(DigiView):
     @shows_errors
     def on_update(self, delta_time: float) -> None:
         super().on_update(delta_time)
-        self.gum_wrapper.on_update(delta_time)
+        self.gum_wrapper.update(delta_time)
 
         s = smerp(self.scroll, self.target_scroll, self._scroll_decay, delta_time)
         if abs(self.scroll - s) < 0.0001:

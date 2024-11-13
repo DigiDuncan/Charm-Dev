@@ -48,7 +48,6 @@ class GameView(DigiView):
     @shows_errors
     def setup(self) -> None:
         self.presetup()
-        self.gum_wrapper = GumWrapper()
 
         if not self._initialized:
             # TODO: make an explicit error for this
@@ -140,7 +139,7 @@ class GameView(DigiView):
     @shows_errors
     def on_update(self, delta_time: float) -> None:
         super().on_update(delta_time)
-        self.gum_wrapper.on_update(delta_time)
+        self.wrapper.update(delta_time)
 
         self._engine.update(self._tracks.time)
         self._engine.calculate_score()
@@ -155,7 +154,7 @@ class GameView(DigiView):
     def on_draw(self) -> None:
         self.predraw()
         # Charm BG
-        self.gum_wrapper.draw()
+        self.wrapper.draw()
         self._display.draw()
         self.postdraw()
 

@@ -14,7 +14,6 @@ class TemplateView(DigiView):
     @shows_errors
     def setup(self) -> None:
         super().presetup()
-        self.gum_wrapper = GumWrapper()
         super().postsetup()
 
     def on_show_view(self) -> None:
@@ -32,11 +31,11 @@ class TemplateView(DigiView):
     @shows_errors
     def on_update(self, delta_time: float) -> None:
         super().on_update(delta_time)
-        self.gum_wrapper.on_update(delta_time)
+        self.wrapper.update(delta_time)
 
     @shows_errors
     def on_draw(self) -> None:
         super().predraw()
         # Charm BG
-        self.gum_wrapper.draw()
+        self.wrapper.draw()
         super().postdraw()

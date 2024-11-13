@@ -23,8 +23,6 @@ from charm.views.settings import SettingsView
 class MainMenuView(DigiView):
     def __init__(self, back: DigiView):
         super().__init__(fade_in=1, back=back)
-        # Generate "gum wrapper" background
-        self.gum_wrapper = GumWrapper()
         self.menu = MainMenu([
             MainMenuItem("Play", "songs", UnifiedSongMenuView(back=self)),
             # MainMenuItem("Playlists", "playlists", None),
@@ -103,7 +101,7 @@ class MainMenuView(DigiView):
     @shows_errors
     def on_update(self, delta_time: float) -> None:
         super().on_update(delta_time)
-        self.gum_wrapper.on_update(delta_time)
+        self.wrapper.update(delta_time)
         self.menu.on_update(delta_time)
 
     def countdown(self) -> None:
@@ -117,7 +115,7 @@ class MainMenuView(DigiView):
     def on_draw(self) -> None:
         super().predraw()
         # Charm BG
-        self.gum_wrapper.draw()
+        self.wrapper.draw()
         left = ease_quartout(self.size[0], 0, perc(0.5, 1.5, self.local_time))
         arcade.draw_lrbt_rectangle_filled(left, self.size[0], self.size[1] // 4, (self.size[1] // 4) * 3, colors.WHITE[:3] + (127,))
 

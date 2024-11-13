@@ -48,13 +48,14 @@ class FiveFretSustain:
             all(self.notes[0].length == note.length for note in self.notes)
         )
         self.min_fret: int = min(self.frets.keys())
+        self.is_open: bool = 7 in self.frets and self.chord.size == 1
         self.is_tap: bool = self.notes[0].type == FiveFretNoteType.TAP
-        self.is_anchored: bool = self.is_single or self.is_tap
+        self.is_anchored: bool = self.is_single or (self.is_tap and not self.is_open)
 
         self.is_finished: bool = False
 
     def get_shape_at_time(self, time: Seconds) -> ChordShape:
-        if 7 in self.frets:
+        if self.is_open:
             return ChordShape(False, False, False, False, False)
         return ChordShape(*(
                 None if (i < self.min_fret and self.is_anchored) else (self.frets.get(i, EMPTY_FRET_DATA).end >= time)
@@ -260,10 +261,6 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         # Sustains have some oddities because they 'ghost' the user's input.
         # A chord matches even if the player is holding down extra notes IF they are for sustains.
 
-        # TODO:
-        # Sustains
-        # Ghosting
-
         if not self.current_notes:
             current_chord = None
             has_active_chord = False
@@ -284,20 +281,26 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         if not chord_shape.matches(self.tap_shape):
             self.tap_shape = EMPTY_CHORD
 
+        # When we do sustains we have to check for 'lift-off' because the player may be
+        # moving towards the correct sustain fretting, and we have to be lenient on them
+        # TODO: add a lenience timer for this? Say they have 1/30th of a second to lift off before its marked as wrong?
+
         for sustain in self.active_sustains:
-            # There is no case where an open sustain could be a disjoint so we only care about this sole case
-            if 7 in sustain.frets and not chord_shape.is_open and not has_active_chord:
+            shape = sustain.get_shape_at_time(time)
+            # We are lenient on lift-off
+            # TODO: We need to account for ghosted notes for open sustsins :melt:
+            if shape.is_open and (not chord_shape.is_open and pressed) and not has_active_chord:
                 logger.info('open sustain dropped')
                 sustain.drop_sustain(time)
                 continue
             
-            shape = sustain.get_shape_at_time(time)
             if (self.linked_disjoints or not sustain.is_disjoint) and ((has_active_chord and chord_shape.contains(shape)) or chord_shape.matches(shape)):
                 logger.info('linked sustain dropped')
                 sustain.drop_sustain(time)
                 self.score_sustain(sustain)
                 continue
-
+            
+            # TODO: handle disjointed open chords :melt:
             sustain_finished = True
             for idx, fretting in enumerate(shape):
                 # anchoring is an easy check
@@ -329,6 +332,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
 
                 sustain_finished = False
 
+            # TODO: This doesn't account for open chords
             sustain.is_finished = sustain_finished
             if sustain_finished:
                 logger.info('sustain dropped and finished')
@@ -345,7 +349,10 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         ghost_shape = chord_shape
         for sustain in self.active_sustains:
             for fret, data in sustain.frets.items():
+                if fret == 7:
+                    continue
                 if not data.dropped or data.drop != FOREVER:
+                    print(fret, data)
                     ghost_shape = ghost_shape.update_fret(fret, None)
 
 
@@ -368,11 +375,6 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         # Then we check for struming notes
         # If we didn't hit a chord then lets look into the future
         # If that didn't work then 'start' the strum leniency
-
-        # TODO:
-        # No Input Ghosting
-        # No Chord Skipping
-        # Prolly so much else lmao
 
         if not self.current_notes and self.active_sustains:
             self.overstrum(time)
@@ -398,6 +400,8 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         ghost_shape = chord_shape
         for sustain in self.active_sustains:
             for fret, data in sustain.frets.items():
+                if fret == 7:
+                    continue
                 if not data.dropped or data.drop != FOREVER:
                     ghost_shape = ghost_shape.update_fret(fret, None)
  

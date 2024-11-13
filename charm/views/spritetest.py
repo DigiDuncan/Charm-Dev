@@ -20,7 +20,6 @@ class SpriteTestView(DigiView):
         self.data_label: Text
         self.fps: int
         self.paused: bool
-        self.gum_wrapper: GumWrapper
         self.sprite_list: SpriteList[AdobeSprite]
 
     def setup(self) -> None:
@@ -42,7 +41,6 @@ class SpriteTestView(DigiView):
         self.fps = self.sprite.fps
         self.paused = False
 
-        self.gum_wrapper = GumWrapper()
         super().postsetup()
 
     def on_button_press(self, keymap: KeyMap) -> None:
@@ -99,11 +97,11 @@ class SpriteTestView(DigiView):
         Sprite F#: {self.sprite.animation_frame}
         X,Y,W,H: {st.x}, {st.y}, {st.width}, {st.height}
         FX,FY,FW,FH: {st.frame_x}, {st.frame_y}, {st.frame_width}, {st.frame_height}"""
-        self.gum_wrapper.on_update(delta_time)
+        self.wrapper.update(delta_time)
 
     def on_draw(self) -> None:
         super().predraw()
-        self.gum_wrapper.draw()
+        self.wrapper.draw()
         if self.sprite_list:
             self.sprite_list.draw()
             self.anim_label.draw()

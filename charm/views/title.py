@@ -17,7 +17,7 @@ from pyglet.text import Label
 import charm.data.audio
 import charm.data.images
 from charm.lib.anim import ease_linear, ease_quadinout, perc
-from charm.lib.charm import CharmColors, GumWrapper
+from charm.lib.charm import CharmColors
 from charm.lib.digiview import DigiView, disable_when_focus_lost, shows_errors
 from charm.lib.keymap import keymap
 from charm.lib.utils import img_from_path, typewriter
@@ -51,8 +51,7 @@ class TitleView(DigiView):
         self.goto_fade_time: float | None
         self.goto_switch_time: float | None
         self.fade_volume: float | None
-        self.components.register(GumWrapper())
-        # self.components.register(GumWrapper(size=self.size))  # Old GumWrapper
+        self.components.register(self.wrapper)
         # Set up main logo
         self.components.register(LogoSprite(self.window))
         self.splash_label = self.components.register(self.generate_splash())
@@ -114,7 +113,6 @@ class TitleView(DigiView):
     @shows_errors
     def on_update(self, delta_time: float) -> None:
         super().on_update(delta_time)
-
         if self.goto_fade_time is not None and self.goto_switch_time is not None and self.fade_volume is not None:
             if self.goto_fade_time <= self.local_time < self.goto_switch_time:
                 # Fade music

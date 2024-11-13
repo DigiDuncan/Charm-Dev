@@ -69,8 +69,8 @@ class GumWrapperOld(Component):
 
     def on_update(self, delta_time: float) -> None:
         """Move background logos forwards and backwards, looping."""
-        self.logos_forward.on_update(delta_time)
-        self.logos_backward.on_update(delta_time)
+        self.logos_forward.update(delta_time)
+        self.logos_backward.update(delta_time)
 
     def draw(self) -> None:
         self.logos_forward.draw()
@@ -118,10 +118,16 @@ class GumWrapper(Component):
 
         self._final_render_geometry: gl.Geometry = gl.geometry.quad_2d_fs()
 
+        self.window_position: tuple[int, int] = 0, 0
+
     def on_resize(self, width: int, height: int) -> None:
         pass
-
+    
+    # Here for componenet system still in use on the Title -.-
     def on_update(self, delta_time: float) -> None:
+        self.update(delta_time)
+
+    def update(self, delta_time: float) -> None:
         v = delta_time * self._logo_size[0] * self._loops_per_sec
         a, b, c, d = self._wrapper_sprites
         a.center_x = (a.center_x + v - self._logo_size[0]/2.0) % self._logo_size[0] + self._logo_size[0]/2.0
@@ -137,8 +143,7 @@ class GumWrapper(Component):
 
         old_blend_function = self._win.ctx.blend_func
         with self._win.ctx.enabled(self._win.ctx.BLEND):
-            s_pos = self._win.get_location()
-            self._wrapper_shader['offset'] = s_pos[0], -s_pos[1]-self._win.height
+            self._wrapper_shader['offset'] = self.window_position[0], -self.window_position[1]-self._win.height
             self._win.ctx.blend_func = self._win.ctx.BLEND_DEFAULT
             self._win.default_camera.use()
             self._wrapper_texture.use()
@@ -154,7 +159,7 @@ class SlidingSpriteList[T: BasicSprite](SpriteList[T]):
         super().__init__()
         self.alpha = alpha
 
-    def on_update(self, delta_time: float = 1 / 60) -> None:
+    def update(self, delta_time: float = 1 / 60) -> None:
         """Move background logos forwards and backwards, looping."""
         old_x = self.x
         slide_x = self.loop_width * delta_time * self.speed
@@ -162,6 +167,6 @@ class SlidingSpriteList[T: BasicSprite](SpriteList[T]):
         self.x = new_x
         to_move = new_x - old_x
         self.move(to_move, 0)
-        super().on_update(delta_time)
+        SpriteList.update(self)
 
 

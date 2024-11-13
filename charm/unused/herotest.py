@@ -121,7 +121,7 @@ class HeroTestView(DigiView):
         if self.lyric_animator:
             self.lyric_animator.update(self.song.time)
 
-        self.gum_wrapper.on_update(delta_time)
+        self.gum_wrapper.update(delta_time)
 
     @shows_errors
     def on_draw(self) -> None:
