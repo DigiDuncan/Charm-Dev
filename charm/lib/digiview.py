@@ -18,7 +18,6 @@ from imgui_bundle import imgui
 from arcade import LBWH, LRBT, View, SpriteList
 
 from charm.lib.charm import CharmColors
-from charm.lib.components import ComponentManager
 from charm.lib.anim import ease_linear, perc
 from charm.lib.errors import CharmError, GenericError, log_charmerror
 from charm.lib.keymap import KeyMap
@@ -76,7 +75,6 @@ class DigiView(View):
         self._error_list: SpriteList = SpriteList()
         self.local_start: float = 0
         self.fader = Fader(self, fade_in)
-        self.components = ComponentManager()
         self.debug_timer = DebugTimer()
         self.last_error: CharmError | None = None
 
@@ -134,7 +132,6 @@ class DigiView(View):
         self.window.camera.projection = LRBT(-width/2, width/2, -height/2, height/2)
         self.window.camera.viewport = LBWH(0, 0, width, height)
         self.fader.on_resize(width, height)
-        self.components.on_resize(width, height)
 
     @shows_errors
     def on_button_press(self, keymap: KeyMap) -> None:
@@ -150,7 +147,6 @@ class DigiView(View):
                 self._errors.remove(popup)
                 self._error_list.remove(popup.error.sprite)
         self.fader.on_update(delta_time)
-        self.components.on_update(delta_time)
 
     def predraw(self) -> None:
         self.debug_timer.draw_start()
@@ -162,7 +158,6 @@ class DigiView(View):
         self.postdraw()
 
     def postdraw(self) -> None:
-        self.components.draw()
         self._error_list.draw()
         self.window.debug.draw()
         self.fader.on_draw()

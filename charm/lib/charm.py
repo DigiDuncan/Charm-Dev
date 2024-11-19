@@ -1,7 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from charm.lib.components import Component
 if TYPE_CHECKING:
     from arcade import BasicSprite
 
@@ -45,7 +44,7 @@ def load_missing_texture(height: int, width: int) -> Texture:
     return Texture(image)
 
 
-class GumWrapperOld(Component):
+class GumWrapperOld:
     def __init__(self, size: tuple[int, int]):
         """Generate two SpriteLists that makes a gum wrapper-style background."""
         screen_w, screen_h = size
@@ -77,7 +76,7 @@ class GumWrapperOld(Component):
         self.logos_backward.draw()
 
 
-class GumWrapper(Component):
+class GumWrapper:
 
     def __init__(self):
         """

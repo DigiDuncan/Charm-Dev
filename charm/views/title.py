@@ -1,7 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from charm.lib.components import Component
 from charm.lib.toast import ToastDisplay
 if TYPE_CHECKING:
     from charm.lib.digiwindow import DigiWindow
@@ -51,18 +50,14 @@ class TitleView(DigiView):
         self.goto_fade_time: float | None
         self.goto_switch_time: float | None
         self.fade_volume: float | None
-        self.components.register(self.wrapper)
-        # Set up main logo
-        self.components.register(LogoSprite(self.window))
-        self.splash_label = self.components.register(self.generate_splash())
-        # Song details
-        self.components.register(SongLabel(self))
-        # Press start prompt
-        self.press_label = self.components.register(PressLabel(self, x=self.window.width // 2, y=self.window.height // 4))
-        self.components.register(WelcomeLabel(x=self.window.width // 2, y=6))
-
-        self.toast = ToastDisplay(width = 400, height = 100)
-
+    
+        self.logo: LogoSprite # Main logo
+        self.splash: SplashLogo | ClownLogo
+        self.song_label: SongLabel # Song details
+        self.press_label: PressLabel # Press start prompt
+        self.welcome_label: WelcomeLabel
+        self.toast: ToastDisplay
+        
     @shows_errors
     def setup(self) -> None:
         super().presetup()
@@ -70,7 +65,16 @@ class TitleView(DigiView):
         self.goto_switch_time = None
         self.fade_volume = None
         self.window.theme_song.seek(self.local_time + 3)
-        self.splash_label.random_splash()
+
+        self.logo = LogoSprite(self.window)
+        self.splash = self.generate_splash()
+        self.splash.random_splash()
+
+        self.song_label = SongLabel(self)
+        self.press_label = PressLabel(self, x=int(self.window.center_x), y=int(self.window.center_y)//2)
+        self.welcome_label = WelcomeLabel(x = int(self.window.center_x), y=6)
+
+        self.toast = ToastDisplay(width=400, height=100)
         keymap.set_controller()
         super().postsetup()
 
@@ -111,6 +115,13 @@ class TitleView(DigiView):
             self.start()
 
     @shows_errors
+    def on_resize(self, width: int, height: int) -> None:
+        self.wrapper.on_resize(width, height)
+        self.logo.on_resize(width, height)
+        self.splash.on_resize(width, height)
+        self.press_label.on_resize(width, height)
+    
+    @shows_errors
     def on_update(self, delta_time: float) -> None:
         super().on_update(delta_time)
         if self.goto_fade_time is not None and self.goto_switch_time is not None and self.fade_volume is not None:
@@ -121,10 +132,21 @@ class TitleView(DigiView):
                 # Go to main menu
                 self.go_start()
 
+        self.wrapper.update(delta_time)
+        self.logo.on_update(delta_time)
+        self.splash.on_update(delta_time)
+        self.song_label.on_update(delta_time)
+        self.press_label.on_update(delta_time)
         self.toast.update(delta_time)
 
     def on_draw(self) -> None:
         super().on_draw()
+        self.wrapper.draw()
+        self.logo.draw()
+        self.splash.draw()
+        self.song_label.draw()
+        self.press_label.draw()
+        self.welcome_label.draw()
         self.toast.draw()
 
     def start(self) -> None:
@@ -142,7 +164,7 @@ class TitleView(DigiView):
         self.goto(v)
 
 
-class ClownLogo(Text, Component):
+class ClownLogo(Text):
     def __init__(self, x: int, y: int):
         super().__init__(
             "CLOWN KILLS YOU",
@@ -172,7 +194,7 @@ class ClownLogo(Text, Component):
         self.position = (height / 2, width / 2, 0)
 
 
-class SplashLogo(Label, Component):
+class SplashLogo(Label):
     def __init__(self, view: DigiView, splashes: list[str]):
         self.view = view
         self.splashes = splashes
@@ -205,7 +227,7 @@ class SplashLogo(Label, Component):
         self.position = (width // 2, height // 2, 0)
 
 
-class SongLabel(Label, Component):
+class SongLabel(Label):
     def __init__(self, view: DigiView):
         self.view = view
         width = 540
@@ -235,7 +257,7 @@ class SongLabel(Label, Component):
                 self.x = ease_quadinout(x_1, x_2, p)
 
 
-class PressLabel(Label, Component):
+class PressLabel(Label):
     def __init__(self, view: DigiView, x: int, y: int):
         self.view = view
         super().__init__(
@@ -264,7 +286,7 @@ class PressLabel(Label, Component):
         self.position = (width / 2, height / 2 / 2, 0)
 
 
-class WelcomeLabel(Text, Component):
+class WelcomeLabel(Text):
     def __init__(self, x: int, y: int):
         super().__init__(
             f"welcome, {getpass.getuser()}!",
@@ -289,8 +311,7 @@ class WelcomeLabel(Text, Component):
         self.position = (width // 2, 6, 0)
 
 
-# TODO: make a sprite component
-class LogoSprite(Sprite, Component):
+class LogoSprite(Sprite):
     def __init__(self, window: DigiWindow):
         self.window = window
         logo_img = img_from_path(files(charm.data.images) / "logo.png")

@@ -1,3 +1,5 @@
+# ! Deprecated
+
 class Component:
     def on_update(self, delta_time: float) -> None:
         return
