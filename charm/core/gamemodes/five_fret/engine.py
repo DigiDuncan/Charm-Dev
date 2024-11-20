@@ -127,7 +127,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         self.active_sustains: list[FiveFretSustain] = []
 
         self.infinite_front_end = False
-        self.linked_disjoints = False # Whether sustains are dropped seperately or together
+        self.linked_disjoints = True # Whether sustains are dropped seperately or together
         self.can_chord_skip = True
         self.punish_chord_skip = True
         self.reward_sustain_accuracy = False # Should sustains reward accurate players?
@@ -288,16 +288,19 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         for sustain in self.active_sustains:
             shape = sustain.get_shape_at_time(time)
             # We are lenient on lift-off
-            # TODO: We need to account for ghosted notes for open sustsins :melt:
+            # TODO: We need to account for ghosted notes for open sustains :melt:
             if shape.is_open and (not chord_shape.is_open and pressed) and not has_active_chord:
                 logger.info('open sustain dropped')
                 sustain.drop_sustain(time)
+                self.score_sustain(sustain)
+                self.active_sustains.remove(sustain)
                 continue
             
-            if (self.linked_disjoints or not sustain.is_disjoint) and ((has_active_chord and chord_shape.contains(shape)) or chord_shape.matches(shape)):
+            if (self.linked_disjoints or not sustain.is_disjoint) and not ((has_active_chord and chord_shape.contains(shape)) or chord_shape.matches(shape)):
                 logger.info('linked sustain dropped')
                 sustain.drop_sustain(time)
                 self.score_sustain(sustain)
+                self.active_sustains.remove(sustain)
                 continue
             
             # TODO: handle disjointed open chords :melt:
