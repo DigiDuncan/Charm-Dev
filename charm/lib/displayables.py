@@ -302,6 +302,10 @@ class NumericDisplay:
 
         self.digits = [Sprite(self.textures[0], scale = scale, center_x = initial_x - (i * self.textures[0].width * scale), center_y = initial_y) for i in range(inital_digits)]
 
+        if not self.show_zeroes:
+            for d in self.digits[:-1]:
+                d.visible = False
+
         for d in self.digits:
             d.color = color
 

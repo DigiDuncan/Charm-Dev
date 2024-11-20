@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from charm.lib.digiview import DigiWindow
 from collections.abc import Sequence
 
-from arcade import get_window
+from arcade import Text, get_window
 
 from charm.lib.types import Seconds
 from charm.lib.displayables import NumericDisplay, Timer
@@ -47,6 +47,10 @@ class FiveFretDisplay(Display[FiveFretChart, FiveFretEngine]):
 
         # Score display
         self.score_display = NumericDisplay(self._win.width - 10, 200, 64, color = arcade.color.BLACK, show_zeroes = False)
+        self.combo_display = Text("| 0", self._win.center_x, 5, arcade.color.BLACK, 20, anchor_x = "left", anchor_y = "bottom", align = "left", font_name = "bananaslip plus")
+        self.multipler_display = Text("1x ", self._win.center_x, 5, arcade.color.BLACK, 20, anchor_x = "right", anchor_y = "bottom", align = "right", font_name = "bananaslip plus")
+        self.multipler_shadow_display = Text("1x ", self._win.center_x + 2, 3, arcade.color.BLACK.replace(a = 127), 20, anchor_x = "right", anchor_y = "bottom", align = "right", font_name = "bananaslip plus")
+        self.section_display = Text("No Section", self.timer.x + self.timer.width, self.timer.y + self.timer.height + 5, arcade.color.BLACK, 24, align = "right", font_name = "bananaslip plus", anchor_x = "right", anchor_y = "bottom")
 
     def update(self, song_time: Seconds) -> None:
         self._song_time = song_time
@@ -64,6 +68,21 @@ class FiveFretDisplay(Display[FiveFretChart, FiveFretEngine]):
             self.current_section = sec.name if sec else "No Section"
 
         self.score_display.score = self.engine.score
+        self.combo_display.text = f"| {self.engine.streak}"
+        self.section_display.text = self.current_section
+        self.multipler_display.text = f"{self.engine.multiplier}x "
+        self.multipler_shadow_display.text = f"{self.engine.multiplier}x "
+        match self.engine.multiplier:
+            case 1:
+                self.multipler_display.color = arcade.color.FOREST_GREEN
+            case 2:
+                self.multipler_display.color = arcade.color.DARK_ORANGE
+            case 3:
+                self.multipler_display.color = arcade.color.DARK_RED
+            case 4:
+                self.multipler_display.color = arcade.color.PURPLE_HEART
+            case _:
+                self.multipler_display.color = arcade.color.DARK_CYAN
 
     def draw(self) -> None:
         self.highway.draw()
@@ -71,9 +90,11 @@ class FiveFretDisplay(Display[FiveFretChart, FiveFretEngine]):
         # self.hp_bar.draw()
         self.timer.draw()
 
-        arcade.draw_text(self.current_section, self.timer.x + self.timer.width, self.timer.y + self.timer.height + 5, arcade.color.BLACK, 24, align = "right", font_name = "bananaslip plus", anchor_x = "right", anchor_y = "bottom")
-
         if self.lyric_animator:
             self.lyric_animator.draw()
 
         self.score_display.draw()
+        self.combo_display.draw()
+        self.section_display.draw()
+        self.multipler_shadow_display.draw()
+        self.multipler_display.draw()

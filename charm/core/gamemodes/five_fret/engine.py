@@ -2,6 +2,7 @@ from queue import Queue
 from math import ceil
 from logging import getLogger
 from dataclasses import dataclass
+from charm.core.generic.results import Results
 from charm.lib.errors import ThisShouldNeverHappenError
 
 from charm.core.generic.engine import DigitalKeyEvent
@@ -145,6 +146,11 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
 
         # The actual score
         self.commited_score: int = 0
+
+        # I guess we need this for Results
+        self.latest_judgement = None
+        self.latest_judgement_time = None
+        self.all_judgements: list[tuple[Seconds, Seconds, Judgement]] = []
 
     @property
     def multiplier(self) -> int:
@@ -326,7 +332,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
                 data = sustain.frets[idx]
                 if data.dropped or data.drop != FOREVER:
                     continue
-                
+
                 # This is the 'contain' check from above... kinda
                 if not chord_fretting:
                     data.drop = time
@@ -463,6 +469,13 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         if chord.hit:
             self.commited_score += 50 * self.multiplier * chord.size
 
+        # Judge the player ... kinda?
+        rt = chord.hit_time - chord.time  # type: ignore -- the type checker is stupid, clearly this isn't ever None at this point
+        j = self.get_note_judgement(chord) # type: ignore -- look into this.
+        self.latest_judgement = j
+        self.latest_judgement_time = self.chart_time
+        self.all_judgements.append((self.latest_judgement_time, rt, self.latest_judgement))
+
     def update_sustains(self):
         time = self.chart_time + self.sustain_end_leniency
         for sustain in self.active_sustains[:]:
@@ -501,9 +514,9 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
     def score_sustain(self, sustain: FiveFretSustain) -> bool:
         if not sustain.is_finished:
             return False
-        
+
         score = self.get_sustain_score(sustain)
-    
+
         # We only want to score the sustain when every fret has been dropped/finished.
         self.sustain_scores.append(FiveFretSustainScore(sustain.start, sustain.hit_time, sustain.frets, sustain.chord, score, sustain.multiplier))
         self.commited_score += ceil(score) * sustain.multiplier
@@ -518,5 +531,18 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         self.max_streak = max(self.streak, self.max_streak)
         self.streak = 0
 
-    # def generate_results(self) -> Results[C]:
-    #     raise NotImplementedError
+    def generate_results(self) -> Results:
+        return Results(
+            self.chart,
+            self.hit_window,
+            self.judgements,
+            self.all_judgements,
+            self.score,
+            self.hits,
+            self.misses,
+            self.accuracy,
+            self.grade,
+            self.fc_type,
+            self.streak,
+            self.max_streak
+        )
