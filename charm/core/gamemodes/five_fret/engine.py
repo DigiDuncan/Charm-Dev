@@ -355,7 +355,6 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
                 if fret == 7:
                     continue
                 if not data.dropped or data.drop != FOREVER:
-                    print(fret, data)
                     ghost_shape = ghost_shape.update_fret(fret, None)
 
 
