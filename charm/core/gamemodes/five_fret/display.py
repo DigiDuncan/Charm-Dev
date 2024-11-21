@@ -13,7 +13,7 @@ from collections.abc import Sequence
 from arcade import Text, get_window
 
 from charm.lib.types import Seconds
-from charm.lib.displayables import NumericDisplay, Timer
+from charm.lib.displayables import NoteStreakDisplay, NumericDisplay, Timer
 
 from charm.core.generic import Display
 from .chart import FiveFretChart, SectionEvent
@@ -52,6 +52,9 @@ class FiveFretDisplay(Display[FiveFretChart, FiveFretEngine]):
         self.multipler_shadow_display = Text("1x ", self._win.center_x + 2, 3, arcade.color.BLACK.replace(a = 127), 20, anchor_x = "right", anchor_y = "bottom", align = "right", font_name = "bananaslip plus")
         self.section_display = Text("No Section", self.timer.x + self.timer.width, self.timer.y + self.timer.height + 5, arcade.color.BLACK, 24, align = "right", font_name = "bananaslip plus", anchor_x = "right", anchor_y = "bottom")
 
+        # Note streak popup
+        self.note_streak_display = NoteStreakDisplay(self.engine, self._win.center_x, self._win.height - 100)
+
     def update(self, song_time: Seconds) -> None:
         self._song_time = song_time
 
@@ -84,6 +87,8 @@ class FiveFretDisplay(Display[FiveFretChart, FiveFretEngine]):
             case _:
                 self.multipler_display.color = arcade.color.DARK_CYAN
 
+        self.note_streak_display.update(self._song_time)
+
     def draw(self) -> None:
         self.highway.draw()
 
@@ -98,3 +103,4 @@ class FiveFretDisplay(Display[FiveFretChart, FiveFretEngine]):
         self.section_display.draw()
         self.multipler_shadow_display.draw()
         self.multipler_display.draw()
+        self.note_streak_display.draw()
