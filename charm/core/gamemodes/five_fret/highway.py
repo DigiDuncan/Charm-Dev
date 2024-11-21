@@ -31,7 +31,7 @@ def load_note_texture(note_type: str, note_lane: int, height: int) -> Texture:
     image_name = f"{note_type}-{note_lane + 1}"
     open_height = int(height * 48 / 128)  # based onm a pixel ratio
     try:
-        if image_name.startswith(("strikeline", "tail", "body", "cap", "active")):
+        if image_name.startswith(("tail", "body", "cap")):
             image = img_from_path(files(skins) / "hero" / f"{image_name}.png")
         else:
             image = img_from_path(files(skins) / "hero" / "3d" / f"{image_name}.png")
@@ -92,20 +92,22 @@ class FiveFretHighway(Highway[FiveFretChart, FiveFretNote, FiveFretEngine]):
 
         # NOTE POOL DEFINITION AND CONSTRUCTION
 
+        billboard_program = self.window.ctx.load_program(  # noqa: SLF001
+            vertex_shader=":system:shaders/sprites/sprite_list_geometry_vs.glsl",
+            geometry_shader=get_shader_path('sprite_no_cull_geo'),
+            fragment_shader=":system:shaders/sprites/sprite_list_geometry_fs.glsl"
+        )
+        billboard_program["sprite_texture"] = 0
+        billboard_program["uv_texture"] = 1
+
+
         # Generators are great for ease, but it means we can't really 'scrub' backwards through the song
         # So this is a patch job at best.
         self._note_generator: Generator[FiveFretNote, Any, None] = (note for note in self.notes)
 
         self._note_pool: SpritePool[NoteSprite] = SpritePool([NoteSprite(x=-1000.0, y=-1000.0) for _ in range(1000)])
         # avoid orthographic culling TODO: make source program more accessable
-        self._note_pool._source.program = self.window.ctx.load_program(  # noqa: SLF001
-            vertex_shader=":system:shaders/sprites/sprite_list_geometry_vs.glsl",
-            geometry_shader=get_shader_path('sprite_no_cull_geo'),
-            fragment_shader=":system:shaders/sprites/sprite_list_geometry_fs.glsl"
-        )
-        self._note_pool._source.program["sprite_texture"] = 0
-        self._note_pool._source.program["uv_texture"] = 1
-
+        self._note_pool._source.program = billboard_program
         self._next_note: FiveFretNote = next(self._note_generator, None)
 
         # SUSTAIN POOL DEFINITION AND CONSTRUCTION
@@ -147,7 +149,7 @@ class FiveFretHighway(Highway[FiveFretChart, FiveFretNote, FiveFretEngine]):
         self.color = (0, 0, 0, 128)  # TODO: eventually this will be a scrolling image.
 
         self.strikeline: SpriteList[StrikelineSprite] = SpriteList()
-        self.strikeline.program = self.strikeline.ctx.sprite_list_program_no_cull
+        self.strikeline.program = billboard_program
         y = self.strikeline_y
         for lane in range(5):
             x = self.lane_x(lane)

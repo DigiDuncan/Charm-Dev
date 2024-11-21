@@ -276,10 +276,6 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
             # Because we have already cleared away all out of data chords we only need to check the front end
             has_active_chord = current_chord.time <= self.window_front_end
 
-        # Because the last hopo time is to protect against accidental
-        # overstrum changing fretting 'consumes' it
-        self.last_hopo_tap_time = NEVER
-
         last_shape = self.last_chord_shape
         last_strum = self.last_strum_time
 
