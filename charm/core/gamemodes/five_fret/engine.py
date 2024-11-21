@@ -122,8 +122,9 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         # There are rolling values from the update, which sucks,
         # but we also need to store it between frames so its okay?
         self.last_chord_shape: ChordShape = EMPTY_CHORD
-        self.last_strum_time: Seconds = -float('inf')
-        self.last_fret_time: Seconds = -float('inf')
+        self.last_strum_time: Seconds = NEVER
+        self.last_fret_time: Seconds = NEVER
+        self.last_hopo_tap_time: Seconds = NEVER
         self.tap_shape: ChordShape = EMPTY_CHORD # need to track if we have 'consumed' a chord
         self.active_sustains: list[FiveFretSustain] = []
 
@@ -132,7 +133,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         self.can_chord_skip = True
         self.punish_chord_skip = True
         self.reward_sustain_accuracy = False # Should sustains reward accurate players?
-        # ? self.hopo_leniency: Seconds = 0.080 ? I think this is so you can hit a hopo before you strum as a consession
+        self.hopo_leniency: Seconds = 0.080 # lenience so you can't overstrum a tapped hopo
         self.strum_leniency: Seconds = 0.060 # How much time after a strum occurs that you can fret a note
         self.no_note_leniency: Seconds = 0.030 # If the hit window is empty but there is a note coming within this time, don't overstrum
         self.sustain_end_leniency: Seconds = 0.01 # How early you can release a sustain and still get full points # TODO: impliment
@@ -275,6 +276,10 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
             # Because we have already cleared away all out of data chords we only need to check the front end
             has_active_chord = current_chord.time <= self.window_front_end
 
+        # Because the last hopo time is to protect against accidental
+        # overstrum changing fretting 'consumes' it
+        self.last_hopo_tap_time = NEVER
+
         last_shape = self.last_chord_shape
         last_strum = self.last_strum_time
 
@@ -376,6 +381,9 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
             if (can_tap_hopo or current_chord.type == FiveFretNoteType.TAP) and self.tap_shape.is_open:
                 self.hit_chord(current_chord, time)
                 self.tap_shape = chord_shape
+
+                if can_tap_hopo:
+                    self.last_hopo_tap_time = time
                 return
 
     def on_strum(self, time: Seconds) -> None:
@@ -384,6 +392,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         # If we didn't hit a chord then lets look into the future
         # If that didn't work then 'start' the strum leniency
 
+        # Overstrum if there are no notes, but there are active sustains
         if not self.current_notes and self.active_sustains:
             self.overstrum(time)
             return
@@ -528,6 +537,11 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         return True
 
     def overstrum(self, time: Seconds) -> None:
+        # If you just tapped a hopo we need to be nicer about over strumming
+        if self.last_hopo_tap_time + self.hopo_leniency < time:
+            self.last_hopo_tap_time = NEVER
+            return
+
         logger.info('overstrummed')
         self.drop_sustains(time)
 
