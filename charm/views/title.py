@@ -140,7 +140,7 @@ class TitleView(DigiView):
         self.toast.update(delta_time)
 
     def on_draw(self) -> None:
-        super().on_draw()
+        self.predraw()
         self.wrapper.draw()
         self.logo.draw()
         self.splash.draw()
@@ -148,6 +148,7 @@ class TitleView(DigiView):
         self.press_label.draw()
         self.welcome_label.draw()
         self.toast.draw()
+        self.postdraw()
 
     def start(self) -> None:
         if self.goto_fade_time is not None:

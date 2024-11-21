@@ -35,7 +35,6 @@ class DigiWindow(Window):
 
         self.register_event_type('on_button_press')
         self.register_event_type('on_button_release')
-        self.push_handlers(self.on_button_press, self.on_button_release)
 
         keymap.set_window(self)
         self.push_handlers(keymap.on_key_press, keymap.on_key_release)

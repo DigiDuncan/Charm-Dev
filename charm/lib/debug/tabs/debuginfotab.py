@@ -58,4 +58,4 @@ class DebugInfoTab:
             )
             imgui.spacing()
             imgui.separator()
-            imgui.text(f"{self.window.ctx.limits.RENDERER}")
+            # imgui.text(f"{self.window.ctx.limits.RENDERER}")
