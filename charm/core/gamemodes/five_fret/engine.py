@@ -461,6 +461,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         self.score_chord(chord)
 
         self.streak += 1
+        self.max_streak = max(self.max_streak, self.streak)
 
         if chord.length > 0.0:
             self.begin_sustain(chord, time)
@@ -468,6 +469,10 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
     def score_chord(self, chord: FiveFretChord) -> None:
         if chord.hit:
             self.commited_score += 50 * self.multiplier * chord.size
+            self.weighted_hit_notes += 1
+            self.hits += 1
+        elif chord.missed:
+            self.misses += 1
 
         # Judge the player ... kinda?
         rt = chord.hit_time - chord.time  # type: ignore -- the type checker is stupid, clearly this isn't ever None at this point
