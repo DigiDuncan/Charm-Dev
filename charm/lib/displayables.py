@@ -13,7 +13,7 @@ from arcade.color import BLACK
 from charm.lib.anim import ease_circout, lerp, ease_linear, LerpData, perc
 from charm.lib.charm import CharmColors
 from charm.lib.types import NEVER
-from charm.lib.utils import map_range, px_to_pt
+from charm.lib.utils import clamp, map_range, px_to_pt
 import charm.data.images.skins.base as base_skin
 
 from charm.core.generic import BaseEngine
@@ -357,6 +357,7 @@ class NoteStreakDisplay:
         self.y = y
 
         self.current_time = 0.0
+
         self.popup_time = 1.0
         self.fade_out_time = 1.0
 
@@ -374,8 +375,6 @@ class NoteStreakDisplay:
 
     def draw(self) -> None:
         if self.latest_popup_time <= self.current_time <= self.latest_popup_time + self.popup_time + self.fade_out_time:
-            if self.current_time >= self.latest_popup_time + self.popup_time:
-                self.popup_text.color = self.popup_text.color.replace(a = int(map_range(self.current_time, self.latest_popup_time + self.popup_time, self.latest_popup_time + self.popup_time + self.fade_out_time, 255, 0)))
-            else:
-                self.popup_text.color.replace(a = 255)
+            new_a = clamp(0, int(map_range(self.current_time, self.latest_popup_time + self.popup_time, self.latest_popup_time + self.popup_time + self.fade_out_time, 255, 0)), 255)
+            self.popup_text.color = self.popup_text.color.replace(a = new_a)
             self.popup_text.draw()

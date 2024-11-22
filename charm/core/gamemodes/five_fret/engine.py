@@ -234,7 +234,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         if self.infinite_front_end and self.current_notes[0].time <= self.window_front_end and self.tap_shape.is_open and (can_tap_hopo or self.current_notes[0].type == FiveFretNoteType.TAP):
             self.hit_chord(self.current_notes[0], self.chart_time)
             self.tap_shape = self.last_chord_shape
-        
+
         self.process_inputs()
         self.calculate_uncommited()
 
