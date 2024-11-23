@@ -41,6 +41,9 @@ class UnifiedSongMenuView(DigiView):
     def on_show_view(self) -> None:
         super().on_show_view()
         self.window.theme_song.volume = 0
+        for element in self.element.element_list.children:
+            element.deselect()
+            
 
     def on_mouse_press(self, x: int, y: int, button: int, modifiers: int) -> bool | None:
         # TODO: Move this to the actual song element list, and also allow for using the mouse to
