@@ -5,7 +5,7 @@ They do no bounds checking.
 It's just for readability in function signatures.
 """
 
-from typing import Literal
+from typing import Literal, Protocol
 
 
 type Seconds = float
@@ -50,3 +50,22 @@ class Point:
     def __str__(self) -> str:
         return f"Point({self.x}, {self.y})"
 
+
+class Drawable(Protocol):
+    @property
+    def position(self) -> tuple[float, float]:
+        ...
+
+    @property
+    def center_x(self) -> float:
+        ...
+
+    @property
+    def center_y(self) -> float:
+        ...
+
+    def update(self, delta_time: float) -> None:
+        ...
+
+    def draw(self) -> None:
+        ...

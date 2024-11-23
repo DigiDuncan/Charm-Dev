@@ -4,7 +4,7 @@ from charm.lib.mini_mint import Element, VerticalElementList
 
 from charm.ui.menu_list.chartset_element import ChartsetElement
 
-from charm.core.generic import ChartSet, ChartMetadata, ChartSetMetadata
+from charm.game.generic import ChartSet, ChartMetadata, ChartSetMetadata
 
 # -- TEMP --
 from importlib.resources import files

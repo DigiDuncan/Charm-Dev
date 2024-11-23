@@ -12,18 +12,18 @@ import numpy as np
 import nindex
 
 import charm.data.audio
-from charm.lib.keymap import KeyMap
+from charm.core.keymap import KeyMap
 from charm.lib.adobexml import sprite_from_adobe
 from charm.lib.anim import ease_linear, ease_quartout, perc
-from charm.lib.digiview import DigiView, disable_when_focus_lost, shows_errors
+from charm.core.digiview import DigiView, disable_when_focus_lost, shows_errors
 from charm.lib.logsection import LogSection
-from charm.lib.paths import songspath
+from charm.core.paths import songspath
 from charm.lib.trackcollection import TrackCollection
 
-from charm.core.generic import AutoEngine, ChartSet
-from charm.core.gamemodes.fnf import FNFNote
-from charm.core.gamemodes.four_key import FourKeyHighway
-from charm.core.parsers.fnf import FNFParser
+from charm.game.generic import AutoEngine, ChartSet
+from charm.game.gamemodes.fnf import FNFNote
+from charm.game.gamemodes.four_key import FourKeyHighway
+from charm.game.parsers.fnf import FNFParser
 
 
 logger = logging.getLogger("charm")

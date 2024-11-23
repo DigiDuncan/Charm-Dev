@@ -9,7 +9,7 @@ from charm.lib.bpmanim import BPMAnimator
 from charm.lib.errors import CharmError
 import charm.data.audio
 
-from charm.core.generic import BPMChangeEvent
+from charm.game.generic import BPMChangeEvent
 
 
 class ThemeSong:

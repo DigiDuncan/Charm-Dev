@@ -1,16 +1,15 @@
 import logging
 
-from charm.lib.charm import GumWrapper
-from charm.lib.digiview import DigiView, shows_errors, disable_when_focus_lost
-from charm.lib.keymap import KeyMap
+from charm.core.charm import GumWrapper
+from charm.core.digiview import DigiView, shows_errors, disable_when_focus_lost
+from charm.core.keymap import KeyMap
 
 # -- UI --
 from charm.lib.mini_mint import Animator, Element
 from charm.ui.menu_list import UnifiedChartsetMenuElement
 
 # -- TEMP --
-from charm.core.loading import load_chartsets, load_chart
-from charm.core.loading2 import CHART_LOADER
+from charm.game.loading import CHART_LOADER, load_chart
 from charm.views.game import GameView
 
 logger = logging.getLogger("charm")

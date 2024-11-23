@@ -6,7 +6,7 @@ from arcade import Sound
 from arcade.clock import GLOBAL_CLOCK
 from charm.lib.oggsound import OGGSound
 
-from charm.lib.settings import MixerNames, settings
+from charm.core.settings import MixerNames, settings
 
 logger = logging.getLogger("charm")
 

@@ -5,10 +5,10 @@ from dataclasses import dataclass
 import logging
 import math
 
-from charm.core.generic.engine import DigitalKeyEvent, Engine, Judgement, EngineEvent
-from charm.core.generic.chart import Seconds
-from charm.core.gamemodes.five_fret import FiveFretChord, FiveFretChart, FiveFretNote
-from charm.lib.keymap import Action, keymap
+from charm.game.generic.engine import DigitalKeyEvent, Engine, Judgement, EngineEvent
+from charm.game.generic.chart import Seconds
+from charm.game.gamemodes.five_fret import FiveFretChord, FiveFretChart, FiveFretNote
+from charm.core.keymap import Action, keymap
 
 logger = logging.getLogger("charm")
 

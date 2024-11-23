@@ -3,8 +3,8 @@ from bisect import insort
 import arcade
 from arcade import BasicSprite, SpriteList, SpriteCircle, Camera2D, Vec2, color as colors
 
-from charm.lib.keymap import keymap
-from charm.lib.digiview import DigiView, shows_errors
+from charm.core.keymap import keymap
+from charm.core.digiview import DigiView, shows_errors
 
 
 class SpriteLayer[T: BasicSprite]:

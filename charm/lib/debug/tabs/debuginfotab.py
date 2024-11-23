@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from charm.lib.digiwindow import DigiWindow
+    from charm.core.digiwindow import DigiWindow
 
 from collections import deque
 

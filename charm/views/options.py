@@ -3,10 +3,10 @@ import logging
 from arcade import Text
 import arcade
 
-from charm.lib.charm import GumWrapper
-from charm.lib.digiview import DigiView, shows_errors, disable_when_focus_lost
-from charm.lib.settings import settings
-from charm.lib.keymap import KeyMap
+from charm.core.charm import GumWrapper
+from charm.core.digiview import DigiView, shows_errors, disable_when_focus_lost
+from charm.core.settings import settings
+from charm.core.keymap import KeyMap
 
 logger = logging.getLogger("charm")
 

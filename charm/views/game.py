@@ -1,14 +1,14 @@
-from charm.lib.digiview import DigiView, shows_errors, disable_when_focus_lost
+from charm.core.digiview import DigiView, shows_errors, disable_when_focus_lost
 
-from charm.lib.charm import GumWrapper
+from charm.core.charm import GumWrapper
 from charm.views.results import ResultsView
-from charm.lib.keymap import KeyMap
+from charm.core.keymap import KeyMap
 
-from charm.core.generic import BaseDisplay, BaseEngine, ChartSet, BaseChart
+from charm.game.generic import BaseDisplay, BaseEngine, ChartSet, BaseChart
 
-from charm.core.definitions import GAMEMODES
+from charm.game.definitions import GAMEMODES
 from charm.lib.trackcollection import TrackCollection
-from charm.lib.settings import settings
+from charm.core.settings import settings
 
 COUNTDOWN_TIME = 3.0
 

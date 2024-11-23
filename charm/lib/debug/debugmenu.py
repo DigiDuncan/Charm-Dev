@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from imgui_bundle.python_backends.pyglet_backend import PygletProgrammablePipelineRenderer
-    from charm.lib.digiwindow import DigiWindow
+    from charm.core.digiwindow import DigiWindow
 
 import pyglet
 

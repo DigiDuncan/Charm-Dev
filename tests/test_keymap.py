@@ -1,6 +1,6 @@
 from arcade.key import H, MOD_SHIFT, Q
 
-from charm.lib.keymap import keymap
+from charm.core.keymap import keymap
 
 # ! THESE ARE NOW BROKEN
 

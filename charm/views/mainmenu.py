@@ -2,11 +2,11 @@ import arcade
 from arcade import color as colors, MOUSE_BUTTON_LEFT
 
 from charm.lib.anim import ease_quartout, perc
-from charm.lib.charm import GumWrapper
-from charm.lib.digiview import DigiView, disable_when_focus_lost, shows_errors
+from charm.core.charm import GumWrapper
+from charm.core.digiview import DigiView, disable_when_focus_lost, shows_errors
 from charm.lib.errors import TestError
-from charm.lib.keymap import KeyMap
-from charm.objects.mainmenu import MainMenu, MainMenuItem
+from charm.core.keymap import KeyMap
+from charm.core.mainmenu import MainMenu, MainMenuItem
 # from charm.views.cycletest import CycleTestView
 # from charm.views.emojitest import EmojiTestView
 # from charm.views.fourkeysongmenu import FourKeySongMenuView

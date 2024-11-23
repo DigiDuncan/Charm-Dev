@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from charm.lib.toast import ToastDisplay
 if TYPE_CHECKING:
-    from charm.lib.digiwindow import DigiWindow
+    from charm.core.digiwindow import DigiWindow
 
 import getpass
 from importlib.resources import files
@@ -16,12 +16,12 @@ from pyglet.text import Label
 import charm.data.audio
 import charm.data.images
 from charm.lib.anim import ease_linear, ease_quadinout, perc
-from charm.lib.charm import CharmColors
-from charm.lib.digiview import DigiView, disable_when_focus_lost, shows_errors
-from charm.lib.keymap import keymap
+from charm.core.charm import CharmColors
+from charm.core.digiview import DigiView, disable_when_focus_lost, shows_errors
+from charm.core.keymap import keymap
 from charm.lib.utils import img_from_path, typewriter
 from charm.views.mainmenu import MainMenuView
-import charm.lib.egg as egg
+import charm.core.egg as egg
 
 # -- TEMP --
 from arcade.key import KEY_0, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9

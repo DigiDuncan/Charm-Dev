@@ -6,9 +6,9 @@ from itertools import cycle
 from arcade import SpriteList, Text, color as colors
 
 from charm.lib.adobexml import sprite_from_adobe, AdobeSprite
-from charm.lib.charm import GumWrapper
-from charm.lib.digiview import DigiView
-from charm.lib.keymap import keymap
+from charm.core.charm import GumWrapper
+from charm.core.digiview import DigiView
+from charm.core.keymap import keymap
 
 
 class SpriteTestView(DigiView):

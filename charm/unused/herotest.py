@@ -4,13 +4,13 @@ import arcade
 from arcade import Text, color as colors
 from pyglet.graphics import Batch
 
-from charm.lib.charm import GumWrapper
-from charm.lib.digiview import DigiView, disable_when_focus_lost, shows_errors
+from charm.core.charm import GumWrapper
+from charm.core.digiview import DigiView, disable_when_focus_lost, shows_errors
 from charm.lib.gamemodes.hero import HeroEngine, HeroHighway, HeroSong, SectionEvent
-from charm.lib.keymap import keymap
+from charm.core.keymap import keymap
 from charm.lib.oggsound import OGGSound
-from charm.lib.paths import songspath
-from charm.objects.lyric_animator import LyricAnimator
+from charm.core.paths import songspath
+from charm.game.displayables.lyric_animator import LyricAnimator
 
 logger = logging.getLogger("charm")
 

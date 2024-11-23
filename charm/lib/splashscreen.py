@@ -6,7 +6,7 @@ from math import sin, pi
 from arcade import Sprite, Texture
 import arcade
 
-from charm.lib.digiview import DigiView
+from charm.core.digiview import DigiView
 from charm.lib.utils import img_from_path
 import charm.data.images
 

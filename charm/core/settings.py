@@ -1,6 +1,7 @@
 from __future__ import annotations
 from weakref import WeakMethod
-from typing import Callable, Self
+from typing import Callable, Literal
+from enum import StrEnum
 
 
 __all__ = (
@@ -65,12 +66,13 @@ class Volume:
     sfx = Setting[float](1.0)
     menu = Setting[float](1.0)
 
-class Mixer:
+class Mixer(StrEnum):
     default = 'default'
     master = 'master'
     music = 'music'
     sfx = 'sfx'
     menu = 'menu'
+MixerNames = Literal["default", "master", "music", "sound", "menu_music"]
 
 class Window:
     title = Setting[str]("Charm", False)

@@ -9,7 +9,7 @@ import charm.data.images
 from charm.core.settings import settings
 from charm.lib import charm_logger
 from charm.lib.utils import pyglet_img_from_path
-from charm.lib.digiwindow import DigiWindow
+from charm.core.digiwindow import DigiWindow
 
 # Fix font
 pyglet.options["win32_disable_shaping"] = True

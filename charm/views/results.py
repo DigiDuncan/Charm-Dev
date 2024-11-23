@@ -5,15 +5,15 @@ import arcade
 from arcade import Sprite, SpriteList, Text, Sound, color as colors
 from pyglet.media import Player
 
-from charm.lib.charm import GumWrapper
-from charm.lib.digiview import DigiView, disable_when_focus_lost, shows_errors
+from charm.core.charm import GumWrapper
+from charm.core.digiview import DigiView, disable_when_focus_lost, shows_errors
 
-from charm.core.generic import BaseResults, Heatmap
+from charm.game.generic import BaseResults, Heatmap
 
 
 import charm.data.audio
 import charm.data.images.skins as skins
-from charm.lib.keymap import KeyMap
+from charm.core.keymap import KeyMap
 
 # from charm.lib import paths
 # from charm.lib.scores import ScoreDB
