@@ -282,6 +282,8 @@ class FiveFretNIndexCollection(NamedTuple):
     note_tick: Index[Ticks, FiveFretNote]
     chord_time: Index[Seconds, FiveFretChord]
     chort_tick: Index[Ticks, FiveFretChord]
+    star_time: Index[Seconds, StarpowerEvent]
+    solo_time: Index[Seconds, SoloEvent]
 
 
 class FiveFretChart(Chart[FiveFretNote]):
@@ -303,6 +305,8 @@ class FiveFretChart(Chart[FiveFretNote]):
         ts = self.events_by_type(TSEvent)
         section = self.events_by_type(SectionEvent)
         beat = self.events_by_type(BeatEvent)
+        star = self.events_by_type(StarpowerEvent)
+        solo = self.events_by_type(SoloEvent)
         note = self.notes
         chord = self.chords
         self.indices = FiveFretNIndexCollection(
@@ -317,4 +321,6 @@ class FiveFretChart(Chart[FiveFretNote]):
             Index[Ticks, FiveFretNote](note, "tick"),
             Index[Seconds, FiveFretChord](chord, "time"),
             Index[Ticks, FiveFretChord](chord, "tick"),
+            Index[Seconds, StarpowerEvent](star, "time"),
+            Index[Seconds, SoloEvent](solo, "time")
         )

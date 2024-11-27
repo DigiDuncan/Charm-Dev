@@ -10,7 +10,7 @@ from charm.core.keymap import KeyMap
 from charm.lib.types import Seconds, NEVER, FOREVER
 
 from charm.game.generic import Engine, EngineEvent, Judgement
-from .chart import ChordShape, FiveFretChart, FiveFretNote, FiveFretChord, FiveFretNoteType, Fret, Ticks
+from .chart import ChordShape, FiveFretChart, FiveFretNote, FiveFretChord, FiveFretNoteType, Fret, Ticks, StarpowerEvent, SoloEvent
 
 logger = getLogger('charm')
 
@@ -121,6 +121,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
 
         # There are rolling values from the update, which sucks,
         # but we also need to store it between frames so its okay?
+        self.processed_time: Seconds = 0.0
         self.last_chord_shape: ChordShape = EMPTY_CHORD
         self.last_strum_time: Seconds = NEVER
         self.last_fret_time: Seconds = NEVER
@@ -132,11 +133,12 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         self.linked_disjoints = True # Whether sustains are dropped seperately or together
         self.can_chord_skip = True
         self.punish_chord_skip = True
+        self.extended_starpower = True # TODO
         self.reward_sustain_accuracy = False # Should sustains reward accurate players?
         self.hopo_leniency: Seconds = 0.080 # lenience so you can't overstrum a tapped hopo
         self.strum_leniency: Seconds = 0.060 # How much time after a strum occurs that you can fret a note
         self.no_note_leniency: Seconds = 0.030 # If the hit window is empty but there is a note coming within this time, don't overstrum
-        self.sustain_end_leniency: Seconds = 0.01 # How early you can release a sustain and still get full points # TODO: impliment
+        self.sustain_end_leniency: Seconds = 0.01 # How early you can release a sustain and still get full points
 
         self.keystate = (False,)*5
         # todo: ignore overstrum during countdown events
@@ -152,6 +154,23 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         self.latest_judgement = None
         self.latest_judgement_time = None
         self.all_judgements: list[tuple[Seconds, Seconds, Judgement]] = []
+
+        self.star_power: float = 0.0
+        self.star_power_active: bool = False
+        self.star_power_time: float = FOREVER
+        self.star_power_phrase: bool = False
+        self.star_power_broken: bool = False
+        self.star_power_event: StarpowerEvent | None = None if not self.chart.indices.star_time.items else self.chart.indices.star_time.items[0]
+        self.next_star_power_idx: int = 1
+
+        self.solo_active: bool = False
+        self.solo_time: float = FOREVER
+        self.solo_note_count: int = 0
+        self.solo_hit_count: int = 0
+        self.solo_event: SoloEvent | None = None if not self.chart.indices.solo_time.items else self.chart.indices.solo_time.items[0]
+        self.next_solo_idx: int = 1
+
+        # TODO: Update parser to make chords with star power and solo.
 
     @property
     def multiplier(self) -> int:
@@ -197,67 +216,143 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
     def unpause(self) -> None:
         pass
 
+    def calculate_score(self) -> None:
+        # Because the chart time will always be later than the input times we run though all the inputs since the
+        # last update first. Then if the processed time is behind the chart time we do one last pass to bring everything up to speed.
+        # This is what Yarg is doing, but their functions are so strangely formatted that it was hard to understand.
+
+        self.process_inputs()
+        self.calculate_uncommited()
+
+        # The inputs have caught everything up to where the chart actually is so we can wash our hands of everything
+        if self.chart_time <= self.processed_time:
+            return
+        
+        self.process_to_time(self.chart_time)
+
+    def process_inputs(self):
+        # Process all the note inputs
+        while self.input_events.qsize() > 0:
+            event = self.input_events.get_nowait()
+            time = event.time
+
+            self.process_to_time(time)
+
+            # Ignore inputs when no notes or sustsains are left
+            if not self.current_notes and not self.active_sustains:
+                continue
+    
+            match event.key:
+                case Fret.GREEN:
+                    self.on_fret_change(Fret.GREEN, event.new_state=='down', time)
+                case Fret.RED:
+                    self.on_fret_change(Fret.RED, event.new_state=='down', time)
+                case Fret.YELLOW:
+                    self.on_fret_change(Fret.YELLOW, event.new_state=='down', time)
+                case Fret.BLUE:
+                    self.on_fret_change(Fret.BLUE, event.new_state=='down', time)
+                case Fret.ORANGE:
+                    self.on_fret_change(Fret.ORANGE, event.new_state=='down', time)
+                case "strum":
+                    self.on_strum(time)
+                case _:
+                    raise ThisShouldNeverHappenError
+                
+    def process_to_time(self, time: Seconds):
+        self.update_sustains(time)
+
+        if self.current_notes:
+            # The first thing that needs to be checked is the front end as this occurs irrespective of the notes
+            self.process_infinite_frontend(time)
+
+            # Run through every note making sure to not miss the start / end of a solo.
+            while self.current_notes and self.current_notes[0].time + self.hit_window < time:
+                note = self.current_notes.pop(0)
+                self.process_starpower(note.time)
+                self.process_solo(note.time)
+                self._miss_chord(note, FOREVER)
+
+        # We need to bring these up to this point in time
+        self.process_starpower(time)
+        self.process_solo(time)
+
+        self.processed_time = time
+                
     def calculate_uncommited(self) -> None:
         base = self.commited_score
         rolling = sum(ceil(self.get_sustain_score(sustain)) * sustain.multiplier for sustain in self.active_sustains)
 
         self.score = base + rolling
 
-    def calculate_score(self) -> None:
-        # There is a curious conundrum to solve
-        # If we work off of the chords then inputs only get
-        # processed when there are chords available,
-        # however when using inputs we need to 'catch-up'
-        # in the same way for chords
-
-        # TODO: Star Power
-        # TODO: Solo
-
-        # ! Not only do we need to handle missed notes, but what about taps with front end?
-        self.update_sustains()
-        # TODO: self.catch_strum()
-
-        # Remove all missed chords
-        # ! What happens if it was a tap/hopo we could have hit using the last chord?
-        # ! Or can we safely assert that would have been caught? I think yes, but lets see.
-        while self.current_notes and self.current_notes[0].time < self.window_back_end:
-            self._miss_chord(self.current_notes.pop(0), float('inf'))
-
-        if not self.current_notes:
-            # We still need to process inputs when there are sustains left
-            if self.active_sustains:
-                self.process_inputs()
-            self.calculate_uncommited()
+    def process_infinite_frontend(self, time: Seconds):
+        # Do all the easy early-exit checks
+        if not self.infinite_front_end or time < self.current_notes[0].time - self.hit_window or not self.tap_shape.is_open:
+            return
+        
+        # If the first unprocessed note wasn't a tap or tap-able hopo then we are done here
+        can_tap_hopo = (self.current_notes[0].type == FiveFretNoteType.HOPO and (self.streak > 0 or len(self.current_notes) == len(self.chart.chords)))
+        if not (can_tap_hopo or self.current_notes[0].type != FiveFretNoteType.TAP):
             return
 
-        can_tap_hopo = (self.current_notes[0].type == FiveFretNoteType.HOPO and (self.streak > 0 or len(self.current_notes) == len(self.chart.chords)))
-        if self.infinite_front_end and self.current_notes[0].time <= self.window_front_end and self.tap_shape.is_open and (can_tap_hopo or self.current_notes[0].type == FiveFretNoteType.TAP):
-            self.hit_chord(self.current_notes[0], self.chart_time)
-            self.tap_shape = self.last_chord_shape
+        ghost_shape = self.calculate_ghost_shape(self.last_chord_shape)
+        if not ghost_shape.matches(self.current_notes[0].shape):
+            return
+        
+        self.hit_chord(self.current_notes[0], time)
+        self.tap_shape = self.last_chord_shape
+        if can_tap_hopo:
+            self.last_hopo_tap_time = time
+        
+    def process_starpower(self, time: Seconds):
+        if self.star_power_event is None or time < self.star_power_event.time:
+            # If there is no star power event then the starpower has finished for the song
+            return
+        
+        if self.star_power_active:
+            if not self.star_power_broken:
+                self.star_power += 0.25
+            self.star_power_active = False
+            self.star_power_time = FOREVER
+        else:
+            self.star_power_active = True
+            self.star_power_time = self.star_power_event.time
+        
+        self.star_power_broken = False
 
-        self.process_inputs()
-        self.calculate_uncommited()
+        # The star power event has passed so we need to get the next star power event.
+        if len(self.chart.indices.star_time.items) <= self.next_star_power_idx:
+            self.star_power_event = None
+            return
 
-    def process_inputs(self):
-        # Process all the note inputs
-        while self.input_events.qsize() > 0:
-            event = self.input_events.get_nowait()
+        self.star_power_event = self.chart.indices.star_time.items[self.next_star_power_idx]
+        self.next_star_power_idx += 1
+        
+    def process_solo(self, time: Seconds):
+        if self.solo_event is None or time < self.solo_event.time:
+            # If there is no solo event then the solos are finished for the song
+            return
 
-            match event.key:
-                case Fret.GREEN:
-                    self.on_fret_change(Fret.GREEN, event.new_state=='down', event.time)
-                case Fret.RED:
-                    self.on_fret_change(Fret.RED, event.new_state=='down', event.time)
-                case Fret.YELLOW:
-                    self.on_fret_change(Fret.YELLOW, event.new_state=='down', event.time)
-                case Fret.BLUE:
-                    self.on_fret_change(Fret.BLUE, event.new_state=='down', event.time)
-                case Fret.ORANGE:
-                    self.on_fret_change(Fret.ORANGE, event.new_state=='down', event.time)
-                case "strum":
-                    self.on_strum(event.time)
-                case _:
-                    raise ThisShouldNeverHappenError
+        if self.solo_active:
+            # The solo has finished so score the solo.
+            if self.solo_note_count != 0:
+                fraction = self.solo_hit_count / self.solo_note_count
+                logger.info(f'Solo hit with {fraction*100:.0f}% accuracy')
+            self.solo_active = False
+            self.solo_time = FOREVER
+        else:
+            self.solo_active = True
+            self.solo_time = self.solo_event.time
+
+        
+        self.solo_hit_count = 0
+        self.solo_note_count = 0
+
+        if len(self.chart.indices.solo_time.items) <= self.next_solo_idx:
+            self.solo_event = None
+            return
+        
+        self.solo_event = self.chart.indices.solo_time.items[self.next_solo_idx]
+        self.next_solo_idx += 1
 
     def on_fret_change(self, fret: Fret, pressed: bool, time: Seconds) -> None:
         # First we check against sustains
@@ -356,14 +451,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
 
         # While this could be done in the previous sustain loop this is easier logically
         # We use the anchoring logic to easily ignore ghosted inputs
-        ghost_shape = chord_shape
-        for sustain in self.active_sustains:
-            for fret, data in sustain.frets.items():
-                if fret == 7:
-                    continue
-                if not data.dropped or data.drop != FOREVER:
-                    ghost_shape = ghost_shape.update_fret(fret, None)
-
+        ghost_shape = self.calculate_ghost_shape(chord_shape)
 
         if ghost_shape.matches(current_chord.shape):
             if abs(time - last_strum) <= self.strum_leniency:
@@ -380,7 +468,16 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
 
                 if can_tap_hopo:
                     self.last_hopo_tap_time = time
-                return
+    
+    def calculate_ghost_shape(self, shape: ChordShape):
+        ghost_shape = shape
+        for sustain in self.active_sustains:
+            for fret, data in sustain.frets.items():
+                if fret == 7:
+                    continue
+                if not data.dropped or data.drop != FOREVER:
+                    ghost_shape = ghost_shape.update_fret(fret, None)
+        return ghost_shape
 
     def on_strum(self, time: Seconds) -> None:
         # First we check for overstrum
@@ -454,6 +551,12 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         self.max_streak = max(self.max_streak, self.streak)
         self.streak = 0
 
+        if self.star_power_active and self.star_power_time < chord.time:
+            self.star_power_broken = True
+
+        if self.solo_active and self.solo_time < chord.time:
+            self.solo_note_count += 1
+
     def hit_chord(self, chord: FiveFretChord, time: float) -> None:
         if chord.missed or chord.hit:
             return
@@ -467,6 +570,10 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
 
         self.streak += 1
         self.max_streak = max(self.max_streak, self.streak)
+
+        if self.solo_active and self.solo_time < chord.time:
+            self.solo_note_count += 1
+            self.solo_hit_count += 1
 
         if chord.length > 0.0:
             self.begin_sustain(chord, time)
@@ -486,8 +593,8 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         self.latest_judgement_time = self.chart_time
         self.all_judgements.append((self.latest_judgement_time, rt, self.latest_judgement))
 
-    def update_sustains(self):
-        time = self.chart_time + self.sustain_end_leniency
+    def update_sustains(self, time: Seconds):
+        time = time + self.sustain_end_leniency
         for sustain in self.active_sustains[:]:
             sustain_finished = True
             for data in sustain.frets.values():
