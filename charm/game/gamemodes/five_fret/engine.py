@@ -235,7 +235,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         while self.input_events.qsize() > 0:
             event = self.input_events.get_nowait()
             time = event.time
-
+    
             self.process_to_time(time)
 
             # Ignore inputs when no notes or sustsains are left
@@ -369,7 +369,7 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
         else:
             current_chord = self.current_notes[0]
             # Because we have already cleared away all out of data chords we only need to check the front end
-            has_active_chord = current_chord.time <= self.window_front_end
+            has_active_chord = current_chord.time <= time + self.hit_window
 
         last_shape = self.last_chord_shape
         last_strum = self.last_strum_time
@@ -500,20 +500,18 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
             self.overstrum(time)
         self.last_strum_time = time
 
-        if not (self.window_back_end <= current_chord.time <= self.window_front_end):
+        # Because we have already cleared away all out of data chords we only need to check the front end
+        has_active_chord = current_chord.time <= time + self.hit_window
+
+        if not has_active_chord:
             # The current chord isn't available to process,
             # but we needed to process overstrum
             self.overstrum(time)
+            self.last_strum_time = -float('inf')
             return
 
         # We use the anchoring logic to easily ignore ghosted inputs
-        ghost_shape = chord_shape
-        for sustain in self.active_sustains:
-            for fret, data in sustain.frets.items():
-                if fret == 7:
-                    continue
-                if not data.dropped or data.drop != FOREVER:
-                    ghost_shape = ghost_shape.update_fret(fret, None)
+        ghost_shape = self.calculate_ghost_shape(chord_shape)
  
         if ghost_shape.matches(current_chord.shape):
             self.hit_chord(current_chord, time)
@@ -521,15 +519,13 @@ class FiveFretEngine(Engine[FiveFretChart, FiveFretNote]):
             return
 
         if self.can_chord_skip:
-            for chord in self.current_notes[1:]:
+            for idx, chord in enumerate(self.current_notes[1:]):
                 if self.window_front_end < chord.time:
                     # We have reached the end of the chords in the hit window
                     break
                 if ghost_shape.matches(chord.shape):
                     if self.punish_chord_skip:
-                        for missed in self.current_notes[:]:
-                            if missed is chord:
-                                break
+                        for missed in self.current_notes[:idx]:
                             self.miss_chord(missed, time)
                     self.hit_chord(chord, time)
                     return
