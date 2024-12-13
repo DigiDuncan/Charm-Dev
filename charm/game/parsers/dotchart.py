@@ -252,7 +252,7 @@ class DotChartParser(Parser):
     def parse_chartset_metadata(path: Path) -> ChartSetMetadata:
         if not (path / "song.ini").exists():
             raise NoMetadataError(path.stem)
-        parser = configparser.ConfigParser(interpolation = None)
+        parser = configparser.ConfigParser(interpolation = None, strict = False)
         parser.read((path / "song.ini").absolute(), encoding = "utf-8")
         if "song" not in parser and "Song" not in parser:
             raise MetadataParseError("Song header not found in metadata!")
